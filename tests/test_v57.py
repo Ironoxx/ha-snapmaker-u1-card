@@ -394,3 +394,20 @@ def test_layers_arcs(tmp_path) -> None:
     assert len(pts) // 2 > 50 and max(ys) == 10.0 and min(ys) >= 0
     full = layers[1]["segs"][0][1]
     assert min(full[1::2]) == -10.0 and max(full[1::2]) == 10.0  # Vollkreis
+
+
+def test_layers_klipper_relative_e_after_g90(tmp_path) -> None:
+    """Orca: M83, danach G90. Klipper laesst E dabei relativ (anders als Marlin)."""
+    import json
+
+    from custom_components.snapmaker_u1_card.layers import parse_layers
+
+    g = tmp_path / "o.gcode"
+    g.write_text("M83\nG90\n;LAYER_CHANGE\n;Z:0.25\nG1 Z.25\nG1 X0 Y0 F3000\n"
+                 "G1 X10 Y0 E.5\nG1 X20 Y0 E.5\nG1 X30 Y0 E.5\nG1 E-1.5\nG1 X40 Y0\nG1 E1.5\nG1 X50 Y0 E.5\n")
+    meta = parse_layers(g, tmp_path / "o.jsonl")
+    layer = json.loads((tmp_path / "o.jsonl").read_text().splitlines()[0])
+    # eine durchgehende Bahn statt Zweipunkt-Stuecken, dann eine zweite nach der Fahrt
+    assert [len(s[1]) // 2 for s in layer["segs"]] == [4, 2]
+    # Rueckzug/Wiederauffuellen netto null: 4 x 0,5 mm
+    assert meta["timeline"][-1][2] == 2.0

@@ -188,13 +188,13 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                 tool = int(t.group(1))
                 continue
             cmd = line.split(" ", 1)[0].upper()
+            # Klipper: G90/G91 betreffen nur XYZ (G91 macht E relativ, G90 nicht
+            # wieder absolut); E-Modus kommt aus M82/M83. Orca schreibt M83, dann G90.
             if cmd == "G90":
                 absolute = True
-                abs_e = True
                 continue
             if cmd == "G91":
                 absolute = False
-                abs_e = False
                 continue
             if cmd == "M82":
                 abs_e = True
@@ -235,11 +235,12 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
             de = 0.0
             if "E" in vals:
                 ev = float(vals["E"])
-                de = ev - e if abs_e else ev
-                if abs_e:
-                    e = ev
+                e_abs = abs_e and absolute
+                de = ev - e if e_abs else ev
+                e = ev if e_abs else e + ev
                 extruding = de > 0 and (nx != x or ny != y or bool(arc))
-                if de > 0:
+                if de:
+                    # netto: Rueckzug und Wiederauffuellen heben sich auf
                     e_tool[tool] = e_tool.get(tool, 0.0) + de
             if arc:
                 flat = sum(math.dist(a, b) for a, b in zip([(x, y), *arc[:-1]], arc, strict=True))

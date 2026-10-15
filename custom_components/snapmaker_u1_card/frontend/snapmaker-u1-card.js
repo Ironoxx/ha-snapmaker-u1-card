@@ -44,7 +44,7 @@
  */
 
 const DOMAIN = "snapmaker_u1_card";
-const CARD_VERSION = "1.0.4";
+const CARD_VERSION = "1.0.5";
 // 1x1-GIF: Zuweisen bricht einen laufenden MJPEG-Request zuverlaessig ab.
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
