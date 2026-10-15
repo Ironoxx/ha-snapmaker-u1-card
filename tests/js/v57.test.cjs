@@ -165,7 +165,11 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(tc.querySelectorAll("polyline").length, 4, "Kopf 1 + Bett, je Ist und Soll; kalter Kopf 2 ausgelassen");
   assert.match(text(tc.querySelector(".tlegend")), /Kopf 1 219 °C.*Bett 60 °C/);
   card._temps = null;
+  assert.match(card._tempSvg(), /Lädt/);
+  card._temps = { step: 5, series: {} };
   assert.match(card._tempSvg(), /Noch keine Daten/);
+  card._temps = { step: 5, series: {}, offline: true };
+  assert.match(card._tempSvg(), /nicht erreichbar/);
 
   // 6. Historie: Ergebnisfoto
   tab("history");

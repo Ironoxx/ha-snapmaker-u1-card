@@ -2,8 +2,9 @@
 
 Moonrakers ``[history]`` speichert jeden Druck seit Inbetriebnahme. Daraus
 entstehen Monatswerte (rueckwirkend, nicht erst ab Installation dieser
-Integration). Strom und Kosten kennt nur die eigene Historie der
-Integration; sie werden per Monat dazugelegt.
+Integration). Strom kennt nur die eigene Historie der Integration. Kosten:
+erfasste Drucke mit ihren echten Kosten, alle anderen mit dem Filamentpreis
+geschaetzt (wie in der Material-Tabelle), damit Summe und Tabelle passen.
 
 Wartung zaehlt in Druckstunden (Moonraker ``history/totals``), damit der
 Stand auch eine Neuinstallation von Home Assistant ueberlebt.
@@ -82,14 +83,29 @@ def build_stats(
     longest = 0.0
     mats: dict[str, dict[str, Any]] = {}
     colors: dict[tuple[str, str], float] = {}
+    records = [r for r in history if _num(r.get("ended")) is not None]
+    used_records: set[int] = set()
+    energy = cost = 0.0
+    have_energy = have_cost = estimated = False
     for job in jobs:
         status = job.get("status")
         if status == "in_progress":
             continue
-        _add_materials(job, status, mats, colors, prices or {})
+        job_cost = _add_materials(job, status, mats, colors, prices or {})
+        rec_i = _match_record(job, records, used_records)
+        if rec_i is not None:
+            used_records.add(rec_i)
+            rec_cost = _num(records[rec_i].get("total_cost"))
+            if rec_cost is not None:
+                job_cost = rec_cost
+        elif job_cost is not None:
+            estimated = True
         start = _num(job.get("start_time"))
         dur = _num(job.get("print_duration")) or 0.0
         g = job_grams(job) or 0.0
+        if job_cost is not None:
+            cost += job_cost
+            have_cost = True
         total += 1
         hours += dur / 3600
         grams += g
@@ -110,24 +126,24 @@ def build_stats(
             bucket["failed"] += 1
         bucket["hours"] += dur / 3600
         bucket["filament_g"] += g
-    energy = cost = 0.0
-    have_energy = have_cost = False
+        if job_cost is not None:
+            bucket["cost"] = (bucket["cost"] or 0.0) + job_cost
+    # Kosten der Drucke ohne Moonraker-Eintrag erst hier (Monat vom Ende)
+    matched = {id(records[i]) for i in used_records}
     for rec in history:
         ended = _num(rec.get("ended"))
         e, c = _num(rec.get("energy")), _num(rec.get("total_cost"))
+        bucket = months.get(_month(ended, tz)) if ended is not None else None
         if e is not None:
             energy += e
             have_energy = True
-        if c is not None:
+            if bucket is not None:
+                bucket["energy"] = (bucket["energy"] or 0.0) + e
+        if c is not None and id(rec) not in matched:
             cost += c
             have_cost = True
-        bucket = months.get(_month(ended, tz)) if ended is not None else None
-        if bucket is None:
-            continue
-        if e is not None:
-            bucket["energy"] = (bucket["energy"] or 0.0) + e
-        if c is not None:
-            bucket["cost"] = (bucket["cost"] or 0.0) + c
+            if bucket is not None:
+                bucket["cost"] = (bucket["cost"] or 0.0) + c
     for b in months.values():
         b["hours"] = round(b["hours"], 2)
         b["filament_g"] = round(b["filament_g"], 1)
@@ -147,6 +163,7 @@ def build_stats(
             "longest_h": round(longest / 3600, 2),
             "energy": round(energy, 2) if have_energy else None,
             "cost": round(cost, 2) if have_cost else None,
+            "cost_estimated": estimated,
         },
         "top_files": [
             {"file": f, "count": n} for f, n in files.most_common(5) if f
@@ -166,12 +183,17 @@ def build_stats(
 
 
 def _add_materials(job: dict[str, Any], status: Any, mats: dict[str, dict[str, Any]],
-                   colors: dict[tuple[str, str], float], prices: dict[str, float | None]) -> None:
-    """Verbrauch je Material und Farbe (Slicer-Gewichte, Abbrueche anteilig)."""
+                   colors: dict[tuple[str, str], float], prices: dict[str, float | None]) -> float | None:
+    """Verbrauch je Material und Farbe (Slicer-Gewichte, Abbrueche anteilig).
+
+    Rueckgabe: geschaetzte Filamentkosten des Jobs, None ohne Preis fuer
+    jedes verwendete Material.
+    """
     meta = job.get("metadata") or {}
     fils = [f for f in parse_file_filaments(meta) if f.get("used") and f.get("weight")]
     if not fils:
-        return
+        return None
+    job_cost: float | None = 0.0
     scale = 1.0
     if status not in OK_STATUS:
         used, planned = _num(job.get("filament_used")), _num(meta.get("filament_total"))
@@ -184,6 +206,7 @@ def _add_materials(job: dict[str, Any], status: Any, mats: dict[str, dict[str, A
         m["grams"] += grams
         price = filament_price_for(kind, prices)
         m["cost"] = None if price is None or m["cost"] is None else m["cost"] + grams * price / 1000
+        job_cost = None if price is None or job_cost is None else job_cost + grams * price / 1000
         if kind not in seen:
             seen.add(kind)
             m["prints"] += 1
@@ -194,6 +217,33 @@ def _add_materials(job: dict[str, Any], status: Any, mats: dict[str, dict[str, A
         if fil.get("color"):
             key = (kind, fil["color"])
             colors[key] = colors.get(key, 0.0) + grams
+    return job_cost
+
+
+MATCH_WINDOW_S = 600
+
+
+def _base(name: Any) -> str:
+    return str(name or "").rsplit("/", 1)[-1].lower()
+
+
+def _match_record(job: dict[str, Any], records: list[dict[str, Any]], used: set[int]) -> int | None:
+    """Eigenen Historien-Eintrag zum Moonraker-Job finden (Datei + Ende +-10 min)."""
+    end = _num(job.get("end_time"))
+    if end is None:
+        start, dur = _num(job.get("start_time")), _num(job.get("total_duration"))
+        end = start + dur if start is not None and dur is not None else None
+    if end is None:
+        return None
+    name = _base(job.get("filename"))
+    best: tuple[float, int] | None = None
+    for i, rec in enumerate(records):
+        if i in used or _base(rec.get("file")) != name:
+            continue
+        diff = abs(float(rec["ended"]) - end)
+        if diff <= MATCH_WINDOW_S and (best is None or diff < best[0]):
+            best = (diff, i)
+    return best[1] if best else None
 
 
 class Maintenance:

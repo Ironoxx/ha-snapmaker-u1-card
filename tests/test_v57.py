@@ -349,3 +349,29 @@ async def test_early_result_photo(hass: HomeAssistant, mock_client, notification
     assert last["photo"] == early, "Foto von der letzten Bahn, kein zweites"
     assert fake.async_get_image.await_count == 1
     assert (coord._own_dir / "results" / Path(early).name).read_bytes() == b"\xff\xd8EARLY"
+
+
+def test_stats_cost_matches_history_and_estimates_rest() -> None:
+    meta = {"filament_type": "PETG", "filament_colour": "#000000", "filament_weight": [100.0],
+            "filament_weight_total": 100.0}
+    jobs = [
+        # erfasst: echte Kosten (inkl. Strom) statt Schaetzung
+        {"status": "completed", "start_time": 1.7e9, "end_time": 1.7e9 + 3600, "print_duration": 3600,
+         "filename": "dir/a.gcode", "metadata": meta},
+        # nicht erfasst (vor Installation): Filamentpreis
+        {"status": "completed", "start_time": 1.7e9 - 86400, "end_time": 1.7e9 - 82800, "print_duration": 3600,
+         "filename": "b.gcode", "metadata": meta},
+    ]
+    history = [
+        {"file": "a.gcode", "ended": 1.7e9 + 3630, "energy": 0.2, "total_cost": 2.5},
+        # Eintrag ohne Moonraker-Job (Historie am Drucker geloescht)
+        {"file": "c.gcode", "ended": 1.7e9 - 5000, "energy": 0.1, "total_cost": 0.4},
+    ]
+    st = build_stats(jobs, history, 1.7e9 + 4000, prices={"PETG": 20.0})
+    t = st["totals"]
+    assert t["cost"] == 2.5 + 2.0 + 0.4 and t["cost_estimated"] is True
+    assert t["energy"] == 0.3
+    assert sum(b["cost"] or 0 for b in st["months"]) == 4.9
+    # ohne Preis keine Schaetzung, nur die echten Kosten
+    st2 = build_stats(jobs, history[:1], 1.7e9 + 4000)
+    assert st2["totals"]["cost"] == 2.5 and st2["totals"]["cost_estimated"] is False

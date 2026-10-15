@@ -44,7 +44,7 @@
  */
 
 const DOMAIN = "snapmaker_u1_card";
-const CARD_VERSION = "1.0.1";
+const CARD_VERSION = "1.0.2";
 // 1x1-GIF: Zuweisen bricht einen laufenden MJPEG-Request zuverlaessig ab.
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -93,6 +93,8 @@ const EN = {
   "Temperaturverlauf": "Temperature history",
   "letzte 20 min": "last 20 min",
   "Noch keine Daten.": "No data yet.",
+  "Drucker nicht erreichbar.": "Printer not reachable.",
+  "Lädt …": "Loading …",
   "jetzt": "now",
   "Bett": "Bed",
   "Firmware": "Firmware",
@@ -162,6 +164,8 @@ const EN = {
   "In die Warteschlange gestellt: {name}": "Added to queue: {name}",
   "Jetzt sichern": "Back up now",
   "Kosten": "Cost",
+  "Gemessen bei Drucken seit Installation der Integration.": "Measured for prints since the integration was installed.",
+  "Ältere Drucke mit Filamentpreis geschätzt, ohne Strom.": "Older prints estimated from filament price, without power.",
   "Letzte 12 Monate": "Last 12 months",
   "Linearführungen schmieren": "Lubricate linear rails",
   "Luftfilter wechseln": "Replace air filter",
@@ -774,11 +778,12 @@ const STYLES = `
   .stat {
     background: var(--u1-panel-high); border-radius: var(--u1-r-m);
     padding: 10px; min-width: 0;
+    display: flex; flex-direction: column; justify-content: space-between;
   }
   .stat .k {
     font-size: var(--md-sys-typescale-label-small-size, 11px);
-    letter-spacing: .06em; text-transform: uppercase; color: var(--u1-on-variant);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--u1-on-variant);
+    line-height: 1.25; hyphens: auto; overflow-wrap: anywhere;
   }
   .stat .v {
     font-family: var(--u1-mono); font-variant-numeric: tabular-nums;
@@ -2031,8 +2036,9 @@ class SnapmakerU1Card extends HTMLElement {
       </div>`;
   }
 
-  _stat(k, v, cls = "") {
-    return `<div class="stat"><div class="k">${esc(k)}</div><div class="v ${cls}">${v}</div></div>`;
+  _stat(k, v, cls = "", hint = "") {
+    const t = hint ? ` title="${esc(hint)}"` : ` title="${esc(k)}"`;
+    return `<div class="stat"${t}><div class="k" lang="${LANG}">${esc(k)}</div><div class="v ${cls}">${v}</div></div>`;
   }
 
   _row(k, v, entity, title) {
@@ -2538,7 +2544,9 @@ class SnapmakerU1Card extends HTMLElement {
 
   _tempSvg() {
     const t = this._temps;
-    const series = t && t.series ? t.series : null;
+    if (!t) return `<div class="t-label">${tr("Lädt …")}</div>`;
+    if (t.offline) return `<div class="t-label">${tr("Drucker nicht erreichbar.")}</div>`;
+    const series = t.series || null;
     if (!series || !Object.keys(series).length) return `<div class="t-label">${tr("Noch keine Daten.")}</div>`;
     const heads = this._d ? this._d.heads : [];
     const names = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed"];
@@ -3260,9 +3268,12 @@ class SnapmakerU1Card extends HTMLElement {
       [tr("Erfolgsquote"), rate],
       [tr("Druckstunden"), num(t.hours_total ?? t.hours, 0, "h")],
       [tr("Filament"), num(t.filament_kg, 2, "kg")],
-      t.energy !== null && t.energy !== undefined ? [tr("Strom"), num(t.energy, 1, "kWh")] : null,
-      t.cost !== null && t.cost !== undefined ? [tr("Kosten"), fmtEuro(t.cost)] : null,
-    ].filter(Boolean).map(([k, v]) => this._stat(k, v, "sm")).join("");
+      t.energy !== null && t.energy !== undefined
+        ? [tr("Strom"), num(t.energy, 1, "kWh"), tr("Gemessen bei Drucken seit Installation der Integration.")] : null,
+      t.cost !== null && t.cost !== undefined
+        ? [tr("Kosten"), (t.cost_estimated ? "≈ " : "") + fmtEuro(t.cost),
+          t.cost_estimated ? tr("Ältere Drucke mit Filamentpreis geschätzt, ohne Strom.") : ""] : null,
+    ].filter(Boolean).map(([k, v, hint]) => this._stat(k, v, "sm", hint)).join("");
     const top = (st.top || []).slice(0, 3).map((f) =>
       `<span class="top-file">${esc(String(f.file).split("/").pop().replace(/\.(gcode|3mf)$/i, ""))} <b>×${f.count}</b></span>`).join("");
     return `
@@ -3557,6 +3568,7 @@ class SnapmakerU1Card extends HTMLElement {
     r.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
     r.querySelectorAll("[data-pane]").forEach((p) => { p.hidden = p.dataset.pane !== id; });
     this._tickCamera();
+    this._tickTemps();  // sofort statt bis zu 10 s "keine Daten"
   }
 
   // ── Rendern ──────────────────────────────────────────────────────────────

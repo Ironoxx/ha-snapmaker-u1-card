@@ -46,6 +46,18 @@ Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über 
 
 > Kein offizielles Produkt von Snapmaker und nicht mit Snapmaker verbunden. „Snapmaker“ und „U1“ sind Marken ihrer Inhaber und stehen hier nur, um den unterstützten Drucker zu nennen. Nutzung auf eigenes Risiko.
 
+## Screenshots
+
+![Übersicht mit Kamera, letztem Druck und Druckköpfen](docs/screenshots/uebersicht.png)
+
+| Druckstart mit Filamentzuordnung | Verlauf und Statistik |
+|---|---|
+| ![Druckstart](docs/screenshots/druckstart.png) | ![Verlauf](docs/screenshots/verlauf.png) |
+| **Steuerung** | **System, Wartung und Diagnose** |
+| ![Steuerung](docs/screenshots/steuerung.png) | ![System](docs/screenshots/system.png) |
+| **Zeitraffer** | |
+| ![Zeitraffer](docs/screenshots/zeitraffer.png) | |
+
 ## Voraussetzungen
 
 | Was | Wozu | Pflicht |
@@ -258,6 +270,7 @@ Die Wartungsschwelle ist der Firmware-Standard von 25 100 Wechseln je Kopf. Ab 9
 - **Verbrauch je Druck** ist die Differenz des Energiezählers zwischen Druckbeginn und -ende.
 - **Stromkosten** werden laufend aufsummiert (Verbrauch seit der letzten Abfrage × Preis in diesem Moment). Dynamische Tarife rechnen so richtig.
 - **Filamentkosten**: Gewicht je Material aus den Slicer-Daten der Datei × Preis je kg. Bei abgebrochenen Drucken wird das Gewicht im Verhältnis gefördertes/geplantes Filament gekürzt. Fehlt für ein verwendetes Material ein Preis, entfallen die Filamentkosten statt einer falschen Summe.
+- **Gesamtkosten im Verlauf** (Kachel und Diagramm): Drucke, die die Integration erfasst hat, mit ihren echten Kosten (Filament + Strom). Ältere Drucke aus Moonraker, also vor der Installation, werden mit dem Filamentpreis geschätzt; die Kachel zeigt dann „≈“. Damit passen Summe und Material-Tabelle zusammen. *Strom* zählt nur gemessene Drucke.
 - **Auto-Aus** greift nur nach *fertig* oder *abgebrochen*, nie nach einem Fehler, und erst wenn alle Düsen und das Bett unter der eingestellten Temperatur sind.
 - Ist der Drucker aus, zeigt die Karte Einschalten, Dateien (bei Auto-Ein), Historie und Zeitraffer. Die Filamentzuordnung nutzt dann den Stand vor dem Ausschalten.
 
