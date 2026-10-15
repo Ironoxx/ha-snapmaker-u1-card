@@ -1,12 +1,12 @@
-"""Sprachsteuerung ueber Assist.
+"""Voice control through Assist.
 
-Die Integration meldet drei Intents an (Status, Pause, Fortsetzen) und legt
-passende Saetze unter ``/config/custom_sentences/<de|en>/snapmaker_u1_card.yaml``
-ab. Diese Dateien gehoeren der Integration (Kopfzeile ``MARKER``): sie werden
-bei jedem Start aktualisiert, solange die Kopfzeile drinsteht. Wer die Saetze
-selbst pflegen will, loescht die Kopfzeile, dann bleibt die Datei unberuehrt.
+The integration registers three intents (status, pause, resume) and writes
+matching sentences to ``/config/custom_sentences/<de|en>/snapmaker_u1_card.yaml``.
+These files belong to the integration (header line ``MARKER``): they are
+updated on every start as long as the header is present. To maintain the
+sentences yourself, delete the header line and the file is left alone.
 
-Beispiele: "Wie weit ist der Drucker?", "Pausiere den Drucker",
+Examples: "Wie weit ist der Drucker?", "Pausiere den Drucker",
 "Drucker fortsetzen"; "How far is the printer?", "Pause the printer".
 """
 
@@ -97,7 +97,7 @@ def _minutes(seconds: float) -> tuple[int, int]:
 
 
 def status_speech(coord: Any, de: bool) -> str:
-    """Antwortsatz fuer den Status (auch ohne Druck)."""
+    """Spoken answer for the status (also without a print)."""
     from .coordinator import remaining_seconds
 
     data = coord.data or coord._prev
@@ -136,12 +136,14 @@ def _coordinators(hass: HomeAssistant) -> list[Any]:
 
 
 class _Base(intent.IntentHandler):
+    """Common intent handling: language, all printers, one spoken answer."""
     platforms = None
 
     def __init__(self, intent_type: str) -> None:
         self.intent_type = intent_type
 
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Run the handler for every configured printer and join the answers."""
         hass = intent_obj.hass
         de = (intent_obj.language or hass.config.language or "de").lower().startswith("de")
         response = intent_obj.create_response()
@@ -158,19 +160,22 @@ class _Base(intent.IntentHandler):
 
 
 class StatusIntent(_Base):
+    """How far is the printer?"""
     async def handle(self, coord: Any, de: bool) -> str:
         return status_speech(coord, de)
 
 
 class ActionIntent(_Base):
+    """Pause or resume the print."""
     def __init__(self, intent_type: str, action: str, need: str) -> None:
         super().__init__(intent_type)
         self.action, self.need = action, need
 
     async def handle(self, coord: Any, de: bool) -> str:
+        """Execute the action if the print state allows it."""
         state = coord.current_print_state()
         if state != self.need:
-            # Pause/Fortsetzen braucht am Drucker einige Sekunden (Kopf parken bzw. anfahren)
+            # Pause/resume takes a few seconds on the printer (parking or approaching the head)
             if self.action == "pause" and state == "paused":
                 return "Der Druck ist bereits pausiert." if de else "The print is already paused."
             if self.action == "resume" and state == "printing":
@@ -181,7 +186,7 @@ class ActionIntent(_Base):
         try:
             await coord.client.print_action(self.action)
         except MoonrakerError as err:
-            _LOGGER.warning("Sprachbefehl %s fehlgeschlagen: %s", self.action, err)
+            _LOGGER.warning("Voice command %s failed: %s", self.action, err)
             return "Der Drucker hat nicht reagiert." if de else "The printer did not respond."
         await coord.async_request_refresh()
         if self.action == "pause":
@@ -190,6 +195,7 @@ class ActionIntent(_Base):
 
 
 def _write_sentences(config_dir: str) -> bool:
+    """Write the sentence files owned by the integration (blocking)."""
     changed = False
     for lang, text in SENTENCES.items():
         target = Path(config_dir) / "custom_sentences" / lang / FILENAME
@@ -204,13 +210,14 @@ def _write_sentences(config_dir: str) -> bool:
 
 
 async def async_setup_voice(hass: HomeAssistant) -> None:
+    """Register the intents and the Assist sentences."""
     intent.async_register(hass, StatusIntent(INTENT_STATUS))
     intent.async_register(hass, ActionIntent(INTENT_PAUSE, "pause", "printing"))
     intent.async_register(hass, ActionIntent(INTENT_RESUME, "resume", "paused"))
     try:
         changed = await hass.async_add_executor_job(_write_sentences, hass.config.config_dir)
     except OSError as err:
-        _LOGGER.warning("Saetze fuer Assist nicht geschrieben: %s", err)
+        _LOGGER.warning("Assist sentences not written: %s", err)
         return
     if changed and hass.services.has_service("conversation", "reload"):
         await hass.services.async_call("conversation", "reload", {}, blocking=False)

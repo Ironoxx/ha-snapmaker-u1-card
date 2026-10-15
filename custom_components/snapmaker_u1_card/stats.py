@@ -1,13 +1,13 @@
-"""Statistik aus der Moonraker-Druckhistorie und Wartungsplaner.
+"""Statistics from Moonraker's print history and the maintenance planner.
 
-Moonrakers ``[history]`` speichert jeden Druck seit Inbetriebnahme. Daraus
-entstehen Monatswerte (rueckwirkend, nicht erst ab Installation dieser
-Integration). Strom kennt nur die eigene Historie der Integration. Kosten:
-erfasste Drucke mit ihren echten Kosten, alle anderen mit dem Filamentpreis
-geschaetzt (wie in der Material-Tabelle), damit Summe und Tabelle passen.
+Moonraker's ``[history]`` stores every print since commissioning, so the
+monthly values are retroactive (not only since this integration was
+installed). Energy is only known from the integration's own history. Cost:
+recorded prints with their real cost, all others estimated from the
+filament price (as in the material table), so that total and table match.
 
-Wartung zaehlt in Druckstunden (Moonraker ``history/totals``), damit der
-Stand auch eine Neuinstallation von Home Assistant ueberlebt.
+Maintenance counts in print hours (Moonraker ``history/totals``) so the
+state survives a reinstall of Home Assistant.
 """
 
 from __future__ import annotations
@@ -22,13 +22,13 @@ MONTHS = 12
 OK_STATUS = ("completed",)
 FAIL_STATUS = ("cancelled", "error", "klippy_shutdown", "klippy_disconnect", "interrupted", "server_exit")
 
-# Wartungspunkte: Schluessel, Standardintervall in Druckstunden (0 = aus)
+# Maintenance items: key, default interval in print hours (0 = off)
 MAINTENANCE_ITEMS: dict[str, int] = {
-    "plate": 30,        # Druckplatte reinigen
-    "nozzle": 100,      # Duesen und Abstreifer reinigen
-    "rails": 300,       # Linearfuehrungen schmieren
-    "belts": 500,       # Riemenspannung pruefen
-    "filter": 0,        # Luftfilter wechseln (nur mit Luftreiniger)
+    "plate": 30,        # clean the build plate
+    "nozzle": 100,      # clean nozzles and wipers
+    "rails": 300,       # lubricate linear rails
+    "belts": 500,       # check belt tension
+    "filter": 0,        # replace the air filter (only with an air purifier)
 }
 
 
@@ -37,6 +37,7 @@ def _month(ts: float, tz: tzinfo) -> str:
 
 
 def _month_keys(now: float, tz: tzinfo, count: int = MONTHS) -> list[str]:
+    """The last ``count`` months as "YYYY-MM", oldest first."""
     d = datetime.fromtimestamp(now, tz)
     y, m = d.year, d.month
     keys = []
@@ -53,7 +54,7 @@ def _num(value: Any) -> float | None:
 
 
 def job_grams(job: dict[str, Any]) -> float | None:
-    """Verbrauchtes Gewicht eines Moonraker-Jobs; abgebrochene anteilig."""
+    """Filament weight used by a Moonraker job; cancelled jobs pro rata."""
     meta = job.get("metadata") or {}
     total_g = _num(meta.get("filament_weight_total"))
     if total_g is None:
@@ -73,7 +74,7 @@ def build_stats(
     tz: tzinfo = UTC,
     prices: dict[str, float | None] | None = None,
 ) -> dict[str, Any]:
-    """Monatswerte der letzten 12 Monate und Gesamtwerte."""
+    """Monthly values of the last 12 months plus totals."""
     keys = _month_keys(now, tz)
     months = {k: {"month": k, "prints": 0, "failed": 0, "hours": 0.0, "filament_g": 0.0,
                   "energy": None, "cost": None} for k in keys}
@@ -128,7 +129,7 @@ def build_stats(
         bucket["filament_g"] += g
         if job_cost is not None:
             bucket["cost"] = (bucket["cost"] or 0.0) + job_cost
-    # Kosten der Drucke ohne Moonraker-Eintrag erst hier (Monat vom Ende)
+    # Cost of prints without a Moonraker job is added here (month of the end)
     matched = {id(records[i]) for i in used_records}
     for rec in history:
         ended = _num(rec.get("ended"))
@@ -184,10 +185,10 @@ def build_stats(
 
 def _add_materials(job: dict[str, Any], status: Any, mats: dict[str, dict[str, Any]],
                    colors: dict[tuple[str, str], float], prices: dict[str, float | None]) -> float | None:
-    """Verbrauch je Material und Farbe (Slicer-Gewichte, Abbrueche anteilig).
+    """Usage per material and colour (slicer weights, cancelled jobs pro rata).
 
-    Rueckgabe: geschaetzte Filamentkosten des Jobs, None ohne Preis fuer
-    jedes verwendete Material.
+    Returns the estimated filament cost of the job, None if a price is
+    missing for any material used.
     """
     meta = job.get("metadata") or {}
     fils = [f for f in parse_file_filaments(meta) if f.get("used") and f.get("weight")]
@@ -228,7 +229,7 @@ def _base(name: Any) -> str:
 
 
 def _match_record(job: dict[str, Any], records: list[dict[str, Any]], used: set[int]) -> int | None:
-    """Eigenen Historien-Eintrag zum Moonraker-Job finden (Datei + Ende +-10 min)."""
+    """Find the integration's own history record for a Moonraker job (file + end +-10 min)."""
     end = _num(job.get("end_time"))
     if end is None:
         start, dur = _num(job.get("start_time")), _num(job.get("total_duration"))
@@ -247,7 +248,7 @@ def _match_record(job: dict[str, Any], records: list[dict[str, Any]], used: set[
 
 
 class Maintenance:
-    """Wartungspunkte mit Intervall in Druckstunden."""
+    """Maintenance items with an interval in print hours."""
 
     def __init__(self, stored: dict[str, Any] | None) -> None:
         self.done: dict[str, dict[str, float]] = {
@@ -258,9 +259,10 @@ class Maintenance:
         return self.done
 
     def baseline(self, hours: float | None, now: float) -> bool:
-        """Beim ersten Mal den aktuellen Stand als 'erledigt' setzen.
+        """On first use, mark the current state as 'done'.
 
-        Sonst waere bei einem schon laenger genutzten Drucker sofort alles faellig.
+        Otherwise everything would be due right away on a printer that has
+        been in use for a while.
         """
         if hours is None:
             return False
@@ -278,6 +280,7 @@ class Maintenance:
         self.done[key] = {"hours": round(hours if hours is not None else prev.get("hours", 0.0), 2), "at": now}
 
     def status(self, hours: float | None, intervals: dict[str, int]) -> list[dict[str, Any]]:
+        """Status of every enabled maintenance item at ``hours`` print hours."""
         items = []
         for key, default in MAINTENANCE_ITEMS.items():
             interval = int(intervals.get(key, default) or 0)

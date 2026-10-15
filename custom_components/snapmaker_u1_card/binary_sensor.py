@@ -1,4 +1,4 @@
-"""Diagnose: steht das Live-Abo bei Moonraker (live.py)?"""
+"""Diagnostic entity: is the live subscription to Moonraker up (live.py)?"""
 
 from __future__ import annotations
 
@@ -20,11 +20,12 @@ from .sensor import U1Entity
 async def async_setup_entry(
     hass: HomeAssistant, entry: U1ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
+    """Add the live connection diagnostic entity."""
     async_add_entities([LiveConnection(entry.runtime_data)])
 
 
 class LiveConnection(U1Entity, BinarySensorEntity):
-    """An = Moonraker meldet Aenderungen sofort; aus = nur Abfrage alle 10 s."""
+    """On = Moonraker pushes changes immediately; off = polling every 10 s only."""
 
     _attr_translation_key = "live"
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -35,7 +36,7 @@ class LiveConnection(U1Entity, BinarySensorEntity):
 
     @property
     def available(self) -> bool:
-        # Auch bei ausgeschaltetem Drucker: dann eben "getrennt".
+        # Also when the printer is switched off: then simply "disconnected".
         return self.coordinator.data is not None
 
     @property

@@ -1,12 +1,12 @@
-"""Zeitraffer-Videos und -Vorschaubilder ueber Home Assistant ausliefern.
+"""Serve timelapse videos and previews through Home Assistant.
 
-Der Browser spricht nie direkt mit dem Drucker: das funktioniert auch ueber
-Nabu Casa/VPN und ohne Mixed-Content-Probleme. Der Videoplayer braucht
-Range-Anfragen zum Spulen; Range und die passenden Antwort-Header werden
-1:1 durchgereicht. Die Karte holt sich per ``auth/sign_path`` eine signierte
-URL, weil ein <video>-Element keinen Authorization-Header mitschicken kann.
+The browser never talks to the printer directly: this works via Nabu
+Casa/VPN and without mixed-content problems. The video player needs Range
+requests for seeking; Range and the matching response headers are passed
+through 1:1. The card fetches a signed URL via ``auth/sign_path`` because a
+<video> element cannot send an Authorization header.
 
-Ausgeliefert wird nur, was in der aktuellen Zeitraffer-Liste steht.
+Only files in the current timelapse list are served.
 """
 
 from __future__ import annotations
@@ -31,6 +31,7 @@ PASS_RESPONSE = ("Content-Type", "Content-Length", "Content-Range", "Accept-Rang
 
 
 def allowed(coordinator: U1Coordinator, root: str, path: str) -> bool:
+    """Whether ``root/path`` is a timelapse the integration currently lists."""
     data = coordinator.data
     for item in (data.timelapses if data else []):
         if item.get("root") == root and path in (item.get("path"), item.get("poster")):
@@ -39,20 +40,22 @@ def allowed(coordinator: U1Coordinator, root: str, path: str) -> bool:
 
 
 def reachable(coordinator: U1Coordinator) -> bool:
-    """Bei ausgeschaltetem/nicht erreichbarem Drucker gar nicht erst verbinden.
+    """Do not even connect while the printer is off or unreachable.
 
-    Eine haengende Anfrage blockiert eine der wenigen Browser-Verbindungen.
+    A hanging request blocks one of the few browser connections.
     """
     data = coordinator.data
     return not coordinator.power_is_off() and data is not None and data.online
 
 
 class TimelapseView(HomeAssistantView):
+    """Authenticated proxy for timelapse videos and images."""
     url = VIDEO_URL + "/{entry_id}/{root}/{path:.+}"
     name = f"api:{DOMAIN}:video"
     requires_auth = True
 
     async def get(self, request: web.Request, entry_id: str, root: str, path: str) -> web.StreamResponse:
+        """Stream a timelapse file from the printer, passing Range through."""
         hass = request.app["hass"]
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is None or entry.domain != DOMAIN or not hasattr(entry, "runtime_data"):
@@ -61,13 +64,13 @@ class TimelapseView(HomeAssistantView):
         if not allowed(coordinator, root, path):
             return web.Response(status=404)
         if not reachable(coordinator):
-            return web.Response(status=503, text="Drucker ist aus oder nicht erreichbar")
+            return web.Response(status=503, text="Printer is off or not reachable")
 
         headers = {k: request.headers[k] for k in PASS_REQUEST if k in request.headers}
         try:
             upstream = await coordinator.client.open_file(root, path, headers)
         except MoonrakerError as err:
-            _LOGGER.debug("Zeitraffer %s/%s nicht abrufbar: %s", root, path, err)
+            _LOGGER.debug("Timelapse %s/%s not available: %s", root, path, err)
             return web.Response(status=502)
 
         response: web.StreamResponse | None = None
@@ -85,7 +88,7 @@ class TimelapseView(HomeAssistantView):
             await response.write_eof()
             return response
         except (ConnectionResetError, OSError):
-            # Player hat abgebrochen (Spulen, Dialog zu): normal.
+            # The player aborted (seeking, dialog closed): normal.
             return response if response is not None else web.Response(status=499)
         finally:
             upstream.release()

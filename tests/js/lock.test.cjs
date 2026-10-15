@@ -1,4 +1,4 @@
-// Sperre fuer Regler: nichts verstellen beim Scrollen, Rueckfrage im Druck.
+// Control lock: nothing changes while scrolling, confirmation during a print.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -34,7 +34,7 @@ const R = () => card.shadowRoot.getElementById("u1card");
 const bedPreset = () => R().querySelector(`[data-set="number.${P}_bed_target"][data-value="55"]`);
 const range = () => R().querySelector(`input[data-num="number.${P}_bed_target"]`);
 
-// 1. Standard: gesperrt
+// 1. Default: locked
 assert.ok(bedPreset().disabled && range().disabled, "Regler gesperrt");
 assert.ok(range().closest(".ctl").classList.contains("locked"));
 assert.ok(R().querySelector("[data-act=home_all]").disabled, "Referenzfahrt gesperrt");
@@ -42,23 +42,23 @@ assert.strictEqual(R().querySelectorAll("[data-su1-lock]").length, 3, "Schloss a
 bedPreset().click();
 assert.strictEqual(calls.length, 0, "gesperrt -> kein Aufruf");
 
-// 2. Entsperren: alle Schloesser gleichzeitig, Regler frei
+// 2. Unlock: all padlocks at once, sliders free
 R().querySelector("[data-su1-lock]").click();
 assert.ok(!bedPreset().disabled && !range().disabled);
 assert.ok([...R().querySelectorAll("[data-su1-lock]")].every((b) => b.getAttribute("aria-pressed") === "true"));
 assert.match(R().querySelector("[data-su1-lock]").textContent, /Entsperrt/);
 bedPreset().click();
 assert.deepEqual(calls.pop().slice(0, 3), ["number", "set_value", { entity_id: `number.${P}_bed_target`, value: 55 }]);
-// Bleibt nach Neuaufbau entsperrt
+// Stays unlocked after a rebuild
 card._renderKey = null; card.hass = hass();
 assert.ok(!bedPreset().disabled, "Neuaufbau behaelt Freigabe");
 
-// 3. Ablauf: wieder gesperrt
+// 3. Expiry: locked again
 card._unlockUntil = Date.now() - 1;
 card._applyLock();
 assert.ok(bedPreset().disabled, "nach Ablauf gesperrt");
 
-// 4. Im Druck: Rueckfrage bei Solltemperatur
+// 4. During a print: confirmation for the target temperature
 states[`sensor.${P}_current_print_state`].state = "printing";
 card.hass = hass();
 R().querySelector("[data-su1-lock]").click();
@@ -70,7 +70,7 @@ answer = true;
 bedPreset().click();
 assert.strictEqual(calls.pop()[2].value, 55);
 
-// 5. Abschaltbar
+// 5. Can be disabled
 const free = make({ unlock_controls: true });
 const FR = free.shadowRoot.getElementById("u1card");
 assert.strictEqual(FR.querySelectorAll("[data-su1-lock]").length, 0);
@@ -78,7 +78,7 @@ assert.ok(!FR.querySelector(`[data-set="number.${P}_bed_target"]`).disabled);
 const off = make({ controls_lock: "off" });
 assert.strictEqual(off.shadowRoot.getElementById("u1card").querySelectorAll("[data-su1-lock]").length, 0, "controls_lock: off");
 
-// 6. Dauer einstellbar
+// 6. Configurable duration
 const t0 = Date.now();
 const short = make({ controls_lock: "30" });
 assert.match(short.shadowRoot.querySelector("[data-su1-lock]").title, /Regler entsperren \(30 s\)/);
@@ -96,8 +96,8 @@ assert.ok(!man._locked());
 man._toggleLock();
 assert.ok(man._locked(), "manuell wieder gesperrt");
 assert.strictEqual(make({})._unlockMs(), 60000, "Standard 1 min");
-// Editor bietet die Auswahl an
+// The editor offers the choice
 const form = w.customElements.get("snapmaker-u1-card").getConfigForm();
 assert.match(JSON.stringify(form.schema), /"controls_lock".*"manual"/);
 assert.strictEqual(form.computeLabel({ name: "controls_lock" }), "Sperre für Regler");
-console.log("SPERRE OK");
+console.log("CONTROL LOCK OK");

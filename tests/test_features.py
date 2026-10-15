@@ -1,4 +1,4 @@
-"""5.3/5.4: Fehler-Klartext, Pause bei Schicht, Warteschlange, Statistik, Wartung, Zeitraffer-Sicherung."""
+"""Error texts, pause at layer, queue, statistics, maintenance, timelapse backup, layer view."""
 
 from datetime import UTC
 from pathlib import Path
@@ -25,7 +25,7 @@ from custom_components.snapmaker_u1_card.stats import (
 from custom_components.snapmaker_u1_card.upload import safe_folder, safe_name
 
 
-# ── Fehler ──────────────────────────────────────────────────────────────────
+# ── Errors ──────────────────────────────────────────────────────────────────
 def test_known_error_per_head() -> None:
     info = describe_error({"id": 523, "index": 2, "code": 0, "level": 2, "message": "e2_filament runout"})
     assert info["text"]["de"] == "Filament leer (Kopf 3)"
@@ -50,12 +50,12 @@ def test_collect_dedupes_and_skips_placeholder() -> None:
     }
     errs = collect_errors(status)
     assert [e["text"]["de"] for e in errs] == ["Spaghetti erkannt"]
-    # Druck nicht im Fehlerzustand: alte print_stats.exception ignorieren
+    # Print not in error state: ignore an old print_stats.exception
     status2 = {"print_stats": {"state": "standby", "exception": {"id": 526, "index": 0, "code": 2, "message": "x"}}}
     assert collect_errors(status2) == []
 
 
-# ── Pause bei Schicht ──────────────────────────────────────────────────────
+# ── Pause at layer ─────────────────────────────────────────────────────────
 ORCA = """; HEADER_BLOCK_START
 ; total layer number: 4
 ; HEADER_BLOCK_END
@@ -95,7 +95,7 @@ def test_pause_inserted_before_layer_change(tmp_path: Path) -> None:
     assert out.count("\nPAUSE\n") == 2
     assert _lines_before_layer(out, 2) == ["; snapmaker_u1_card: Pause vor Schicht 2", "PAUSE"]
     assert _lines_before_layer(out, 3)[-1] == "PAUSE"
-    # Sonst unveraendert
+    # otherwise unchanged
     assert out.replace("; snapmaker_u1_card: Pause vor Schicht 2\nPAUSE\n", "") \
         .replace("; snapmaker_u1_card: Pause vor Schicht 3\nPAUSE\n", "") \
         .split("\n", 1)[1] == ORCA
@@ -124,7 +124,7 @@ def test_pause_names() -> None:
     assert original_file(name) == "sub/Box.gcode"
 
 
-# ── Warteschlange ──────────────────────────────────────────────────────────
+# ── Queue ──────────────────────────────────────────────────────────────────
 def test_queue_order() -> None:
     q = JobQueue(None)
     a = q.add({"file": "a.gcode", "mapping": {0: 2}})
@@ -139,7 +139,7 @@ def test_queue_order() -> None:
     assert [j["file"] for j in restored.jobs] == ["c.gcode", "b.gcode"]
 
 
-# ── Statistik ──────────────────────────────────────────────────────────────
+# ── Statistics ─────────────────────────────────────────────────────────────
 def test_stats_months_and_totals() -> None:
     now = 1_760_000_000.0  # 2025-10-09
     jobs = [
@@ -167,9 +167,9 @@ def test_stats_months_and_totals() -> None:
 def test_maintenance_baseline_and_due() -> None:
     m = Maintenance(None)
     assert m.baseline(100.0, 1.0)
-    assert not m.baseline(120.0, 2.0)  # nur beim ersten Mal
+    assert not m.baseline(120.0, 2.0)  # only the first time
     items = {i["key"]: i for i in m.status(140.0, {"belts": 0})}
-    assert "belts" not in items and "filter" not in items  # 0 = aus
+    assert "belts" not in items and "filter" not in items  # 0 = off
     assert items["plate"]["due"] and items["plate"]["used_h"] == 40.0
     assert not items["nozzle"]["due"] and items["nozzle"]["remaining_h"] == 60.0
     m.mark_done("plate", 140.0, 3.0)
@@ -187,7 +187,7 @@ def test_upload_names() -> None:
     assert safe_folder("../a/./b//c") == "a/b/c"
 
 
-# ── Schichtansicht ─────────────────────────────────────────────────────────
+# ── Layer view ─────────────────────────────────────────────────────────────
 LAYERED = """; HEADER
 G28
 G90
@@ -228,34 +228,34 @@ def test_parse_layers(tmp_path: Path) -> None:
     one = layer_payload(meta, out, 1)
     assert one["z"] == 0.2
     segs = one["segs"]
-    # Fahrt trennt die Polylinien, Werkzeugwechsel auch; zu kurze Schritte entfallen,
-    # der Endpunkt bleibt erhalten
+    # Travel splits the polylines, so does a tool change; too short steps are dropped,
+    # the end point is kept
     assert [s[0] for s in segs] == [0, 0, 1]
     assert segs[0][1] == [10.0, 10.0, 20.0, 10.0, 20.0, 20.0]
     assert segs[1][1] == [50.0, 50.0, 60.0, 50.0]
     assert segs[2][1] == [60.0, 50.0, 60.0, 60.0]
-    # Dateipositionen aufsteigend und innerhalb der Schicht
+    # file positions ascending and within the layer
     starts = [s[2] for s in segs]
     assert starts == sorted(starts) and one["start"] <= starts[0] < one["end"]
     assert LAYERED.encode()[starts[0]:].startswith(b"G1 X20 Y10 E1")
-    # Relative Koordinaten (G91)
+    # relative coordinates (G91)
     assert layer_payload(meta, out, 2)["segs"][0][1] == [10.0, 10.0, 15.0, 10.0]
-    # Leere Schicht bleibt, unbekannte gibt es nicht
+    # An empty layer stays, unknown layers do not exist
     assert layer_payload(meta, out, 3)["segs"] == []
     assert layer_payload(meta, out, 4) is None
 
 
 def test_view_box_ignores_purge_lines_and_uses_objects(tmp_path: Path) -> None:
-    """Spuelbahnen am Bettrand duerfen den Ausschnitt nicht aufs ganze Bett ziehen."""
+    """Purge moves at the bed edge must not stretch the viewport to the whole bed."""
     from custom_components.snapmaker_u1_card.layers import parse_layers
 
     lines = ["EXCLUDE_OBJECT_DEFINE NAME=Teil CENTER=130,130 POLYGON=[[120,120],[140,120],[140,140],[120,140]]",
              "G90", "M83"]
     for n in range(1, 6):
         lines += [";LAYER_CHANGE", f"G1 Z{n * 0.2:.1f}", "T0"]
-        # Spuelbahn am vorderen Rand, wie beim Werkzeugwechsel
+        # purge move at the front edge, as at a tool change
         lines += ["G1 X5 Y2", "G1 X260 Y2 E3"]
-        # Teil: viele kurze Bahnen im Bereich 120..140
+        # part: many short moves in the range 120..140
         for i in range(60):
             y = 121 + (i % 19)
             lines += [f"G1 X121 Y{y}", f"G1 X139 Y{y} E0.5"]

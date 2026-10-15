@@ -1,13 +1,13 @@
-"""Live-Abo bei Moonraker statt reiner Abfrage.
+"""Live subscription to Moonraker instead of plain polling.
 
-Moonraker schickt nach ``printer.objects.subscribe`` nur Aenderungen
-(``notify_status_update``), hoechstens alle 250 ms. Damit sieht die
-Integration Statuswechsel, Schichtwechsel, Kopfwechsel und Fehler sofort,
-ohne den Drucker im Sekundentakt zu fragen. Die regelmaessige Abfrage laeuft
-weiter, solange das Abo steht aber nur alle 30 s (Rueckfall: 10 s).
+After ``printer.objects.subscribe`` Moonraker only sends changes
+(``notify_status_update``), at most every 250 ms. The integration therefore
+sees state, layer and head changes and errors immediately without asking the
+printer every second. Regular polling continues, but only every 30 s while
+the subscription is up (fallback: 10 s).
 
-Nach einem Neustart von Klipper (``notify_klippy_ready``) muss neu abonniert
-werden. Ist der Drucker aus, wird gar nicht erst verbunden.
+After a Klipper restart (``notify_klippy_ready``) the subscription has to be
+renewed. If the printer is switched off, no connection is attempted.
 """
 
 from __future__ import annotations
@@ -36,13 +36,14 @@ BACKOFF = (5, 10, 30, 60)
 
 
 def merge(status: dict[str, Any], diff: dict[str, Any]) -> None:
-    """Aenderung in den Gesamtstand uebernehmen (eine Ebene tief, wie Moonraker sie schickt)."""
+    """Merge a change into the full state (one level deep, as Moonraker sends it)."""
     for obj, fields in diff.items():
         if isinstance(fields, dict):
             status.setdefault(obj, {}).update(fields)
 
 
 class LiveListener:
+    """Keeps a WebSocket subscription to Moonraker and reconnects on failure."""
     def __init__(
         self,
         client: MoonrakerClient,
@@ -66,6 +67,7 @@ class LiveListener:
             self._task = hass.async_create_background_task(self._run(), "snapmaker_u1_card live")
 
     async def stop(self) -> None:
+        """Cancel the background task and report disconnected."""
         if self._task is not None:
             self._task.cancel()
             with contextlib.suppress(asyncio.CancelledError, Exception):
@@ -80,6 +82,7 @@ class LiveListener:
             self._on_state(connected)
 
     async def _run(self) -> None:
+        """Connect, subscribe and reconnect with backoff while the printer is on."""
         attempt = 0
         while True:
             if self._is_off():
@@ -91,13 +94,14 @@ class LiveListener:
                 attempt = 0
             except asyncio.CancelledError:
                 raise
-            except Exception as err:  # noqa: BLE001 - jede Stoerung: neu verbinden
-                _LOGGER.debug("Live-Abo getrennt: %s", err)
+            except Exception as err:  # noqa: BLE001 - any failure: reconnect
+                _LOGGER.debug("Live subscription dropped: %s", err)
             self._set(False)
             await asyncio.sleep(BACKOFF[min(attempt, len(BACKOFF) - 1)])
             attempt += 1
 
     async def _subscribe(self, ws: aiohttp.ClientWebSocketResponse) -> int:
+        """Send the subscription request; returns its JSON-RPC id."""
         self._ids += 1
         await ws.send_json({
             "jsonrpc": "2.0", "method": "printer.objects.subscribe",
@@ -106,6 +110,7 @@ class LiveListener:
         return self._ids
 
     async def _session(self) -> None:
+        """One connection: subscribe and forward status updates until it closes."""
         async with self.client.websocket() as ws:
             pending = await self._subscribe(ws)
             async for msg in ws:
@@ -116,8 +121,8 @@ class LiveListener:
                 data = json.loads(msg.data)
                 if data.get("id") == pending:
                     if "error" in data:
-                        # Klipper noch nicht bereit: auf notify_klippy_ready warten
-                        _LOGGER.debug("Abo abgelehnt: %s", data["error"])
+                        # Klipper not ready yet: wait for notify_klippy_ready
+                        _LOGGER.debug("Subscription refused: %s", data["error"])
                         continue
                     status = (data.get("result") or {}).get("status") or {}
                     self.status = {}

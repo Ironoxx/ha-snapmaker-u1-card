@@ -1,4 +1,4 @@
-"""MoonrakerClient gegen einen nachgebauten U1-Moonraker."""
+"""MoonrakerClient against a simulated U1 Moonraker."""
 
 import ast
 import json
@@ -9,7 +9,7 @@ from aiohttp import web
 
 from conftest import api, parsing
 
-# socket_enabled: das HA-Testplugin blockiert Sockets sonst auch auf localhost.
+# socket_enabled: the HA test plugin otherwise blocks sockets even on localhost.
 
 PTC = {"filament_type": ["PLA", "NONE", "NONE", "NONE"], "filament_exist": [True, False, False, False]}
 
@@ -39,7 +39,7 @@ async def moonraker(socket_enabled, aiohttp_server):
         async for msg in ws:
             req = json.loads(msg.data)
             seen["rpc"].append(req)
-            # Moonraker schickt ungefragt Statusmeldungen dazwischen
+            # Moonraker sends unsolicited status messages in between
             await ws.send_json({"jsonrpc": "2.0", "method": "notify_status_update", "params": [{}]})
             if req["params"]["path"] == "busy.gcode":
                 await ws.send_json({"jsonrpc": "2.0", "id": req["id"],
@@ -90,7 +90,7 @@ async def test_start_print_like_orca(client):
     assert req["params"]["path"] == "sub/a.gcode"
     opts = req["params"]["options"]
     assert opts == {"map_table": "[[0, 2], [1, 0]]", "bed_level": 1, "flow_calibrate": 0, "time_lapse_camera": 1}
-    # So baut u1-moonraker daraus den G-Code (klippy_apis.start_print_advanced)
+    # This is how u1-moonraker builds the G-code (klippy_apis.start_print_advanced)
     script = "SDCARD_PRINT_FILE_WITH_PARAMETERS" + "".join(f' {k.upper()}="{v}"' for k, v in opts.items())
     assert 'MAP_TABLE="[[0, 2], [1, 0]]"' in script
     assert ast.literal_eval(opts["map_table"]) == [[0, 2], [1, 0]]

@@ -1,4 +1,4 @@
-// Netzschalter, Aus-Zustand, Druckdialog mit Auto-Ein, Verbrauch, Historie, Zeitraffer.
+// Power switch, off state, print dialog with auto-on, consumption, history, timelapses.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -26,7 +26,7 @@ const add = (id, state, attrs = {}, platform = "moonraker", tk) => {
   reg[id] = { entity_id: id, platform, translation_key: tk };
 };
 const own = (id, state, attrs, tk) => add(id, state, attrs, "snapmaker_u1_card", tk);
-// Drucker aus: Moonraker-Entitaeten nicht verfuegbar
+// Printer off: Moonraker entities unavailable
 add(`sensor.${P}_printer_state`, "unavailable");
 add(`sensor.${P}_current_print_state`, "unavailable");
 own("switch.snapmaker_u1_card_netzschalter", "off", {
@@ -63,7 +63,7 @@ const hass = () => ({
     if (a[1] === "start_print") return new Promise((r) => { startResolve = r; });
     return Promise.resolve();
   },
-  // Wie HA: zurueck kommt der DEKODIERTE Pfad (async_sign_path liefert url.path).
+  // Like HA: the DECODED path comes back (async_sign_path returns url.path).
   callWS: async (msg) => { ws.push(msg); return { path: `${decodeURIComponent(msg.path)}?authSig=X` }; },
 });
 
@@ -76,7 +76,7 @@ const text = () => root().textContent.replace(/\s+/g, " ");
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 (async () => {
-  // 1. Aus-Zustand: Hinweis, Einschalten, Dateien (Auto-Ein), Historie, Zeitraffer
+  // 1. Off state: hint, power on, files (auto-on), history, timelapses
   assert.strictEqual(card._ents.power, "switch.snapmaker_u1_card_netzschalter");
   assert.ok(/Drucker ist aus/.test(text()), "Aus-Hinweis");
   assert.ok(root().querySelector('[data-print="nuss.gcode"]'), "Dateien bei Auto-Ein sichtbar");
@@ -84,7 +84,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const chip = root().querySelector('[data-su1="pwr"]');
   assert.ok(/Aus/.test(chip.textContent), "Chip zeigt Aus");
 
-  // 2. Druckdialog bei ausgeschaltetem Drucker
+  // 2. Print dialog with the printer off
   root().querySelector('[data-print="nuss.gcode"]').click();
   const dlg = () => card.shadowRoot.querySelector("dialog.u1dlg:not(.u1video)");
   assert.ok(/wird eingeschaltet/.test(dlg().textContent), "Auto-Ein-Hinweis");
@@ -101,7 +101,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   startResolve(); await tick();
   assert.ok(!dlg().hasAttribute("open"), "Dialog zu nach Start");
 
-  // Ohne Auto-Ein: gesperrt
+  // Without auto-on: blocked
   states["switch.snapmaker_u1_card_netzschalter"].attributes.auto_on = false;
   card.hass = hass();
   root().querySelector('[data-act="power"]').scrollIntoView?.();
@@ -112,12 +112,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card._closeDialog();
   assert.ok(!root().querySelector('[data-print="nuss.gcode"]'), "ohne Auto-Ein keine Dateien im Aus-Zustand");
 
-  // 3. Einschalten ohne Rueckfrage
+  // 3. Power on without confirmation
   calls.length = 0;
   root().querySelector('.offline [data-act="power"]').click();
   assert.strictEqual(JSON.stringify(calls[0].slice(0, 3)), JSON.stringify(["snapmaker_u1_card", "power_on", { config_entry_id: "E1" }]));
 
-  // 4. Eingeschaltet + online: Watt im Chip, Ausschalten mit Rueckfrage
+  // 4. On + online: watts in the chip, power off with confirmation
   states["switch.snapmaker_u1_card_netzschalter"].state = "on";
   states["sensor.steckdose_leistung"].state = "86.4";
   states[`sensor.${P}_printer_state`].state = "ready";
@@ -138,14 +138,14 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   root().querySelector('[data-su1="pwr"]').click();
   assert.strictEqual(JSON.stringify(calls[0].slice(0, 2)), JSON.stringify(["snapmaker_u1_card", "power_off"]));
   assert.ok(/herunterfahren/.test(prompts.at(-1)));
-  // Waehrend eines Drucks: Hinweis statt Ausschalten
+  // During a print: hint instead of power off
   states[`sensor.${P}_current_print_state`].state = "printing";
   card.hass = hass();
   calls.length = 0;
   root().querySelector('[data-su1="pwr"]').click();
   assert.strictEqual(calls.length, 0);
   assert.ok(/druckt gerade/.test(prompts.at(-1)));
-  // Herunterfahren: Chip gesperrt mit Status
+  // Shutting down: chip locked with status
   states[`sensor.${P}_current_print_state`].state = "standby";
   states["switch.snapmaker_u1_card_netzschalter"].attributes.shutting_down = true;
   card.hass = hass();
@@ -154,11 +154,11 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   states["switch.snapmaker_u1_card_netzschalter"].attributes.shutting_down = false;
   card.hass = hass();
 
-  // 5. Statistik: Verbrauch und Kosten
+  // 5. Statistics: consumption and cost
   assert.ok(/Strom letzter Druck ?1,23 kWh/.test(text()), "Strom");
   assert.ok(/Kosten letzter Druck ?0,47 €/.test(text()), "Kosten");
 
-  // 6. Historie
+  // 6. History
   const hist = [...root().querySelectorAll(".hist")];
   assert.strictEqual(hist.length, 2);
   assert.ok(/Nuss/.test(hist[0].textContent) && /Fertig/.test(hist[0].textContent) && /0,47 €/.test(hist[0].textContent));
@@ -166,8 +166,8 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(/Abgebrochen/.test(hist[1].textContent));
   assert.ok(/2 Drucke · 1,2 kWh · 0,47 €/.test(text()), "Summe");
 
-  // 7. Zeitraffer: Vorschaubild statisch von HA (kein Proxy, keine Signatur),
-  //    Player mit signierter URL
+  // 7. Timelapses: preview served statically by HA (no proxy, no signature),
+  //    player with a signed URL
   await tick();
   const poster = root().querySelector(".tl-thumb img");
   assert.strictEqual(poster.getAttribute("src"), "/snapmaker_u1_card/thumbs/E1/tl/abc.jpg");
@@ -190,7 +190,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(video.getAttribute("poster"), "/snapmaker_u1_card/thumbs/E1/tl/abc.jpg");
   vd.querySelector("[data-close]").click();
 
-  // Drucker aus: kein Abspielversuch (Proxy wuerde haengen)
+  // Printer off: no playback attempt (the proxy would hang)
   const st = states["sensor.snapmaker_u1_card_zeitraffer"];
   st.attributes = { ...st.attributes, playable: false };
   card.hass = hass();
@@ -202,8 +202,8 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(/aus oder nicht erreichbar/.test(alerted), "Hinweis statt Player");
   assert.strictEqual(ws.length, before, "keine Signatur, kein Proxy");
 
-  // '#' im Dateinamen: Pfad muss kodiert bleiben, nur die Signatur wird angehaengt
+  // '#' in the file name: the path must stay encoded, only the signature is appended
   const signed = await card._signed("/api/snapmaker_u1_card/video/E1/camera/Teil%20%232_20260101120000.mp4");
   assert.strictEqual(signed, "/api/snapmaker_u1_card/video/E1/camera/Teil%20%232_20260101120000.mp4?authSig=X");
-  console.log("STROM/HISTORIE/ZEITRAFFER OK –", calls.length, "Aufrufe,", ws.length, "Signaturen");
+  console.log("POWER/HISTORY/TIMELAPSE OK –", calls.length, "calls,", ws.length, "signatures");
 })().catch((e) => { console.error(e); process.exit(1); });

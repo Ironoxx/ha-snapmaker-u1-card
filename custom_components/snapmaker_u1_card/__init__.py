@@ -1,7 +1,7 @@
-"""Snapmaker U1 Card – Filamente, Dateien und Druckstart mit Zuordnung.
+"""Snapmaker U1 Card: loaded filaments, files and starting prints with filament mapping.
 
-Die Integration liefert die Lovelace-Karte selbst aus und registriert sie im
-Frontend. Eine manuelle Ressource unter Dashboards ist nicht noetig.
+The integration ships the Lovelace card itself and registers it with the
+frontend, so no manual dashboard resource is needed.
 """
 
 from __future__ import annotations
@@ -54,6 +54,7 @@ from .const import (
     VERSION,
 )
 from .coordinator import U1Coordinator
+from .i18n import tr
 from .layer_view import LayerView, TempsView
 from .stats import MAINTENANCE_ITEMS
 from .upload import UploadView
@@ -78,7 +79,7 @@ PRINT_FIELDS = {
     vol.Optional("flow_calibration"): cv.boolean,
     vol.Optional("timelapse"): cv.boolean,
     vol.Optional("plate", default=1): vol.All(vol.Coerce(int), vol.Range(min=1)),
-    # Vor diesen Schichten (1 = erste) anhalten, z. B. fuer Magnete oder Muttern
+    # Pause before these layers (1 = first), e.g. to insert magnets or nuts
     vol.Optional("pause_layers"): vol.All(
         cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(min=1, max=100000))]
     ),
@@ -103,7 +104,7 @@ MOVE_SCHEMA = vol.Schema({vol.Required("source"): cv.string, vol.Required("dest"
 SET_SPOOL_SCHEMA = vol.Schema(
     {
         vol.Required("slot"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-        # Spulen-ID aus Spoolman; 0 = bewusst keine Spule. Weglassen = automatisch.
+        # Spoolman spool ID; 0 = deliberately no spool. Omitted = automatic.
         vol.Optional("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(ATTR_ENTRY): cv.string,
     }
@@ -117,7 +118,7 @@ POWER_ON_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Karte ausliefern und Dienste anmelden – einmal pro HA-Start."""
+    """Serve the card and register the services (once per Home Assistant start)."""
     frontend_dir = Path(__file__).parent / "frontend"
     thumb_dir = Path(hass.config.path(".storage", DOMAIN, "thumbs"))
     await hass.async_add_executor_job(lambda: thumb_dir.mkdir(parents=True, exist_ok=True))
@@ -132,9 +133,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(UploadView())
     hass.http.register_view(LayerView())
     hass.http.register_view(TempsView())
-    # Versionsparameter erzwingt nach Updates das Neuladen im Browser.
+    # The version parameter forces browsers to reload the card after an update.
     add_extra_js_url(hass, f"{CARD_URL}/{CARD_FILENAME}?v={VERSION}")
-    # Zweiter Ladeweg, unabhaengig vom Startzeitpunkt der Integration (siehe resource.py).
+    # Second loading path, independent of when the integration starts (see resource.py).
     await resource.async_install(hass)
     hass.data[DOMAIN] = {"thumb_dir": thumb_dir}
     await async_setup_voice(hass)
@@ -151,7 +152,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 pause_layers=call.data.get("pause_layers"),
                 auto_on=bool(coordinator.options.get(CONF_AUTO_ON)),
             )
-        except ValueError as err:  # ungueltige Zuordnung
+        except ValueError as err:  # invalid mapping
             raise ServiceValidationError(str(err)) from err
 
     async def refresh(call: ServiceCall) -> None:
@@ -178,7 +179,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def power_off(call: ServiceCall) -> None:
         coordinator = _coordinator(hass, call.data.get(ATTR_ENTRY))
-        # Pruefung sofort (Fehlermeldung beim Aufrufer), Herunterfahren im Hintergrund.
+        # Validate right away (error goes to the caller), shut down in the background.
         force = call.data["force"]
         coordinator.check_power_off(force)
         hass.async_create_task(coordinator.async_power_off(force=force), f"{DOMAIN} power off")
@@ -252,20 +253,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 def _coordinator(hass: HomeAssistant, entry_id: str | None) -> U1Coordinator:
+    """Resolve the coordinator for a service call (optional config_entry_id)."""
     entries = [
         e for e in hass.config_entries.async_loaded_entries(DOMAIN)
         if entry_id in (None, e.entry_id)
     ]
     if not entries:
-        raise ServiceValidationError("Kein eingerichteter Snapmaker U1 gefunden.")
+        raise ServiceValidationError(tr(hass, "Kein eingerichteter Snapmaker U1 gefunden.", "No configured Snapmaker U1 found."))
     if entry_id is None and len(entries) > 1:
-        raise ServiceValidationError(
-            "Mehrere Drucker eingerichtet – bitte config_entry_id angeben."
-        )
+        raise ServiceValidationError(tr(
+            hass, "Mehrere Drucker eingerichtet – bitte config_entry_id angeben.",
+            "Several printers configured - please pass config_entry_id.",
+        ))
     return entries[0].runtime_data
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: U1ConfigEntry) -> bool:
+    """Set up one printer: client, coordinator, platforms and live subscription."""
     client = MoonrakerClient(
         async_get_clientsession(hass),
         entry.data[CONF_HOST],
@@ -289,6 +293,7 @@ async def _reload(hass: HomeAssistant, entry: U1ConfigEntry) -> None:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: U1ConfigEntry) -> bool:
+    """Unload one printer and stop its background tasks."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
         await entry.runtime_data.async_shutdown()
@@ -296,6 +301,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: U1ConfigEntry) -> bool:
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: U1ConfigEntry) -> None:
-    """Letzter Drucker entfernt: Dashboard-Ressource und Kopie unter /local aufraeumen."""
+    """Last printer removed: clean up the dashboard resource and the copy under /local."""
     if not [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]:
         await resource.async_uninstall(hass)

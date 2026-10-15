@@ -1,17 +1,19 @@
-"""Release-Schutz: Versionsnummer an allen drei Stellen gleich."""
+"""Release guard: the version number is identical everywhere, translations are complete."""
 
 import json
 import re
 from pathlib import Path
 
-PKG = Path(__file__).resolve().parents[1] / "custom_components" / "snapmaker_u1_card"
+ROOT = Path(__file__).resolve().parents[1]
+PKG = ROOT / "custom_components" / "snapmaker_u1_card"
 
 
 def test_versions_match():
     manifest = json.loads((PKG / "manifest.json").read_text())["version"]
     const = re.search(r'VERSION = "([^"]+)"', (PKG / "const.py").read_text()).group(1)
     card = re.search(r'CARD_VERSION = "([^"]+)"', (PKG / "frontend" / "snapmaker-u1-card.js").read_text()).group(1)
-    assert manifest == const == card
+    src = re.search(r'CARD_VERSION = "([^"]+)"', (ROOT / "frontend" / "src" / "const.js").read_text()).group(1)
+    assert manifest == const == card == src
 
 
 def test_translations_complete():
@@ -27,7 +29,7 @@ def test_translations_complete():
 
 
 def test_services_yaml_valid():
-    """services.yaml so, wie Home Assistant sie beim Laden prueft; jeder Dienst uebersetzt."""
+    """services.yaml as Home Assistant validates it on load; every service translated."""
     import pytest
 
     yaml = pytest.importorskip("yaml")

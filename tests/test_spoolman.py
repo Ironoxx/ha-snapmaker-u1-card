@@ -1,4 +1,4 @@
-"""Spulenverwaltung mit Spoolman: Zuordnung, manuelle Wahl, Abbuchung je Kopf."""
+"""Spool management with Spoolman: assignment, manual choice, usage per head."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -23,7 +23,7 @@ def _spool(sid, name, material, color, vendor="Generic", remaining=500.0, used=1
                          "vendor": {"name": vendor}}}
 
 
-# Beispielbestueckung: PLA schwarz/weiss, PLA Silk bronze/gold
+# sample setup: PLA black/white, PLA Silk bronze/gold
 SLOTS = p.parse_slots({
     "filament_vendor": ["Generic"] * 4, "filament_type": ["PLA"] * 4,
     "filament_sub_type": ["", "", "Silk", "Silk"],
@@ -41,21 +41,21 @@ SPOOLS = [
 ]
 
 
-# ── reine Logik ─────────────────────────────────────────────────────────────
+# ── Pure logic ──────────────────────────────────────────────────────────────
 def test_suggest_spools_matches_material_color_and_prefers_recent():
     spools = [p.compact_spool(s) for s in SPOOLS]
     assert p.suggest_spools(SLOTS, spools) == {0: 1, 1: 3, 2: 4, 3: 5}
-    # manuell fest, Spule wird nicht doppelt vergeben
+    # manual is fixed, a spool is never assigned twice
     assert p.suggest_spools(SLOTS, spools, {1: 2})[1] == 2
-    # kein passendes Material -> keine Zuordnung statt falscher Spule
+    # no matching material -> no assignment instead of a wrong spool
     petg_only = [p.compact_spool(SPOOLS[5])]
     assert p.suggest_spools(SLOTS, petg_only) == {0: None, 1: None, 2: None, 3: None}
-    # archivierte Spulen nie
+    # archived spools never
     assert 7 not in p.suggest_spools(SLOTS, spools).values()
-    # Blaues PLA, aber nur weisse/goldene/schwarze PLA-Spulen: keine falsche Spule
+    # Blue PLA, but only white/gold/black PLA spools: no wrong spool
     blue = [{**SLOTS[3], "color": "#1E88E5"}]
     assert p.suggest_spools(blue, spools) == {3: None}
-    # Spule ohne Farbangabe: Material reicht
+    # spool without a colour: the material is enough
     nocolor = [p.compact_spool({**SPOOLS[0], "filament": {**SPOOLS[0]["filament"], "color_hex": None}})]
     assert p.suggest_spools([SLOTS[0]], nocolor) == {0: 1}
 
@@ -64,10 +64,10 @@ def test_grams_per_slot_uses_map_table_and_cancel_ratio():
     rec = {"result": "complete", "map_table": [2, 0] + [0] * 30,
            "filaments": [{"index": 0, "weight": 10.0}, {"index": 1, "weight": 4.0}]}
     assert p.grams_per_slot(rec) == {2: 10.0, 0: 4.0}
-    # zwei logische Filamente auf demselben Kopf werden addiert
+    # two logical filaments on the same head are added up
     rec2 = {**rec, "map_table": [1, 1]}
     assert p.grams_per_slot(rec2) == {1: 14.0}
-    # Abbruch nach der Haelfte
+    # cancelled halfway
     rec3 = {**rec, "result": "cancelled", "filament_used": 500.0, "filament_total": 1000.0}
     assert p.grams_per_slot(rec3) == {2: 5.0, 0: 2.0}
     assert p.grams_per_slot({"filaments": []}) == {}
@@ -126,25 +126,25 @@ async def test_assignment_manual_override_and_reset(hass: HomeAssistant, mock_cl
     assert {k: (v or {}).get("id") for k, v in sm["slots"].items()} == {"0": 1, "1": 3, "2": 4, "3": 5}
     assert hass.states.get("sensor.snapmaker_u1_card_slot_2").attributes["spool_remaining"] == 120
 
-    # Manuell: Kopf 2 bekommt Spule 2
+    # manual: head 2 gets spool 2
     await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 2}, blocking=True)
     sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
     assert sm["slots"]["1"]["id"] == 2 and sm["slots"]["1"]["manual"] is True
-    # bleibt ueber weitere Abrufe stabil
+    # stays stable over further polls
     await _refresh(hass, entry)
     assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["slots"]["1"]["id"] == 2
 
-    # Unbekannte Spule wird abgelehnt
-    with pytest.raises(HomeAssistantError, match="Spule 99"):
+    # unknown spool is refused
+    with pytest.raises(HomeAssistantError, match="Spool 99"):
         await hass.services.async_call(DOMAIN, "set_spool", {"slot": 1, "spool_id": 99}, blocking=True)
 
-    # Anderes Filament in Kopf 2 -> manuelle Zuordnung verfaellt, neu automatisch
+    # different filament in head 2 -> manual assignment expires, automatic again
     mock_client["query"].return_value["print_task_config"]["filament_color_rgba"][1] = "000000FF"
     await _refresh(hass, entry)
     sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
     assert sm["slots"]["1"] is None or sm["slots"]["1"]["manual"] is False
 
-    # Zurueck auf automatisch
+    # back to automatic
     await hass.services.async_call(DOMAIN, "set_spool", {"slot": 3}, blocking=True)
     assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["slots"]["2"]["id"] == 4
 
@@ -153,7 +153,7 @@ async def test_print_books_usage_per_head_and_retries(hass: HomeAssistant, mock_
     _real_slots(mock_client)
     entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
     coord = entry.runtime_data
-    # Datei: zwei Filamente; der Druck mappt T0 -> Kopf 3 (Bronze), T1 -> Kopf 1 (Schwarz)
+    # file: two filaments; the print maps T0 -> head 3 (bronze), T1 -> head 1 (black)
     meta = {"filament_type": "PLA;PLA", "filament_colour": "#6F4C2F;#000000",
             "filament_weight": [12.0, 3.5], "filament_total": 5000.0}
     with patch(f"{API}.file_metadata", AsyncMock(return_value=meta)):
@@ -161,7 +161,7 @@ async def test_print_books_usage_per_head_and_retries(hass: HomeAssistant, mock_
         st["print_task_config"]["extruder_map_table"] = [2, 0] + [0] * 30
         await _refresh(hass, entry)
         await _refresh(hass, entry)
-        # Spoolman faellt beim Druckende aus: Buchung bleibt vorgemerkt
+        # Spoolman fails at the print end: the booking stays pending
         spoolman["fail"] = True
         _status(mock_client, "complete", "nuss.gcode")
         await _refresh(hass, entry)
@@ -171,7 +171,7 @@ async def test_print_books_usage_per_head_and_retries(hass: HomeAssistant, mock_
         if hass.states.get("sensor.snapmaker_u1_card_print_history") else coord.data.history[0]
     assert {(s["slot"], s["spool_id"], s["grams"]) for s in last["spools"]} == {(2, 4, 12.0), (0, 1, 3.5)}
 
-    # Wieder da: nachgebucht, genau einmal
+    # back again: booked later, exactly once
     spoolman["fail"] = False
     coord.spools.force()
     await _refresh(hass, entry)

@@ -1,12 +1,12 @@
-"""Reine Datenaufbereitung ohne Home-Assistant-Abhaengigkeit.
+"""Pure data processing without Home Assistant dependencies.
 
-Alles hier ist bewusst frei von HA-Imports, damit es sich isoliert testen
-laesst. Die Feldnamen stammen aus Snapmakers offengelegtem Quellcode:
+Everything here is deliberately free of HA imports so it can be tested in
+isolation. The field names come from Snapmaker's published source code:
 
-* ``print_task_config`` – u1-klipper/klippy/extras/print_task_config.py
+* ``print_task_config`` - u1-klipper/klippy/extras/print_task_config.py
   (DEFAULT_PRINT_TASK_CONFIG, get_status, SET_PRINT_TASK_PARAMETERS)
-* Dateimetadaten – u1-moonraker/moonraker/components/file_manager/metadata.py
-  (SUPPORTED_DATA, PrusaSlicer-Parser)
+* file metadata - u1-moonraker/moonraker/components/file_manager/metadata.py
+  (SUPPORTED_DATA, PrusaSlicer parser)
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ def _at(seq: Any, idx: int, default: Any = None) -> Any:
 
 
 def _clean(value: Any) -> str | None:
-    """Snapmaker nutzt 'NONE' als Platzhalter fuer leere Felder."""
+    """Snapmaker uses 'NONE' as a placeholder for empty fields."""
     if value is None:
         return None
     text = str(value).strip().strip('"').strip()
@@ -39,7 +39,7 @@ def _clean(value: Any) -> str | None:
 
 
 def normalize_color(value: Any) -> str | None:
-    """'1B5E20FF', '#1b5e20' oder 0xFF1B5E20 -> '#1B5E20'."""
+    """'1B5E20FF', '#1b5e20' or 0xFF1B5E20 -> '#1B5E20'."""
     if value is None:
         return None
     if isinstance(value, int):
@@ -49,7 +49,7 @@ def normalize_color(value: Any) -> str | None:
 
 
 def parse_slots(ptc: dict[str, Any] | None) -> list[dict[str, Any]]:
-    """print_task_config -> eine Liste mit vier Slots."""
+    """print_task_config -> a list of four slots."""
     ptc = ptc or {}
     slots = []
     for i in range(PHYSICAL_SLOTS):
@@ -78,6 +78,7 @@ def parse_slots(ptc: dict[str, Any] | None) -> list[dict[str, Any]]:
 
 
 def parse_preferences(ptc: dict[str, Any] | None) -> dict[str, bool]:
+    """Print options currently set on the printer (bed leveling, flow, timelapse)."""
     ptc = ptc or {}
     return {
         "bed_leveling": bool(ptc.get("auto_bed_leveling", False)),
@@ -87,6 +88,7 @@ def parse_preferences(ptc: dict[str, Any] | None) -> dict[str, bool]:
 
 
 def _split(value: Any) -> list[str]:
+    """Slicer list value (list or "a;b;c") -> list of strings."""
     if value is None:
         return []
     if isinstance(value, (list, tuple)):
@@ -95,7 +97,7 @@ def _split(value: Any) -> list[str]:
 
 
 def parse_file_filaments(meta: dict[str, Any] | None) -> list[dict[str, Any]]:
-    """Logische Filamente einer Druckdatei (T0, T1, ...)."""
+    """Logical filaments of a print file (T0, T1, ...)."""
     meta = meta or {}
     types = _split(meta.get("filament_type"))
     colors = _split(meta.get("filament_colour"))
@@ -135,7 +137,7 @@ def _rgb(color: str | None) -> tuple[int, int, int] | None:
 
 
 def color_distance(a: str | None, b: str | None) -> float:
-    """Gewichtete RGB-Distanz ('redmean'), 0 = gleich. Unbekannt = gross."""
+    """Weighted RGB distance ('redmean'), 0 = identical. Unknown = large."""
     ra, rb = _rgb(a), _rgb(b)
     if ra is None or rb is None:
         return 765.0
@@ -151,11 +153,11 @@ def _same_type(a: str | None, b: str | None) -> bool:
 def suggest_mapping(
     filaments: list[dict[str, Any]], slots: list[dict[str, Any]]
 ) -> dict[int, int]:
-    """Vorschlag logisch -> physisch, aehnlich wie Snapmaker Orca.
+    """Suggest logical -> physical mapping, similar to Snapmaker Orca.
 
-    Reihenfolge der Kriterien: geladener Slot, gleicher Materialtyp, aehnliche
-    Farbe, noch nicht vergebener Slot. Ohne geladene Slots bleibt T<n> auf
-    Slot n (Firmware-Standard).
+    Criteria in order: loaded slot, same material type, similar colour, slot
+    not yet taken. Without loaded slots T<n> stays on slot n (firmware
+    default).
     """
     loaded = [s for s in slots if s.get("loaded")]
     taken: set[int] = set()
@@ -180,16 +182,16 @@ def suggest_mapping(
 
 
 def map_table_option(mapping: dict[int, int]) -> str:
-    """Format fuer MAP_TABLE: Python-Literal [[logisch, physisch], ...]."""
+    """Format for MAP_TABLE: Python literal [[logical, physical], ...]."""
     pairs = sorted((int(k), int(v)) for k, v in mapping.items())
     for logical, physical in pairs:
         if not 0 <= logical < LOGICAL_EXTRUDERS or not 0 <= physical < PHYSICAL_SLOTS:
-            raise ValueError(f"Ungueltige Zuordnung T{logical} -> Slot {physical + 1}")
+            raise ValueError(f"Invalid mapping T{logical} -> slot {physical + 1}")
     return "[" + ", ".join(f"[{a}, {b}]" for a, b in pairs) + "]"
 
 
 def pick_thumbnail(meta: dict[str, Any] | None, target_width: int = 300) -> str | None:
-    """Relativen Pfad des passendsten Vorschaubilds waehlen."""
+    """Pick the relative path of the best-fitting thumbnail."""
     thumbs = [t for t in (meta or {}).get("thumbnails") or [] if t.get("relative_path")]
     if not thumbs:
         return None
@@ -204,12 +206,13 @@ def pick_thumbnail(meta: dict[str, Any] | None, target_width: int = 300) -> str 
 
 
 def thumbnail_source(file_path: str, relative: str) -> str:
-    """Pfad unter /server/files/gcodes/ fuer ein Vorschaubild."""
+    """Path below /server/files/gcodes/ for a thumbnail."""
     folder = posixpath.dirname(file_path)
     return posixpath.normpath(posixpath.join(folder, relative)).lstrip("/")
 
 
 def describe_file(path: str, entry: dict[str, Any], meta: dict[str, Any] | None) -> dict[str, Any]:
+    """File list entry for the card: name, times, weight, filaments."""
     meta = meta or {}
     name = posixpath.basename(path)
     for suffix in PRINTABLE_SUFFIXES:
@@ -231,25 +234,25 @@ def describe_file(path: str, entry: dict[str, Any], meta: dict[str, Any] | None)
     }
 
 
-# ── Werkzeugwechsel ─────────────────────────────────────────────────────────
-# Die Firmware zaehlt jeden erfolgreichen Kopfwechsel dauerhaft pro Kopf
+# ── Tool changes ────────────────────────────────────────────────────────────
+# The firmware permanently counts every successful head change per head
 # (u1-klipper/klippy/kinematics/extruder.py, ExtruderSwitchRecorder,
-# Felder switch_count, retry_count, error_count, last_maintenance_count im
-# Status von extruder ... extruder3). Einen Zaehler pro Druck gibt es nicht;
-# den bildet track_print_switches als Differenz.
+# fields switch_count, retry_count, error_count, last_maintenance_count in
+# the status of extruder ... extruder3). There is no per-print counter;
+# track_print_switches derives it as a difference.
 
 EXTRUDER_OBJECTS = ("extruder", "extruder1", "extruder2", "extruder3")
 SWITCH_FIELDS = ("switch_count", "retry_count", "error_count", "last_maintenance_count")
-# Firmware-Standard (individual_maintenance_threshold in [extruder]).
+# Firmware default (individual_maintenance_threshold in [extruder]).
 MAINTENANCE_THRESHOLD = 25100
 ACTIVE_PRINT_STATES = ("printing", "paused")
-# Nach einem eigenen Druckstart meldet print_stats noch kurz den alten Zustand
-# (standby/complete). So lange wartet der Zaehler auf "printing".
+# Right after a print started by us, print_stats briefly still reports the
+# old state (standby/complete). The counter waits this long for "printing".
 START_GRACE_S = 120
 
 
 def parse_tool_changes(status: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Zaehler aller Koepfe; None, wenn die Firmware keine liefert."""
+    """Counters of all heads; None if the firmware does not provide any."""
     status = status or {}
     heads = []
     for i, name in enumerate(EXTRUDER_OBJECTS):
@@ -281,13 +284,14 @@ def _delta(start: float | None, end: float | None) -> float | None:
     return max(0.0, end - start)
 
 
-# Felder des laufenden Drucks, die beim Abschluss in den Datensatz wandern.
+# Fields of the running print that move into the record when it finishes.
 _CARRY = ("name", "thumb", "filaments", "filament_total", "filament_used", "print_duration",
           "map_table", "spool_ids", "source", "mapping", "options", "pause_layers")
 
 
 def _close(active: dict[str, Any], counters: dict[str, float | None],
            result: str | None, now: float) -> dict[str, Any]:
+    """Turn the active print into a finished record with its consumption."""
     base = active.get("start") or {}
     last: dict[str, Any] = {
         "file": active.get("file"),
@@ -307,7 +311,7 @@ def _close(active: dict[str, Any], counters: dict[str, float | None],
 
 
 def migrate_print_state(state: dict[str, Any] | None) -> dict[str, Any]:
-    """Gespeicherten Stand aelterer Versionen ins aktuelle Format bringen."""
+    """Bring stored state from older versions into the current format."""
     state = dict(state or {})
     active = state.get("active")
     if isinstance(active, dict) and "start_total" in active:
@@ -327,17 +331,17 @@ def migrate_print_state(state: dict[str, Any] | None) -> dict[str, Any]:
 
 
 def _accumulate_cost(active: dict[str, Any], energy: float | None, price: float | None) -> dict[str, Any]:
-    """Stromkosten laufend aufsummieren: Delta-kWh x Preis zum jeweiligen Zeitpunkt.
+    """Accumulate energy cost continuously: delta kWh x price at that moment.
 
-    So rechnen dynamische Tarife (Preis je Stunde) richtig, statt den Preis
-    beim Druckende auf den ganzen Druck anzuwenden.
+    This handles dynamic tariffs (hourly prices) correctly instead of
+    applying the price at the end of the print to the whole print.
     """
     if energy is None:
         return active
     prev = active.get("energy_prev")
     if prev is not None and price is None:
-        # Preis kurz unbekannt: Basis stehen lassen, das Delta wird mit dem
-        # naechsten bekannten Preis verrechnet statt verloren zu gehen.
+        # Price briefly unknown: keep the base; the delta is charged at the
+        # next known price instead of being lost.
         return active
     out = {**active, "energy_prev": energy}
     if prev is not None and price is not None and energy >= prev:
@@ -356,15 +360,15 @@ def track_print(
     price: float | None = None,
     stats: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None, bool]:
-    """Laufenden bzw. letzten Druck fortschreiben.
+    """Advance the running or last print.
 
-    ``counters`` sind monoton steigende Zaehler (Werkzeugwechsel, kWh), deren
-    Differenz zwischen Druckbeginn und -ende den Verbrauch des Drucks ergibt.
-    ``price`` ist der aktuelle Strompreis je kWh, ``stats`` sind
-    print_duration und filament_used aus print_stats.
-    Rueckgabe: neuer Zustand, gerade abgeschlossener Druck (oder None), und ob
-    sich die Struktur geaendert hat (sofort speichern). ``pending=True`` meldet
-    einen eben selbst ausgeloesten Start an.
+    ``counters`` are monotonically increasing counters (tool changes, kWh);
+    their difference between start and end of a print is its consumption.
+    ``price`` is the current energy price per kWh, ``stats`` are
+    print_duration and filament_used from print_stats.
+    Returns the new state, the print that just finished (or None) and whether
+    the structure changed (save immediately). ``pending=True`` registers a
+    start that was just triggered by the integration itself.
     """
     rest = {k: v for k, v in state.items() if k not in ("active", "last")}
     active = state.get("active")
@@ -398,7 +402,7 @@ def track_print(
             active = {k: v for k, v in active.items() if k != "pending"}
             changed = True
         elif now - float(active.get("started") or now) > START_GRACE_S:
-            # Druck ist nie angelaufen: nichts verbuchen.
+            # The print never got going: record nothing.
             active = None
             return out(), None, True
         else:
@@ -411,7 +415,7 @@ def track_print(
                 if isinstance(stats.get(key), (int, float)):
                     active[key] = stats[key]
 
-    # Druck beendet oder zwischen zwei Abfragen schon der naechste gestartet.
+    # Print finished, or the next one already started between two polls.
     if active and (not running or (filename and filename != active.get("file"))):
         last = finished = _close(active, counters, print_state if not running else "unknown", now)
         active = None
@@ -422,7 +426,7 @@ def track_print(
         changed = True
 
     if active:
-        # Zaehler zurueckgesetzt oder erst jetzt bekannt: Basis nachziehen.
+        # Counter reset or only known now: move the base along.
         base = dict(active.get("start") or {})
         for key, value in counters.items():
             if value is None:
@@ -437,7 +441,7 @@ def track_print(
 
 
 def print_progress(state: dict[str, Any], counters: dict[str, float | None]) -> dict[str, Any]:
-    """Verbrauch des laufenden Drucks je Zaehler (None ohne laufenden Druck)."""
+    """Consumption of the running print per counter (None without a running print)."""
     active = state.get("active")
     if not active or active.get("pending"):
         return {key: None for key in (*counters, "energy_cost")}
@@ -451,12 +455,12 @@ def print_progress(state: dict[str, Any], counters: dict[str, float | None]) -> 
     return result
 
 
-# ── Filamentverbrauch und Kosten je Druck ─────────────────────────────────
+# ── Filament usage and cost per print ───────────────────────────────────────
 FILAMENT_PRICE_KEYS = ("PLA", "PETG", "ABS", "ASA", "TPU", "PA")
 
 
 def filament_price_for(ftype: str | None, prices: dict[str, float | None]) -> float | None:
-    """Preis je kg fuer einen Materialtyp; 'PLA-CF' faellt auf 'PLA' zurueck."""
+    """Price per kg for a material type; 'PLA-CF' falls back to 'PLA'."""
     key = (ftype or "").upper()
     for cand in (key, key.split("-")[0].split(" ")[0]):
         if prices.get(cand) is not None:
@@ -465,7 +469,7 @@ def filament_price_for(ftype: str | None, prices: dict[str, float | None]) -> fl
 
 
 def average_kw(history: list[dict[str, Any]]) -> float | None:
-    """Mittlere Leistung des Druckers aus fertigen Drucken (kWh / Stunden, ab 10 min)."""
+    """Average printer power from finished prints (kWh / hours, prints of 10 min and more)."""
     kwh = hours = 0.0
     for item in history:
         energy, duration = item.get("energy"), item.get("duration")
@@ -478,7 +482,7 @@ def average_kw(history: list[dict[str, Any]]) -> float | None:
 def estimate_cost(
     file: dict[str, Any], prices: dict[str, float | None], kwh_price: float | None, avg_kw: float | None
 ) -> dict[str, float] | None:
-    """Kosten vor dem Druck: Slicer-Gewicht x Materialpreis + Druckzeit x mittlere Leistung x Strompreis."""
+    """Cost before printing: slicer weight x material price + print time x average power x energy price."""
     out: dict[str, float] = {}
     fils = [f for f in file.get("filaments") or [] if f.get("used") is not False and f.get("weight")]
     if fils:
@@ -498,11 +502,11 @@ def estimate_cost(
 
 
 def summarize_print(record: dict[str, Any], prices: dict[str, float | None]) -> dict[str, Any]:
-    """Abgeschlossenen Druck um Gewicht, Filament- und Gesamtkosten ergaenzen.
+    """Add weight, filament cost and total cost to a finished print.
 
-    Das Gewicht kommt aus dem Slicer. Bei abgebrochenen Drucken wird es im
-    Verhaeltnis tatsaechlich gefoerderter zu geplanter Laenge gekuerzt
-    (print_stats.filament_used / filament_total aus den Dateimetadaten).
+    The weight comes from the slicer. For cancelled prints it is reduced by
+    the ratio of actually extruded to planned length
+    (print_stats.filament_used / filament_total from the file metadata).
     """
     out = dict(record)
     fils = [f for f in record.get("filaments") or [] if f.get("weight")]
@@ -535,7 +539,7 @@ def summarize_print(record: dict[str, Any], prices: dict[str, float | None]) -> 
 
 
 def price_per_kwh(state: str | None, unit: str | None) -> float | None:
-    """Preis-Entitaet in Waehrung je kWh; ct/kWh und je MWh werden umgerechnet."""
+    """Price entity in currency per kWh; ct/kWh and per MWh are converted."""
     try:
         value = float(state)  # type: ignore[arg-type]
     except (TypeError, ValueError):
@@ -554,7 +558,7 @@ ENERGY_FACTORS = {"Wh": 0.001, "kWh": 1.0, "MWh": 1000.0}
 
 
 def energy_kwh(state: str | None, unit: str | None) -> float | None:
-    """Zustand eines Energiezaehlers in kWh; None wenn unbrauchbar."""
+    """State of an energy meter in kWh; None if unusable."""
     factor = ENERGY_FACTORS.get(unit or "kWh")
     if factor is None:
         return None
@@ -564,23 +568,23 @@ def energy_kwh(state: str | None, unit: str | None) -> float | None:
         return None
 
 
-# ── Zeitraffer ──────────────────────────────────────────────────────────────
-# Der U1 legt Zeitraffer ueber einen nicht offenen Snapmaker-Dienst ab. Bei
-# Stock-Firmware zeigt Moonraker sie im Ordner "camera" (/oem/printer_data/
-# camera), Fluidd-Timelapse nutzt "timelapse". Gesucht wird in allen Ordnern
-# ausser Konfiguration und Logs.
+# ── Timelapses ──────────────────────────────────────────────────────────────
+# The U1 stores timelapses through a closed Snapmaker service. With stock
+# firmware Moonraker shows them in the "camera" folder (/oem/printer_data/
+# camera); Fluidd timelapse uses "timelapse". All folders are searched
+# except config and logs.
 VIDEO_SUFFIXES = (".mp4", ".webm", ".mkv")
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png")
 TIMELAPSE_SKIP_ROOTS = ("config", "logs", "config_examples", "docs")
 
 
-# Stock-Firmware: <Druckname>_<YYYYMMDDHHMMSS>.mp4 plus _cover.jpg (gross) und
-# .jpg (Miniatur) mit gleichem Stamm.
+# Stock firmware: <print name>_<YYYYMMDDHHMMSS>.mp4 plus _cover.jpg (large) and
+# .jpg (thumbnail) with the same stem.
 _STAMP = re.compile(r"^(?P<name>.*?)_(?P<ts>\d{14})$")
 
 
 def pick_timelapses(root: str, entries: list[dict[str, Any]], limit: int = 20) -> list[dict[str, Any]]:
-    """Videos eines Ordners, neueste zuerst, mit passendem Vorschaubild."""
+    """Videos of a folder, newest first, with the matching preview image."""
     images: dict[str, str] = {}
     by_dir: dict[str, str] = {}
     for e in entries:
@@ -596,7 +600,7 @@ def pick_timelapses(root: str, entries: list[dict[str, Any]], limit: int = 20) -
             continue
         stem = posixpath.splitext(path.lower())[0]
         folder = posixpath.dirname(path.lower())
-        # Cover vor Miniatur, sonst das erste Bild im selben Unterordner.
+        # Cover before thumbnail, otherwise the first image in the same subfolder.
         poster = (images.get(f"{stem}_cover") or images.get(stem)
                   or (by_dir.get(folder) if folder else None))
         base = posixpath.splitext(posixpath.basename(path))[0]
@@ -614,7 +618,7 @@ def pick_timelapses(root: str, entries: list[dict[str, Any]], limit: int = 20) -
                 "size": e.get("size"),
                 "modified": e.get("modified"),
                 "poster": poster,
-                # kleines Vorschaubild (U1: <Name>.jpg), falls vorhanden
+                # small preview image (U1: <name>.jpg), if present
                 "thumb": images.get(stem) if images.get(stem) != poster else None,
             }
         )
@@ -623,15 +627,16 @@ def pick_timelapses(root: str, entries: list[dict[str, Any]], limit: int = 20) -
 
 
 # ── Spoolman ────────────────────────────────────────────────────────────────
-# Spoolman (github.com/Donkie/Spoolman, API v1): GET /api/v1/spool liefert
-# Spulen mit filament{name, material, color_hex, vendor{name}},
-# remaining_weight, initial_weight, last_used, archived. Abgebucht wird mit
+# Spoolman (github.com/Donkie/Spoolman, API v1): GET /api/v1/spool returns
+# spools with filament{name, material, color_hex, vendor{name}},
+# remaining_weight, initial_weight, last_used, archived. Usage is booked with
 # PUT /api/v1/spool/{id}/use {"use_weight": g}.
-# Moonraker kennt nur EINE aktive Spule; fuer vier Koepfe ordnet deshalb die
-# Integration selbst zu und bucht je Kopf ab.
+# Moonraker only knows ONE active spool; for four heads the integration
+# therefore assigns spools itself and books usage per head.
 
 
 def compact_spool(spool: dict[str, Any]) -> dict[str, Any]:
+    """Reduce a Spoolman spool to the fields the card needs."""
     fil = spool.get("filament") or {}
     vendor = (fil.get("vendor") or {}).get("name")
     color = normalize_color(fil.get("color_hex"))
@@ -657,13 +662,14 @@ def _round(value: Any) -> float | None:
 
 
 def slot_fingerprint(slot: dict[str, Any]) -> str | None:
-    """Merkmal des geladenen Filaments; aendert es sich, gilt die Zuordnung nicht mehr."""
+    """Fingerprint of the loaded filament; if it changes, the mapping is no longer valid."""
     if not slot.get("loaded"):
         return None
     return "|".join(str(slot.get(k) or "").upper() for k in ("type", "sub_type", "vendor", "color"))
 
 
 def _spool_score(slot: dict[str, Any], spool: dict[str, Any]) -> tuple:
+    """Sort key for how well a spool matches a slot (lower is better)."""
     stype, sub = (slot.get("type") or "").upper(), (slot.get("sub_type") or "").upper()
     material = (spool.get("material") or "").upper()
     name = (spool.get("name") or "").upper()
@@ -671,11 +677,11 @@ def _spool_score(slot: dict[str, Any], spool: dict[str, Any]) -> tuple:
                      and slot["vendor"].strip().upper() == spool["vendor"].strip().upper())
     return (
         0 if stype and (material == stype or material.split("-")[0] == stype) else 1,
-        # Farbe in Stufen, damit fast gleiche Farben gleich zaehlen
+        # Colour in steps so that nearly identical colours count as equal
         round(color_distance(slot.get("color"), spool.get("color")) / 40),
         0 if not sub or sub in name or sub in material else 1,
         0 if vendor_ok else 1,
-        # angebrochene, zuletzt benutzte Spule zuerst
+        # opened, most recently used spool first
         0 if spool.get("used_weight") else 1,
         "\uffff" if not spool.get("last_used") else _neg(spool["last_used"]),
         spool.get("remaining_weight") if spool.get("remaining_weight") is not None else 1e9,
@@ -683,18 +689,18 @@ def _spool_score(slot: dict[str, Any], spool: dict[str, Any]) -> tuple:
 
 
 def _neg(text: str) -> str:
-    """Sortierschluessel fuer 'neuestes zuerst' bei ISO-Zeitstempeln."""
+    """Sort key for 'newest first' with ISO timestamps."""
     return "".join(chr(255 - ord(c)) if c.isdigit() else c for c in text)
 
 
-# Gleiche Farbfamilie liegt bei der redmean-Distanz unter ~100 (schwarz/fast
-# schwarz 84, creme/weiss 55), verschiedene Farben ueber ~180 (weiss/silber 189).
+# The same colour family stays below ~100 in redmean distance (black/almost
+# black 84, cream/white 55), different colours are above ~180 (white/silver 189).
 SPOOL_COLOR_LIMIT = 150
 
 
 def _color_close(slot: dict[str, Any], spool: dict[str, Any]) -> bool:
     if not slot.get("color") or not spool.get("color"):
-        return True  # ohne Farbangabe entscheidet das Material
+        return True  # without a colour the material decides
     return color_distance(slot["color"], spool["color"]) <= SPOOL_COLOR_LIMIT
 
 
@@ -703,10 +709,10 @@ def suggest_spools(
     spools: list[dict[str, Any]],
     fixed: dict[int, int | None] | None = None,
 ) -> dict[int, int | None]:
-    """Spulen den geladenen Koepfen zuordnen; ``fixed`` (manuell) bleibt unangetastet.
+    """Assign spools to the loaded heads; ``fixed`` (manual) entries are left alone.
 
-    Eine Spule steckt physisch nur in einem Kopf: jede wird hoechstens einmal
-    vergeben. Passt das Material nicht, wird nichts zugeordnet.
+    A spool can physically only sit in one head: each is assigned at most
+    once. If the material does not match, nothing is assigned.
     """
     fixed = dict(fixed or {})
     taken = {sid for sid in fixed.values() if sid}
@@ -722,7 +728,7 @@ def suggest_spools(
         pool = [s for s in spools if not s.get("archived") and s["id"] not in taken]
         best = min(pool, key=lambda s: _spool_score(slot, s), default=None)
         if best is None or _spool_score(slot, best)[0] != 0 or not _color_close(slot, best):
-            # Lieber keine Zuordnung als eine falsche Spule, von der dann abgebucht wird.
+            # Better no assignment than a wrong spool that usage is then booked from.
             result[idx] = None
             continue
         result[idx] = best["id"]
@@ -731,11 +737,11 @@ def suggest_spools(
 
 
 def grams_per_slot(record: dict[str, Any]) -> dict[int, float]:
-    """Verbrauch eines Drucks je physischem Kopf.
+    """Consumption of a print per physical head.
 
-    Gewicht je logischem Filament (Slicer) x Anteil bei Abbruch, ueber die
-    Zuordnungstabelle des Drucks (print_task_config.extruder_map_table:
-    Position = logisch, Wert = Kopf) auf die Koepfe verteilt.
+    Weight per logical filament (slicer) x share when cancelled, distributed
+    to the heads via the print's map table (print_task_config.extruder_map_table:
+    position = logical, value = head).
     """
     fils = [f for f in record.get("filaments") or [] if f.get("weight")]
     if not fils:

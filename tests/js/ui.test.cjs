@@ -1,4 +1,4 @@
-// 5.2: Reiter, Overlay auf der Kamera, Mini-Karte, visueller Editor, Englisch.
+// Tabs, overlay on the camera, mini card, visual editor, English.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -63,7 +63,7 @@ const make = (tag, cfg = {}) => {
 };
 const R = (el) => el.shadowRoot.getElementById("u1card");
 
-// 1. Reiter: Standard, Uebersicht aktiv, Wechsel nur per hidden (kein Neuaufbau)
+// 1. Tabs: default, overview active, switching only via hidden (no rebuild)
 const card = make("snapmaker-u1-card");
 let r = R(card);
 const tabs = [...r.querySelectorAll("[data-tab]")].map((b) => b.dataset.tab);
@@ -76,12 +76,12 @@ assert.deepStrictEqual(visible(), ["history"]);
 assert.strictEqual(r.querySelector('[data-tab="history"]').getAttribute("aria-selected"), "true");
 assert.strictEqual(r.querySelector("img[data-live]"), live, "Kamera-<img> bleibt erhalten");
 assert.strictEqual(card._streamImg, null, "kein Stream bei verborgener Bildflaeche");
-// Neuaufbau behaelt den Reiter
+// A rebuild keeps the tab
 card._renderKey = null; card.hass = hass(); r = R(card);
 assert.deepStrictEqual(visible(), ["history"], "Reiter ueberlebt Neuaufbau");
 r.querySelector('[data-tab="overview"]').click();
 
-// 2. Overlay auf der Kamera, gepatcht
+// 2. Overlay on the camera, patched
 const hud = r.querySelector(".hud");
 assert.ok(hud, "Overlay");
 assert.match(hud.textContent.replace(/\s+/g, " "), /42 ?% .*57 \/ 130 .*1 h 15 min/);
@@ -98,17 +98,17 @@ assert.ok(!R(make("snapmaker-u1-card", { hide_overlay: true })).querySelector(".
 const hid = make("snapmaker-u1-card", { hide: ["system", "maintenance", "timelapse"] });
 assert.deepStrictEqual([...R(hid).querySelectorAll("[data-tab]")].map((b) => b.dataset.tab), ["overview", "control", "files", "history"], "hide");
 
-// 3. layout: scroll = alles untereinander, keine Reiter
+// 3. layout: scroll = everything stacked, no tabs
 const scroll = make("snapmaker-u1-card", { layout: "scroll" });
 assert.ok(!R(scroll).querySelector(".tabs"));
 assert.strictEqual(R(scroll).querySelectorAll(".layout").length, 1);
 assert.ok(R(scroll).querySelector(".hud"));
 
-// 4. show begrenzt: ein Reiter => keine Leiste
+// 4. Limited show: one tab => no tab bar
 const single = make("snapmaker-u1-card", { show: ["stage", "job"] });
 assert.ok(!R(single).querySelector(".tabs"), "ein Reiter ohne Leiste");
 
-// 5. Mini-Karte
+// 5. Mini card
 const mini = make("snapmaker-u1-mini-card");
 const mt = R(mini).textContent.replace(/\s+/g, " ");
 assert.match(mt, /nuss/);
@@ -130,7 +130,7 @@ R(miniNav).querySelector(".mini-file").click();
 assert.strictEqual(nav, 1);
 assert.strictEqual(w.location.pathname, "/drucker/0");
 
-// 6. Visueller Editor
+// 6. Visual editor
 const C = w.customElements.get("snapmaker-u1-card");
 const M = w.customElements.get("snapmaker-u1-mini-card");
 assert.strictEqual(C.getConfigElement, undefined, "alter Editor entfernt");
@@ -143,13 +143,13 @@ assert.ok(JSON.stringify(M.getConfigForm().schema).includes("navigation_path"));
 assert.ok(JSON.stringify(M.getConfigForm().schema).includes("hide_filaments"));
 const miniHide = make("snapmaker-u1-mini-card", { hide_filaments: true });
 assert.ok(!R(miniHide).querySelector(".mini-fil"), "Filamente ausblendbar");
-// Mini patcht Prozent ohne Neuaufbau
+// The mini card patches the percentage without a rebuild
 states[`sensor.${P}_progress`].state = "50.2"; mini.hass = hass();
 assert.match(R(mini).textContent.replace(/\s+/g, " "), /50 %/);
 states[`sensor.${P}_progress`].state = "43.6";
 assert.ok(w.customCards.some((c) => c.type === "snapmaker-u1-mini-card"), "Kartenauswahl");
 
-// 7. Englisch: keine deutschen Reste
+// 7. English: no German leftovers
 lang = "en";
 const GERMAN = /[äöüÄÖÜß]|\b(Druck|Drucker|Datei|Dateien|Schicht|Restzeit|Fertig|Bereit|Abbrechen|Licht|Kopf|Köpfe|Leer|Spule|Verlauf|Steuerung|Übersicht|Zeitraffer|Heizung|Lüfter|Geladen|und|oder|nicht|noch|keine?)\b/;
 const check = (el, what) => {
@@ -167,7 +167,7 @@ assert.match(R(card).textContent, /Overview/);
 const fe = C.getConfigForm();
 assert.strictEqual(fe.computeLabel({ name: "layout" }), "Layout");
 assert.match(JSON.stringify(fe.schema), /"Tabs"/);
-// Drucker aus, englisch
+// Printer off, English
 states[`sensor.${P}_printer_state`].state = "unavailable";
 states[`sensor.${P}_current_print_state`].state = "unavailable";
 states["switch.snapmaker_u1_card_netzschalter"].state = "off";
@@ -175,4 +175,4 @@ check(card, "aus");
 check(mini, "Mini aus");
 assert.match(R(card).textContent, /Printer is off/);
 
-console.log("UI 5.2 OK – Reiter, Overlay, Mini-Karte, Editor, Englisch");
+console.log("UI OK – tabs, overlay, mini card, editor, English");

@@ -1,8 +1,8 @@
-"""Diagnose-Download (Geraete-/Integrationsseite -> "Diagnose herunterladen").
+"""Diagnostics download (device/integration page -> "Download diagnostics").
 
-Enthaelt alles, was fuer eine Fehlersuche gebraucht wird: Optionen, Zustand
-des Live-Abos, Rohstatus des Druckers, laufender Druck, Fehler, Warteschlange.
-API-Schluessel, Spoolman-Adresse und Benachrichtigungsziele werden geschwaerzt.
+Contains everything needed for troubleshooting: options, state of the live
+subscription, raw printer status, current print, errors and the queue.
+API keys, the Spoolman address and notification targets are redacted.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ TO_REDACT = {"api_key", CONF_SPOOLMAN_URL, CONF_NOTIFY, "host", "access_token", 
 
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
+    """Collect redacted diagnostics for one config entry."""
     coord = entry.runtime_data
     data = coord.data or coord._prev
     try:

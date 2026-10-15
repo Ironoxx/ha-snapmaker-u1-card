@@ -1,10 +1,10 @@
-"""HTTP-Endpunkt fuer die Schichtansicht der Karte.
+"""HTTP endpoints for the card's layer view and temperature chart.
 
-GET /api/snapmaker_u1_card/layers/<entry_id>?layer=N  -> Bahnen der Schicht N
-GET /api/snapmaker_u1_card/layers/<entry_id>?position=1 -> aktuelle Dateiposition
+GET /api/snapmaker_u1_card/layers/<entry_id>?layer=N  -> paths of layer N
+GET /api/snapmaker_u1_card/layers/<entry_id>?position=1 -> current file position
 
-Die Bahnen sind fuer eine Sensor-Eigenschaft zu gross (Recorder, Websocket an
-alle Clients) und werden deshalb nur auf Anfrage der Karte geliefert.
+The paths are too large for a sensor attribute (recorder, WebSocket to all
+clients), so they are only delivered when the card asks for them.
 """
 
 from __future__ import annotations
@@ -24,11 +24,13 @@ LAYER_URL = f"/api/{DOMAIN}/layers"
 
 
 class LayerView(HomeAssistantView):
+    """Layer paths and live position for the card's layer view."""
     url = LAYER_URL + "/{entry_id}"
     name = f"api:{DOMAIN}:layers"
     requires_auth = True
 
     async def get(self, request: web.Request, entry_id: str) -> web.Response:
+        """Return one layer (``layer=N``) or the live position (``position=1``)."""
         hass = request.app[KEY_HASS]
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is None or entry.domain != DOMAIN or not hasattr(entry, "runtime_data"):
@@ -76,7 +78,7 @@ TEMP_SERIES = ("extruder", "extruder1", "extruder2", "extruder3", "heater_bed")
 
 
 def downsample(store: dict[str, Any], step: int = 5) -> dict[str, Any]:
-    """Moonrakers Temperaturspeicher (1 Wert/s) auf Mittelwerte je ``step`` s."""
+    """Average Moonraker's temperature store (1 value/s) over ``step`` seconds."""
     out: dict[str, Any] = {}
     for name in TEMP_SERIES:
         series = store.get(name)
@@ -92,13 +94,14 @@ def downsample(store: dict[str, Any], step: int = 5) -> dict[str, Any]:
 
 
 class TempsView(HomeAssistantView):
-    """Temperaturverlauf der Koepfe und des Betts (Moonraker /server/temperature_store)."""
+    """Temperature history of the heads and the bed (Moonraker /server/temperature_store)."""
 
     url = TEMPS_URL + "/{entry_id}"
     name = f"api:{DOMAIN}:temps"
     requires_auth = True
 
     async def get(self, request: web.Request, entry_id: str) -> web.Response:
+        """Return the downsampled temperature history."""
         hass = request.app[KEY_HASS]
         entry = hass.config_entries.async_get_entry(entry_id)
         if entry is None or entry.domain != DOMAIN or not hasattr(entry, "runtime_data"):

@@ -1,4 +1,4 @@
-"""Zweiter Ladeweg: Karte als Dashboard-Ressource unter /local."""
+"""Second loading path: the card as a dashboard resource under /local."""
 
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -40,7 +40,7 @@ async def test_resource_created_and_file_copied(hass: HomeAssistant, mock_client
     from custom_components.snapmaker_u1_card.const import VERSION
 
     await _setup(hass)
-    # Echtes Lovelace (Abhaengigkeit der Integration), Speicher-Modus
+    # real Lovelace (dependency of the integration), storage mode
     coll = hass.data[LOVELACE_DATA].resources
     assert hass.data[LOVELACE_DATA].resource_mode == "storage"
     items = _ours(coll)
@@ -65,7 +65,7 @@ async def test_resource_updated_and_deduplicated(hass: HomeAssistant, storage_re
     items = _ours(storage_resources)
     assert [(i["url"], i["type"]) for i in items] == [(f"/local/{DOMAIN}/snapmaker-u1-card.js?v={VERSION}", "module")]
     assert other in storage_resources.async_items(), "fremde Ressourcen bleiben"
-    # zweiter Lauf aendert nichts
+    # a second run changes nothing
     await resource.async_install(hass)
     assert len(_ours(storage_resources)) == 1
 
@@ -79,7 +79,7 @@ async def test_yaml_mode_untouched(hass: HomeAssistant) -> None:
     )
     await resource.async_install(hass)
     yaml_coll.async_create_item.assert_not_called()
-    # Datei liegt trotzdem bereit (fuer eine eigene YAML-Ressource)
+    # the file is still provided (for a custom YAML resource)
     assert Path(hass.config.path("www", DOMAIN, "snapmaker-u1-card.js")).exists()
 
 

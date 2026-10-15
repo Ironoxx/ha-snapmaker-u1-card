@@ -1,4 +1,4 @@
-"""Einrichtung ueber die Oberflaeche."""
+"""Setup through the UI (config flow and options flow)."""
 
 from __future__ import annotations
 
@@ -81,6 +81,7 @@ INT_FIELDS = (CONF_FILES_LIMIT, CONF_AUTO_OFF_TEMP, CONF_AUTO_OFF_DELAY, CONF_SP
 
 
 def _box(minimum: float, maximum: float, step: float, unit: str | None = None) -> selector.NumberSelector:
+    """Number selector shown as an input box."""
     config = selector.NumberSelectorConfig(
         min=minimum, max=maximum, step=step, mode=selector.NumberSelectorMode.BOX
     )
@@ -90,10 +91,11 @@ def _box(minimum: float, maximum: float, step: float, unit: str | None = None) -
 
 
 def _options_schema(notify_services: list[str]) -> vol.Schema:
+    """Options form, grouped into collapsible sections."""
     power = vol.Schema(
         {
-            # Schalter des Druckers: Shelly, KNX, Zigbee-Steckdose ... alles,
-            # was sich ein- und ausschalten laesst.
+            # The printer's power switch: Shelly, KNX, Zigbee plug ... anything
+            # that can be switched on and off.
             vol.Optional(CONF_POWER_SWITCH): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["switch", "light", "input_boolean"])
             ),
@@ -139,8 +141,8 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
     filament = vol.Schema({vol.Optional(key): _box(0, 500, 0.01, "€/kg") for key in PRICE_FIELDS})
     spoolman = vol.Schema(
         {
-            # Leer = Spulenverwaltung aus; nichts davon erscheint in Karte/Integration.
-            # Text statt URL-Feld: Adresse ohne http:// ist erlaubt (api.py ergaenzt es)
+            # Empty = spool management off; none of it shows up in the card/integration.
+            # Text instead of a URL field: an address without http:// is allowed (api.py adds it)
             vol.Optional(CONF_SPOOLMAN_URL): selector.TextSelector(),
             vol.Required(CONF_SPOOLMAN_DEDUCT, default=DEFAULT_SPOOLMAN_DEDUCT): selector.BooleanSelector(),
             vol.Required(CONF_SPOOLMAN_LOW, default=DEFAULT_SPOOLMAN_LOW): _box(0, 1000, 10, "g"),
@@ -166,11 +168,11 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             vol.Required(SEC_POWER): section(power, SectionConfig(collapsed=False)),
             vol.Required(SEC_NOTIFY): section(notify, SectionConfig(collapsed=True)),
             vol.Required(SEC_FILAMENT): section(filament, SectionConfig(collapsed=True)),
-            # Abschnitte immer Required und ohne default: Ein default ({}) am
-            # Abschnitt ersetzt im Frontend die Vorbelegung der Felder darin
-            # (compute-initial-ha-form-data nimmt "default" vor den Kindern).
-            # Folge waere "Nicht alle Pflichtfelder ausgefuellt", bis man den
-            # Abschnitt aufklappt und jedes Feld einmal anfasst.
+            # Sections are always Required and without a default: a default ({}) on
+            # the section replaces the pre-filled values of its fields in the frontend
+            # (compute-initial-ha-form-data takes "default" before the children).
+            # The result would be "Not all required fields are filled in" until you
+            # expand the section and touch every field once.
             vol.Required(SEC_SPOOLMAN): section(spoolman, SectionConfig(collapsed=True)),
             vol.Required(SEC_FILES): section(files, SectionConfig(collapsed=True)),
             vol.Required(SEC_TIMELAPSE): section(timelapse, SectionConfig(collapsed=True)),
@@ -180,7 +182,7 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
 
 
 def flatten_options(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Abschnitte des Formulars -> flache Optionen; Filamentpreise als dict."""
+    """Form sections -> flat options; filament prices as a dict."""
     flat: dict[str, Any] = {}
     for value in user_input.values():
         if isinstance(value, dict):
@@ -201,13 +203,13 @@ def flatten_options(user_input: dict[str, Any]) -> dict[str, Any]:
     for key in INT_FIELDS:
         if key in flat:
             flat[key] = int(flat[key])
-    # Mit "notify."-Praefix speichern, damit die Auswahlliste sie wiedererkennt.
+    # Store with the "notify." prefix so the selector recognises it.
     flat[CONF_NOTIFY] = [t if t.startswith("notify.") else f"notify.{t}" for t in flat.get(CONF_NOTIFY) or []]
     return flat
 
 
 def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Gespeicherte Optionen -> Vorschlagswerte je Abschnitt."""
+    """Stored options -> suggested values per section."""
     opts = dict(options)
     prices = opts.pop(CONF_FILAMENT_PRICES, {}) or {}
     for key, value in prices.items():
@@ -234,7 +236,7 @@ def _notify_services(hass: Any) -> list[str]:
 
 
 async def _validate_options(hass: Any, flat: dict[str, Any]) -> str | None:
-    """Gemeinsame Pruefung fuer Ersteinrichtung und Optionen; Fehlerschluessel oder None."""
+    """Validation shared by initial setup and options; returns an error key or None."""
     if (flat.get(CONF_AUTO_OFF) or flat.get(CONF_AUTO_ON)) and not flat.get(CONF_POWER_SWITCH):
         return "auto_needs_switch"
     if flat.get(CONF_NOTIFY) and not all(
@@ -254,6 +256,7 @@ async def _validate_options(hass: Any, flat: dict[str, Any]) -> str | None:
 
 
 def _schema(defaults: dict[str, Any]) -> vol.Schema:
+    """Connection form (host, port, API key)."""
     return vol.Schema(
         {
             vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
@@ -266,9 +269,11 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
 
 
 class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Config flow: connect to the printer, then all options in a second step."""
     VERSION = 1
 
     async def _probe(self, data: dict[str, Any]) -> str | None:
+        """Check that Moonraker answers; returns an error key or None."""
         client = MoonrakerClient(
             async_get_clientsession(self.hass), data[CONF_HOST], data[CONF_PORT],
             data.get(CONF_API_KEY) or None,
@@ -282,6 +287,7 @@ class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
         return None if "print_task_config" in status else "not_u1"
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """First step: printer address."""
         errors: dict[str, str] = {}
         if user_input is not None:
             user_input[CONF_HOST] = user_input[CONF_HOST].strip().removeprefix("http://").rstrip("/")
@@ -297,7 +303,7 @@ class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_settings(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
-        """Zweiter Schritt der Einrichtung: alle Einstellungen gleich mit (spaeter unter Konfigurieren)."""
+        """Second setup step: all settings right away (later under "Configure")."""
         errors: dict[str, str] = {}
         if user_input is not None:
             flat = flatten_options(user_input)
@@ -313,6 +319,7 @@ class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="settings", data_schema=schema, errors=errors)
 
     async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Change the printer address of an existing entry."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -332,9 +339,10 @@ class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class U1OptionsFlow(OptionsFlow):
-    """Alles Weitere an einer Stelle: Strom, Benachrichtigung, Preise, Spoolman, Dateien."""
+    """Everything else in one place: power, notifications, prices, Spoolman, files."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Show and store the options form."""
         errors: dict[str, str] = {}
         if user_input is not None:
             flat = flatten_options(user_input)
@@ -346,8 +354,8 @@ class U1OptionsFlow(OptionsFlow):
         values = user_input if user_input is not None else nest_options(self.config_entry.options)
         return self.async_show_form(
             step_id="init",
-            # Vorschlagswerte statt Standardwerten: so laesst sich eine
-            # Entitaet auch wieder austragen.
+            # Suggested values instead of defaults: this way an entity
+            # can also be removed again.
             data_schema=self.add_suggested_values_to_schema(_options_schema(services), values),
             errors=errors,
         )

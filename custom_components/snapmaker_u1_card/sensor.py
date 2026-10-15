@@ -1,4 +1,4 @@
-"""Sensoren: geladene Filamente, einzelne Slots, Druckdateien."""
+"""Sensors: loaded filaments, individual slots, print files, statistics."""
 
 from __future__ import annotations
 
@@ -32,6 +32,7 @@ from .parsing import average_kw, estimate_cost
 async def async_setup_entry(
     hass: HomeAssistant, entry: U1ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
+    """Add all sensors of one printer."""
     coordinator = entry.runtime_data
     entities: list[SensorEntity] = [FilamentsSensor(coordinator), FilesSensor(coordinator)]
     entities += [SlotSensor(coordinator, i) for i in range(4)]
@@ -47,6 +48,7 @@ async def async_setup_entry(
 
 
 class U1Entity(CoordinatorEntity[U1Coordinator]):
+    """Base class: device info and availability for all entities of a printer."""
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: U1Coordinator, key: str) -> None:
@@ -64,13 +66,13 @@ class U1Entity(CoordinatorEntity[U1Coordinator]):
 
     @property
     def available(self) -> bool:
-        # Werte vom Drucker nur, solange er erreichbar ist.
+        # Printer values only while it is reachable.
         data = self.coordinator.data
         return super().available and data is not None and data.online
 
 
 class PrintRecordEntity(U1Entity):
-    """Werte des laufenden bzw. letzten Drucks; auch bei ausgeschaltetem Drucker."""
+    """Values of the running or last print; available even with the printer off."""
 
     _key = ""
 
@@ -79,6 +81,7 @@ class PrintRecordEntity(U1Entity):
         return self.coordinator.data is not None
 
     def _value(self) -> float | None:
+        """Value of the running print, else of the last one."""
         prints = self.coordinator.data.prints
         current = (prints.get("current") or {}).get(self._key)
         if current is not None:
@@ -104,7 +107,7 @@ class PrintRecordEntity(U1Entity):
 
 
 class FilamentsSensor(U1Entity, SensorEntity):
-    """Alle vier Slots in einem Attribut – Datenquelle der Karte."""
+    """All four slots in one attribute; the card's main data source."""
 
     _attr_translation_key = "filaments"
     _attr_icon = "mdi:printer-3d-nozzle"
@@ -116,7 +119,7 @@ class FilamentsSensor(U1Entity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        # Letzter bekannter Stand bleibt fuer den Druckdialog (Auto-Ein) sichtbar.
+        # The last known state stays visible for the print dialog (auto-on).
         data = self.coordinator.data
         return super(U1Entity, self).available and data is not None and bool(data.slots)
 
@@ -132,20 +135,20 @@ class FilamentsSensor(U1Entity, SensorEntity):
             "map_table": d.map_table,
             "preferences": d.preferences,
             "live": d.online,
-            # aktiver Kopf laut Firmware (toolhead.extruder), 0-3
+            # active head according to the firmware (toolhead.extruder), 0-3
             "active_head": d.active_head,
-            # Kerne des Druckers: Systemlast (Load Average) dazu ins Verhaeltnis setzen
+            # printer CPU cores: puts the system load (load average) into context
             "cpu_count": d.cpu_count,
-            # Spule laeuft im Druck leer: {kopf: {minutes, takeover}}
+            # spool runs out during the print: {head: {minutes, takeover}}
             "runout": {str(k): v for k, v in d.runout.items()},
-            # nur mit eingerichtetem Spoolman: Spule je Kopf + Spulenliste
+            # only with Spoolman configured: spool per head + spool list
             **({"spoolman": d.spoolman} if d.spoolman is not None else {}),
             "entry_id": self.coordinator.config_entry.entry_id,
         }
 
 
 class SlotSensor(U1Entity, SensorEntity):
-    """Ein Slot fuer Automationen ('Slot 2 leer', 'PLA geladen')."""
+    """One slot for automations ('slot 2 empty', 'PLA loaded')."""
 
     _attr_translation_key = "slot"
     _attr_icon = "mdi:printer-3d-nozzle-outline"
@@ -178,7 +181,7 @@ class SlotSensor(U1Entity, SensorEntity):
 
 
 class FilesSensor(U1Entity, SensorEntity):
-    """Neueste Druckdateien inkl. Filamenten und Vorschaubild."""
+    """Newest print files including filaments and thumbnail."""
 
     _attr_translation_key = "files"
     _attr_icon = "mdi:file-document-multiple-outline"
@@ -189,7 +192,7 @@ class FilesSensor(U1Entity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        # Letzte bekannte Liste auch bei ausgeschaltetem Drucker (Auto-Ein).
+        # Last known list even with the printer switched off (auto-on).
         return self.coordinator.data is not None
 
     @property
@@ -207,7 +210,7 @@ class FilesSensor(U1Entity, SensorEntity):
         return {
             "files": files,
             "cost_basis": {"kwh_price": kwh, "avg_kw": kw},
-            # alle druckbaren Dateien (nur Name, Datum, Groesse): Suche und Ordner
+            # all printable files (name, date, size only): search and folders
             "all": coord.data.all_files,
             "updated": self.coordinator.data.files_updated,
             "entry_id": self.coordinator.config_entry.entry_id,
@@ -219,7 +222,7 @@ def _iso(ts: float | None) -> str | None:
 
 
 class ToolChangesSensor(U1Entity, SensorEntity):
-    """Werkzeugwechsel seit Auslieferung bzw. Zaehler-Reset, je Kopf als Attribut."""
+    """Tool changes since delivery or counter reset, per head as attributes."""
 
     _attr_translation_key = "tool_changes"
     _attr_icon = "mdi:swap-horizontal-circle-outline"
@@ -248,7 +251,7 @@ class ToolChangesSensor(U1Entity, SensorEntity):
 
 
 class PrintToolChangesSensor(PrintRecordEntity, SensorEntity):
-    """Wechsel im laufenden Druck, sonst im letzten erfassten Druck."""
+    """Changes in the running print, otherwise in the last recorded print."""
 
     _attr_translation_key = "tool_changes_print"
     _attr_icon = "mdi:swap-horizontal"
@@ -263,7 +266,7 @@ class PrintToolChangesSensor(PrintRecordEntity, SensorEntity):
 
 
 class PrintEnergySensor(PrintRecordEntity, SensorEntity):
-    """Energie des laufenden bzw. letzten Drucks aus dem Energiezaehler."""
+    """Energy of the running or last print from the energy meter."""
 
     _attr_translation_key = "print_energy"
     _attr_device_class = SensorDeviceClass.ENERGY
@@ -286,7 +289,7 @@ class PrintEnergySensor(PrintRecordEntity, SensorEntity):
 
 
 class PrintCostSensor(PrintRecordEntity, SensorEntity):
-    """Kosten des laufenden Drucks (Strom bisher) bzw. des letzten (Strom + Filament)."""
+    """Cost of the running print (energy so far) or the last one (energy + filament)."""
 
     _attr_translation_key = "print_cost"
     _attr_device_class = SensorDeviceClass.MONETARY
@@ -320,7 +323,7 @@ class PrintCostSensor(PrintRecordEntity, SensorEntity):
 
 
 class HistorySensor(U1Entity, SensorEntity):
-    """Letzte Drucke mit Dauer, Ergebnis, Verbrauch und Kosten."""
+    """Recent prints with duration, result, consumption and cost."""
 
     _attr_translation_key = "history"
     _attr_icon = "mdi:history"
@@ -349,7 +352,7 @@ class HistorySensor(U1Entity, SensorEntity):
 
 
 class TimelapsesSensor(U1Entity, SensorEntity):
-    """Zeitraffer auf dem Drucker; Abspielen ueber den Proxy der Integration."""
+    """Timelapses on the printer; playback goes through the integration's proxy."""
 
     _attr_translation_key = "timelapses"
     _attr_icon = "mdi:filmstrip-box-multiple"
@@ -372,16 +375,16 @@ class TimelapsesSensor(U1Entity, SensorEntity):
         return {
             "videos": self.coordinator.data.timelapses,
             "url": f"{VIDEO_URL}/{entry_id}",
-            # Abspielen nur bei erreichbarem Drucker (Proxy holt vom Drucker)
+            # Playback only while the printer is reachable (the proxy fetches from it)
             "playable": bool(self.coordinator.data.online and not self.coordinator.power_is_off()),
             "entry_id": entry_id,
-            # Sicherung im Medienordner (None = aus)
+            # backup in the media folder (None = off)
             "archive": self.coordinator.data.archive,
         }
 
 
 class OfflineEntity(U1Entity):
-    """Werte der Integration selbst: auch bei ausgeschaltetem Drucker da."""
+    """Values owned by the integration itself: present even with the printer off."""
 
     @property
     def available(self) -> bool:
@@ -389,7 +392,7 @@ class OfflineEntity(U1Entity):
 
 
 class QueueSensor(OfflineEntity, SensorEntity):
-    """Geplante Druckauftraege (Start immer von Hand, nach Raeumen des Betts)."""
+    """Planned print jobs (always started by hand, after clearing the bed)."""
 
     _attr_translation_key = "queue"
     _attr_icon = "mdi:tray-full"
@@ -409,7 +412,7 @@ class QueueSensor(OfflineEntity, SensorEntity):
 
 
 class StatisticsSensor(OfflineEntity, SensorEntity):
-    """Druckstunden gesamt; Monatswerte als Attribut (aus Moonrakers Historie)."""
+    """Total print hours; monthly values as attributes (from Moonraker's history)."""
 
     _attr_translation_key = "statistics"
     _attr_icon = "mdi:chart-bar"
@@ -438,7 +441,7 @@ class StatisticsSensor(OfflineEntity, SensorEntity):
 
 
 class MaintenanceSensor(OfflineEntity, SensorEntity):
-    """Anzahl faelliger Wartungspunkte; Details als Attribut."""
+    """Number of maintenance items due; details as attributes."""
 
     _attr_translation_key = "maintenance"
     _attr_icon = "mdi:wrench-clock"
@@ -462,7 +465,7 @@ class MaintenanceSensor(OfflineEntity, SensorEntity):
 
 
 class ErrorsSensor(U1Entity, SensorEntity):
-    """Offene Meldungen der Firmware (Anzahl); Klartext je Meldung als Attribut."""
+    """Open firmware messages (count); plain text per message as attributes."""
 
     _attr_translation_key = "errors"
     _attr_icon = "mdi:alert-circle-outline"
@@ -481,7 +484,7 @@ class ErrorsSensor(U1Entity, SensorEntity):
 
 
 class RemainingSensor(U1Entity, SensorEntity):
-    """Restzeit: Zeitprofil der Datei, mit der echten Druckdauer geeicht."""
+    """Remaining time: the file's time profile, calibrated with the real print duration."""
 
     _attr_translation_key = "remaining"
     _attr_device_class = SensorDeviceClass.DURATION
@@ -499,7 +502,7 @@ class RemainingSensor(U1Entity, SensorEntity):
 
 
 class FinishSensor(U1Entity, SensorEntity):
-    """Voraussichtliches Druckende."""
+    """Expected end of the print."""
 
     _attr_translation_key = "finish"
     _attr_device_class = SensorDeviceClass.TIMESTAMP
@@ -513,5 +516,5 @@ class FinishSensor(U1Entity, SensorEntity):
         d = self.coordinator.data
         if d.eta is None or d.print_state not in ("printing", "paused"):
             return None
-        # auf die Minute: sonst neuer Zustand bei jedem Abgleich
+        # rounded to the minute: otherwise a new state on every poll
         return datetime.fromtimestamp(round(d.eta / 60) * 60, UTC)

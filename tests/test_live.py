@@ -1,4 +1,4 @@
-"""Live-Abo (live.py) gegen einen echten WebSocket-Server und neue Push-Ereignisse."""
+"""Live subscription (live.py) against a real WebSocket server, plus new push events."""
 
 import asyncio
 import json
@@ -44,7 +44,7 @@ async def test_listener_subscribe_diff_resubscribe(socket_enabled) -> None:
                                     "params": [{"toolhead": {"extruder": "extruder2"}}, 2]})
                 await ws.send_json({"jsonrpc": "2.0", "method": "notify_klippy_ready"})
             else:
-                # Zweites Abo nach Klipper-Neustart: abgelehnt, dann Ende
+                # second subscription after a Klipper restart: refused, then end
                 await ws.send_json({"jsonrpc": "2.0", "id": req["id"], "error": {"code": 503, "message": "x"}})
                 done.set()
                 await ws.close()
@@ -86,7 +86,7 @@ async def test_listener_skips_when_off() -> None:
 
 def test_remaining_seconds() -> None:
     assert remaining_seconds(3600, 0.5) == 3600
-    assert remaining_seconds(100, 0.01) is None  # zu frueh fuer eine Schaetzung
+    assert remaining_seconds(100, 0.01) is None  # too early for an estimate
     assert remaining_seconds(100, 1.0) is None
     assert remaining_seconds(None, 0.5) is None
 
@@ -105,7 +105,7 @@ async def test_live_diff_updates_head_and_refreshes(hass: HomeAssistant, mock_cl
     mock_client["query"].reset_mock()
     coord._on_live({"print_stats": {"state": "paused"}})
     await hass.async_block_till_done()
-    mock_client["query"].assert_awaited()  # Statuswechsel: sofort abgleichen
+    mock_client["query"].assert_awaited()  # state change: poll right away
     coord._on_live_state(True)
     assert coord.update_interval.total_seconds() == 30
     coord._on_live_state(False)
@@ -124,7 +124,7 @@ async def test_first_layer_and_almost_done(hass: HomeAssistant, mock_client, not
     await _refresh(hass, entry)
     await hass.async_block_till_done()
     assert len(_sent(notifications, "Erste Schicht")) == 1
-    # Restzeit 600*(1-0.95)/0.95 ~ 32 s -> gleich fertig, nur einmal
+    # remaining 600*(1-0.95)/0.95 ~ 32 s -> almost done, only once
     st["print_stats"]["print_duration"] = 6000
     st["virtual_sdcard"] = {"progress": 0.95}
     await _refresh(hass, entry)
@@ -132,7 +132,7 @@ async def test_first_layer_and_almost_done(hass: HomeAssistant, mock_client, not
     await hass.async_block_till_done()
     msgs = _sent(notifications, "Gleich fertig")
     assert len(msgs) == 1 and "min" in msgs[0].data["message"]
-    # Ueber das Live-Abo kein zweites Mal
+    # not a second time via the live subscription
     coord = entry.runtime_data
     coord.live.status = {"print_stats": st["print_stats"], "virtual_sdcard": {"progress": 0.97}}
     coord._on_live({"virtual_sdcard": {"progress": 0.97}})
@@ -157,12 +157,12 @@ async def test_alert_on_new_error_while_printing(hass: HomeAssistant, mock_clien
     await _refresh(hass, entry)
     st["exception_manager"] = {"exceptions": [{"id": 523, "index": 0, "code": 1, "level": 2, "message": "x"}]}
     await _refresh(hass, entry)
-    await _refresh(hass, entry)  # gleiche Meldung: nicht nochmal
+    await _refresh(hass, entry)  # same message: not again
     await hass.async_block_till_done()
     alerts = _sent(notifications, "Meldung vom Drucker")
     assert len(alerts) == 1
     assert alerts[0].data["data"]["priority"] == "high"
-    # Neue Meldung zusammen mit Pause: nur die Pausenmeldung (enthaelt den Text)
+    # new message together with a pause: only the pause notification (contains the text)
     st["exception_manager"] = {"exceptions": [{"id": 524, "index": 1, "code": 2, "level": 2, "message": "y"}]}
     st["print_stats"]["state"] = "paused"
     await _refresh(hass, entry)

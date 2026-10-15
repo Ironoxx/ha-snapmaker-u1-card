@@ -1,10 +1,10 @@
-"""Schlanker Moonraker-Client fuer den Snapmaker U1.
+"""Lean Moonraker client for the Snapmaker U1.
 
-Lesen laeuft ueber HTTP. Der Druckstart mit Filamentzuordnung laeuft ueber
-JSON-RPC auf dem WebSocket: Snapmakers Moonraker registriert
-``server.files.start_local_print`` ausdruecklich ohne HTTP-Transport
-(u1-moonraker/moonraker/components/snapmakercloud.py). Das ist derselbe Weg,
-den Snapmaker Orca im LAN-Modus nimmt.
+Reads go over HTTP. Starting a print with filament mapping goes over JSON-RPC
+on the WebSocket: Snapmaker's Moonraker registers
+``server.files.start_local_print`` explicitly without HTTP transport
+(u1-moonraker/moonraker/components/snapmakercloud.py). This is the same path
+Snapmaker Orca uses in LAN mode.
 """
 
 from __future__ import annotations
@@ -24,14 +24,15 @@ HTTP_TIMEOUT = aiohttp.ClientTimeout(total=15)
 
 
 class MoonrakerError(Exception):
-    """Moonraker hat mit einem Fehler geantwortet."""
+    """Moonraker answered with an error."""
 
 
 class MoonrakerConnectionError(MoonrakerError):
-    """Drucker nicht erreichbar."""
+    """Printer not reachable."""
 
 
 class MoonrakerClient:
+    """HTTP and JSON-RPC access to one Moonraker instance."""
     def __init__(
         self,
         session: aiohttp.ClientSession,
@@ -51,6 +52,7 @@ class MoonrakerClient:
 
     # ── HTTP ────────────────────────────────────────────────────────────────
     async def _get_json(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        """GET a Moonraker endpoint and return its ``result`` payload."""
         try:
             async with self._session.get(
                 f"{self.base_url}{path}", params=params,
@@ -58,12 +60,12 @@ class MoonrakerClient:
             ) as resp:
                 body = await resp.text()
                 if resp.status >= 400:
-                    raise MoonrakerError(f"HTTP {resp.status} fuer {path}: {body[:200]}")
+                    raise MoonrakerError(f"HTTP {resp.status} for {path}: {body[:200]}")
                 data = json.loads(body)
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise MoonrakerConnectionError(f"{self.host} nicht erreichbar: {err}") from err
+            raise MoonrakerConnectionError(f"{self.host} not reachable: {err}") from err
         except ValueError as err:
-            raise MoonrakerError(f"Ungueltige Antwort von {path}") from err
+            raise MoonrakerError(f"Invalid response from {path}") from err
         if isinstance(data, dict) and "error" in data:
             raise MoonrakerError(str(data["error"]))
         return data.get("result") if isinstance(data, dict) else data
@@ -71,7 +73,7 @@ class MoonrakerClient:
     async def query_objects(
         self, *objects: str, fields: dict[str, tuple[str, ...]] | None = None
     ) -> dict[str, Any]:
-        """Objekte abfragen; ``fields`` begrenzt die Felder je Objekt."""
+        """Query printer objects; ``fields`` limits the fields per object."""
         params = {name: "" for name in objects}
         for name, wanted in (fields or {}).items():
             params[name] = ",".join(wanted)
@@ -87,16 +89,16 @@ class MoonrakerClient:
         return [r["name"] for r in result or [] if isinstance(r, dict) and r.get("name")]
 
     async def klippy_ready(self) -> bool:
-        """Moonraker erreichbar und Klipper betriebsbereit."""
+        """Moonraker reachable and Klipper ready."""
         result = await self._get_json("/server/info")
         return isinstance(result, dict) and result.get("klippy_state") == "ready"
 
     async def open_file(
         self, root: str, path: str, headers: dict[str, str] | None = None
     ) -> aiohttp.ClientResponse:
-        """Datei als Antwortstrom oeffnen (fuer den Video-Proxy, Range wird durchgereicht).
+        """Open a file as a response stream (video proxy; Range is passed through).
 
-        Der Aufrufer muss die Antwort schliessen.
+        The caller must close the response.
         """
         url = f"{self.base_url}/server/files/{quote(root)}/{quote(path)}"
         try:
@@ -112,23 +114,23 @@ class MoonrakerClient:
         return result if isinstance(result, dict) else {}
 
     async def download(self, relative: str, root: str = "gcodes") -> bytes:
+        """Download a small file completely into memory."""
         url = f"{self.base_url}/server/files/{quote(root)}/{quote(relative)}"
         try:
             async with self._session.get(
                 url, headers=self._headers, timeout=HTTP_TIMEOUT
             ) as resp:
                 if resp.status >= 400:
-                    raise MoonrakerError(f"HTTP {resp.status} fuer {root}/{relative}")
+                    raise MoonrakerError(f"HTTP {resp.status} for {root}/{relative}")
                 return await resp.read()
         except (aiohttp.ClientError, TimeoutError) as err:
             raise MoonrakerConnectionError(str(err)) from err
 
     async def download_to(self, root: str, relative: str, target: Path, hass: Any) -> int:
-        """Grosse Datei (Video, G-Code) streamend nach ``target`` laden.
+        """Stream a large file (video, G-code) to ``target``.
 
-        Schreibt erst in ``<target>.part`` und benennt am Ende um: ein
-        abgebrochener Download hinterlaesst keine halbe Datei unter dem
-        richtigen Namen.
+        Writes to ``<target>.part`` first and renames at the end, so an
+        aborted download never leaves a half file under the real name.
         """
         url = f"{self.base_url}/server/files/{quote(root)}/{quote(relative)}"
         part = target.with_name(target.name + ".part")
@@ -141,7 +143,7 @@ class MoonrakerClient:
                 timeout=aiohttp.ClientTimeout(total=None, sock_connect=10, sock_read=60),
             ) as resp:
                 if resp.status >= 400:
-                    raise MoonrakerError(f"HTTP {resp.status} fuer {root}/{relative}")
+                    raise MoonrakerError(f"HTTP {resp.status} for {root}/{relative}")
                 buf = bytearray()
                 async for chunk in resp.content.iter_chunked(256 * 1024):
                     buf += chunk
@@ -165,13 +167,13 @@ class MoonrakerClient:
         return size
 
     async def upload(self, source: Path, path: str, root: str = "gcodes") -> dict[str, Any]:
-        """Lokale Datei nach ``root/path`` hochladen (Unterordner werden angelegt)."""
+        """Upload a local file to ``root/path`` (missing subfolders are created)."""
         folder, name = posixpath.split(path.lstrip("/"))
         form = aiohttp.FormData()
         form.add_field("root", root)
         if folder:
             form.add_field("path", folder)
-        # aiohttp liest Dateiobjekte im Executor; Datei bleibt bis zum Ende offen.
+        # aiohttp reads file objects in the executor; the file stays open until done.
         fh = await asyncio.get_running_loop().run_in_executor(None, source.open, "rb")
         try:
             form.add_field("file", fh, filename=name, content_type="application/octet-stream")
@@ -181,9 +183,9 @@ class MoonrakerClient:
             ) as resp:
                 body = await resp.text()
                 if resp.status >= 400:
-                    raise MoonrakerError(f"Upload abgelehnt (HTTP {resp.status}): {body[:200]}")
+                    raise MoonrakerError(f"Upload refused (HTTP {resp.status}): {body[:200]}")
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise MoonrakerConnectionError(f"Upload zu {self.host}: {err}") from err
+            raise MoonrakerConnectionError(f"Upload to {self.host}: {err}") from err
         finally:
             await asyncio.get_running_loop().run_in_executor(None, fh.close)
         try:
@@ -193,9 +195,9 @@ class MoonrakerClient:
         return data.get("result", data) if isinstance(data, dict) else {}
 
     async def move_file(self, source: str, dest: str, root: str = "gcodes") -> None:
-        """Umbenennen/Verschieben; fehlende Zielordner werden angelegt."""
+        """Rename/move a file; missing target folders are created."""
         folder = posixpath.dirname(dest.lstrip("/"))
-        # Moonraker legt Zielordner beim Verschieben nicht an, und auch nur je eine Ebene
+        # Moonraker does not create target folders when moving, and only one level at a time
         parts = folder.split("/") if folder else []
         for depth in range(1, len(parts) + 1):
             try:
@@ -203,7 +205,7 @@ class MoonrakerClient:
                     f"{self.base_url}/server/files/directory", json={"path": f"{root}/{'/'.join(parts[:depth])}"},
                     headers=self._headers, timeout=HTTP_TIMEOUT,
                 ):
-                    pass  # 400 = gibt es schon
+                    pass  # 400 = already exists
             except (aiohttp.ClientError, TimeoutError) as err:
                 raise MoonrakerConnectionError(str(err)) from err
         url = f"{self.base_url}/server/files/move"
@@ -212,31 +214,32 @@ class MoonrakerClient:
             async with self._session.post(url, json=body, headers=self._headers, timeout=HTTP_TIMEOUT) as resp:
                 text = await resp.text()
                 if resp.status >= 400:
-                    raise MoonrakerError(f"Verschieben abgelehnt (HTTP {resp.status}): {text[:200]}")
+                    raise MoonrakerError(f"Move refused (HTTP {resp.status}): {text[:200]}")
         except (aiohttp.ClientError, TimeoutError) as err:
             raise MoonrakerConnectionError(str(err)) from err
 
     async def temperature_store(self) -> dict[str, Any]:
-        """Temperaturverlauf, den Moonraker ohnehin vorhaelt (1/s, 20 min)."""
+        """Temperature history Moonraker keeps anyway (1/s, 20 min)."""
         result = await self._get_json("/server/temperature_store", {"include_monitors": "false"})
         return result if isinstance(result, dict) else {}
 
     async def delete_file(self, path: str, root: str = "gcodes") -> None:
+        """Delete a file below a Moonraker root; a missing file is not an error."""
         url = f"{self.base_url}/server/files/{quote(root)}/{quote(path.lstrip('/'))}"
         try:
             async with self._session.delete(url, headers=self._headers, timeout=HTTP_TIMEOUT) as resp:
                 if resp.status >= 400 and resp.status != 404:
-                    raise MoonrakerError(f"Loeschen abgelehnt (HTTP {resp.status})")
+                    raise MoonrakerError(f"Delete refused (HTTP {resp.status})")
         except (aiohttp.ClientError, TimeoutError) as err:
             raise MoonrakerConnectionError(str(err)) from err
 
     async def firmware_version(self) -> str | None:
-        """Installierte Firmware: product_info (Snapmaker-Moonraker), sonst Klipper-Version."""
+        """Installed firmware: product_info (Snapmaker Moonraker), else the Klipper version."""
         try:
             result = await self._get_json("/machine/system_info")
             prod = ((result or {}).get("system_info") or {}).get("product_info") or {}
             ver = prod.get("firmware_version") or prod.get("software_version")
-            # Nur echte Versionsnummern; sonst (z. B. "?") die Klipper-Version
+            # Real version numbers only; otherwise (e.g. "?") use the Klipper version
             if isinstance(ver, str) and re.search(r"\d+\.\d+", ver) and ver != "0.0.0":
                 return ver
         except MoonrakerError:
@@ -246,14 +249,14 @@ class MoonrakerClient:
         return ver if isinstance(ver, str) and ver else None
 
     async def cpu_count(self) -> int | None:
-        """Anzahl CPU-Kerne (fuer die Einordnung der Systemlast)."""
+        """Number of CPU cores (to put the system load into context)."""
         result = await self._get_json("/machine/system_info")
         info = ((result or {}).get("system_info") or {}).get("cpu_info") or {}
         count = info.get("cpu_count")
         return int(count) if isinstance(count, int) and count > 0 else None
 
     async def history(self, limit: int = 1000) -> list[dict[str, Any]]:
-        """Abgeschlossene Druckauftraege aus Moonrakers [history], neueste zuerst."""
+        """Finished jobs from Moonraker's [history], newest first."""
         result = await self._get_json("/server/history/list", {"limit": limit, "order": "desc"})
         jobs = (result or {}).get("jobs") if isinstance(result, dict) else None
         return [j for j in jobs or [] if isinstance(j, dict)]
@@ -264,11 +267,11 @@ class MoonrakerClient:
         return totals if isinstance(totals, dict) else {}
 
     async def print_action(self, action: str) -> None:
-        """pause | resume | cancel ueber JSON-RPC (Moonraker: printer.print.<action>)."""
+        """pause | resume | cancel via JSON-RPC (Moonraker: printer.print.<action>)."""
         await self.rpc(f"printer.print.{action}", response_timeout=30)
 
     def websocket(self) -> Any:
-        """Dauerhafte WebSocket-Verbindung (Kontextmanager) fuer das Live-Abo."""
+        """Persistent WebSocket connection (context manager) for the live subscription."""
         return self._session.ws_connect(
             f"ws://{self.host}:{self.port}/websocket", headers=self._headers, heartbeat=30,
             timeout=aiohttp.ClientWSTimeout(ws_close=10),
@@ -277,10 +280,10 @@ class MoonrakerClient:
     # ── WebSocket JSON-RPC ──────────────────────────────────────────────────
     async def rpc(self, method: str, params: dict[str, Any] | None = None,
                   response_timeout: float = 60) -> Any:
-        """Einzelner JSON-RPC-Aufruf, Verbindung danach wieder zu.
+        """Single JSON-RPC call; the connection is closed afterwards.
 
-        Moonraker schickt auf derselben Verbindung laufend notify_*-Meldungen;
-        es zaehlt nur die Antwort mit passender id.
+        Moonraker keeps sending notify_* messages on the same connection;
+        only the response with the matching id counts.
         """
         req_id = next(self._ids)
         payload = {"jsonrpc": "2.0", "method": method, "params": params or {}, "id": req_id}
@@ -303,11 +306,11 @@ class MoonrakerClient:
                         if "error" in data:
                             err = data["error"]
                             text = err.get("message") if isinstance(err, dict) else str(err)
-                            raise MoonrakerError(text or "Unbekannter Fehler")
+                            raise MoonrakerError(text or "Unknown error")
                         return data.get("result")
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise MoonrakerConnectionError(f"WebSocket zu {self.host}: {err}") from err
-        raise MoonrakerConnectionError("WebSocket ohne Antwort geschlossen")
+            raise MoonrakerConnectionError(f"WebSocket to {self.host}: {err}") from err
+        raise MoonrakerConnectionError("WebSocket closed without a response")
 
     async def start_print(
         self,
@@ -318,11 +321,11 @@ class MoonrakerClient:
         timelapse: bool | None = None,
         plate: int = 1,
     ) -> dict[str, Any]:
-        """Druck starten wie Snapmaker Orca.
+        """Start a print the way Snapmaker Orca does.
 
-        Die options-Schluessel landen grossgeschrieben als Parameter von
+        The option keys end up upper-cased as parameters of
         SDCARD_PRINT_FILE_WITH_PARAMETERS (klippy_apis.start_print_advanced)
-        und werden von SET_PRINT_TASK_PARAMETERS ausgewertet.
+        and are evaluated by SET_PRINT_TASK_PARAMETERS.
         """
         options: dict[str, Any] = {}
         if map_table:
@@ -344,7 +347,7 @@ class MoonrakerClient:
 
 
 class SpoolmanClient:
-    """Minimaler Spoolman-Client (API v1)."""
+    """Minimal Spoolman client (API v1)."""
 
     def __init__(self, session: aiohttp.ClientSession, url: str) -> None:
         self._session = session
@@ -354,6 +357,7 @@ class SpoolmanClient:
         self.url = url.removesuffix("/api/v1")
 
     async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
+        """Call the Spoolman API and return the decoded JSON."""
         try:
             async with self._session.request(
                 method, f"{self.url}/api/v1{path}", timeout=aiohttp.ClientTimeout(total=10), **kwargs
@@ -363,9 +367,9 @@ class SpoolmanClient:
                     raise MoonrakerError(f"Spoolman HTTP {resp.status}: {body[:200]}")
                 return json.loads(body) if body else None
         except (aiohttp.ClientError, TimeoutError) as err:
-            raise MoonrakerConnectionError(f"Spoolman nicht erreichbar: {err}") from err
+            raise MoonrakerConnectionError(f"Spoolman not reachable: {err}") from err
         except ValueError as err:
-            raise MoonrakerError("Ungueltige Antwort von Spoolman") from err
+            raise MoonrakerError("Invalid response from Spoolman") from err
 
     async def info(self) -> dict[str, Any]:
         return await self._request("GET", "/info") or {}

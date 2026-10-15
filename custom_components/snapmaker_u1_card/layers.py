@@ -1,21 +1,20 @@
-"""Schichtansicht: Bahnen der aktuellen Schicht aus der Druckdatei.
+"""Layer view: the paths of the current layer, taken from the print file.
 
-Die Integration laedt die laufende Datei einmal vom Drucker und zerlegt sie
-in Schichten (gleiche Markierungen wie bei "Pause vor Schicht"). Je Schicht
-bleiben nur extrudierende Bahnen, als Polylinien je Werkzeug (``T<n>`` =
-logisches Filament; der Drucker setzt es ueber die Zuordnungstabelle auf
-einen Kopf um). Zu jeder Polylinie wird die Dateiposition gemerkt: mit
-``virtual_sdcard.file_position`` zeigt die Karte, was in der Schicht schon
-gedruckt ist.
+The integration downloads the running file once and splits it into layers
+(same markers as "pause at layer"). Per layer only extruding moves are kept,
+as polylines per tool (``T<n>`` = logical filament; the printer maps it to a
+head through the map table). Each polyline remembers its file position: with
+``virtual_sdcard.file_position`` the card shows what has already been
+printed in the layer.
 
-Punkte naeher als ``MIN_STEP`` mm am letzten werden ausgelassen; das haelt
-auch Fuellungen mit vielen kurzen Segmenten klein, ohne das Bild zu aendern.
+Points closer than ``MIN_STEP`` mm to the previous one are dropped; this
+keeps infill with many short segments small without changing the picture.
 
-Nebenbei entsteht ein Zeitprofil (``timeline``): je Dateiposition die
-aufsummierte Fahrzeit (Strecke / Vorschub, ohne Beschleunigung) und die
-bis dahin gefoerderte Filamentlaenge je Werkzeug. Die Integration eicht die
-Fahrzeit mit der echten Druckdauer (Restzeit) und rechnet den Restbedarf je
-Kopf aus (Filament reicht nicht mehr).
+A time profile (``timeline``) is built on the way: per file position the
+accumulated move time (distance / feed rate, no acceleration) and the
+filament length extruded so far per tool. The integration calibrates the
+move time against the real print duration (remaining time) and computes the
+remaining demand per head (filament running out).
 """
 
 from __future__ import annotations
@@ -34,20 +33,19 @@ MAX_POINTS_PER_LAYER = 40000
 _NUM = re.compile(r"([XYZEIJ])(-?\d*\.?\d+)")
 _TOOL = re.compile(r"^T(\d+)\b")
 _OBJECT = re.compile(r"^EXCLUDE_OBJECT_DEFINE\b.*?POLYGON=(\[\[.*?\]\])", re.IGNORECASE)
-SAMPLE = 30000  # Punkte-Stichprobe fuer den Bildausschnitt
-TIMELINE_ROWS = 400  # Stuetzstellen des Zeitprofils
+SAMPLE = 30000  # point sample for the viewport
+TIMELINE_ROWS = 400  # samples in the time profile
 _DWELL = re.compile(r"([PS])(\d*\.?\d+)")
 _FEED = re.compile(r"F(\d*\.?\d+)")
 
 
 def view_box(sample: list[tuple[float, float]], objects: list[list[float]]) -> list[float] | None:
-    """Bildausschnitt: wo gedruckt wird, ohne Ausreisser.
+    """Viewport: where the part is printed, without outliers.
 
-    Spuel- und Abstreifbahnen beim Werkzeugwechsel liegen am Bettrand und sind
-    wenige, lange Bahnen; das Teil besteht aus vielen Punkten. Deshalb das
-    1.-99.-Perzentil, dann die echten Grenzen der Punkte innerhalb eines
-    Fensters darum (Kanten nicht abschneiden). Objekt-Polygone aus
-    EXCLUDE_OBJECT_DEFINE kommen immer dazu.
+    Purge and wipe moves at tool changes sit at the bed edge and are few, long
+    moves; the part consists of many points. Hence the 1st-99th percentile,
+    then the real bounds of the points within a window around it (do not cut
+    off edges). Object polygons from EXCLUDE_OBJECT_DEFINE are always added.
     """
     boxes = []
     if sample:
@@ -69,6 +67,7 @@ def view_box(sample: list[tuple[float, float]], objects: list[list[float]]) -> l
 
 
 def _detect_marker(path: Path) -> tuple[re.Pattern[str], int] | None:
+    """First layer change marker found in the file, or None."""
     with path.open("r", encoding="utf-8", errors="replace") as fh:
         for line in fh:
             for pattern, kind in _MARKERS:
@@ -78,25 +77,25 @@ def _detect_marker(path: Path) -> tuple[re.Pattern[str], int] | None:
 
 
 def parse_layers(path: Path, out: Path) -> dict[str, Any]:
-    """Datei zerlegen (blockierend, im Executor aufrufen).
+    """Split a file into layers (blocking, run in the executor).
 
-    Schichten gehen zeilenweise als JSON nach ``out``; im Speicher bleibt nur
-    der Index (Schicht -> Dateiposition in ``out`` und im G-Code). So kostet
-    auch eine 50-MB-Datei kaum Arbeitsspeicher.
+    Layers are written line by line as JSON to ``out``; only the index
+    (layer -> position in ``out`` and in the G-code) stays in memory, so even
+    a 50 MB file costs very little RAM.
     """
     marker = _detect_marker(path)
     if marker is None:
-        raise ValueError("Keine Schichtwechsel in der Datei gefunden.")
+        raise ValueError("No layer changes found in the file.")
     file_size = path.stat().st_size
     tl_step = max(256, file_size // TIMELINE_ROWS)
-    timeline: list[list[float]] = []  # [offset, sekunden, e_t0 .. e_t7]
+    timeline: list[list[float]] = []  # [offset, seconds, e_t0 .. e_t7]
     t_kin = 0.0
     feed = 3000.0  # mm/min
     e_tool: dict[int, float] = {}
     next_row = 0
-    last_extrude = 0  # Dateiposition der letzten Extrusion (danach: End-G-Code)
+    last_extrude = 0  # file position of the last extrusion (end G-code follows)
     pattern, kind = marker
-    index: list[list[int]] = []  # [nummer, start im G-Code, offset in out, laenge in out]
+    index: list[list[int]] = []  # [number, start in G-code, offset in out, length in out]
     tools_seen: set[int] = set()
     sink = out.open("wb")
     cur: dict[str, Any] | None = None
@@ -110,11 +109,11 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
     points = 0
     sample: list[tuple[float, float]] = []
     seen = 0
-    rng = random.Random(1)  # reproduzierbar
+    rng = random.Random(1)  # reproducible
     objects: list[list[float]] = []
 
     def take(pt: tuple[float, float]) -> None:
-        """Stichprobe (Reservoir) fuer den Bildausschnitt."""
+        """Reservoir sample for the viewport."""
         nonlocal seen
         seen += 1
         if len(sample) < SAMPLE:
@@ -126,7 +125,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
     layer_no = 0
     offset = 0
 
-    tail: tuple[float, float] | None = None  # letzter extrudierter Punkt (auch ausgelassen)
+    tail: tuple[float, float] | None = None  # last extruded point (also when it was skipped)
 
     def close() -> None:
         nonlocal poly, tail
@@ -188,8 +187,8 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                 tool = int(t.group(1))
                 continue
             cmd = line.split(" ", 1)[0].upper()
-            # Klipper: G90/G91 betreffen nur XYZ (G91 macht E relativ, G90 nicht
-            # wieder absolut); E-Modus kommt aus M82/M83. Orca schreibt M83, dann G90.
+            # Klipper: G90/G91 only affect XYZ (G91 makes E relative, G90 does not
+            # make it absolute again); the E mode comes from M82/M83. Orca writes M83, then G90.
             if cmd == "G90":
                 absolute = True
                 continue
@@ -240,7 +239,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                 e = ev if e_abs else e + ev
                 extruding = de > 0 and (nx != x or ny != y or bool(arc))
                 if de:
-                    # netto: Rueckzug und Wiederauffuellen heben sich auf
+                    # net: retraction and unretraction cancel out
                     e_tool[tool] = e_tool.get(tool, 0.0) + de
             if arc:
                 flat = sum(math.dist(a, b) for a, b in zip([(x, y), *arc[:-1]], arc, strict=True))
@@ -273,7 +272,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
     flush()
     sink.close()
     timeline.append([offset, round(t_kin, 1), *_e_row(e_tool)])
-    # Leere Schichten (nur Fahrten) bleiben drin: Nummerierung gleich der Firmware.
+    # Empty layers (travel only) stay in: numbering matches the firmware.
     return {
         "index": index,
         "total": len(index),
@@ -285,15 +284,15 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
     }
 
 
-ARC_STEP = 0.5  # mm Sehnenlaenge beim Zerlegen von G2/G3
+ARC_STEP = 0.5  # mm chord length when splitting G2/G3
 
 
 def _arc_points(cmd: str, x: float, y: float, nx: float, ny: float,
                 vals: dict[str, str]) -> list[tuple[float, float]] | None:
-    """G2 (im Uhrzeigersinn) / G3 (gegen) mit I/J in Punkte zerlegen.
+    """Split G2 (clockwise) / G3 (counter-clockwise) arcs with I/J into points.
 
-    Orca schreibt bei "Arc fitting" Rundungen als Boegen; als gerade Linie
-    gezeichnet wuerden sie zur Sehne. Gleicher Start und Ziel = Vollkreis.
+    Orca writes curves as arcs when "Arc fitting" is on; drawn as a straight
+    line they would become a chord. Identical start and end = full circle.
     """
     if "I" not in vals and "J" not in vals:
         return None
@@ -316,12 +315,12 @@ def _arc_points(cmd: str, x: float, y: float, nx: float, ny: float,
 
 
 def _e_row(e_tool: dict[int, float]) -> list[float]:
-    # feste Spaltenfolge Werkzeug 0..7 (T0-T7), Laenge in mm
+    # fixed column order tool 0..7 (T0-T7), length in mm
     return [round(e_tool.get(i, 0.0), 1) for i in range(8)]
 
 
 def timeline_at(meta: dict[str, Any] | None, position: int | None) -> dict[str, Any] | None:
-    """Fahrzeit und Filament bis ``position`` (linear zwischen Stuetzstellen)."""
+    """Move time and filament up to ``position`` (linear between samples)."""
     rows = (meta or {}).get("timeline") or []
     if not rows or position is None:
         return None
@@ -343,12 +342,12 @@ def timeline_at(meta: dict[str, Any] | None, position: int | None) -> dict[str, 
 def estimate_remaining(
     meta: dict[str, Any] | None, position: int | None, duration: float | None, slicer_total: float | None
 ) -> float | None:
-    """Restzeit in s aus Zeitprofil, bisheriger Druckdauer und Slicer-Schaetzung.
+    """Remaining time in seconds from the time profile, elapsed time and slicer estimate.
 
-    k = Anteil der Fahrzeit bis zur aktuellen Position. Zwei Schaetzungen:
-    Slicer (Gesamtzeit nach dem Profil verteilt) und Ist (bisherige Dauer x
-    Rest/Erledigt). Gewichtet mit k: am Anfang zaehlt der Slicer, gegen Ende
-    die gemessene Geschwindigkeit.
+    k = share of the move time up to the current position. Two estimates:
+    slicer (total time distributed along the profile) and actual (elapsed
+    time x remaining/done). Weighted by k: early on the slicer counts, towards
+    the end the measured speed.
     """
     at = timeline_at(meta, position)
     if at is None or not at["t_total"]:
@@ -366,7 +365,7 @@ def estimate_remaining(
 
 
 def layer_payload(meta: dict[str, Any], store: Path, number: int) -> dict[str, Any] | None:
-    """Eine Schicht fuer die Karte (1-basiert wie die Firmware); blockierend."""
+    """One layer for the card (1-based like the firmware); blocking."""
     index = meta["index"]
     pos = next((i for i, row in enumerate(index) if row[0] == number), None)
     if pos is None:

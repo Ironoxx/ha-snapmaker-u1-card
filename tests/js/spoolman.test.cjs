@@ -1,4 +1,4 @@
-// Spulen aus Spoolman: Anzeige je Kopf, Auswahl, Warnung im Druckdialog.
+// Spools from Spoolman: display per head, selection, warning in the print dialog.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -54,7 +54,7 @@ const root = () => card.shadowRoot.getElementById("u1card");
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 (async () => {
-  // 1. Spule je Kopf
+  // 1. Spool per head
   const lines = [...root().querySelectorAll(".spool-line")];
   assert.strictEqual(lines.length, 3, "drei geladene Koepfe mit Spule, leerer Kopf ohne Zeile");
   assert.ok(/#1 PLA Schwarz/.test(lines[0].textContent) && /650 g/.test(lines[0].textContent));
@@ -62,7 +62,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(lines[1].dataset.low, "1", "60 g < 100 g Warnschwelle");
   assert.ok(/manuell/.test(lines[2].title), "manuell gewaehlt im Tooltip");
 
-  // 2. Auswahl: passende zuerst, PETG zuletzt, belegte Spule markiert
+  // 2. Selection: matching first, PETG last, used spool marked
   lines[0].click();
   const dlg = () => card.shadowRoot.querySelector("dialog.u1spool");
   assert.ok(dlg().hasAttribute("open"));
@@ -74,7 +74,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   await tick();
   assert.deepStrictEqual(calls.at(-1), ["snapmaker_u1_card", "set_spool", { slot: 1, spool_id: 4, config_entry_id: "E1" }, null, false]);
   assert.ok(!dlg().hasAttribute("open"), "Dialog zu nach Erfolg");
-  // automatisch = ohne spool_id; keine = 0
+  // automatic = without spool_id; none = 0
   root().querySelectorAll(".spool-line")[1].click();
   dlg().querySelector('[data-pick="auto"]').click(); await tick();
   assert.deepStrictEqual(calls.at(-1)[2], { slot: 2, config_entry_id: "E1" });
@@ -82,19 +82,19 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   dlg().querySelector('[data-pick="0"]').click(); await tick();
   assert.deepStrictEqual(calls.at(-1)[2], { slot: 2, spool_id: 0, config_entry_id: "E1" });
 
-  // 3. Druckdialog: weisses PLA (80 g) auf Kopf 2 mit 60 g -> Warnung, Rest am Knopf
+  // 3. Print dialog: white PLA (80 g) on head 2 with 60 g -> warning, remainder on the button
   root().querySelector('[data-print="teil.gcode"]').click();
   const pd = card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)");
   assert.ok(/Spule #3 hat noch 60 g, gebraucht werden ca\. 80 g/.test(pd.textContent), pd.textContent.replace(/\s+/g, " "));
   assert.ok(pd.querySelector(".slot-rest"), "Restgewicht an den Kopf-Knoepfen");
-  // beide Filamente auf Kopf 1 (650 g): keine Warnung
+  // both filaments on head 1 (650 g): no warning
   pd.querySelector('[data-map="0"][data-slot="0"]').click();
   assert.ok(!/gebraucht werden/.test(card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)").textContent));
   pd.close && card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)").close();
 
-  // 4. Ohne Spoolman: nichts davon
+  // 4. Without Spoolman: none of it
   delete states["sensor.u1c_filamente"].attributes.spoolman;
   card.hass = hass();
   assert.strictEqual(root().querySelectorAll(".spool-line").length, 0);
-  console.log("SPOOLMAN OK –", calls.length, "Dienstaufrufe");
+  console.log("SPOOLMAN OK –", calls.length, "service calls");
 })().catch((e) => { console.error(e); process.exit(1); });

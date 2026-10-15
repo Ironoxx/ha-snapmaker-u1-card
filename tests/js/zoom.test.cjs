@@ -1,4 +1,4 @@
-// Kamera-Zoom und Systemlast-Anzeige.
+// Camera zoom and system load display.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -28,34 +28,34 @@ const R = () => card.shadowRoot.getElementById("u1card");
 const frame = () => R().querySelector(".stage .frame");
 const img = () => frame().querySelector("img");
 
-// Systemlast eingeordnet
+// System load with context
 assert.match(R().querySelector('[data-su1="sys"]').textContent, /0,50 · 13 % von 4 Kernen/);
 assert.match(R().textContent, /Systemlast \(Ø 1 min\)/);
 
-// Zoom per Knopf
+// Zoom via buttons
 assert.ok(frame().querySelector('[data-zoom="out"]').hidden, "Minus erst beim Zoomen");
 frame().querySelector('[data-zoom="in"]').click();
 assert.match(img().style.transform, /scale\(1\.6\)/);
 assert.ok(frame().classList.contains("zoomed"));
 assert.strictEqual(frame().querySelector(".zoom-badge").textContent, "1,6×");
 assert.ok(!frame().querySelector('[data-zoom="out"]').hidden);
-// Mitte bleibt Mitte: translate = 200 - 200*1.6 = -120, 150 - 150*1.6 = -90
+// The centre stays the centre: translate = 200 - 200*1.6 = -120, 150 - 150*1.6 = -90
 assert.match(img().style.transform, /translate\(-120px, -90px\)/);
-// Mausrad ohne Strg scrollt nur die Seite? Bei Zoom > 1 wird gezoomt
+// Mouse wheel without Ctrl only scrolls the page? With zoom > 1 it zooms
 const wheel = (dy, ctrl) => { const e = new w.WheelEvent("wheel", { deltaY: dy, ctrlKey: ctrl, clientX: 0, clientY: 0, cancelable: true }); frame().dispatchEvent(e); return e.defaultPrevented; };
 assert.ok(wheel(100, false), "gezoomt: Rad zoomt");
-// Neuaufbau behaelt den Zoom
+// A rebuild keeps the zoom
 const t = img().style.transform;
 card._renderKey = null; card.hass = hass();
 assert.strictEqual(img().style.transform, t, "Zoom ueberlebt Neuaufbau");
-// Doppelklick setzt zurueck
+// Double click resets
 frame().dispatchEvent(new w.MouseEvent("dblclick", { clientX: 10, clientY: 10, bubbles: true }));
 assert.strictEqual(img().style.transform, "");
 assert.ok(!frame().classList.contains("zoomed"));
-// Ungezoomt: Rad ohne Strg nicht abfangen (Seite scrollt)
+// Not zoomed: do not capture the wheel without Ctrl (page scrolls)
 assert.ok(!wheel(100, false), "ungezoomt: Seite scrollt");
 assert.ok(wheel(-100, true), "Strg+Rad zoomt");
-// Rand: nicht ueber das Bild hinaus schieben
+// Edge: do not pan beyond the image
 card._zoom.x = 500; card._applyZoom();
 assert.match(img().style.transform, /translate\(0px/);
 console.log("ZOOM OK");

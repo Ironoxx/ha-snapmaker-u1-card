@@ -1,14 +1,14 @@
-"""Sicherung der Drucker-Konfiguration (Moonraker-Wurzel "config").
+"""Backup of the printer configuration (Moonraker root "config").
 
-Einmal taeglich (und per Dienst ``backup_config``) holt die Integration alle
-Dateien aus der Wurzel ``config`` (printer.cfg, moonraker.conf, Makros ...)
-und legt sie unter ``/config/snapmaker_u1_backup/<YYYY-MM-DD_HHMMSS>/`` ab.
-Ein neuer Stand entsteht nur, wenn sich der Inhalt geaendert hat; die
-letzten ``BACKUP_KEEP`` bleiben. Dateien ueber ``BACKUP_MAX_BYTES`` (Logs,
-Datenbanken) werden uebersprungen.
+Once a day (and via the ``backup_config`` service) the integration fetches all
+files from the ``config`` root (printer.cfg, moonraker.conf, macros ...) and
+stores them under ``/config/snapmaker_u1_backup/<YYYY-MM-DD_HHMMSS>/``.
+A new snapshot is only created when the content changed; the last
+``BACKUP_KEEP`` are kept. Files above ``BACKUP_MAX_BYTES`` (logs, databases)
+are skipped.
 
-Die Sicherungen liegen im HA-Konfigordner und sind damit auch in jedem
-HA-Backup enthalten.
+The snapshots live in the Home Assistant config folder and are therefore
+part of every Home Assistant backup.
 """
 
 from __future__ import annotations
@@ -36,6 +36,7 @@ def _safe(path: str) -> str | None:
 
 
 def _write_snapshot(folder: Path, name: str, blobs: dict[str, bytes], keep: int) -> Path:
+    """Write one snapshot folder and prune old ones (blocking)."""
     target = folder / name
     for rel, blob in blobs.items():
         dest = target / rel
@@ -48,6 +49,7 @@ def _write_snapshot(folder: Path, name: str, blobs: dict[str, bytes], keep: int)
 
 
 def list_snapshots(folder: Path) -> list[str]:
+    """Existing snapshot folders, newest first (blocking)."""
     if not folder.is_dir():
         return []
     return sorted((p.name for p in folder.iterdir() if p.is_dir()), reverse=True)
@@ -56,7 +58,7 @@ def list_snapshots(folder: Path) -> list[str]:
 async def backup_config(
     hass: Any, client: MoonrakerClient, folder: Path, last_digest: str | None, keep: int = BACKUP_KEEP
 ) -> dict[str, Any]:
-    """Eine Sicherung; Rueckgabe: {status: saved|unchanged|empty, digest, snapshot, files, skipped}."""
+    """One backup run. Returns {status: saved|unchanged|empty, digest, snapshot, files, skipped}."""
     entries = await client.list_files("config")
     blobs: dict[str, bytes] = {}
     skipped: list[str] = []
@@ -71,7 +73,7 @@ async def backup_config(
         try:
             blobs[rel] = await client.download(rel, root="config")
         except MoonrakerError as err:
-            _LOGGER.debug("Sicherung: %s nicht geladen: %s", rel, err)
+            _LOGGER.debug("Backup: %s not downloaded: %s", rel, err)
             skipped.append(rel)
     if not blobs:
         return {"status": "empty", "digest": last_digest, "files": 0, "skipped": skipped}
@@ -83,5 +85,5 @@ async def backup_config(
         return {"status": "unchanged", "digest": hexdigest, "files": len(blobs), "skipped": skipped}
     name = dt_util.now().strftime("%Y-%m-%d_%H%M%S")
     target = await hass.async_add_executor_job(_write_snapshot, folder, name, blobs, keep)
-    _LOGGER.info("Drucker-Konfiguration gesichert: %s (%d Dateien)", target, len(blobs))
+    _LOGGER.info("Printer configuration backed up: %s (%d files)", target, len(blobs))
     return {"status": "saved", "digest": hexdigest, "snapshot": name, "files": len(blobs), "skipped": skipped}

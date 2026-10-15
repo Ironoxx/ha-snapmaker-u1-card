@@ -1,5 +1,5 @@
-// 5.3/5.4: Warteschlange, Pause bei Schicht, Nachdruck, Upload, Meldungen,
-// Diagramme, Wartung, Zeitraffer-Archiv – in DE und EN.
+// Queue, pause at layer, reprint, upload, messages,
+// charts, maintenance, timelapse archive, in German and English.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -18,7 +18,7 @@ let confirmAnswer = true;
 const prompts = [];
 w.confirm = (m) => { prompts.push(m); return confirmAnswer; };
 w.alert = (m) => prompts.push(m);
-// XHR-Attrappe fuer den Upload
+// XHR fake for the upload
 const xhrs = [];
 w.XMLHttpRequest = class {
   constructor() { this.headers = {}; this.upload = {}; xhrs.push(this); }
@@ -95,12 +95,12 @@ const tab = (id) => R().querySelector(`[data-tab="${id}"]`).click();
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 (async () => {
-  // 1. Meldung im Klartext oben, in jedem Reiter
+  // 1. Plain-language message on top, on every tab
   assert.match(text(R().querySelector(".alerts")), /Vorladen: kein Filament erkannt \(Kopf 2\) Filament bis zum Anschlag/);
   tab("system");
   assert.ok(R().querySelector(".alerts"), "Meldung auch im System-Reiter");
 
-  // 2. Wartung
+  // 2. Maintenance
   const m = text(R().querySelector(".m-list"));
   assert.match(m, /Druckplatte reinigen 31 \/ 30 h · fällig/);
   assert.match(m, /Linearführungen schmieren 250 \/ 300 h · noch 50 h/);
@@ -112,7 +112,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.match(prompts.pop(), /„Druckplatte reinigen“ als erledigt markieren\?/);
   assert.deepEqual(calls.pop().slice(0, 3), ["snapmaker_u1_card", "maintenance_done", { item: "plate", config_entry_id: "E1" }]);
 
-  // 3. Diagramme
+  // 3. Charts
   tab("history");
   assert.strictEqual(R().querySelectorAll(".chart .bar").length, 12);
   assert.ok(R().querySelector(".bar-fail"), "Abgebrochene gestapelt");
@@ -123,11 +123,11 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(!R().querySelector(".bar-fail"), "Stunden ohne Stapel");
   assert.match(R().querySelectorAll(".chart .bar")[11].title, /16,5 h/);
   assert.ok(R().querySelector('[data-metric="cost"]'), "Kosten-Chip, da Kosten vorhanden");
-  // Nach Neuaufbau bleibt die Kennzahl
+  // The metric survives a rebuild
   card._renderKey = null; card.hass = hass();
   assert.ok(R().querySelector('[data-metric="hours"]').classList.contains("sel"));
 
-  // 4. Historie: Nachdruck mit alter Zuordnung, Optionen, Pause; Fehlertext
+  // 4. History: reprint with the old mapping, options, pause; error text
   assert.strictEqual(R().querySelectorAll("[data-reprint]").length, 1, "nur, wenn die Datei noch da ist");
   assert.match(text(R().querySelector(".hist-list")), /Pause vor 12/);
   assert.match(text(R().querySelector(".hist-list")), /Spaghetti erkannt/);
@@ -140,7 +140,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(dl.querySelector('[data-pref="timelapse"]').checked, "Zeitraffer wie damals");
   assert.match(text(dl), /hält vor Schicht 12 an/);
 
-  // 5. Pause-Eingabe pruefen
+  // 5. Validate the pause input
   const pin = dl.querySelector("[data-pause]");
   pin.value = "3, 60"; pin.dispatchEvent(new w.Event("change"));
   dl = D();
@@ -151,7 +151,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   D().querySelector("[data-pause]").value = "20 5,20"; D().querySelector("[data-pause]").dispatchEvent(new w.Event("change"));
   dl = D();
   assert.match(text(dl), /vor Schicht 5, 20 an/);
-  // Druck: Bestaetigung noetig; Warteschlange nicht
+  // Print: confirmation required; queue: not
   assert.ok(dl.querySelector('[data-dlg="print"]').disabled);
   dl.querySelector('[data-dlg="queue"]').click();
   await tick(); await tick();
@@ -162,7 +162,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(q[2].timelapse, true);
   assert.ok(!D() || !D().hasAttribute("open"), "Dialog zu");
 
-  // 6. Druck mit Pause starten
+  // 6. Start a print with pauses
   tab("files");
   R().querySelector('[data-print="box.gcode"]').click();
   dl = D();
@@ -174,7 +174,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(sp[1], "start_print");
   assert.deepEqual(sp[2].pause_layers, [7]);
 
-  // 7. Warteschlange im Dateien-Reiter
+  // 7. Queue in the files tab
   const qtext = text(R().querySelector(".q-list"));
   assert.match(qtext, /1 Box Pause vor 5, 9.*2 Teil/);
   assert.strictEqual(R().querySelector('[data-q="start"]').dataset.job, "j1");
@@ -191,7 +191,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   R().querySelector('[data-q="start"]').click(); await tick(); await tick();
   assert.strictEqual(calls.pop()[1], "queue_start");
 
-  // 8. Waehrend des Drucks: Dateien sichtbar, Dialog nur Warteschlange, Start gesperrt
+  // 8. During a print: files visible, dialog offers the queue only, start blocked
   states[`sensor.${P}_current_print_state`].state = "printing";
   card.hass = hass();
   tab("files");
@@ -225,20 +225,20 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card.hass = hass();
   assert.ok(D() && D().hasAttribute("open") && /Neu/.test(D().querySelector(".dlg-title").textContent), "Dialog fuer neue Datei");
   D().querySelector('[data-dlg="cancel"]').click();
-  // Fehler vom Server
+  // error from the server
   const input2 = R().querySelector("input[data-upload]");
   Object.defineProperty(input2, "files", { value: [file], configurable: true });
   input2.dispatchEvent(new w.Event("change"));
   const x2 = xhrs.pop();
   x2.status = 413; x2.responseText = JSON.stringify({ message: "Datei zu gross." }); x2.onload();
   assert.match(text(R().querySelector(".dlg-error")), /Neu\.gcode: Datei zu gross/);
-  // falsche Endung
+  // wrong file extension
   const bad = new w.File(["x"], "a.stl");
   Object.defineProperty(R().querySelector("input[data-upload]"), "files", { value: [bad], configurable: true });
   R().querySelector("input[data-upload]").dispatchEvent(new w.Event("change"));
   assert.match(prompts.pop(), /Nur \.gcode/);
 
-  // 10. Zeitraffer-Archiv
+  // 10. Timelapse archive
   tab("timelapse");
   assert.match(text(R().querySelector(".arch-head")), /Gesichert in Medien \(2\)/);
   assert.match(text(R().querySelector('[data-archive="0"]')), /Nuss 2 PLA 1h17m/);
@@ -255,7 +255,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card.hass = hass();
   assert.match(text(R()), /von der Firmware nicht unterstützt/);
 
-  // 11. Mini-Karte: Meldung und naechster Auftrag
+  // 11. Mini card: message and next job
   const mini = w.document.createElement("snapmaker-u1-mini-card");
   mini.setConfig({ type: "custom:snapmaker-u1-mini-card" });
   w.document.body.appendChild(mini);
@@ -264,9 +264,9 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.match(mt, /Vorladen: kein Filament erkannt/);
   assert.match(mt, /Nächster: Box \(\+1\)/);
 
-  // 12. Englisch: keine deutschen Reste in allen Reitern, Dialog und Mini
+  // 12. English: no German leftovers in any tab, the dialog and the mini card
   lang = "en";
-  card._up = null; // Fehlermeldung des Servers stammt aus dem DE-Teil
+  card._up = null; // The server error message comes from the German part
   const GERMAN = /[äöüÄÖÜß]|\b(Druck|Drucke|Drucker|Datei|Dateien|Schicht|Schichten|Restzeit|Fertig|fertig|Bereit|Abbrechen|Licht|Kopf|Leer|Spule|Verlauf|Steuerung|Zeitraffer|Wartung|Warteschlange|Aufträge|Meldung|Starten|Entfernen|Erledigt|Stunden|Kosten|Strom|und|oder|nicht|noch|keine?|vor|nach)\b/;
   const scan = (root, what) => {
     const t = text(root);
@@ -289,5 +289,5 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   tab("history");
   assert.match(text(R().querySelector(".chart").parentElement), /Success rate\s*94\.3 %/);
 
-  console.log("FUNKTIONEN 5.3/5.4 OK");
+  console.log("FEATURES OK – queue, pause at layer, upload, messages, charts, maintenance, archive");
 })().catch((e) => { console.error(e); process.exit(1); });

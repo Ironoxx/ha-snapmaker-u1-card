@@ -1,16 +1,16 @@
-"""Warteschlange und Pause bei Schicht.
+"""Job queue and pause at layer.
 
-Warteschlange: Moonrakers ``[job_queue]`` ist auf dem U1 nicht geladen und
-kennt ohnehin keine Filamentzuordnung. Die Integration fuehrt die Liste
-deshalb selbst, mit Zuordnung und Optionen je Auftrag. Gestartet wird nie
-automatisch: nach einem Druck muss erst jemand das Bett raeumen.
+Queue: Moonraker's ``[job_queue]`` is not loaded on the U1 and knows nothing
+about filament mapping anyway. The integration therefore keeps its own list,
+with mapping and options per job. A job is never started automatically:
+after a print somebody has to clear the bed first.
 
-Pause bei Schicht: Klipper hat dafuer keinen Befehl, die U1-Firmware auch
-nicht. Wie die Slicer-Funktion wird ``PAUSE`` direkt in eine Kopie der Datei
-geschrieben, vor den Schichtwechsel der gewuenschten Schicht. Die Firmware
-behandelt ``PAUSE`` in Dateien ausdruecklich (virtual_sdcard.process_gcode_line).
-Die Kopie heisst ``<name>.u1pause-<schichten>.gcode``, ist in der Dateiliste
-ausgeblendet und wird nach dem Druck geloescht.
+Pause at layer: neither Klipper nor the U1 firmware has a command for it.
+Like the slicer feature, ``PAUSE`` is written straight into a copy of the
+file, before the layer change of the requested layer. The firmware handles
+``PAUSE`` in files explicitly (virtual_sdcard.process_gcode_line). The copy
+is named ``<name>.u1pause-<layers>.gcode``, hidden in the file list and
+deleted after the print.
 """
 
 from __future__ import annotations
@@ -25,31 +25,33 @@ from typing import Any
 PAUSE_TAG = ".u1pause-"
 _PAUSE_RE = re.compile(r"^(?P<stem>.+)\.u1pause-[\d-]+(?P<ext>\.gcode)$", re.IGNORECASE)
 
-# Schichtwechsel-Markierungen, bevorzugt zuerst. Zahl = Schichtnummer (1-basiert)
-# oder None = fortlaufend zaehlen.
+# Layer change markers, preferred first. Number = layer number (1-based)
+# or None = count sequentially.
 _MARKERS: tuple[tuple[re.Pattern[str], int], ...] = (
     # OrcaSlicer/Snapmaker Orca, PrusaSlicer, BambuStudio
     (re.compile(r"^;\s*LAYER_CHANGE\b"), 0),
-    # BambuStudio-Stil
+    # BambuStudio style
     (re.compile(r"^;\s*CHANGE_LAYER\b"), 0),
-    # Cura: ;LAYER:0 ist die erste Schicht
+    # Cura: ;LAYER:0 is the first layer
     (re.compile(r"^;LAYER:(-?\d+)"), 1),
-    # Klipper-Layerinfo ohne Kommentare
+    # Klipper layer info without comments
     (re.compile(r"^SET_PRINT_STATS_INFO\b.*\bCURRENT_LAYER=(\d+)", re.IGNORECASE), 0),
 )
 
 
 def pause_file_name(path: str, layers: list[int]) -> str:
+    """Name of the pause copy for ``path`` and the given layers."""
     stem, _ext = posixpath.splitext(path)
     return f"{stem}{PAUSE_TAG}{'-'.join(str(n) for n in sorted(set(layers)))}.gcode"
 
 
 def is_pause_copy(path: str | None) -> bool:
+    """Whether ``path`` is a pause copy created by the integration."""
     return bool(path) and bool(_PAUSE_RE.match(posixpath.basename(str(path))))
 
 
 def original_file(path: str | None) -> str | None:
-    """Pfad der Originaldatei zu einer Pause-Kopie (sonst unveraendert)."""
+    """Path of the original file for a pause copy (otherwise unchanged)."""
     if not path:
         return path
     head, base = posixpath.split(str(path))
@@ -58,15 +60,15 @@ def original_file(path: str | None) -> str | None:
 
 
 def add_layer_pauses(src: Path, dst: Path, layers: list[int]) -> dict[str, Any]:
-    """Datei kopieren und vor den gewuenschten Schichten ``PAUSE`` einfuegen.
+    """Copy the file and insert ``PAUSE`` before the requested layers.
 
-    Blockierend (im Executor aufrufen). Rueckgabe: welche Schichten gesetzt
-    wurden, Schichten gesamt, verwendete Markierung. Ohne erkennbare
-    Schichtwechsel -> ValueError.
+    Blocking (run in the executor). Returns which layers were set, the total
+    number of layers and the marker used. Without detectable layer changes
+    -> ValueError.
     """
     wanted = sorted({int(n) for n in layers if int(n) >= 1})
     if not wanted:
-        raise ValueError("Keine gueltige Schicht angegeben.")
+        raise ValueError("No valid layer given.")
     with src.open("r", encoding="utf-8", errors="surrogateescape") as fh:
         marker = None
         for line in fh:
@@ -77,7 +79,7 @@ def add_layer_pauses(src: Path, dst: Path, layers: list[int]) -> dict[str, Any]:
             if marker:
                 break
     if marker is None:
-        raise ValueError("Keine Schichtwechsel in der Datei gefunden (Slicer-Kommentare fehlen).")
+        raise ValueError("No layer changes found in the file (slicer comments missing).")
     pattern, kind = marker
     done: list[int] = []
     layer = 0
@@ -101,7 +103,7 @@ def add_layer_pauses(src: Path, dst: Path, layers: list[int]) -> dict[str, Any]:
 
 
 class JobQueue:
-    """Geplante Druckauftraege; gespeichert mit dem Coordinator."""
+    """Planned print jobs; persisted together with the coordinator."""
 
     def __init__(self, stored: list[dict[str, Any]] | None) -> None:
         self.jobs: list[dict[str, Any]] = [
@@ -112,6 +114,7 @@ class JobQueue:
         return self.jobs
 
     def add(self, job: dict[str, Any]) -> dict[str, Any]:
+        """Append a job (file, mapping, options) and return it."""
         entry = {
             "id": uuid.uuid4().hex[:8],
             "added": time.time(),
@@ -133,6 +136,7 @@ class JobQueue:
         return len(self.jobs) != before
 
     def move(self, job_id: str, position: int) -> bool:
+        """Move a job to ``position`` (clamped to the queue length)."""
         job = self.get(job_id)
         if job is None:
             return False

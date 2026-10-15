@@ -1,5 +1,5 @@
-"""Netzschalter, Energie und Kosten je Druck, Historie, Benachrichtigung,
-Auto-Ein/-Aus und Zeitraffer-Proxy."""
+"""Power switch, energy and cost per print, history, notifications,
+auto-on/-off and the timelapse proxy."""
 
 import asyncio
 from unittest.mock import AsyncMock, patch
@@ -19,7 +19,7 @@ from pytest_homeassistant_custom_component.common import (  # noqa: E402
 
 from tests.test_init import API, DOMAIN, PTC, mock_client  # noqa: E402,F401
 
-COORD = "custom_components.snapmaker_u1_card.coordinator"
+COORD = "custom_components.snapmaker_u1_card.coordinator.power"
 SWITCH = "input_boolean.drucker_steckdose"
 ENERGY = "sensor.drucker_energie"
 POWER = "sensor.drucker_leistung"
@@ -91,7 +91,7 @@ async def _refresh(hass, entry):
     await hass.async_block_till_done()
 
 
-# ── Optionen ────────────────────────────────────────────────────────────────
+# ── Options ─────────────────────────────────────────────────────────────────
 async def test_options_flow_sections(hass: HomeAssistant, mock_client, notifications) -> None:
     entry = await _setup(hass)
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -107,10 +107,10 @@ async def test_options_flow_sections(hass: HomeAssistant, mock_client, notificat
         "files": {"files_limit": 10},
         "spoolman": {"spoolman_deduct": True, "spoolman_low": 100}, "timelapse": {"timelapse_archive": False, "timelapse_keep": 5}, "maintenance": {"maint_plate": 30, "maint_nozzle": 100, "maint_rails": 300, "maint_belts": 500, "maint_filter": 0},
     }
-    # Auto-Ein ohne Schalter wird abgelehnt
+    # auto-on without a switch is refused
     result = await hass.config_entries.options.async_configure(result["flow_id"], base)
     assert result["errors"] == {"base": "auto_needs_switch"}
-    # Unbekannter Benachrichtigungsdienst
+    # unknown notification service
     base["power"]["power_switch"] = SWITCH
     base["notify"]["notify_targets"] = ["notify.gibt_es_nicht"]
     result = await hass.config_entries.options.async_configure(result["flow_id"], base)
@@ -126,9 +126,9 @@ async def test_options_flow_sections(hass: HomeAssistant, mock_client, notificat
     assert opts["filament_prices"] == {"PLA": 19.99, "OTHER": 30.0}
     assert opts["notify_targets"] == ["notify.mobile_app_handy"]
     assert opts["energy_price"] == PRICE
-    assert "energy_sensor" not in opts  # ausgetragen
+    assert "energy_sensor" not in opts  # removed
 
-    # Erneutes Oeffnen zeigt die gespeicherten Werte im richtigen Abschnitt
+    # reopening shows the stored values in the right section
     from custom_components.snapmaker_u1_card.config_flow import nest_options
 
     nested = nest_options(opts)
@@ -136,7 +136,7 @@ async def test_options_flow_sections(hass: HomeAssistant, mock_client, notificat
     assert nested["power"]["power_switch"] == SWITCH
 
 
-# ── Ein/Aus ─────────────────────────────────────────────────────────────────
+# ── On/off ──────────────────────────────────────────────────────────────────
 async def test_setup_while_printer_off(hass: HomeAssistant, mock_client) -> None:
     from custom_components.snapmaker_u1_card.api import MoonrakerConnectionError
 
@@ -147,7 +147,7 @@ async def test_setup_while_printer_off(hass: HomeAssistant, mock_client) -> None
     assert sw.state == "off"
     assert sw.attributes["power_sensor"] == POWER
     assert hass.states.get("sensor.snapmaker_u1_card_filaments").state == "unavailable"
-    # Bei ausgeschaltetem Schalter wird der Drucker gar nicht erst gefragt
+    # With the switch off the printer is not even asked
     calls = mock_client["query"].await_count
     await _refresh(hass, entry)
     assert mock_client["query"].await_count == calls
@@ -167,7 +167,7 @@ async def test_files_survive_restart_while_off(hass: HomeAssistant, mock_client)
     assert hass.states.get("sensor.snapmaker_u1_card_print_files").state == "2"
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    # Drucker aus, HA startet neu: letzte Dateiliste bleibt fuer die Karte da
+    # Printer off, HA restarts: the last file list stays available for the card
     mock_client["query"].side_effect = MoonrakerConnectionError("aus")
     await hass.services.async_call("input_boolean", "turn_off", {"entity_id": SWITCH}, blocking=True)
     with patch("custom_components.snapmaker_u1_card.add_extra_js_url"):
@@ -181,9 +181,9 @@ async def test_power_off_blocked_while_printing(hass: HomeAssistant, mock_client
     entry = await _setup(hass)
     _status(mock_client, "printing", "a.gcode")
     await _refresh(hass, entry)
-    with pytest.raises(HomeAssistantError, match="druckt gerade"):
+    with pytest.raises(HomeAssistantError, match="is printing"):
         await hass.services.async_call("switch", "turn_off", {"entity_id": OWN_SWITCH}, blocking=True)
-    with pytest.raises(HomeAssistantError, match="druckt gerade"):
+    with pytest.raises(HomeAssistantError, match="is printing"):
         await hass.services.async_call(DOMAIN, "power_off", {}, blocking=True)
     assert hass.states.get(SWITCH).state == "on"
 
@@ -193,7 +193,7 @@ async def test_power_off_waits_until_printer_is_gone(hass: HomeAssistant, mock_c
 
     await _setup(hass)
     seen: list[str] = []
-    # Erst antwortet der Drucker noch zweimal, dann ist das Netzwerk weg.
+    # The printer answers twice more, then the network is gone.
     mock_client["ready"].side_effect = [True, True, MoonrakerConnectionError("weg")]
 
     async def turn_off_check(*a, **k):
@@ -214,14 +214,14 @@ async def test_power_off_when_shutdown_refused(hass: HomeAssistant, mock_client)
     from custom_components.snapmaker_u1_card.api import MoonrakerError
 
     await _setup(hass)
-    # Abgelehnter Shutdown: ohne Wartezeit direkt ausschalten (sonst Timeout hier).
+    # Refused shutdown: switch off right away without waiting (otherwise a timeout here).
     with patch(f"{API}.rpc", AsyncMock(side_effect=MoonrakerError("sudo: a password is required"))), \
          patch(f"{COORD}.SHUTDOWN_SETTLE_S", 0.01):
         await hass.services.async_call("switch", "turn_off", {"entity_id": OWN_SWITCH}, blocking=True)
         await asyncio.wait_for(hass.async_block_till_done(), 5)
     assert hass.states.get(SWITCH).state == "off"
     assert hass.states.get(OWN_SWITCH).attributes["last_shutdown"].startswith("refused: sudo")
-    # Ohne Abfrage beim Drucker (Option aus): kein Herunterfahren
+    # Without asking the printer (option off): no shutdown
 
 
 
@@ -229,16 +229,16 @@ async def test_auto_on_when_starting_print(hass: HomeAssistant, mock_client, fas
     from custom_components.snapmaker_u1_card.api import MoonrakerConnectionError
 
     entry = await _setup(hass, switch_on=False, auto_on=True)
-    # Ohne Auto-Ein: klare Ablehnung
+    # Without auto-on: a clear refusal
     hass.config_entries.async_update_entry(entry, options={**entry.options, "auto_on": False})
     await hass.async_block_till_done()
-    with pytest.raises(HomeAssistantError, match="ausgeschaltet"):
+    with pytest.raises(HomeAssistantError, match="switched off"):
         await hass.services.async_call(DOMAIN, "start_print", {"filename": "sub/new.gcode", "mapping": {"0": 0}}, blocking=True)
     mock_client["start_print"].assert_not_awaited()
 
     hass.config_entries.async_update_entry(entry, options={**entry.options, "auto_on": True})
     await hass.async_block_till_done()
-    # Bootet: zweimal nicht erreichbar, einmal Klipper noch nicht bereit, dann bereit
+    # Booting: twice unreachable, once Klipper not ready yet, then ready
     mock_client["ready"].side_effect = [MoonrakerConnectionError("boot"), MoonrakerConnectionError("boot"), False, True]
     await hass.services.async_call(DOMAIN, "start_print", {"filename": "sub/new.gcode", "mapping": {"0": 0}}, blocking=True)
     assert hass.states.get(SWITCH).state == "on"
@@ -250,22 +250,22 @@ async def test_auto_on_times_out(hass: HomeAssistant, mock_client, fast_power) -
     await _setup(hass, switch_on=False, auto_on=True)
     mock_client["ready"].return_value = False
     with patch(f"{COORD}.POWER_ON_TIMEOUT_S", 0.05), \
-         pytest.raises(HomeAssistantError, match="noch nicht bereit"):
+         pytest.raises(HomeAssistantError, match="not ready"):
         await hass.services.async_call(DOMAIN, "start_print", {"filename": "sub/new.gcode"}, blocking=True)
     mock_client["start_print"].assert_not_awaited()
 
 
-# ── Druck: Energie, Kosten, Historie, Benachrichtigung, Auto-Aus ────────────
+# ── Print: energy, cost, history, notification, auto-off ───────────────────
 async def test_full_print_cycle(hass: HomeAssistant, mock_client, notifications, fast_power) -> None:
     entry = await _setup(
         hass, auto_off=True, auto_off_delay=0, auto_off_temp=50,
         notify_targets=["notify.mobile_app_handy"], camera="camera.drucker",
     )
-    hass.config.language = "de"  # Texte der Benachrichtigung auf Deutsch pruefen
+    hass.config.language = "de"  # check the notification texts in German
     events = async_capture_events(hass, f"{DOMAIN}_print_finished")
     _status(mock_client, "printing", "sub/new.gcode", temps=220.0, print_duration=10.0, filament_used=0.0)
     await _refresh(hass, entry)
-    # Laufender Druck: Strom 0,75 kWh zu 30 ct, dann 0,25 kWh zu 10 ct
+    # running print: 0.75 kWh at 30 ct, then 0.25 kWh at 10 ct
     hass.states.async_set(ENERGY, "10.75", {"unit_of_measurement": "kWh"})
     await _refresh(hass, entry)
     hass.states.async_set(PRICE, "10", {"unit_of_measurement": "ct/kWh"})
@@ -277,20 +277,20 @@ async def test_full_print_cycle(hass: HomeAssistant, mock_client, notifications,
     assert float(en.state) == pytest.approx(1.0) and en.attributes["in_progress"] is True
     assert float(hass.states.get("sensor.snapmaker_u1_card_cost_print").state) == pytest.approx(0.25)
 
-    # Pause (Filament leer) wird gemeldet
+    # a pause (filament runout) is reported
     _status(mock_client, "paused", "sub/new.gcode", temps=220.0)
     await _refresh(hass, entry)
     assert len(notifications) == 1 and "pausiert" in notifications[0].data["title"]
     assert notifications[0].data["data"]["image"] == "/api/camera_proxy/camera.drucker"
 
-    # Fertig, aber noch heiss: Ereignis, Historie, Meldung; Ausschalten noch nicht
+    # finished but still hot: event, history, notification; no switch-off yet
     _status(mock_client, "complete", "sub/new.gcode", temps=180.0)
     await _refresh(hass, entry)
     assert len(events) == 1
     ev = events[0].data
     assert ev["result"] == "complete" and ev["tool_changes"] == 30
     assert ev["energy_kwh"] == pytest.approx(1.0) and ev["energy_cost"] == pytest.approx(0.25)
-    # META: PETG 4 g x 25 €/kg + PLA 6 g x 20 €/kg = 0,22 €
+    # META: PETG 4 g x 25 €/kg + PLA 6 g x 20 €/kg = 0.22 €
     assert ev["filament_g"] == 10.0 and ev["filament_cost"] == pytest.approx(0.22)
     assert ev["total_cost"] == pytest.approx(0.47) and ev["duration_s"] == 3540.0
 
@@ -307,7 +307,7 @@ async def test_full_print_cycle(hass: HomeAssistant, mock_client, notifications,
     assert hass.states.get(OWN_SWITCH).attributes["auto_off_pending"] is True
     assert hass.states.get(SWITCH).state == "on"
 
-    # Abgekuehlt: Auto-Aus (Drucker antwortet nach dem Shutdown nicht mehr)
+    # cooled down: auto-off (the printer stops answering after the shutdown)
     from custom_components.snapmaker_u1_card.api import MoonrakerConnectionError
 
     mock_client["ready"].side_effect = MoonrakerConnectionError("weg")
@@ -316,7 +316,7 @@ async def test_full_print_cycle(hass: HomeAssistant, mock_client, notifications,
         await _refresh(hass, entry)
         await hass.async_block_till_done()
     assert hass.states.get(SWITCH).state == "off"
-    # Werte des letzten Drucks bleiben sichtbar
+    # values of the last print stay visible
     cost = hass.states.get("sensor.snapmaker_u1_card_cost_print")
     assert float(cost.state) == pytest.approx(0.47) and cost.attributes["result"] == "complete"
     assert hass.states.get("sensor.snapmaker_u1_card_print_history").state == "1"
@@ -360,7 +360,7 @@ async def test_no_auto_off_after_error(hass: HomeAssistant, mock_client) -> None
     assert hass.states.get(SWITCH).state == "on"
 
 
-# ── Zeitraffer ──────────────────────────────────────────────────────────────
+# ── Timelapses ──────────────────────────────────────────────────────────────
 async def test_timelapses_and_proxy(hass: HomeAssistant, hass_client, mock_client) -> None:
     entry = await _setup(hass)
     tl = hass.states.get("sensor.snapmaker_u1_card_timelapses")
@@ -395,13 +395,13 @@ async def test_timelapses_and_proxy(hass: HomeAssistant, hass_client, mock_clien
         assert await resp.read() == b"\x00\x00\x00\x18"
         assert op.await_args.args == ("camera", video["path"], {"Range": "bytes=0-3"})
         assert up.released
-        # Nur Dateien aus der Liste: alles andere 404, ohne Abruf beim Drucker
+        # only files from the list: everything else 404, without asking the printer
         op.reset_mock()
         for path in ("config/printer.cfg", "camera/../config/printer.cfg", "logs/klippy.log"):
             resp = await client.get(f"{base}/{path}")
             assert resp.status == 404, path
         op.assert_not_awaited()
-    # Vorschaubilder liegen lokal und kommen statisch von HA (nicht ueber den Proxy)
+    # preview images are stored locally and served statically (not via the proxy)
     assert video["poster_url"].startswith(f"/{DOMAIN}/thumbs/{entry.entry_id}/tl/")
     assert video["thumb_url"].startswith(f"/{DOMAIN}/thumbs/{entry.entry_id}/tl/")
     mock_client["download"].assert_any_await(video["poster"], root="camera")
@@ -409,7 +409,7 @@ async def test_timelapses_and_proxy(hass: HomeAssistant, hass_client, mock_clien
     assert resp.status == 200
     assert tl.attributes["playable"] is True
 
-    # Drucker aus: Proxy antwortet sofort, ohne beim Drucker anzufragen
+    # printer off: the proxy answers immediately without asking the printer
     await hass.services.async_call("input_boolean", "turn_off", {"entity_id": SWITCH}, blocking=True)
     await _refresh(hass, entry)
     assert hass.states.get("sensor.snapmaker_u1_card_timelapses").attributes["playable"] is False
@@ -417,11 +417,11 @@ async def test_timelapses_and_proxy(hass: HomeAssistant, hass_client, mock_clien
         resp = await client.get(f"{base}/camera/{video['path']}")
         assert resp.status == 503
         op.assert_not_awaited()
-    # Bilder bleiben auch ausgeschaltet abrufbar
+    # images stay available while switched off
     resp = await client.get(video["poster_url"])
     assert resp.status == 200
 
-    # Ohne Anmeldung kein Zugriff
+    # no access without authentication
     from aiohttp import ClientSession
 
     async with ClientSession() as raw:
@@ -429,9 +429,9 @@ async def test_timelapses_and_proxy(hass: HomeAssistant, hass_client, mock_clien
         assert resp.status == 401
 
 
-# ── Absicherungen aus dem Review ───────────────────────────────────────────
+# ── Safeguards from the review ─────────────────────────────────────────────
 async def test_power_off_refused_when_printer_drops_out_mid_print(hass: HomeAssistant, mock_client) -> None:
-    """WLAN-Aussetzer mitten im Druck darf kein Ausschalten erlauben."""
+    """A WiFi dropout in the middle of a print must not allow switching off."""
     from custom_components.snapmaker_u1_card.api import MoonrakerConnectionError
 
     entry = await _setup(hass)
@@ -440,19 +440,19 @@ async def test_power_off_refused_when_printer_drops_out_mid_print(hass: HomeAssi
     mock_client["query"].side_effect = MoonrakerConnectionError("timeout")
     await _refresh(hass, entry)
     assert entry.runtime_data.data.online is False
-    with pytest.raises(HomeAssistantError, match="druckt gerade"):
+    with pytest.raises(HomeAssistantError, match="is printing"):
         await hass.services.async_call("switch", "turn_off", {"entity_id": OWN_SWITCH}, blocking=True)
-    with pytest.raises(HomeAssistantError, match="druckt gerade"):
+    with pytest.raises(HomeAssistantError, match="is printing"):
         await hass.services.async_call(DOMAIN, "power_off", {}, blocking=True)
     assert hass.states.get(SWITCH).state == "on"
-    # Abgestuerzter Drucker: bewusst erzwingen geht
+    # crashed printer: forcing deliberately works
     await hass.services.async_call(DOMAIN, "power_off", {"force": True}, blocking=True)
     await hass.async_block_till_done()
     assert hass.states.get(SWITCH).state == "off"
 
 
 async def test_power_off_aborts_if_print_starts_during_shutdown(hass: HomeAssistant, mock_client, fast_power) -> None:
-    """Shutdown abgelehnt, in der Wartezeit startet jemand am Display einen Druck."""
+    """Shutdown refused; while waiting somebody starts a print on the display."""
     from custom_components.snapmaker_u1_card.api import MoonrakerError
 
     entry = await _setup(hass)
@@ -475,14 +475,14 @@ async def test_power_off_aborts_while_heating(hass: HomeAssistant, mock_client, 
     with patch(f"{API}.rpc", AsyncMock(return_value="ok")) as rpc:
         await hass.services.async_call(DOMAIN, "power_off", {}, blocking=True)
         await hass.async_block_till_done()
-    rpc.assert_not_awaited()  # kein Herunterfahren
+    rpc.assert_not_awaited()  # no shutdown
     assert hass.states.get(SWITCH).state == "on"
 
 
 async def test_start_print_refused_while_shutting_down(hass: HomeAssistant, mock_client) -> None:
     entry = await _setup(hass)
     entry.runtime_data.shutting_down = True
-    with pytest.raises(HomeAssistantError, match="herunter"):
+    with pytest.raises(HomeAssistantError, match="shutting down"):
         await hass.services.async_call(DOMAIN, "start_print", {"filename": "sub/new.gcode", "mapping": {"0": 0}}, blocking=True)
     mock_client["start_print"].assert_not_awaited()
 
@@ -490,12 +490,12 @@ async def test_start_print_refused_while_shutting_down(hass: HomeAssistant, mock
 async def test_power_off_refused_while_powering_on(hass: HomeAssistant, mock_client) -> None:
     entry = await _setup(hass)
     entry.runtime_data.powering_on = True
-    with pytest.raises(HomeAssistantError, match="startet gerade"):
+    with pytest.raises(HomeAssistantError, match="booting"):
         await hass.services.async_call(DOMAIN, "power_off", {"force": True}, blocking=True)
 
 
 async def test_no_auto_off_while_heaters_have_targets(hass: HomeAssistant, mock_client) -> None:
-    """Druck am Display gestartet: print_stats meldet noch 'complete', aber es heizt."""
+    """Print started on the display: print_stats still reports 'complete', but it is heating."""
     entry = await _setup(hass, auto_off=True, auto_off_delay=0)
     _status(mock_client, "printing", "a.gcode")
     await _refresh(hass, entry)
@@ -511,7 +511,7 @@ async def test_no_auto_off_while_heaters_have_targets(hass: HomeAssistant, mock_
 
 
 async def test_running_print_is_saved_periodically(hass: HomeAssistant, mock_client) -> None:
-    """Debounce darf das Sichern waehrend eines langen Drucks nicht endlos verschieben."""
+    """The debounce must not postpone saving forever during a long print."""
     entry = await _setup(hass)
     coord = entry.runtime_data
     _status(mock_client, "printing", "a.gcode")
@@ -519,7 +519,7 @@ async def test_running_print_is_saved_periodically(hass: HomeAssistant, mock_cli
     with patch.object(coord._store, "async_delay_save") as save:
         for _ in range(5):
             await _refresh(hass, entry)
-        assert save.call_count == 0  # innerhalb einer Minute nichts
+        assert save.call_count == 0  # nothing within a minute
         coord._saved_at -= 61
         await _refresh(hass, entry)
         assert save.call_count == 1

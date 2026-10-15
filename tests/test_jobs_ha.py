@@ -1,5 +1,5 @@
-"""Dienste und Sensoren fuer Warteschlange, Pause bei Schicht, Fehler, Statistik,
-Wartung, Zeitraffer-Sicherung und Upload in einer echten HA-Testinstanz."""
+"""Services and sensors for queue, pause at layer, errors, statistics,
+maintenance, timelapse backup and upload in a real HA test instance."""
 
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -25,7 +25,7 @@ from tests.test_power import (  # noqa: F401
 
 @pytest.fixture
 def transfer(tmp_path):
-    """download_to/upload/delete_file/rpc als Attrappen mit kleinem Dateisystem."""
+    """download_to/upload/delete_file/rpc as fakes with a small file system."""
     uploaded: dict[str, str] = {}
 
     async def download_to(self, root, path, target, hass):
@@ -57,7 +57,7 @@ async def test_start_with_pause_layers(hass: HomeAssistant, mock_client, transfe
     active = entry.runtime_data._print_state["active"]
     assert active["source"] == "sub/new.gcode" and active["pause_layers"] == [2, 3]
 
-    # Kopie taucht nicht in der Dateiliste auf
+    # the copy does not show up in the file list
     mock_client["files"]["gcodes"].append({"path": copy, "modified": 99, "size": 1})
     entry.runtime_data.request_files_refresh()
     _status(mock_client, "printing", copy)
@@ -65,19 +65,19 @@ async def test_start_with_pause_layers(hass: HomeAssistant, mock_client, transfe
     paths = [f["path"] for f in entry.runtime_data.data.files]
     assert copy not in paths and "sub/new.gcode" in paths
 
-    # Druckende: Historie zeigt das Original, Kopie wird geloescht
+    # Print end: history shows the original, the copy is deleted
     _status(mock_client, "complete", copy)
     await _refresh(hass, entry)
     await hass.async_block_till_done()
     last = entry.runtime_data._print_state["last"]
     assert last["file"] == "sub/new.gcode" and last["pause_layers"] == [2, 3]
-    assert last["name"] == "new"  # Name der Originaldatei, nicht der Kopie
+    assert last["name"] == "new"  # name of the original file, not of the copy
     transfer["delete"].assert_awaited_with(copy)
 
 
 async def test_pause_layer_out_of_range(hass: HomeAssistant, mock_client, transfer, notifications) -> None:
     await _setup(hass)
-    with pytest.raises(HomeAssistantError, match="Schicht 9"):
+    with pytest.raises(HomeAssistantError, match="Layer 9"):
         await hass.services.async_call(
             DOMAIN, "start_print", {"filename": "old.gcode", "pause_layers": [9]}, blocking=True
         )
@@ -105,14 +105,14 @@ async def test_queue_flow(hass: HomeAssistant, mock_client, transfer, notificati
     assert [j["file"] for j in entry.runtime_data.queue.jobs] == ["sub/new.gcode", "old.gcode"]
     await hass.services.async_call(DOMAIN, "queue_move", {"job_id": r2["job"]["id"], "position": 5}, blocking=True)
 
-    # Drucker druckt: Start abgelehnt, Auftrag bleibt
+    # Printer is printing: start refused, the job stays
     _status(mock_client, "printing", "x.gcode")
     await _refresh(hass, entry)
     with pytest.raises(HomeAssistantError, match="druckt bereits"):
         await hass.services.async_call(DOMAIN, "queue_start", {}, blocking=True)
     assert len(entry.runtime_data.queue.jobs) == 2
 
-    # Druckende -> Hinweis auf den naechsten Auftrag
+    # Print end -> hint about the next job
     _status(mock_client, "complete", "x.gcode")
     await _refresh(hass, entry)
     await hass.async_block_till_done()
@@ -126,13 +126,13 @@ async def test_queue_flow(hass: HomeAssistant, mock_client, transfer, notificati
     kw = mock_client["start_print"].call_args.kwargs
     assert kw["timelapse"] is True and kw["map_table"]
     assert [j["file"] for j in entry.runtime_data.queue.jobs] == ["sub/new.gcode"]
-    assert r1["job"]["id"] not in [j["id"] for j in entry.runtime_data.queue.jobs]  # gestartet = entfernt
+    assert r1["job"]["id"] not in [j["id"] for j in entry.runtime_data.queue.jobs]  # started = removed
     await hass.services.async_call(DOMAIN, "queue_remove", {"job_id": r2["job"]["id"]}, blocking=True)
     assert entry.runtime_data.queue.jobs == []
     with pytest.raises(HomeAssistantError, match="leer"):
         await hass.services.async_call(DOMAIN, "queue_start", {}, blocking=True)
 
-    # Ueberlebt einen Neustart der Integration
+    # Survives an integration restart
     await hass.services.async_call(DOMAIN, "queue_add", {"filename": "old.gcode"}, blocking=True)
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
@@ -151,14 +151,14 @@ async def test_errors_stats_maintenance(hass: HomeAssistant, mock_client, notifi
     assert errors[0].attributes["errors"][0]["text"]["de"] == "Vorladen: kein Filament erkannt (Kopf 2)"
 
     stats = next(e for e in hass.states.async_all("sensor") if "months" in e.attributes)
-    assert stats.state == "10.0"  # 36000 s aus history_totals
+    assert stats.state == "10.0"  # 36000 s from history_totals
     assert stats.attributes["totals"]["prints"] == 1 and len(stats.attributes["months"]) == 12
 
     maint = next(e for e in hass.states.async_all("sensor") if "items" in e.attributes)
     keys = [i["key"] for i in maint.attributes["items"]]
     assert keys[:4] == ["plate", "nozzle", "rails", "belts"] and "tool_changer" in keys
-    assert maint.state == "0"  # Baseline beim ersten Mal: nichts faellig
-    # 40 Druckstunden spaeter: Druckplatte faellig
+    assert maint.state == "0"  # Baseline the first time: nothing due
+    # 40 print hours later: build plate due
     with patch(f"{API}.history_totals", AsyncMock(return_value={"total_print_time": 50 * 3600.0})):
         entry.runtime_data._force_stats = True
         await _refresh(hass, entry)
@@ -184,7 +184,7 @@ async def test_timelapse_archive_and_cleanup(hass: HomeAssistant, mock_client, t
 
     async def rpc(self, method, params=None, response_timeout=60):
         calls.append((method, dict(params or {})))
-        # Nur die Form {"file_name": ...} loescht wirklich (wie unbekannte Firmware)
+        # Only the form {"file_name": ...} really deletes (like unknown firmware)
         if method == "camera.delete_timelapse_instance" and "file_name" in params:
             cam[:] = [f for f in cam if f["path"] != params["file_name"]]
             return {"state": "success"}
@@ -197,7 +197,7 @@ async def test_timelapse_archive_and_cleanup(hass: HomeAssistant, mock_client, t
         await hass.async_block_till_done()
     folder = media / "snapmaker_u1"
     assert sorted(p.name for p in folder.glob("*.mp4")) == [f"Teil{i}_2026100{i + 1}120000.mp4" for i in range(4)]
-    # Die beiden aeltesten sind auf dem Drucker weg, die neuesten zwei bleiben
+    # The two oldest are gone from the printer, the newest two stay
     assert sorted(f["path"] for f in cam if f["path"].endswith(".mp4")) == [
         "Teil2_20261003120000.mp4", "Teil3_20261004120000.mp4"]
     styles = [p for m, p in calls if m == "camera.delete_timelapse_instance"]
@@ -205,7 +205,7 @@ async def test_timelapse_archive_and_cleanup(hass: HomeAssistant, mock_client, t
     archive = entry.runtime_data._archive_data()
     assert archive["count"] == 4 and archive["cleanup"] == "ok"
     assert entry.runtime_data.archive.delete_style == "file_name"
-    # Neustart merkt sich die Form: beim naechsten Mal direkt die richtige
+    # A restart remembers the form: next time the right one directly
     assert entry.runtime_data._stored()["archive"]["delete_style"] == "file_name"
 
 
@@ -221,7 +221,7 @@ async def test_archive_not_supported_keeps_everything(hass, mock_client, transfe
         entry = await _setup(hass, timelapse_archive=True, timelapse_keep=0)
         await hass.services.async_call(DOMAIN, "backup_timelapses", {}, blocking=True)
     assert len(list((tmp_path / "m" / "snapmaker_u1").glob("*.mp4"))) == 1
-    assert len(cam) == 3  # keep=0: nie loeschen
+    assert len(cam) == 3  # keep=0: never delete
     assert entry.runtime_data._archive_data()["cleanup"] is None
 
 
@@ -266,7 +266,7 @@ async def test_layer_view(hass: HomeAssistant, mock_client, hass_client, notific
         st = _status(mock_client, "printing", "sub/new.gcode")
         await _refresh(hass, entry)
         await hass.async_block_till_done(wait_background_tasks=True)
-        # Einmal je Druck automatisch (Zeitprofil fuer Restzeit)
+        # Automatically once per print (time profile for the remaining time)
         assert entry.runtime_data.layer_view["status"] == "ready"
         body = await (await client.get(f"{url}?layer=1")).json()
     assert body["status"] == "ready" and body["total"] == 3 and len(body["segs"]) == 3
@@ -276,7 +276,7 @@ async def test_layer_view(hass: HomeAssistant, mock_client, hass_client, notific
     st["print_stats"]["info"] = {"current_layer": 2}
     pos = await (await client.get(f"{url}?position=1")).json()
     assert pos["position"] == 123 and pos["layer"] == 2
-    # Live-Abo steht: Position ohne Abfrage beim Drucker
+    # Live subscription is up: position without asking the printer
     coord = entry.runtime_data
     coord.live.connected = True
     coord.live.status = {"virtual_sdcard": {"file_position": 456}, "print_stats": {"info": {"current_layer": 3}},
@@ -289,7 +289,7 @@ async def test_layer_view(hass: HomeAssistant, mock_client, hass_client, notific
 
 
 async def test_no_listing_while_printing(hass: HomeAssistant, mock_client, notifications) -> None:
-    """Waehrend eines Drucks keine Zeitraffer-/Historienabfragen, Dateien nur selten."""
+    """During a print: no timelapse/history queries, files only rarely."""
     import time as _time
 
     entry = await _setup(hass)
@@ -305,16 +305,16 @@ async def test_no_listing_while_printing(hass: HomeAssistant, mock_client, notif
     with patch(f"{API}.list_files", list_files), \
          patch(f"{API}.history", AsyncMock(return_value=[])) as hist:
         _status(mock_client, "printing", "sub/new.gcode")
-        # Intervalle laengst abgelaufen
+        # intervals long expired
         coord._files_at = coord._timelapses_at = coord._stats_at = _time.monotonic() - 3600
         coord._force_files = coord._force_timelapses = coord._force_stats = False
         await _refresh(hass, entry)
-        assert roots == ["gcodes"], roots  # Dateien (10 min um), keine Zeitraffer
+        assert roots == ["gcodes"], roots  # files (10 min passed), no timelapses
         hist.assert_not_called()
         roots.clear()
         await _refresh(hass, entry)
         assert roots == [], "Dateien erst nach 10 min wieder"
-        # Druckende stoesst Zeitraffer und Statistik an
+        # the print end triggers timelapses and statistics
         _status(mock_client, "complete", "sub/new.gcode")
         await _refresh(hass, entry)
         assert "camera" in roots

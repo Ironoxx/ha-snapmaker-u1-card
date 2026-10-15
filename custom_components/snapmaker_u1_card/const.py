@@ -1,18 +1,18 @@
-"""Konstanten."""
+"""Constants shared across the integration."""
 
 from __future__ import annotations
 
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.0.5"
+VERSION = "1.1.0"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
 CONF_POWER_SWITCH = "power_switch"
 CONF_POWER_SENSOR = "power_sensor"
 CONF_ENERGY_SENSOR = "energy_sensor"
-CONF_ENERGY_PRICE = "energy_price"  # Preis-Entitaet (sensor/input_number)
+CONF_ENERGY_PRICE = "energy_price"  # Price entity (sensor/input_number)
 CONF_AUTO_ON = "auto_on"
 CONF_NOTIFY = "notify_targets"
 CONF_NOTIFY_EVENTS = "notify_events"
@@ -20,36 +20,36 @@ CONF_CAMERA = "camera"
 CONF_SPOOLMAN_URL = "spoolman_url"
 CONF_SPOOLMAN_DEDUCT = "spoolman_deduct"
 CONF_SPOOLMAN_LOW = "spoolman_low"
-CONF_FILAMENT_PRICES = "filament_prices"  # {"PLA": 20.0, ...} je kg
+CONF_FILAMENT_PRICES = "filament_prices"  # {"PLA": 20.0, ...} per kg
 CONF_SHUTDOWN_HOST = "shutdown_host"
 CONF_AUTO_OFF = "auto_off"
 CONF_AUTO_OFF_TEMP = "auto_off_temp"
 CONF_AUTO_OFF_DELAY = "auto_off_delay"
-CONF_ARCHIVE = "timelapse_archive"      # Zeitraffer nach /media sichern
-CONF_ARCHIVE_KEEP = "timelapse_keep"    # so viele neueste auf dem Drucker lassen (0 = nie loeschen)
-CONF_MAINTENANCE = "maintenance"        # {"plate": 30, ...} Intervalle in Druckstunden
+CONF_ARCHIVE = "timelapse_archive"      # Back up timelapses to /media
+CONF_ARCHIVE_KEEP = "timelapse_keep"    # keep this many newest on the printer (0 = never delete)
+CONF_MAINTENANCE = "maintenance"        # {"plate": 30, ...} intervals in print hours
 
 DEFAULT_PORT = 80
 DEFAULT_FILES_LIMIT = 24
 DEFAULT_SHUTDOWN_HOST = True
 DEFAULT_AUTO_OFF = False
 DEFAULT_AUTO_OFF_TEMP = 50
-DEFAULT_AUTO_OFF_DELAY = 5  # Minuten
+DEFAULT_AUTO_OFF_DELAY = 5  # minutes
 DEFAULT_AUTO_ON = False
 NOTIFY_EVENTS = ("complete", "cancelled", "error", "paused", "alert", "first_layer", "almost_done",
                  "spool_low", "spool_runout", "bed_cool")
 DEFAULT_NOTIFY_EVENTS = ["complete", "error", "paused", "alert", "spool_low", "spool_runout"]
 CONF_BED_COOL = "bed_cool_temp"
-DEFAULT_BED_COOL = 35  # °C: PEI-Platte loest das Teil
+DEFAULT_BED_COOL = 35  # °C: the PEI plate releases the part
 CONF_IDLE_OFF = "idle_off_hours"
-DEFAULT_IDLE_OFF = 0  # 0 = aus
-RUNOUT_WARN_MIN = 30  # Spule laeuft in weniger als x min leer -> Push
+DEFAULT_IDLE_OFF = 0  # 0 = off
+RUNOUT_WARN_MIN = 30  # Spool runs out in less than x min -> push notification
 EVENT_NOTIFY_ACTION = "mobile_app_notification_action"
-# Snapmaker veroeffentlicht die Firmware-Quellen mit Commits "Release firmware version x.y.z"
+# Snapmaker publishes the firmware sources with commits "Release firmware version x.y.z"
 FIRMWARE_REPOS = ("Snapmaker/u1-moonraker", "Snapmaker/u1-klipper")
 FIRMWARE_CHECK_S = 24 * 3600
 CONF_ALMOST_DONE = "almost_done_minutes"
-DEFAULT_ALMOST_DONE = 10  # Minuten vor Ende
+DEFAULT_ALMOST_DONE = 10  # minutes before the end
 CONF_BACKUP = "config_backup"
 DEFAULT_BACKUP = True
 BACKUP_KEEP = 10
@@ -64,25 +64,25 @@ DEFAULT_ARCHIVE_KEEP = 5
 STATS_INTERVAL_S = 900
 UPLOAD_MAX_BYTES = 2 * 1024**3
 TIMELAPSE_INTERVAL_S = 300
-# Einschalten bis Moonraker/Klipper bereit sind (U1 bootet ca. 1-2 min).
+# Switch-on until Moonraker/Klipper are ready (the U1 boots in about 1-2 min).
 POWER_ON_TIMEOUT_S = 240
 
-# Nach machine.shutdown: warten, bis der Drucker nicht mehr antwortet
-# (hoechstens SHUTDOWN_MAX_S), danach noch SHUTDOWN_SETTLE_S fuer das
-# Dateisystem, dann Strom aus.
+# After machine.shutdown: wait until the printer stops answering
+# (at most SHUTDOWN_MAX_S), then another SHUTDOWN_SETTLE_S for the
+# file system, then power off.
 SHUTDOWN_MAX_S = 60
 SHUTDOWN_SETTLE_S = 10
 
 EVENT_PRINT_FINISHED = f"{DOMAIN}_print_finished"
 
 UPDATE_INTERVAL = timedelta(seconds=10)
-# Live-Abo steht: Abfrage nur noch als Abgleich (live.py)
+# Live subscription is up: polling only as a consistency check (live.py)
 LIVE_INTERVAL = timedelta(seconds=30)
 FILES_INTERVAL = timedelta(seconds=60)
 
-# Karte und Vorschaubilder liefert die Integration selbst aus. Die Pfade
-# duerfen nicht ineinander liegen: ein statischer Pfad faengt sonst alle
-# Unterpfade ab und die Vorschaubilder liefern 404.
+# The integration serves the card and the thumbnails itself. The paths
+# must not be nested: a static path would otherwise swallow all
+# sub-paths and the thumbnails would return 404.
 CARD_URL = f"/{DOMAIN}/card"
 CARD_FILENAME = "snapmaker-u1-card.js"
 THUMB_URL = f"/{DOMAIN}/thumbs"
@@ -101,7 +101,7 @@ SERVICE_MAINTENANCE_DONE = "maintenance_done"
 SERVICE_BACKUP_CONFIG = "backup_config"
 SERVICE_BACKUP_TIMELAPSES = "backup_timelapses"
 
-# Zeitraffer laufen ueber einen authentifizierten Proxy der Integration
-# (Range-Anfragen fuer den Videoplayer, keine Drucker-IP im Browser).
+# Timelapses go through an authenticated proxy of the integration
+# (Range requests for the video player, no printer IP in the browser).
 VIDEO_URL = f"/api/{DOMAIN}/video"
 UPLOAD_URL = f"/api/{DOMAIN}/upload"

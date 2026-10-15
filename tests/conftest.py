@@ -1,4 +1,4 @@
-"""Laedt parsing.py und api.py ohne Home Assistant (beide sind HA-frei)."""
+"""Load parsing.py and api.py without Home Assistant (both are HA-free)."""
 
 import contextlib
 import importlib.util
@@ -19,7 +19,7 @@ def _load(name: str):
 parsing = _load("parsing")
 api = _load("api")
 
-try:  # im HA-Testplugin enthalten; ohne HA einfach nichts tun
+try:  # part of the HA test plugin; without HA simply do nothing
     import pytest_socket  # noqa: F401
 except ImportError:
     import pytest
@@ -28,20 +28,20 @@ except ImportError:
     def socket_enabled():
         return None
 
-# Das HA-Testplugin haengt beim Start eine eigene testing_config mit einem
-# regulaeren custom_components-Paket vor sys.path. Frueh importiert bleibt
-# dieses Repository im Modul-Cache und wird vom Loader gefunden.
+# The HA test plugin puts its own testing_config with a regular
+# custom_components package in front of sys.path. Importing early keeps
+# this repository in the module cache, where the loader finds it.
 with contextlib.suppress(ImportError):
     import custom_components.snapmaker_u1_card  # noqa: F401
 
 
-# Das Live-Abo (live.py) verbindet sich im Hintergrund und wartet zwischen den
-# Versuchen; in den normalen HA-Tests wuerde das wait_background_tasks blockieren.
-# Tests fuer das Abo markieren sich mit @pytest.mark.live.
+# The live subscription (live.py) connects in the background and waits between
+# attempts; in normal HA tests that would block wait_background_tasks.
+# Tests for the subscription opt out with @pytest.mark.live.
 try:
     import pytest as _pytest
     from custom_components.snapmaker_u1_card import live as _live
-except ImportError:  # ohne HA
+except ImportError:  # without HA
     _live = None
 else:
     @_pytest.fixture(autouse=True)
@@ -52,4 +52,4 @@ else:
 
 
 def pytest_configure(config):
-    config.addinivalue_line("markers", "live: Live-Abo nicht abschalten")
+    config.addinivalue_line("markers", "live: keep the live subscription enabled")

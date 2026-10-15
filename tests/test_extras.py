@@ -1,4 +1,4 @@
-"""5.6: Kosten vor dem Druck, Konfig-Sicherung, Sprachsteuerung, Diagnose."""
+"""Cost before printing, config backup, voice control and diagnostics."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -16,7 +16,7 @@ from tests.test_init import API, DOMAIN, mock_client  # noqa: F401
 from tests.test_power import _refresh, _setup, _status, auto_enable, notifications  # noqa: F401
 
 
-# ── Kosten ──────────────────────────────────────────────────────────────────
+# ── Cost ────────────────────────────────────────────────────────────────────
 def test_average_kw_and_estimate() -> None:
     hist = [{"energy": 0.2, "duration": 3600}, {"energy": 0.3, "duration": 3600},
             {"energy": 5.0, "duration": 60}, {"duration": 7200}]
@@ -27,7 +27,7 @@ def test_average_kw_and_estimate() -> None:
                                      {"type": "TPU", "weight": 0, "used": False}]}
     c = estimate_cost(f, {"PLA": 20.0, "PETG": 30.0}, 0.30, 0.25)
     assert c == {"filament": 3.5, "energy_kwh": 0.5, "energy": 0.15, "total": 3.65}
-    # Preis fuer ein Material fehlt: nur Strom
+    # Price for one material missing: energy only
     assert estimate_cost(f, {"PLA": 20.0}, 0.30, 0.25) == {"energy_kwh": 0.5, "energy": 0.15, "total": 0.15}
     assert estimate_cost({"time": 10}, {}, None, None) is None
 
@@ -40,11 +40,11 @@ async def test_files_sensor_has_cost(hass: HomeAssistant, mock_client, notificat
     st = next(s for s in hass.states.async_all("sensor") if "files" in s.attributes and "cost_basis" in s.attributes)
     assert st.attributes["cost_basis"] == {"kwh_price": 0.3, "avg_kw": 0.5}
     f = next(x for x in st.attributes["files"] if x["path"] == "old.gcode")
-    # META: 4 g PETG + 6 g PLA, 600 s -> 0,1+0,12 = 0,22 EUR Filament; 0,083 kWh x 0,30
+    # META: 4 g PETG + 6 g PLA, 600 s -> 0.10 + 0.12 = 0.22 EUR filament; 0.083 kWh x 0.30
     assert f["cost"] == {"filament": 0.22, "energy_kwh": 0.083, "energy": 0.02, "total": 0.24}
 
 
-# ── Konfig-Sicherung ───────────────────────────────────────────────────────
+# ── Config backup ──────────────────────────────────────────────────────────
 async def test_config_backup(hass: HomeAssistant, mock_client, notifications) -> None:
     mock_client["files"]["config"] = [
         {"path": "printer.cfg", "size": 10}, {"path": "macros/start.cfg", "size": 5},
@@ -67,10 +67,10 @@ async def test_config_backup(hass: HomeAssistant, mock_client, notifications) ->
         assert (snaps[0] / "macros/start.cfg").exists()
         assert not (snaps[0] / "klippy.log").exists() and not (snaps[0] / "huge.cfg").exists()
         assert not (folder.parent / "evil.cfg").exists()
-        # Unveraendert -> kein neuer Stand; Dienst liefert Ergebnis
+        # Unchanged -> no new snapshot; the service returns a result
         res = await hass.services.async_call(DOMAIN, "backup_config", {}, blocking=True, return_response=True)
         assert res["status"] == "unchanged" and len(res["snapshots"]) == 1
-        # Geaendert -> neuer Stand
+        # Changed -> new snapshot
         content["printer.cfg"] = b"[printer]\nmax_velocity: 500\n"
         with patch("custom_components.snapmaker_u1_card.backup.dt_util.now") as now:
             now.return_value.strftime.return_value = "2099-01-01_000000"
@@ -100,7 +100,7 @@ async def test_backup_disabled(hass: HomeAssistant, mock_client, notifications) 
     assert entry.runtime_data.data.backup is None
 
 
-# ── Sprachsteuerung ─────────────────────────────────────────────────────────
+# ── Voice control ───────────────────────────────────────────────────────────
 def test_sentences_parse() -> None:
     import io
 
@@ -109,7 +109,7 @@ def test_sentences_parse() -> None:
     for lang, sample, expect in (
         ("de", "Wie weit ist der Drucker", voice.INTENT_STATUS),
         ("de", "wie lange braucht der 3D-Drucker noch", voice.INTENT_STATUS),
-        # HA entfernt Fuellwoerter wie "noch" vor dem Abgleich
+        # HA removes filler words such as "noch" before matching
         ("de", "wie lange braucht der Drucker", voice.INTENT_STATUS),
         ("de", "Pausiere den Drucker", voice.INTENT_PAUSE),
         ("de", "Drucker fortsetzen", voice.INTENT_RESUME),
@@ -155,7 +155,7 @@ async def test_intents(hass: HomeAssistant, mock_client, notifications) -> None:
         assert "läuft bereits" in await _ask(hass, voice.INTENT_RESUME)
 
 
-# ── Diagnose ────────────────────────────────────────────────────────────────
+# ── Diagnostics ─────────────────────────────────────────────────────────────
 async def test_diagnostics_redacts(hass: HomeAssistant, mock_client, notifications) -> None:
     entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"])
     diag = await async_get_config_entry_diagnostics(hass, entry)

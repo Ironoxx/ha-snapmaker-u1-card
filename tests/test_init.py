@@ -1,4 +1,4 @@
-"""Integration in einer echten Home-Assistant-Testinstanz."""
+"""The integration in a real Home Assistant test instance."""
 
 from unittest.mock import AsyncMock, patch
 
@@ -36,10 +36,10 @@ META = {
 
 @pytest.fixture(autouse=True)
 def auto_enable(enable_custom_integrations, hass, tmp_path):
-    # Das echte Frontend-Paket (hass_frontend) ist im Test nicht installiert.
+    # The real frontend package (hass_frontend) is not installed in tests.
     hass.config.components.add("frontend")
-    # Eigenes Konfigurationsverzeichnis: Vorschaubilder landen sonst im
-    # gemeinsamen testing_config des Testpakets.
+    # Own config directory: thumbnails would otherwise end up in the
+    # shared testing_config of the test package.
     hass.config.config_dir = str(tmp_path)
     yield
 
@@ -58,7 +58,7 @@ def mock_client():
             {"path": "sub/new.gcode", "modified": 9, "size": 1},
             {"path": "notes.txt", "modified": 10, "size": 1},
         ],
-        # Wie auf dem echten U1 (Stock-Firmware), Ordner "camera"
+        # As on the real U1 (stock firmware), folder "camera"
         "camera": [
             {"path": "Nuss_2_PLA_1h17m_20261008195643.mp4", "modified": 20, "size": 17019965},
             {"path": "Nuss_2_PLA_1h17m_20261008195643_cover.jpg", "modified": 19, "size": 32859},
@@ -104,9 +104,9 @@ async def test_sensors(hass: HomeAssistant, mock_client) -> None:
     assert hass.states.get("sensor.snapmaker_u1_card_slot_3").state == "leer"
 
     files = hass.states.get("sensor.snapmaker_u1_card_print_files")
-    assert files.state == "2"  # .txt gefiltert
+    assert files.state == "2"  # .txt filtered
     paths = [f["path"] for f in files.attributes["files"]]
-    assert paths == ["sub/new.gcode", "old.gcode"]  # neueste zuerst
+    assert paths == ["sub/new.gcode", "old.gcode"]  # newest first
     thumb = files.attributes["files"][0]["thumb"]
     assert thumb.startswith(f"/snapmaker_u1_card/thumbs/{entry.entry_id}/")
     mock_client["download"].assert_any_await("sub/.thumbs/t.png")
@@ -130,7 +130,7 @@ async def test_start_print_explicit_mapping(hass: HomeAssistant, mock_client) ->
 async def test_start_print_auto_mapping(hass: HomeAssistant, mock_client) -> None:
     await _setup(hass)
     await hass.services.async_call(DOMAIN, "start_print", {"filename": "sub/new.gcode"}, blocking=True)
-    # PETG schwarz -> Slot 2 (Index 1), PLA hell -> Slot 1 (Index 0)
+    # PETG black -> slot 2 (index 1), PLA light -> slot 1 (index 0)
     assert mock_client["start_print"].await_args.kwargs["map_table"] == "[[0, 1], [1, 0]]"
 
 
@@ -163,12 +163,12 @@ async def test_config_flow(hass: HomeAssistant, mock_client) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "http://192.0.2.10/", "port": 80, "api_key": ""}
         )
-        # Zweiter Schritt: alle Einstellungen gleich bei der Einrichtung
+        # Second step: all settings right away during setup
         assert result["type"] is FlowResultType.FORM and result["step_id"] == "settings"
         schema = result["data_schema"].schema
         assert {str(k) for k in schema} == {"power", "notify", "filament", "spoolman", "files", "timelapse", "maintenance"}
-        # Kein Abschnitt mit default: das Frontend wuerde sonst die Vorbelegung der Felder
-        # verwerfen und "Nicht alle Pflichtfelder ausgefuellt" melden.
+        # No section with a default: the frontend would otherwise drop the pre-filled
+        # values and report "Not all required fields are filled in".
         for key in schema:
             assert key.default is vol.UNDEFINED, f"Abschnitt {key} hat default"
         settings = {
@@ -222,7 +222,7 @@ async def test_tool_changes(hass: HomeAssistant, mock_client) -> None:
     printing = hass.states.get("sensor.snapmaker_u1_card_tool_changes_print")
     assert printing.state == "unknown"
 
-    # Druck ueber den Dienst starten: Basis wird sofort gesetzt
+    # Start the print via the service: the baseline is set right away
     status = q.return_value
     await hass.services.async_call(DOMAIN, "start_print", {"filename": "sub/new.gcode", "mapping": {"0": 0}}, blocking=True)
     status["print_stats"] = {"state": "printing", "filename": "sub/new.gcode"}
@@ -235,7 +235,7 @@ async def test_tool_changes(hass: HomeAssistant, mock_client) -> None:
     assert st.state == "23" and st.attributes["in_progress"] is True
     assert st.attributes["file"] == "sub/new.gcode"
 
-    # Neustart der Integration mitten im Druck: Basis bleibt erhalten
+    # Integration restart in the middle of a print: the baseline survives
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     status["extruder"]["switch_count"] += 5

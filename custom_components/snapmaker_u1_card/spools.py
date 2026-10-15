@@ -1,11 +1,11 @@
-"""Spulenverwaltung mit Spoolman: Zuordnung je Kopf und Abbuchung je Druck.
+"""Spool management with Spoolman: assignment per head and usage booking per print.
 
-Ohne eingetragene Spoolman-URL ist das Modul inaktiv; Karte und Sensoren
-zeigen dann nichts davon.
+Without a Spoolman URL the module is inactive; card and sensors then show
+nothing of it.
 
-Zustand (der Coordinator speichert ihn mit, siehe ``as_stored``):
-  spool_map:   {"<kopf>": {"spool_id": int|None, "manual": bool, "fp": str|None}}
-  spool_queue: [{"key", "spool_id", "grams", "file", "slot"}]  noch nicht gebucht
+State (persisted by the coordinator, see ``as_stored``):
+  spool_map:   {"<head>": {"spool_id": int|None, "manual": bool, "fp": str|None}}
+  spool_queue: [{"key", "spool_id", "grams", "file", "slot"}]  not booked yet
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SpoolManager:
+    """Spoolman state: spool list, assignment per head and pending bookings."""
     def __init__(self, client: SpoolmanClient | None, stored: dict[str, Any] | None, deduct: bool) -> None:
         self.client = client
         stored = stored or {}
@@ -36,7 +37,7 @@ class SpoolManager:
         self.online = False
         self.error: str | None = None
         self._fetched = 0.0
-        self.just_booked: list[dict[str, Any]] = []  # fuer die Historie, vom Coordinator abgeholt
+        self.just_booked: list[dict[str, Any]] = []  # for the history, picked up by the coordinator
 
     @property
     def enabled(self) -> bool:
@@ -60,7 +61,7 @@ class SpoolManager:
         self._fetched = 0.0
 
     async def async_refresh(self) -> bool:
-        """Spulen holen und offene Buchungen nachholen. True = Zustand geaendert."""
+        """Fetch spools and retry pending bookings. True = state changed."""
         if self.client is None:
             return False
         self._fetched = time.monotonic()
@@ -74,7 +75,7 @@ class SpoolManager:
         return await self._flush_queue()
 
     def assign(self, slots: list[dict[str, Any]]) -> bool:
-        """Zuordnung je Kopf fortschreiben. True = geaendert (speichern)."""
+        """Update the assignment per head. True = changed (save)."""
         if not self.enabled or not self.online:
             return False
         known = {s["id"] for s in self.spools}
@@ -86,15 +87,15 @@ class SpoolManager:
             fp = slot_fingerprint(slot)
             if entry is None:
                 continue
-            # Anderes Filament eingelegt oder Spule archiviert/geloescht:
-            # Zuordnung neu bestimmen, auch eine manuelle.
+            # Different filament loaded or spool archived/deleted:
+            # determine the assignment again, even a manual one.
             if entry.get("fp") != fp or (entry.get("spool_id") and entry["spool_id"] not in known):
                 del self.mapping[key]
                 changed = True
                 continue
-            # Manuelle und gefundene Zuordnungen bleiben stabil, solange das
-            # Filament gleich ist. Automatisch leere werden neu gesucht (z. B.
-            # wenn inzwischen eine passende Spule in Spoolman angelegt wurde).
+            # Manual and found assignments stay stable as long as the
+            # filament is the same. Automatic empty ones are searched again (e.g.
+            # when a matching spool has been added to Spoolman in the meantime).
             if entry.get("manual") or entry.get("spool_id") is not None:
                 fixed[slot["index"]] = entry.get("spool_id")
         proposal = suggest_spools(slots, self.spools, fixed)
@@ -115,6 +116,7 @@ class SpoolManager:
         return changed
 
     def set_manual(self, slot: dict[str, Any], spool_id: int | None, automatic: bool) -> None:
+        """Pin a spool to a head (or release the head with None)."""
         key = str(slot["index"])
         if automatic:
             self.mapping.pop(key, None)
@@ -128,6 +130,7 @@ class SpoolManager:
         return next((s for s in self.spools if s["id"] == spool_id), None) if spool_id else None
 
     def slot_info(self, index: int) -> dict[str, Any] | None:
+        """Assigned spool of a head with the manual flag, or None."""
         entry = self.mapping.get(str(index)) or {}
         spool = self.spool(entry.get("spool_id"))
         if spool is None:
@@ -135,7 +138,7 @@ class SpoolManager:
         return {**spool, "manual": bool(entry.get("manual"))}
 
     def book(self, record: dict[str, Any]) -> list[dict[str, Any]]:
-        """Verbrauch eines beendeten Drucks einplanen; Rueckgabe fuer die Historie."""
+        """Schedule the usage of a finished print; returns data for the history."""
         if not self.enabled:
             return []
         spool_ids: dict[str, Any] = record.get("spool_ids") or {}
@@ -156,6 +159,7 @@ class SpoolManager:
         return booked
 
     async def _flush_queue(self) -> bool:
+        """Book pending usage in Spoolman; failures stay queued."""
         if not self.queue or self.client is None:
             return False
         done = []
@@ -163,21 +167,21 @@ class SpoolManager:
             try:
                 await self.client.use_weight(item["spool_id"], item["grams"])
             except MoonrakerError as err:
-                if "404" in str(err):  # Spule geloescht: nicht ewig wiederholen
-                    _LOGGER.warning("Spoolman: Spule %s existiert nicht mehr, %s g verworfen",
+                if "404" in str(err):  # spool deleted: do not retry forever
+                    _LOGGER.warning("Spoolman: spool %s no longer exists, %s g discarded",
                                     item["spool_id"], item["grams"])
                     done.append(item)
                     continue
-                _LOGGER.debug("Spoolman-Buchung verschoben: %s", err)
+                _LOGGER.debug("Spoolman booking postponed: %s", err)
                 break
-            _LOGGER.info("Spoolman: %s g von Spule %s abgebucht (%s, Kopf %s)",
+            _LOGGER.info("Spoolman: %s g booked from spool %s (%s, head %s)",
                          item["grams"], item["spool_id"], item.get("file"), item["slot"] + 1)
             done.append(item)
         for item in done:
             self.queue.remove(item)
         self.just_booked.extend(done)
         if done:
-            # Restgewichte sofort aktualisieren
+            # update remaining weights right away
             with contextlib.suppress(MoonrakerError):
                 self.spools = [compact_spool(s) for s in await self.client.spools()]
         return bool(done)

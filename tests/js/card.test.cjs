@@ -1,5 +1,5 @@
-// Funktionstest der Karte in jsdom: Autoerkennung, LED ohne Neuaufbau,
-// Kamera-<img> ueberlebt Neuaufbau, Druckdialog mit Zuordnung.
+// Functional test of the card in jsdom: auto-detection, LED without rebuild,
+// camera <img> survives rebuilds, print dialog with mapping.
 const fs = require("fs");
 const assert = require("assert");
 const { JSDOM } = require("jsdom");
@@ -70,25 +70,25 @@ w.document.body.appendChild(card);
 card.hass = hass();
 const root = () => card.shadowRoot.getElementById("u1card");
 
-// 1. Autoerkennung
+// 1. Auto-detection
 assert.strictEqual(card._ents.prefix, P, "Praefix");
 assert.strictEqual(card._ents.camera, `camera.${P}_webcam`, "Kamera");
 assert.strictEqual(card._ents.filaments, "sensor.snapmaker_u1_card_filamente");
 assert.strictEqual(card._ents.files, "sensor.snapmaker_u1_card_druckdateien");
 
-// 2. Live-Filamente in den Koepfen
+// 2. Live filaments in the heads
 const mats = [...root().querySelectorAll(".head-mat")].map((e) => e.textContent);
 assert.deepStrictEqual(mats, ["PETG HF", "PLA", "PLA Silk", "Leer"], "Materialien");
 assert.ok(root().querySelector(".rfid"), "RFID-Badge");
 assert.strictEqual(root().querySelectorAll(".spool")[2].querySelectorAll('circle[stroke-dasharray]').length, 2, "Mehrfarbenring");
 
-// 2b. Werkzeugwechsel in der Statistik
+// 2b. Tool changes in the statistics
 const txt = () => [...root().querySelectorAll(".row")].map((r) => `${r.querySelector(".k").textContent} ${r.querySelector(".v").textContent}`).join(" | ").replace(/\s+/g, " ");
 assert.ok(/Werkzeugwechsel gesamt 12\.345/.test(txt()), "Wechsel gesamt");
 assert.ok(/Wechsel letzter Druck 87 \(fertig\)/.test(txt()), "Wechsel letzter Druck");
 assert.ok(/Wechsel je Kopf 1: 6\.000 · 2: 4\.000 · 3: 2\.000 · 4: 345/.test(txt()), "je Kopf");
 assert.ok(/Seit Wartung \(max\.\) 23\.000 \/ 25\.100/.test(txt()), "Wartung");
-// Laufender Druck: Beschriftung wechselt, Zahl wird gepatcht
+// Running print: label changes, number is patched
 states["sensor.snapmaker_u1_card_werkzeugwechsel_druck"] = { entity_id: "x", state: "3", attributes: { in_progress: true, file: "b.gcode" } };
 card.hass = hass();
 assert.ok(/Wechsel aktueller Druck 3/.test(txt()), "aktueller Druck");
@@ -99,7 +99,7 @@ card.hass = hass();
 assert.strictEqual(card._renderKey, k2, "Zaehler ohne Neuaufbau");
 assert.ok(/Wechsel aktueller Druck 4/.test(txt()) && /12\.346/.test(txt()), "gepatcht");
 
-// 3. LED: kein Neuaufbau, Kamerabild bleibt dasselbe Element
+// 3. LED: no rebuild, the camera image stays the same element
 const img = root().querySelector("img[data-live]");
 img.setAttribute("src", "/api/camera_proxy_stream/x");
 const key = card._renderKey;
@@ -108,7 +108,7 @@ card.hass = hass();
 assert.strictEqual(card._renderKey, key, "LED darf keinen Neuaufbau ausloesen");
 assert.ok(root().querySelector('[data-su1="light"]').classList.contains("on"), "Licht-Knopf gepatcht");
 
-// 4. Strukturwechsel: Bild-Element wird uebernommen, nicht neu verbunden
+// 4. Structural change: the image element is moved over, not reconnected
 states["sensor.snapmaker_u1_card_druckdateien"].attributes.files = [...files, { ...files[0], path: "b.gcode", name: "b", modified: 2 }];
 card.hass = hass();
 assert.notStrictEqual(card._renderKey, key, "Neuaufbau erwartet");
@@ -117,7 +117,7 @@ assert.strictEqual(img.getAttribute("src"), "/api/camera_proxy_stream/x", "Strea
 states["sensor.snapmaker_u1_card_druckdateien"].attributes.files = files;
 card.hass = hass();
 
-// 4b. Kein Stream im Bearbeitungsmodus und ausserhalb des Bildbereichs
+// 4b. No stream in edit mode and outside the viewport
 const live = () => root().querySelector("img[data-live]");
 const isStream = () => /camera_proxy_stream/.test(live().getAttribute("src") || "");
 card._stopStream(); card._streamFailUntil = 0;
@@ -137,26 +137,26 @@ assert.ok(!isStream(), "kein Stream ausserhalb des Bildbereichs");
 observers.at(-1).cb([{ isIntersecting: true }]);
 assert.ok(isStream(), "sichtbar: Stream wieder an");
 
-// 5. Druckdialog
+// 5. Print dialog
 root().querySelector('[data-print="sub/benchy.gcode"]').click();
 const dlg = () => card.shadowRoot.querySelector("dialog.u1dlg");
 assert.ok(dlg() && dlg().hasAttribute("open"), "Dialog offen");
 assert.strictEqual(dlg().querySelectorAll(".map-row").length, 2, "nur genutzte Filamente");
-// Vorschlag: weiss PLA -> Slot 1 (weisses PLA), rot PLA -> Slot 2 (rotes Silk-PLA)
+// Suggestion: white PLA -> slot 1 (white PLA), red PLA -> slot 2 (red silk PLA)
 assert.deepStrictEqual({ ...card._dlg.map }, { 0: 1, 1: 2 }, "Vorschlag");
 const printBtn = () => dlg().querySelector('[data-dlg="print"]');
 assert.ok(printBtn().disabled, "ohne Bestaetigung gesperrt");
-// Filament 2 von Hand auf Slot 0 (PETG) -> Warnung, aber erlaubt
+// Filament 2 manually on slot 0 (PETG) -> warning, but allowed
 dlg().querySelector('[data-map="1"][data-slot="0"]').click();
 assert.ok(/Material weicht ab/.test(dlg().textContent), "Warnung Materialabweichung");
-// Leerer Slot blockiert
+// An empty slot blocks
 dlg().querySelector('[data-map="1"][data-slot="3"]').click();
 const conf = dlg().querySelector("[data-confirm]");
 conf.checked = true; conf.dispatchEvent(new w.Event("change"));
 assert.ok(printBtn().disabled, "leerer Slot muss blockieren");
 dlg().querySelector('[data-map="1"][data-slot="2"]').click();
 assert.ok(!printBtn().disabled, "jetzt freigegeben");
-// Fehlerpfad
+// Error path
 failNext = { message: "Printer is busy, cannot start print" };
 printBtn().click();
 return new Promise((r) => setTimeout(r, 0)).then(async () => {
@@ -168,10 +168,10 @@ return new Promise((r) => setTimeout(r, 0)).then(async () => {
     config_entry_id: "E1", mapping: { 0: 1, 1: 2 },
   });
   assert.strictEqual(notify, false, "kein doppelter Toast");
-  // Erfolgspfad
+  // Success path
   printBtn().click();
   await new Promise((r) => setTimeout(r, 0));
   assert.ok(!dlg().hasAttribute("open"), "Dialog nach Erfolg zu");
   assert.strictEqual(card._dlg, null);
-  console.log("ALLE TESTS OK –", calls.length, "Dienstaufrufe");
+  console.log("CARD OK –", calls.length, "service calls");
 });

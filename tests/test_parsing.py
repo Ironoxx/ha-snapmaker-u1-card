@@ -4,7 +4,7 @@ import pytest
 
 from conftest import parsing as p
 
-# Auszug aus u1-companion/docs/PROTOCOL.md 3.2 (aus Snapmakers Quellcode abgeleitet)
+# Excerpt from u1-companion/docs/PROTOCOL.md 3.2 (derived from Snapmaker's source code)
 PTC = {
     "filament_vendor": ["Snapmaker", "Snapmaker", "Snapmaker", "NONE"],
     "filament_type": ["PLA", "PLA", "PETG", "NONE"],
@@ -42,7 +42,7 @@ def test_slots():
     slots = p.parse_slots(PTC)
     assert [s["type"] for s in slots] == ["PLA", "PLA", "PETG", None]
     assert slots[0]["color"] == "#000000" and slots[1]["color"] == "#F5F0E1"
-    assert slots[2]["colors"] == ["#D3232A", "#FBC02D"]  # nums=2 kappt die dritte Farbe
+    assert slots[2]["colors"] == ["#D3232A", "#FBC02D"]  # nums=2 cuts off the third colour
     assert (slots[3]["loaded"], slots[3]["vendor"], slots[3]["type"]) == (False, None, None)
     assert slots[0]["official"] and not slots[2]["official"]
 
@@ -71,12 +71,12 @@ def test_file_without_weights_counts_all_used():
 def test_suggest_mapping_type_then_color():
     slots = p.parse_slots(PTC)
     fil = p.parse_file_filaments(META)
-    # hellgrau PLA -> beiges PLA (1); rot PLA -> PLA-Slot naechster Farbe;
-    # PETG -> PETG-Slot (2)
+    # light grey PLA -> beige PLA (1); red PLA -> PLA slot with the closest colour;
+    # PETG -> PETG slot (2)
     m = p.suggest_mapping(fil, slots)
     assert m[0] == 1 and m[2] == 2
     assert m[1] in (0, 1)
-    assert 3 not in m  # unbenutzt
+    assert 3 not in m  # unused
 
 
 def test_suggest_mapping_without_loaded_slots():
@@ -85,7 +85,7 @@ def test_suggest_mapping_without_loaded_slots():
 
 
 def test_map_table_roundtrip_through_klipper_parser():
-    """Format so pruefen, wie Snapmakers Firmware es liest."""
+    """Check the format the way Snapmaker's firmware reads it."""
     table = p.map_table_option({1: 0, 0: 2})
     assert table == "[[0, 2], [1, 0]]"
     # klippy_apis.start_print_advanced: KEY="value"
@@ -120,7 +120,7 @@ def test_color_helpers():
 
 
 def _split_gcode_params(eargs):
-    """Kopie aus u1-klipper/klippy/gcode.py (_split_gcode_params)."""
+    """Copy of u1-klipper/klippy/gcode.py (_split_gcode_params)."""
     result, current, in_quote, quote_char = [], [], False, None
     for ch in eargs:
         if in_quote:
@@ -141,7 +141,7 @@ def _split_gcode_params(eargs):
     return result
 
 
-# ── Werkzeugwechsel ─────────────────────────────────────────────────────────
+# ── Tool changes ────────────────────────────────────────────────────────────
 def _ext(sw, maint=0, retry=0, err=0):
     return {"switch_count": sw, "last_maintenance_count": maint, "retry_count": retry, "error_count": err}
 
@@ -186,11 +186,11 @@ def test_track_print_full_cycle():
 
 
 def test_track_print_unknown_counters():
-    # Alte Firmware, kein Energiezaehler: Druck wird trotzdem erfasst (Ereignis).
+    # Old firmware, no energy meter: the print is still recorded (event).
     st, _, _ = p.track_print({"active": None, "last": None}, "printing", "a", _c(None), 1.0)
     st, fin, _ = p.track_print(st, "error", "a", _c(None), 9.0)
     assert fin["result"] == "error" and fin["switches"] is None and fin["energy"] is None
-    # Energiezaehler erst waehrend des Drucks verfuegbar: Basis wird nachgezogen
+    # Energy meter only available during the print: the baseline is moved along
     st, _, _ = p.track_print(st, "printing", "b", _c(None, None), 10.0)
     st, _, ch = p.track_print(st, "printing", "b", _c(None, 2.0), 11.0)
     assert ch and st["active"]["start"]["energy"] == 2.0
@@ -199,11 +199,11 @@ def test_track_print_unknown_counters():
 def test_track_print_back_to_back_and_reset():
     track = p.track_print
     st, _, _ = track({"active": None, "last": None}, "printing", "a.gcode", _c(10), 1.0)
-    # Naechster Druck startete zwischen zwei Abfragen
+    # the next print started between two polls
     st, fin, ch = track(st, "printing", "b.gcode", _c(30), 2.0)
     assert ch and fin["switches"] == 20 and fin["result"] == "unknown"
     assert st["active"]["file"] == "b.gcode" and st["active"]["start"]["switches"] == 30
-    # Zaehler am Drucker zurueckgesetzt
+    # counters reset on the printer
     st, _, ch = track(st, "printing", "b.gcode", _c(3), 3.0)
     assert ch and st["active"]["start"]["switches"] == 3
     st, fin, _ = track(st, "cancelled", "b.gcode", _c(8), 4.0)
@@ -215,7 +215,7 @@ def test_track_print_pending_start():
     st = {"active": None, "last": {"file": "old", "switches": 3, "result": "complete", "started": 0, "ended": 1}}
     st, fin, _ = track(st, None, "a.gcode", _c(100), 10.0, pending=True)
     assert fin is None
-    # Drucker meldet noch den alten Zustand: kein Abschluss
+    # printer still reports the old state: not finished
     st, fin, ch = track(st, "complete", "old", _c(100), 15.0)
     assert not ch and fin is None and st["active"]["pending"] and st["last"]["file"] == "old"
     assert p.print_progress(st, _c(100)) == {"switches": None, "energy": None, "energy_cost": None}
@@ -223,7 +223,7 @@ def test_track_print_pending_start():
     assert ch and "pending" not in st["active"] and st["active"]["start"]["switches"] == 100
     st, fin, _ = track(st, "complete", "a.gcode", _c(109), 30.0)
     assert fin["switches"] == 9 and fin["file"] == "a.gcode"
-    # Start, der nie anlaeuft, verfaellt ohne Eintrag
+    # a start that never gets going expires without a record
     st, _, _ = track(st, None, "b.gcode", _c(109), 40.0, pending=True)
     st, fin, ch = track(st, "standby", "", _c(109), 40.0 + p.START_GRACE_S + 1)
     assert ch and fin is None and st["active"] is None and st["last"]["file"] == "a.gcode"
@@ -234,7 +234,7 @@ def test_migrate_print_state_from_41():
     new = p.migrate_print_state(old)
     assert new["active"] == {"file": "a", "started": 1.0, "start": {"switches": 50}}
     assert p.migrate_print_state(None) == {"active": None, "last": None, "history": [], "files": [], "timelapses": []}
-    # Letzter Druck aus 4.1.x landet in der Historie
+    # last print from 4.1.x ends up in the history
     last = {"file": "x", "result": "complete"}
     assert p.migrate_print_state({"last": last})["history"] == [last]
 
@@ -247,7 +247,7 @@ def test_energy_kwh():
 
 
 
-# ── Kosten, Filament, Historie, Zeitraffer ─────────────────────────────────
+# ── Cost, filament, history, timelapses ────────────────────────────────────
 def test_dynamic_price_is_summed_over_the_print():
     track = p.track_print
     st = {"active": None, "last": None, "history": []}
@@ -255,11 +255,11 @@ def test_dynamic_price_is_summed_over_the_print():
     st, _, _ = track(st, "printing", "a", _c(0, 10.5), 1.0, price=0.30)   # 0.5 kWh x 0.30
     st, _, _ = track(st, "printing", "a", _c(0, 11.5), 2.0, price=0.10)   # 1.0 kWh x 0.10
     assert p.print_progress(st, _c(0, 11.5))["energy_cost"] == pytest.approx(0.25)
-    # Letzter Abschnitt wird beim Abschluss noch mit verrechnet
+    # the last segment is still charged when finishing
     st, fin, _ = track(st, "complete", "a", _c(0, 12.0), 3.0, price=0.20)  # 0.5 x 0.20
     assert fin["energy"] == pytest.approx(2.0)
     assert fin["energy_cost"] == pytest.approx(0.35)
-    # Historie/Dateien bleiben beim Fortschreiben erhalten
+    # history/files are kept when advancing
     assert "history" in st
 
 
@@ -268,7 +268,7 @@ def test_track_print_records_stats():
     st["active"].update(filaments=[{"type": "PLA", "weight": 10.0}], filament_total=4000.0, name="A")
     st, _, _ = p.track_print(st, "printing", "a", _c(0), 1.0, stats={"print_duration": 300.5, "filament_used": 1000.0})
     st, fin, _ = p.track_print(st, "cancelled", "a", _c(0), 2.0, stats={"print_duration": 999})
-    # Nach Druckende kommen keine Laufwerte mehr dazu
+    # no running values are added after the print end
     assert fin["print_duration"] == 300.5 and fin["filament_used"] == 1000.0
     assert fin["filaments"] == [{"type": "PLA", "weight": 10.0}] and fin["name"] == "A"
 
@@ -285,7 +285,7 @@ def test_summarize_print_costs():
     assert out["energy_cost"] == 0.15 and out["total_cost"] == pytest.approx(0.70)
     assert out["duration"] == 3600.0 and out["materials"] == ["PETG-HF", "PLA"]
     assert "filaments" not in out
-    # Fehlender Preis fuer ein Material: keine Filamentkosten statt falscher Summe
+    # Missing price for one material: no filament cost instead of a wrong total
     assert "filament_cost" not in p.summarize_print(rec, {"PLA": 20.0})
     assert p.summarize_print(rec, {"OTHER": 10.0})["filament_cost"] == pytest.approx(0.25)
 
@@ -326,7 +326,7 @@ def test_pick_timelapses_u1_naming():
 
 def test_cost_gap_when_price_unknown():
     act = {"energy_prev": 1.0, "energy_cost": 0.0}
-    act = p._accumulate_cost(act, 1.5, None)  # Preis kurz weg
+    act = p._accumulate_cost(act, 1.5, None)  # price briefly gone
     assert act["energy_prev"] == 1.0
     act = p._accumulate_cost(act, 2.0, 0.30)
     assert act["energy_prev"] == 2.0 and round(act["energy_cost"], 4) == 0.30

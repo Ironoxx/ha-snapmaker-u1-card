@@ -1,17 +1,17 @@
-"""Zeitraffer in den Medienordner von Home Assistant sichern.
+"""Back up timelapses to the Home Assistant media folder.
 
-Ziel: ``<media>/snapmaker_u1/`` (im Medienbrowser unter "Lokale Medien").
-Gesichert wird jedes Video, das noch nicht dort liegt, samt Vorschaubild.
+Target: ``<media>/snapmaker_u1/`` ("Local media" in the media browser).
+Every video that is not there yet is copied, including its preview image.
 
-Auf dem Drucker aufraeumen: Moonraker gibt den Ordner ``camera`` nur lesend
-frei (snapmakercloud.py: register_data_folder('camera') ohne full_access).
-Loeschen geht nur ueber Snapmakers internen Kameradienst
-(``camera.delete_timelapse_instance`` per WebSocket, repeater.py), dessen
-Parameter nicht dokumentiert sind. Deshalb:
-  - geloescht wird nur, was nachweislich im Medienordner liegt,
-  - vorher wird alles gesichert (auch was behalten wird),
-  - die Parameterform wird beim ersten Mal ermittelt und gemerkt; klappt
-    keine, bleibt alles stehen und der Status sagt es.
+Cleaning up on the printer: Moonraker exposes the ``camera`` folder read-only
+(snapmakercloud.py: register_data_folder('camera') without full_access).
+Deleting only works through Snapmaker's internal camera service
+(``camera.delete_timelapse_instance`` over WebSocket, repeater.py), whose
+parameters are undocumented. Therefore:
+  - only videos proven to be in the media folder are deleted,
+  - everything is backed up first (including videos that are kept),
+  - the parameter form is probed once and remembered; if none works,
+    nothing is deleted and the status says so.
 """
 
 from __future__ import annotations
@@ -33,13 +33,13 @@ ARCHIVE_LIST = 30
 
 
 def media_root(media_dirs: dict[str, str], config_path: str) -> Path:
-    """Ordner hinter "Lokale Medien" (media_dirs['local']), sonst /config/media."""
+    """Folder behind "Local media" (media_dirs['local']), else /config/media."""
     local = media_dirs.get("local") or next(iter(media_dirs.values()), None)
     return Path(local) if local else Path(config_path) / "media"
 
 
 def list_archive(folder: Path) -> list[dict[str, Any]]:
-    """Gesicherte Videos, neueste zuerst (blockierend)."""
+    """Backed-up videos, newest first (blocking)."""
     if not folder.is_dir():
         return []
     out = []
@@ -65,16 +65,17 @@ def _copy(src: Path, dst: Path) -> None:
 
 
 class TimelapseArchive:
+    """Copies timelapses into the media folder and optionally prunes the printer."""
     def __init__(self, client: MoonrakerClient, folder: Path, stored: dict[str, Any] | None) -> None:
         self.client = client
         self.folder = folder
         stored = stored or {}
-        # Funktionierende Parameterform fuer delete_timelapse_instance
+        # Working parameter form for delete_timelapse_instance
         self.delete_style: str | None = stored.get("delete_style")
-        self.cleanup: str | None = stored.get("cleanup")  # Status fuer die Anzeige
+        self.cleanup: str | None = stored.get("cleanup")  # Status for display
         self.last_backup: float | None = stored.get("last_backup")
         self.errors: list[str] = []
-        # Nach jedem Neustart erneut versuchen (z. B. nach einem Firmware-Update)
+        # Retry after every restart (e.g. after a firmware update)
         self._unsupported = False
 
     def as_stored(self) -> dict[str, Any]:
@@ -83,10 +84,10 @@ class TimelapseArchive:
     async def backup(
         self, hass: Any, videos: list[dict[str, Any]], poster_dir: Path, poster_cache: Path | None = None
     ) -> list[str]:
-        """Fehlende Videos sichern. Rueckgabe: neu gesicherte Dateinamen.
+        """Back up missing videos. Returns the newly saved file names.
 
-        ``poster_cache``: zusaetzliche Kopie des Vorschaubilds, die HA statisch
-        ausliefert (die Karte braucht dann keine signierte Medien-URL).
+        ``poster_cache``: extra copy of the preview image that Home Assistant
+        serves statically (the card then needs no signed media URL).
         """
         have = {v["file"]: v["size"] for v in await hass.async_add_executor_job(list_archive, self.folder)}
         saved: list[str] = []
@@ -101,7 +102,7 @@ class TimelapseArchive:
                 await self.client.download_to(video["root"], video["path"], target, hass)
             except (MoonrakerError, OSError) as err:
                 self.errors.append(f"{name}: {err}")
-                _LOGGER.warning("Zeitraffer %s nicht gesichert: %s", name, err)
+                _LOGGER.warning("Timelapse %s not saved: %s", name, err)
                 continue
             poster = video.get("poster_url")
             if poster:
@@ -111,15 +112,15 @@ class TimelapseArchive:
                     if poster_cache is not None:
                         await hass.async_add_executor_job(_copy, src, poster_cache / f"{target.stem}.jpg")
             saved.append(name)
-            _LOGGER.info("Zeitraffer gesichert: %s", target)
+            _LOGGER.info("Timelapse saved: %s", target)
         if saved:
             self.last_backup = time.time()
         return saved
 
     async def cleanup_printer(self, hass: Any, videos: list[dict[str, Any]], keep: int) -> list[str]:
-        """Aelteste Videos auf dem Drucker loeschen, neueste ``keep`` behalten.
+        """Delete the oldest videos on the printer, keep the newest ``keep``.
 
-        Nur Videos, die vollstaendig gesichert sind.
+        Only videos that are fully backed up.
         """
         if keep <= 0 or self._unsupported:
             return []
@@ -139,6 +140,7 @@ class TimelapseArchive:
         return deleted
 
     async def _delete(self, video: dict[str, Any]) -> bool:
+        """Delete one video on the printer, probing the parameter form on first use."""
         name = posixpath.basename(video["path"])
         stem = posixpath.splitext(name)[0]
         styles = {
@@ -156,14 +158,14 @@ class TimelapseArchive:
             except MoonrakerError as err:
                 _LOGGER.debug("delete_timelapse_instance %s: %s", style, err)
                 if "not found" in str(err).lower() and "method" in str(err).lower():
-                    break  # Endpunkt gibt es nicht (ohne Snapmaker-Dienst)
+                    break  # Endpoint does not exist (no Snapmaker service)
                 continue
             if isinstance(result, dict) and result.get("state") == "failed":
                 _LOGGER.debug("delete_timelapse_instance %s: %s", style, result)
                 continue
             if not await self._exists(video):
                 if self.delete_style != style:
-                    _LOGGER.info("Zeitraffer loeschen: Parameterform '%s' funktioniert", style)
+                    _LOGGER.info("Deleting timelapses: parameter form '%s' works", style)
                 self.delete_style = style
                 self.cleanup = "ok"
                 return True
@@ -171,14 +173,15 @@ class TimelapseArchive:
             self._unsupported = True
             self.cleanup = "not_supported"
             _LOGGER.warning(
-                "Zeitraffer auf dem Drucker lassen sich nicht loeschen (Kameradienst lehnt ab). "
-                "Sicherung laeuft weiter, aufgeraeumt wird nicht."
+                "Timelapses on the printer cannot be deleted (camera service refuses). "
+                "Backups continue, no cleanup."
             )
         return False
 
     async def _exists(self, video: dict[str, Any]) -> bool:
+        """Whether the video is still listed on the printer (True when unsure)."""
         try:
             files = await self.client.list_files(video["root"])
         except MoonrakerError:
-            return True  # im Zweifel: nicht als geloescht werten
+            return True  # when in doubt: do not count as deleted
         return any(f.get("path") == video["path"] for f in files)

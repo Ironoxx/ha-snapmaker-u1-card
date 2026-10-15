@@ -1,4 +1,4 @@
-// 5.7: Temperaturverlauf, Dateiverwaltung, Ergebnisfoto, Restzeit, Spule leer, Firmware, Selbsttest, Material-Statistik.
+// Temperature chart, file management, result photo, remaining time, spool runout, firmware, self test, material stats.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -17,7 +17,7 @@ let confirmAnswer = true;
 const prompts = [];
 w.confirm = (m) => { prompts.push(m); return confirmAnswer; };
 w.alert = (m) => prompts.push(m);
-// XHR-Attrappe fuer den Upload
+// XHR fake for the upload
 const xhrs = [];
 w.XMLHttpRequest = class {
   constructor() { this.headers = {}; this.upload = {}; xhrs.push(this); }
@@ -109,17 +109,17 @@ const tab = (id) => R().querySelector(`[data-tab="${id}"]`).click();
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 (async () => {
-  // 1. Restzeit/Fertig aus eigenen Sensoren
+  // 1. Remaining/finish time from our own sensors
   assert.strictEqual(card._d.remaining, 42.5 * 60);
   assert.strictEqual(card._d.eta, "2026-10-13T18:30:00+00:00");
 
-  // 2. Spule leer: Hinweis am Kopf, mit Uebernahme
+  // 2. Spool runout: hint on the head, with takeover
   tab("overview");
   const ro = R().querySelector('[data-runout="1"]');
   assert.ok(ro, "Hinweis am Kopf 2");
   assert.match(text(ro), /leer in ~25 min · Kopf 3 übernimmt/);
 
-  // 3. Dateien: Suche, Ordner, aeltere Datei nachladen
+  // 3. Files: search, folders, loading an older file
   tab("files");
   const search = R().querySelector("[data-fsearch]");
   assert.match(search.placeholder, /4 Dateien/);
@@ -139,12 +139,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(R().querySelector('[data-print="box.gcode"]').hidden);
   assert.strictEqual(R().querySelectorAll("[data-fopen]").length, 2, "Ordner zeigt aeltere Dateien");
   R().querySelector('[data-ffolder=""]').click();
-  // Sortierung nach Name bleibt nach Neuaufbau
+  // Sorting by name survives a rebuild
   R().querySelector("[data-fsort]").value = "name"; R().querySelector("[data-fsort]").dispatchEvent(new w.Event("change"));
   card._renderKey = null; card.hass = hass();
   assert.strictEqual(R().querySelector("[data-fsort]").value, "name");
 
-  // 4. Umbenennen / Loeschen im Dialog
+  // 4. Rename / delete in the dialog
   R().querySelector('[data-print="box.gcode"]').click();
   w.prompt = () => "teile/box2";
   D().querySelector('[data-dlg="rename"]').click(); await tick();
@@ -154,7 +154,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.match(prompts.pop(), /„Box“ vom Drucker löschen\?/);
   assert.deepEqual(calls.pop().slice(1, 3), ["delete_file", { path: "box.gcode", config_entry_id: "E1" }]);
 
-  // 5. Temperaturverlauf
+  // 5. Temperature chart
   tab("control");
   card._temps = { step: 5, series: {
     extruder: { temperatures: [30, 120, 210, 219], targets: [220, 220, 220, 220] },
@@ -171,7 +171,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card._temps = { step: 5, series: {}, offline: true };
   assert.match(card._tempSvg(), /nicht erreichbar/);
 
-  // 6. Historie: Ergebnisfoto
+  // 6. History: result photo
   tab("history");
   const ph = R().querySelector("img.hist-photo");
   assert.ok(ph && ph.dataset.photo.endsWith("/results/x.jpg"));
@@ -184,25 +184,25 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   pd.click();
   assert.ok(!pd.hasAttribute("open"), "Antippen schliesst");
 
-  // 7. Material-Statistik
+  // 7. Material statistics
   const mt = R().querySelector(".mat-table");
   assert.ok(mt);
   const cells = [...mt.querySelectorAll("tbody tr")].map((tr) => [...tr.children].map((td) => td.textContent.trim()).join("|"));
   assert.deepEqual(cells, ["PLA|60|3,20 kg|64,00 €|95 %", "PETG|10|450 g|—|90 %"]);
   assert.match(text(R().querySelector(".colors")), /PLA 1800 g/);
 
-  // 8. System: Firmware und Selbsttest
+  // 8. System: firmware and self test
   tab("system");
   assert.match(text(R().querySelector('[data-su1="fw"]')), /1\.6\.0 → 2\.0\.0 verfügbar/);
   R().querySelector('[data-act="selftest"]').click(); await tick(); await tick();
   const stx = text(R().querySelector("[data-selftest]"));
   assert.strictEqual(stx, "✓Moonraker erreichbar!Keine Kamera✗300 MiB frei");
 
-  // 9. Englisch
+  // 9. English
   lang = "en"; card._renderKey = null; card.hass = hass();
   tab("files");
   assert.match(R().querySelector("[data-fsearch]").placeholder, /Search \(4 files\)/);
   tab("system");
   assert.match(text(R().querySelector('[data-su1="fw"]')), /available/);
-  console.log("5.7 OK – Temperaturverlauf, Dateien, Foto, Restzeit, Spule, Firmware, Selbsttest, Material");
+  console.log("MONITORING OK – temperatures, files, photo, remaining time, spool, firmware, self test, materials");
 })().catch((e) => { console.error(e); process.exit(1); });

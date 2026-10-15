@@ -1,20 +1,20 @@
-"""Fehlermeldungen der U1-Firmware im Klartext.
+"""Plain-language messages for U1 firmware errors.
 
-Die Firmware meldet Ausnahmen strukturiert (u1-klipper coded_exception.py,
-exception_manager.py): Modul-ID, Index (meist der Kopf), Code, Stufe und eine
-englische Rohmeldung. Abfragbar ueber die Objekte ``exception_manager``
-(``exceptions``: alle offenen) und ``print_stats`` (``exception``: die, die
-den Druck gestoppt hat).
+The firmware reports exceptions in a structured way (u1-klipper
+coded_exception.py, exception_manager.py): module ID, index (usually the
+head), code, level and an English raw message. They can be queried via the
+objects ``exception_manager`` (``exceptions``: all open ones) and
+``print_stats`` (``exception``: the one that stopped the print).
 
-Die Texte hier sind aus den Quellstellen der Firmware abgeleitet. Unbekannte
-Codes fallen auf eine Modulbeschreibung plus Rohmeldung zurueck.
+The texts here are derived from the firmware sources. Unknown codes fall
+back to a module description plus the raw message.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-# Modul-IDs (exception_manager.ExceptionList)
+# Module IDs (exception_manager.ExceptionList)
 MODULES: dict[int, tuple[str, str]] = {
     522: ("Bewegungssystem", "Motion system"),
     523: ("Druckkopf", "Toolhead"),
@@ -31,10 +31,10 @@ MODULES: dict[int, tuple[str, str]] = {
     2052: ("System", "System"),
 }
 
-# Module, deren Index einen Kopf bzw. Zufuhrkanal meint
+# Modules whose index refers to a head or feed channel
 _PER_HEAD = (523, 525)
 
-# (Modul, Code) -> (deutsch, englisch, Hinweis deutsch, Hinweis englisch)
+# (module, code) -> (German, English, hint German, hint English)
 CATALOG: dict[tuple[int, int], tuple[str, str, str, str]] = {
     (522, 11): ("Schrittmotortreiber meldet einen Fehler", "Stepper driver reports an error",
                 "Drucker aus- und wieder einschalten. Tritt es erneut auf: Kabel des Motors prüfen.",
@@ -126,7 +126,7 @@ def _int(value: Any) -> int | None:
 
 
 def describe_error(raw: dict[str, Any]) -> dict[str, Any] | None:
-    """Eine Firmware-Ausnahme aufbereiten; None fuer leere Eintraege."""
+    """Prepare one firmware exception for display; None for empty entries."""
     module, code, index = _int(raw.get("id")), _int(raw.get("code")), _int(raw.get("index"))
     if module is None or code is None:
         return None
@@ -153,7 +153,7 @@ def describe_error(raw: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def collect_errors(status: dict[str, Any]) -> list[dict[str, Any]]:
-    """Offene Ausnahmen aus exception_manager plus die Druck-Ausnahme, ohne Dubletten."""
+    """Open exceptions from exception_manager plus the print exception, without duplicates."""
     raw: list[dict[str, Any]] = []
     em = status.get("exception_manager") or {}
     if isinstance(em.get("exceptions"), list):
@@ -168,7 +168,7 @@ def collect_errors(status: dict[str, Any]) -> list[dict[str, Any]]:
         info = describe_error(item)
         if info is None or info["key"] in seen:
             continue
-        # Platzhalter der Firmware fuer "keine Ausnahme" (Code 0 ohne Text)
+        # Firmware placeholder for "no exception" (code 0 without text)
         if info["id"] == 522 and info["code"] == 0 and not info["message"]:
             continue
         seen.add(info["key"])
@@ -177,6 +177,7 @@ def collect_errors(status: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def error_text(info: dict[str, Any], lang: str) -> str:
+    """Plain-language text and hint for a firmware exception in the given language."""
     key = "de" if lang.lower().startswith("de") else "en"
     text = info["text"][key]
     if not info.get("known") and info.get("message"):

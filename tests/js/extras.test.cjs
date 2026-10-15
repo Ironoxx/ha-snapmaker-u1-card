@@ -1,4 +1,4 @@
-// 5.6: Kosten vor dem Druck, Konfig-Sicherung, automatische Bildhoehe.
+// Cost before printing, config backup, automatic image height.
 const fs = require("fs");
 const path = require("path");
 const assert = require("assert");
@@ -17,7 +17,7 @@ let confirmAnswer = true;
 const prompts = [];
 w.confirm = (m) => { prompts.push(m); return confirmAnswer; };
 w.alert = (m) => prompts.push(m);
-// XHR-Attrappe fuer den Upload
+// XHR fake for the upload
 const xhrs = [];
 w.XMLHttpRequest = class {
   constructor() { this.headers = {}; this.upload = {}; xhrs.push(this); }
@@ -96,7 +96,7 @@ const tab = (id) => R().querySelector(`[data-tab="${id}"]`).click();
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
 (async () => {
-  // 1. Kosten im Startdialog
+  // 1. Cost in the start dialog
   tab("files");
   R().querySelector('[data-print="box.gcode"]').click();
   const t = text(D());
@@ -104,7 +104,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.match(text(D().querySelector("[data-cost]")), /Geschätzt: Filament 0,40 € · Strom 0,08 € \(0,25 kWh\)/);
   D().close();
 
-  // 2. Konfig-Sicherung im System-Reiter
+  // 2. Config backup in the system tab
   tab("system");
   const b = R().querySelector("[data-backup]");
   assert.ok(b, "Sicherungszeile");
@@ -113,7 +113,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   await tick();
   assert.deepEqual(calls.pop().slice(0, 3), ["snapmaker_u1_card", "backup_config", { config_entry_id: "E1" }]);
 
-  // 3. Bildhoehe automatisch: Seitenverhaeltnis aus dem Bild
+  // 3. Automatic image height: aspect ratio from the image
   tab("overview");
   const frame = R().querySelector(".stage .frame");
   assert.match(frame.getAttribute("style"), /aspect-ratio:\s*16 \/ 9/);
@@ -126,7 +126,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.match(frame.style.aspectRatio, /1280 \/ 960|4 \/ 3/);
   card._renderKey = null; card.hass = hass();
   assert.match(R().querySelector(".stage .frame").getAttribute("style"), /1280 \/ 960/, "bleibt nach Neuaufbau");
-  // feste Hoehe bleibt fest
+  // a fixed height stays fixed
   const fixedCard = w.document.createElement("snapmaker-u1-card");
   fixedCard.setConfig({ type: "custom:snapmaker-u1-card", camera_height: 300 });
   w.document.body.appendChild(fixedCard); fixedCard.hass = hass();
@@ -135,7 +135,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   fixedCard._fitAspect(Object.assign(ff.querySelector("img[data-live]"), {}));
   assert.ok(!fixedCard._camAspect);
 
-  // 4. Live-Verbindung im System-Reiter, mit Aktualisierung ohne Neuaufbau
+  // 4. Live connection in the system tab, updated without a rebuild
   tab("system");
   assert.match(text(R().querySelector('[data-su1="live"]')), /● verbunden · seit 13\.10\./);
   states["binary_sensor.snapmaker_u1_card_live_verbindung"].state = "off";
@@ -143,7 +143,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card.hass = hass();
   assert.match(text(R().querySelector('[data-su1="live"]')), /getrennt · Abfrage alle 10 s/);
 
-  // 5. Vorschaubild: dunkles Teil -> heller Grund, helles -> dunkler, ohne Transparenz -> nichts
+  // 5. Thumbnail: dark part -> light background, light -> dark, no transparency -> nothing
   const fake = (rgb, alphaOpaque) => {
     const data = new Uint8ClampedArray(32 * 32 * 4);
     for (let i = 0; i < 32 * 32; i++) {
@@ -168,7 +168,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(probe("/t/schwarz.png", null), "dark", "Ergebnis je Adresse gemerkt");
   w.HTMLCanvasElement.prototype.getContext = () => null;
 
-  // 6. Englisch
+  // 6. English
   lang = "en"; card._renderKey = null; card.hass = hass();
   tab("files");
   R().querySelector('[data-print="box.gcode"]').click();
@@ -178,5 +178,5 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.match(text(R().querySelector("[data-backup]")), /Printer configuration backed up .*14 files/);
   assert.match(text(R().querySelector('[data-su1="live"]')), /disconnected · polling every 10 s/);
 
-  console.log("5.6 OK – Kosten, Konfig-Sicherung, Bildhoehe, Live-Verbindung, Vorschau-Hintergrund");
+  console.log("EXTRAS OK – cost, config backup, image height, live connection, thumbnail background");
 })().catch((e) => { console.error(e); process.exit(1); });

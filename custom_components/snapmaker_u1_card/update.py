@@ -1,9 +1,9 @@
-"""Firmware-Stand des U1 als Update-Entitaet (nur Anzeige und Hinweis).
+"""U1 firmware version as an update entity (display and hint only).
 
-Installiert: ``/machine/system_info`` -> ``product_info.firmware_version``.
-Neueste: Snapmakers Release-Commits der Firmware-Quellen auf GitHub, einmal
-am Tag. Installiert wird weiter am Drucker (Display oder Snapmaker-App);
-die Entitaet bietet deshalb keine Installation an.
+Installed: ``/machine/system_info`` -> ``product_info.firmware_version``.
+Latest: Snapmaker's release commits of the firmware sources on GitHub, once a
+day. Updating still happens on the printer (display or Snapmaker app), so the
+entity does not offer an install action.
 """
 
 from __future__ import annotations
@@ -20,10 +20,12 @@ from .sensor import U1Entity
 async def async_setup_entry(
     hass: HomeAssistant, entry: U1ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
+    """Add the firmware update entity."""
     async_add_entities([FirmwareUpdate(entry.runtime_data)])
 
 
 class FirmwareUpdate(U1Entity, UpdateEntity):
+    """Installed vs. latest firmware; display only, no install action."""
     _attr_translation_key = "firmware"
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_title = "Snapmaker U1 Firmware"
@@ -47,7 +49,7 @@ class FirmwareUpdate(U1Entity, UpdateEntity):
         installed = self.installed_version
         if not latest:
             return installed
-        # Aelter als installiert (z. B. Beta am Drucker): kein Update anzeigen
+        # Older than installed (e.g. a beta on the printer): do not show an update
         if installed and version_tuple(latest) <= version_tuple(installed):
             return installed
         return latest

@@ -5,7 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: "17 4 * * 1"  # wöchentlich: neue HA-Version bricht nichts?
+    - cron: "17 4 * * 1"  # weekly: does a new HA version break anything?
 
 jobs:
   hassfest:
@@ -34,7 +34,17 @@ jobs:
       - run: pip install -r requirements_test.txt
       - run: ruff check custom_components
       - run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with:
           node-version: "22"
-      - run: npm install && npm test
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - name: Bundle is built from the current sources
+        run: npm run build && git diff --exit-code -- custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js
+      - run: npm test
