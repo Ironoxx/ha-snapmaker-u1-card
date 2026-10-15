@@ -1,0 +1,7 @@
+{
+  "name": "Snapmaker U1 Card",
+  "homeassistant": "2025.3.0",
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "snapmaker_u1_card.zip"
+}

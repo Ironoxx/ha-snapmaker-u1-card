@@ -1,0 +1,33 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet
+labels: [bug]
+body:
+  - type: textarea
+    id: was
+    attributes:
+      label: Was ist passiert?
+      description: Was hast du gemacht, was hast du erwartet, was kam stattdessen?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version der Integration
+      placeholder: z. B. 1.0.1
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home-Assistant-Version
+      placeholder: z. B. 2026.10.1
+  - type: input
+    id: firmware
+    attributes:
+      label: Drucker-Firmware
+      placeholder: z. B. Stock 2.0.0, Extended Firmware …
+  - type: textarea
+    id: diagnose
+    attributes:
+      label: Diagnose-Datei / Log
+      description: "Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen und hier anhängen. Zugangsdaten sind darin geschwärzt."

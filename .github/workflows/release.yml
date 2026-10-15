@@ -1,0 +1,70 @@
+name: Release
+
+# Neue Version = neues Release, ohne Tag von Hand:
+# Version in manifest.json (und const.py, Karte) anheben und nach main pushen.
+# Gibt es den Tag v<Version> noch nicht, laufen die Tests, dann entstehen
+# Tag, Release und die Zips (snapmaker_u1_card.zip fuer HACS + Install-Zip).
+# Von Hand: Actions -> Release -> Run workflow.
+on:
+  push:
+    branches: [main]
+    paths: ["custom_components/snapmaker_u1_card/manifest.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Version lesen, schon veroeffentlicht?
+        id: ver
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('custom_components/snapmaker_u1_card/manifest.json'))['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION gibt es schon - nichts zu tun."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Version = const.py = Karte
+        if: steps.ver.outputs.exists == 'false'
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          grep -q "VERSION = \"$V\"" custom_components/snapmaker_u1_card/const.py
+          grep -q "CARD_VERSION = \"$V\"" custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js
+      - uses: actions/setup-python@v6
+        if: steps.ver.outputs.exists == 'false'
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements_test.txt
+      - if: steps.ver.outputs.exists == 'false'
+        run: pip install -r requirements_test.txt && ruff check custom_components && pytest -q
+      - uses: actions/setup-node@v5
+        if: steps.ver.outputs.exists == 'false'
+        with:
+          node-version: "22"
+      - if: steps.ver.outputs.exists == 'false'
+        run: npm install && npm test
+      - name: Zips bauen
+        if: steps.ver.outputs.exists == 'false'
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          (cd custom_components/snapmaker_u1_card && zip -qr "$GITHUB_WORKSPACE/snapmaker_u1_card.zip" . -x "__pycache__/*")
+          zip -qr "snapmaker_u1_card-$V-install.zip" custom_components/snapmaker_u1_card -x "*/__pycache__/*"
+      - uses: softprops/action-gh-release@v2
+        if: steps.ver.outputs.exists == 'false'
+        with:
+          tag_name: v${{ steps.ver.outputs.version }}
+          name: ${{ steps.ver.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          files: |
+            snapmaker_u1_card.zip
+            snapmaker_u1_card-*-install.zip
+          generate_release_notes: true

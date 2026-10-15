@@ -1,0 +1,103 @@
+"""Netzschalter des Druckers mit Schutz beim Ausschalten.
+
+Die Entitaet spiegelt einen beliebigen Schalter (Shelly, KNX, Zigbee ...).
+Ausschalten ueber sie ist waehrend eines Drucks gesperrt und faehrt den
+Drucker vorher herunter. Automationen sollten deshalb diese Entitaet
+schalten, nicht den Schalter dahinter.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
+
+from . import U1ConfigEntry
+from .const import (
+    CONF_AUTO_OFF,
+    CONF_AUTO_OFF_DELAY,
+    CONF_AUTO_OFF_TEMP,
+    CONF_AUTO_ON,
+    CONF_ENERGY_SENSOR,
+    CONF_POWER_SENSOR,
+    CONF_POWER_SWITCH,
+    DEFAULT_AUTO_OFF_DELAY,
+    DEFAULT_AUTO_OFF_TEMP,
+)
+from .coordinator import U1Coordinator
+from .sensor import U1Entity
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: U1ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
+) -> None:
+    if entry.options.get(CONF_POWER_SWITCH):
+        async_add_entities([PowerSwitch(entry.runtime_data)])
+
+
+class PowerSwitch(U1Entity, SwitchEntity):
+    _attr_translation_key = "power"
+    _attr_device_class = SwitchDeviceClass.OUTLET
+    _attr_icon = "mdi:power"
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "power")
+        self._source = coordinator.power_switch
+
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        watched = [e for e in (self._source, self.coordinator.options.get(CONF_POWER_SENSOR)) if e]
+        self.async_on_remove(
+            async_track_state_change_event(self.hass, watched, self._source_changed)
+        )
+
+    @callback
+    def _source_changed(self, event: Event[EventStateChangedData]) -> None:
+        self.async_write_ha_state()
+        if event.data["entity_id"] == self._source:
+            old, new = event.data["old_state"], event.data["new_state"]
+            if (old and old.state) != (new and new.state):
+                # Ein: Drucker bald wieder abfragen. Aus: sofort offline melden.
+                self.hass.async_create_task(self.coordinator.async_request_refresh())
+
+    @property
+    def available(self) -> bool:
+        st = self.hass.states.get(self._source) if self._source else None
+        return st is not None and st.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
+
+    @property
+    def is_on(self) -> bool | None:
+        st = self.hass.states.get(self._source)
+        return None if st is None else st.state == STATE_ON
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_power_on()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        # Pruefung sofort (Fehlermeldung im Frontend), Herunterfahren im Hintergrund.
+        self.coordinator.check_power_off()
+        self.hass.async_create_task(self.coordinator.async_power_off())
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        c = self.coordinator
+        opts = c.options
+        return {
+            "source": self._source,
+            "power_sensor": opts.get(CONF_POWER_SENSOR),
+            "energy_sensor": opts.get(CONF_ENERGY_SENSOR),
+            "energy_price": c.energy_price,
+            "shutting_down": c.shutting_down,
+            "powering_on": c.powering_on,
+            "last_shutdown": c.last_shutdown,
+            "auto_on": bool(opts.get(CONF_AUTO_ON)),
+            "auto_off": bool(opts.get(CONF_AUTO_OFF)),
+            "auto_off_pending": c.auto_off_armed is not None,
+            "auto_off_temp": opts.get(CONF_AUTO_OFF_TEMP, DEFAULT_AUTO_OFF_TEMP),
+            "auto_off_delay": opts.get(CONF_AUTO_OFF_DELAY, DEFAULT_AUTO_OFF_DELAY),
+            "entry_id": c.config_entry.entry_id,
+        }

@@ -1,0 +1,645 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Snapmaker U1",
+        "description": "IP address or host name of the printer. Port 80 works with stock firmware, Extended Firmware and Bespok3d.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_key": "Moonraker API key (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Snapmaker U1",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_key": "Moonraker API key (optional)"
+        }
+      },
+      "settings": {
+        "title": "Settings",
+        "description": "All optional and changeable later under “Configure”. Expand the sections.",
+        "sections": {
+          "power": {
+            "name": "Power and energy",
+            "description": "Any switch works: Shelly, KNX, Zigbee plug, …",
+            "data": {
+              "power_switch": "Printer power switch",
+              "power_sensor": "Power sensor (W)",
+              "energy_sensor": "Energy meter (kWh)",
+              "energy_price": "Electricity price entity",
+              "shutdown_host": "Shut the printer down before cutting power",
+              "auto_on": "Switch on automatically when a print is started",
+              "auto_off": "Switch off automatically after a print",
+              "auto_off_temp": "Auto-off below temperature",
+              "auto_off_delay": "Auto-off delay after the print",
+              "idle_off_hours": "Switch off after idle"
+            },
+            "data_description": {
+              "power_switch": "Used for the on/off button on the card. Switching off is blocked while printing.",
+              "power_sensor": "Live power draw, usually from the same plug.",
+              "energy_sensor": "Total energy counter. Used for the consumption of each print.",
+              "energy_price": "Sensor or helper with the current price per kWh (EUR/kWh or ct/kWh). Dynamic tariffs are summed up over the print.",
+              "shutdown_host": "Sends a shutdown to the printer, waits until it is gone plus 10 s, then switches off. If the printer refuses, it is switched off after 10 s like with its rocker switch.",
+              "auto_on": "Starting a print from the card while the printer is off switches it on and waits until it is ready (about 1–2 min).",
+              "auto_off": "After a finished or cancelled print, once all heaters have cooled down.",
+              "auto_off_temp": "Nozzles and bed must be below this temperature.",
+              "auto_off_delay": "Minimum time between the end of the print and switching off.",
+              "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off."
+            }
+          },
+          "notify": {
+            "name": "Notifications",
+            "description": "Phone push: print end, errors, pause, messages, first layer, almost done, low filament.",
+            "data": {
+              "notify_targets": "Notify services",
+              "notify_events": "Notify on",
+              "camera": "Camera for the picture",
+              "almost_done_minutes": "“Almost done” warning",
+              "bed_cool_temp": "“Part ready” at"
+            },
+            "data_description": {
+              "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
+              "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
+              "almost_done_minutes": "Minutes before the estimated end.",
+              "bed_cool_temp": "Bed temperature after a finished print at which the message is sent."
+            }
+          },
+          "filament": {
+            "name": "Filament prices",
+            "description": "Price per kg by material, used for the filament cost of each print. Leave empty to skip.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Other materials"
+            }
+          },
+          "files": {
+            "name": "Files",
+            "data": {
+              "files_limit": "Number of newest files",
+              "config_backup": "Back up printer configuration"
+            },
+            "data_description": {
+              "config_backup": "Daily copy of printer.cfg etc. to /config/snapmaker_u1_backup (only when changed, 10 versions)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Optional. Leave the URL empty if you don't use Spoolman.",
+            "data": {
+              "spoolman_url": "Spoolman URL",
+              "spoolman_deduct": "Deduct usage per head after each print",
+              "spoolman_low": "Warn below"
+            },
+            "data_description": {
+              "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
+              "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
+              "spoolman_low": "Card shows a warning when a spool has less filament left."
+            }
+          },
+          "timelapse": {
+            "name": "Timelapse backup",
+            "description": "Copies new timelapses to Home Assistant's media folder (snapmaker_u1). The oldest can then be deleted on the printer.",
+            "data": {
+              "timelapse_archive": "Back up timelapses",
+              "timelapse_keep": "Keep on the printer"
+            },
+            "data_description": {
+              "timelapse_keep": "This many newest stay on the printer, older ones are deleted after the backup. 0 = never delete."
+            }
+          },
+          "maintenance": {
+            "name": "Maintenance",
+            "description": "Intervals in print hours. 0 = hide item.",
+            "data": {
+              "maint_plate": "Clean build plate",
+              "maint_nozzle": "Clean nozzles and wiper",
+              "maint_rails": "Lubricate linear rails",
+              "maint_belts": "Check belt tension",
+              "maint_filter": "Replace air filter"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Printer not reachable.",
+      "not_u1": "Moonraker answered, but this is not a Snapmaker U1 (print_task_config missing).",
+      "auto_needs_switch": "Auto-on and auto-off need a power switch.",
+      "unknown_notify": "One of the notify services does not exist.",
+      "spoolman_unreachable": "Spoolman is not reachable at this URL."
+    },
+    "abort": {
+      "already_configured": "This printer is already set up.",
+      "reconfigure_successful": "Settings updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Snapmaker U1 options",
+        "description": "Everything here is optional. The card picks it up automatically.",
+        "sections": {
+          "power": {
+            "name": "Power and energy",
+            "description": "Any switch works: Shelly, KNX, Zigbee plug, …",
+            "data": {
+              "power_switch": "Printer power switch",
+              "power_sensor": "Power sensor (W)",
+              "energy_sensor": "Energy meter (kWh)",
+              "energy_price": "Electricity price entity",
+              "shutdown_host": "Shut the printer down before cutting power",
+              "auto_on": "Switch on automatically when a print is started",
+              "auto_off": "Switch off automatically after a print",
+              "auto_off_temp": "Auto-off below temperature",
+              "auto_off_delay": "Auto-off delay after the print",
+              "idle_off_hours": "Switch off after idle"
+            },
+            "data_description": {
+              "power_switch": "Used for the on/off button on the card. Switching off is blocked while printing.",
+              "power_sensor": "Live power draw, usually from the same plug.",
+              "energy_sensor": "Total energy counter. Used for the consumption of each print.",
+              "energy_price": "Sensor or helper with the current price per kWh (EUR/kWh or ct/kWh). Dynamic tariffs are summed up over the print.",
+              "shutdown_host": "Sends a shutdown to the printer, waits until it is gone plus 10 s, then switches off. If the printer refuses, it is switched off after 10 s like with its rocker switch.",
+              "auto_on": "Starting a print from the card while the printer is off switches it on and waits until it is ready (about 1–2 min).",
+              "auto_off": "After a finished or cancelled print, once all heaters have cooled down.",
+              "auto_off_temp": "Nozzles and bed must be below this temperature.",
+              "auto_off_delay": "Minimum time between the end of the print and switching off.",
+              "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off."
+            }
+          },
+          "notify": {
+            "name": "Notifications",
+            "description": "Phone push: print end, errors, pause, messages, first layer, almost done, low filament.",
+            "data": {
+              "notify_targets": "Notify services",
+              "notify_events": "Notify on",
+              "camera": "Camera for the picture",
+              "almost_done_minutes": "“Almost done” warning",
+              "bed_cool_temp": "“Part ready” at"
+            },
+            "data_description": {
+              "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
+              "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
+              "almost_done_minutes": "Minutes before the estimated end.",
+              "bed_cool_temp": "Bed temperature after a finished print at which the message is sent."
+            }
+          },
+          "filament": {
+            "name": "Filament prices",
+            "description": "Price per kg by material, used for the filament cost of each print. Leave empty to skip.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Other materials"
+            }
+          },
+          "files": {
+            "name": "Files",
+            "data": {
+              "files_limit": "Number of newest files",
+              "config_backup": "Back up printer configuration"
+            },
+            "data_description": {
+              "config_backup": "Daily copy of printer.cfg etc. to /config/snapmaker_u1_backup (only when changed, 10 versions)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Optional. Leave the URL empty if you don't use Spoolman.",
+            "data": {
+              "spoolman_url": "Spoolman URL",
+              "spoolman_deduct": "Deduct usage per head after each print",
+              "spoolman_low": "Warn below"
+            },
+            "data_description": {
+              "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
+              "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
+              "spoolman_low": "Card shows a warning when a spool has less filament left."
+            }
+          },
+          "timelapse": {
+            "name": "Timelapse backup",
+            "description": "Copies new timelapses to Home Assistant's media folder (snapmaker_u1). The oldest can then be deleted on the printer.",
+            "data": {
+              "timelapse_archive": "Back up timelapses",
+              "timelapse_keep": "Keep on the printer"
+            },
+            "data_description": {
+              "timelapse_keep": "This many newest stay on the printer, older ones are deleted after the backup. 0 = never delete."
+            }
+          },
+          "maintenance": {
+            "name": "Maintenance",
+            "description": "Intervals in print hours. 0 = hide item.",
+            "data": {
+              "maint_plate": "Clean build plate",
+              "maint_nozzle": "Clean nozzles and wiper",
+              "maint_rails": "Lubricate linear rails",
+              "maint_belts": "Check belt tension",
+              "maint_filter": "Replace air filter"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "auto_needs_switch": "Auto-on and auto-off need a power switch.",
+      "unknown_notify": "One of the notify services does not exist.",
+      "spoolman_unreachable": "Spoolman is not reachable at this URL."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "filaments": {
+        "name": "Filaments",
+        "unit_of_measurement": "loaded"
+      },
+      "slot": {
+        "name": "Slot {slot}"
+      },
+      "files": {
+        "name": "Print files",
+        "unit_of_measurement": "files"
+      },
+      "tool_changes": {
+        "name": "Tool changes",
+        "unit_of_measurement": "changes"
+      },
+      "tool_changes_print": {
+        "name": "Tool changes (print)",
+        "unit_of_measurement": "changes"
+      },
+      "print_energy": {
+        "name": "Energy (print)"
+      },
+      "print_cost": {
+        "name": "Cost (print)"
+      },
+      "history": {
+        "name": "Print history",
+        "unit_of_measurement": "prints"
+      },
+      "timelapses": {
+        "name": "Timelapses",
+        "unit_of_measurement": "videos"
+      },
+      "queue": {
+        "name": "Queue",
+        "unit_of_measurement": "jobs"
+      },
+      "statistics": {
+        "name": "Print hours"
+      },
+      "maintenance": {
+        "name": "Maintenance due",
+        "unit_of_measurement": "items"
+      },
+      "errors": {
+        "name": "Printer messages",
+        "unit_of_measurement": "messages"
+      },
+      "remaining": {
+        "name": "Time remaining"
+      },
+      "finish": {
+        "name": "Finish time"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      }
+    },
+    "binary_sensor": {
+      "live": {
+        "name": "Live connection"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "services": {
+    "start_print": {
+      "name": "Start print",
+      "description": "Starts a print file on the printer with filament mapping, like Snapmaker Orca.",
+      "fields": {
+        "filename": {
+          "name": "File",
+          "description": "Path relative to the gcodes folder."
+        },
+        "mapping": {
+          "name": "Filament mapping",
+          "description": "Logical filament (T0, T1, ...) to printer slot 0-3, e.g. 0: 2 and 1: 0 as YAML mapping. Empty = automatic suggestion."
+        },
+        "bed_leveling": {
+          "name": "Bed leveling",
+          "description": "Run automatic bed leveling before printing."
+        },
+        "flow_calibration": {
+          "name": "Flow calibration",
+          "description": "Run flow calibration before printing."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Record a timelapse."
+        },
+        "plate": {
+          "name": "Plate",
+          "description": "Plate number for 3MF files."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        },
+        "pause_layers": {
+          "name": "Pause before layer",
+          "description": "List of layers (1 = first). The printer pauses before these layers, e.g. to insert magnets. A copy of the file with PAUSE is created for this."
+        }
+      }
+    },
+    "refresh": {
+      "name": "Refresh",
+      "description": "Reload file list and filaments immediately.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "power_on": {
+      "name": "Power on",
+      "description": "Switch the printer on.",
+      "fields": {
+        "wait": {
+          "name": "Wait until ready",
+          "description": "Return only when Klipper is ready (up to 4 min)."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "power_off": {
+      "name": "Power off safely",
+      "description": "Shut the printer down and then switch it off. Refused while printing.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        },
+        "force": {
+          "name": "Force",
+          "description": "Switch off even though a print is recorded as running, e.g. after the printer crashed. Not checked against the printer state."
+        }
+      }
+    },
+    "set_spool": {
+      "name": "Assign spool",
+      "description": "Assigns a Spoolman spool to a toolhead. Without spool_id the integration picks automatically again.",
+      "fields": {
+        "slot": {
+          "name": "Toolhead",
+          "description": "1-4"
+        },
+        "spool_id": {
+          "name": "Spool ID",
+          "description": "ID in Spoolman; 0 = no spool. Leave empty for automatic."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "queue_add": {
+      "name": "Add to queue",
+      "description": "Plans a print with mapping and options. It is started manually (queue_start) once the bed is cleared.",
+      "fields": {
+        "filename": {
+          "name": "File",
+          "description": "Path relative to the gcodes folder."
+        },
+        "mapping": {
+          "name": "Filament mapping",
+          "description": "Logical filament (T0, T1, ...) to printer slot 0-3, e.g. 0: 2 and 1: 0 as YAML mapping. Empty = automatic suggestion."
+        },
+        "bed_leveling": {
+          "name": "Bed leveling",
+          "description": "Run automatic bed leveling before printing."
+        },
+        "flow_calibration": {
+          "name": "Flow calibration",
+          "description": "Run flow calibration before printing."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Record a timelapse."
+        },
+        "plate": {
+          "name": "Plate",
+          "description": "Plate number for 3MF files."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        },
+        "pause_layers": {
+          "name": "Pause before layer",
+          "description": "List of layers (1 = first). The printer pauses before these layers, e.g. to insert magnets. A copy of the file with PAUSE is created for this."
+        }
+      }
+    },
+    "queue_remove": {
+      "name": "Remove from queue",
+      "description": "Removes a job.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "ID from the jobs attribute of the queue sensor."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "queue_move": {
+      "name": "Move job",
+      "description": "Changes the order.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "ID from the jobs attribute of the queue sensor."
+        },
+        "position": {
+          "name": "Position",
+          "description": "0 = first."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "queue_start": {
+      "name": "Start job",
+      "description": "Starts the first (or the given) job. Clear the bed first.",
+      "fields": {
+        "job_id": {
+          "name": "Job",
+          "description": "Empty = first job."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "queue_clear": {
+      "name": "Clear queue",
+      "description": "Removes all jobs.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Maintenance done",
+      "description": "Resets the counter of a maintenance item.",
+      "fields": {
+        "item": {
+          "name": "Item",
+          "description": ""
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "backup_timelapses": {
+      "name": "Back up timelapses now",
+      "description": "Backs up missing timelapses to the media folder, then cleans up the printer.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "backup_config": {
+      "name": "Back up printer configuration",
+      "description": "Copies printer.cfg etc. from the printer to /config/snapmaker_u1_backup (new version only when changed).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "file_details": {
+      "name": "File details",
+      "description": "Metadata and thumbnail of a print file, including older ones (for the card's search).",
+      "fields": {
+        "path": {
+          "name": "File",
+          "description": "Path relative to gcodes, e.g. parts/holder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "delete_file": {
+      "name": "Delete file",
+      "description": "Deletes a print file on the printer. Not while it is printing or queued.",
+      "fields": {
+        "path": {
+          "name": "File",
+          "description": "Path relative to gcodes, e.g. parts/holder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "move_file": {
+      "name": "Rename/move file",
+      "description": "New name or path; subfolders are created.",
+      "fields": {
+        "source": {
+          "name": "File",
+          "description": "Current path"
+        },
+        "dest": {
+          "name": "Destination",
+          "description": "New name or path"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "self_test": {
+      "name": "Self-test",
+      "description": "Checks printer, live connection, storage, Moonraker integration, camera, power, notifications, Spoolman, Assist and media folder.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        },
+        "language": {
+          "name": "Language",
+          "description": "de or en; empty = Home Assistant language."
+        }
+      }
+    }
+  },
+  "selector": {
+    "notify_events": {
+      "options": {
+        "complete": "Print finished",
+        "cancelled": "Print cancelled",
+        "error": "Print error",
+        "paused": "Print paused (e.g. filament runout)",
+        "alert": "Printer message during a print",
+        "first_layer": "First layer done",
+        "almost_done": "Almost done",
+        "spool_low": "Not enough filament (Spoolman)",
+        "spool_runout": "Spool about to run out during print (Spoolman)",
+        "bed_cool": "Part ready to remove (bed cooled)"
+      }
+    },
+    "maintenance_item": {
+      "options": {
+        "plate": "Clean build plate",
+        "nozzle": "Clean nozzles and wiper",
+        "rails": "Lubricate linear rails",
+        "belts": "Check belt tension",
+        "filter": "Replace air filter"
+      }
+    }
+  }
+}

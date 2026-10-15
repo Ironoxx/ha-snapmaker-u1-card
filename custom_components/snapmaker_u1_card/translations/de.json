@@ -1,0 +1,645 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Snapmaker U1",
+        "description": "IP-Adresse oder Hostname des Druckers. Port 80 funktioniert mit Stock-Firmware, Extended Firmware und Bespok3d.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_key": "Moonraker-API-Key (optional)"
+        }
+      },
+      "reconfigure": {
+        "title": "Snapmaker U1",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "api_key": "Moonraker-API-Key (optional)"
+        }
+      },
+      "settings": {
+        "title": "Einstellungen",
+        "description": "Alles freiwillig und später unter „Konfigurieren“ änderbar. Abschnitte zum Aufklappen.",
+        "sections": {
+          "power": {
+            "name": "Strom und Verbrauch",
+            "description": "Jeder Schalter geht: Shelly, KNX, Zigbee-Steckdose, …",
+            "data": {
+              "power_switch": "Netzschalter des Druckers",
+              "power_sensor": "Leistungssensor (W)",
+              "energy_sensor": "Energiezähler (kWh)",
+              "energy_price": "Strompreis-Entität",
+              "shutdown_host": "Drucker vor dem Abschalten herunterfahren",
+              "auto_on": "Beim Druckstart automatisch einschalten",
+              "auto_off": "Nach dem Druck automatisch ausschalten",
+              "auto_off_temp": "Auto-Aus unter Temperatur",
+              "auto_off_delay": "Auto-Aus frühestens nach",
+              "idle_off_hours": "Ausschalten nach Leerlauf"
+            },
+            "data_description": {
+              "power_switch": "Für den Ein/Aus-Knopf der Karte. Ausschalten ist während eines Drucks gesperrt.",
+              "power_sensor": "Aktuelle Leistung, meist von derselben Steckdose.",
+              "energy_sensor": "Zählerstand. Daraus wird der Verbrauch je Druck berechnet.",
+              "energy_price": "Sensor oder Helfer mit dem aktuellen Preis je kWh (EUR/kWh oder ct/kWh). Dynamische Tarife werden über den Druck aufsummiert.",
+              "shutdown_host": "Fährt den Drucker herunter, wartet bis er weg ist plus 10 s und schaltet dann ab. Lehnt der Drucker ab, wird nach 10 s abgeschaltet wie mit dem Kippschalter.",
+              "auto_on": "Druckstart aus der Karte bei ausgeschaltetem Drucker: einschalten und warten, bis er bereit ist (ca. 1–2 min).",
+              "auto_off": "Nach fertigem oder abgebrochenem Druck, sobald alle Heizungen abgekühlt sind.",
+              "auto_off_temp": "Düsen und Bett müssen unter dieser Temperatur liegen.",
+              "auto_off_delay": "Mindestzeit zwischen Druckende und Abschalten.",
+              "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus."
+            }
+          },
+          "notify": {
+            "name": "Benachrichtigungen",
+            "description": "Push aufs Handy: Druckende, Fehler, Pause, Meldungen, erste Schicht, gleich fertig, Filament knapp.",
+            "data": {
+              "notify_targets": "Benachrichtigungsdienste",
+              "notify_events": "Benachrichtigen bei",
+              "camera": "Kamera für das Bild",
+              "almost_done_minutes": "Vorwarnung „Gleich fertig“",
+              "bed_cool_temp": "„Teil entnehmbar“ ab"
+            },
+            "data_description": {
+              "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
+              "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
+              "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
+              "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt."
+            }
+          },
+          "filament": {
+            "name": "Filamentpreise",
+            "description": "Preis je kg nach Material für die Filamentkosten je Druck. Leer lassen = keine Filamentkosten.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Sonstige Materialien"
+            }
+          },
+          "files": {
+            "name": "Dateien",
+            "data": {
+              "files_limit": "Anzahl neuester Dateien",
+              "config_backup": "Drucker-Konfiguration sichern"
+            },
+            "data_description": {
+              "config_backup": "Täglich printer.cfg & Co. nach /config/snapmaker_u1_backup (nur bei Änderung, 10 Stände)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Optional. Adresse leer lassen, wenn du Spoolman nicht nutzt.",
+            "data": {
+              "spoolman_url": "Spoolman-Adresse",
+              "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
+              "spoolman_low": "Warnen unter"
+            },
+            "data_description": {
+              "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
+              "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
+              "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist."
+            }
+          },
+          "timelapse": {
+            "name": "Zeitraffer sichern",
+            "description": "Kopiert neue Zeitraffer in den Medienordner von Home Assistant (snapmaker_u1). Danach können die ältesten auf dem Drucker gelöscht werden.",
+            "data": {
+              "timelapse_archive": "Zeitraffer sichern",
+              "timelapse_keep": "Auf dem Drucker behalten"
+            },
+            "data_description": {
+              "timelapse_keep": "So viele neueste bleiben auf dem Drucker, ältere werden nach der Sicherung gelöscht. 0 = nie löschen."
+            }
+          },
+          "maintenance": {
+            "name": "Wartung",
+            "description": "Intervalle in Druckstunden. 0 = Punkt ausblenden.",
+            "data": {
+              "maint_plate": "Druckplatte reinigen",
+              "maint_nozzle": "Düsen und Abstreifer reinigen",
+              "maint_rails": "Linearführungen schmieren",
+              "maint_belts": "Riemenspannung prüfen",
+              "maint_filter": "Luftfilter wechseln"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Drucker nicht erreichbar.",
+      "not_u1": "Moonraker antwortet, aber das ist kein Snapmaker U1 (print_task_config fehlt).",
+      "auto_needs_switch": "Auto-Ein und Auto-Aus brauchen einen Netzschalter.",
+      "unknown_notify": "Einer der Benachrichtigungsdienste existiert nicht.",
+      "spoolman_unreachable": "Unter dieser Adresse ist kein Spoolman erreichbar."
+    },
+    "abort": {
+      "already_configured": "Dieser Drucker ist bereits eingerichtet.",
+      "reconfigure_successful": "Einstellungen übernommen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Snapmaker U1 Optionen",
+        "description": "Alles hier ist freiwillig. Die Karte übernimmt es automatisch.",
+        "sections": {
+          "power": {
+            "name": "Strom und Verbrauch",
+            "description": "Jeder Schalter geht: Shelly, KNX, Zigbee-Steckdose, …",
+            "data": {
+              "power_switch": "Netzschalter des Druckers",
+              "power_sensor": "Leistungssensor (W)",
+              "energy_sensor": "Energiezähler (kWh)",
+              "energy_price": "Strompreis-Entität",
+              "shutdown_host": "Drucker vor dem Abschalten herunterfahren",
+              "auto_on": "Beim Druckstart automatisch einschalten",
+              "auto_off": "Nach dem Druck automatisch ausschalten",
+              "auto_off_temp": "Auto-Aus unter Temperatur",
+              "auto_off_delay": "Auto-Aus frühestens nach",
+              "idle_off_hours": "Ausschalten nach Leerlauf"
+            },
+            "data_description": {
+              "power_switch": "Für den Ein/Aus-Knopf der Karte. Ausschalten ist während eines Drucks gesperrt.",
+              "power_sensor": "Aktuelle Leistung, meist von derselben Steckdose.",
+              "energy_sensor": "Zählerstand. Daraus wird der Verbrauch je Druck berechnet.",
+              "energy_price": "Sensor oder Helfer mit dem aktuellen Preis je kWh (EUR/kWh oder ct/kWh). Dynamische Tarife werden über den Druck aufsummiert.",
+              "shutdown_host": "Fährt den Drucker herunter, wartet bis er weg ist plus 10 s und schaltet dann ab. Lehnt der Drucker ab, wird nach 10 s abgeschaltet wie mit dem Kippschalter.",
+              "auto_on": "Druckstart aus der Karte bei ausgeschaltetem Drucker: einschalten und warten, bis er bereit ist (ca. 1–2 min).",
+              "auto_off": "Nach fertigem oder abgebrochenem Druck, sobald alle Heizungen abgekühlt sind.",
+              "auto_off_temp": "Düsen und Bett müssen unter dieser Temperatur liegen.",
+              "auto_off_delay": "Mindestzeit zwischen Druckende und Abschalten.",
+              "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus."
+            }
+          },
+          "notify": {
+            "name": "Benachrichtigungen",
+            "description": "Push aufs Handy: Druckende, Fehler, Pause, Meldungen, erste Schicht, gleich fertig, Filament knapp.",
+            "data": {
+              "notify_targets": "Benachrichtigungsdienste",
+              "notify_events": "Benachrichtigen bei",
+              "camera": "Kamera für das Bild",
+              "almost_done_minutes": "Vorwarnung „Gleich fertig“",
+              "bed_cool_temp": "„Teil entnehmbar“ ab"
+            },
+            "data_description": {
+              "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
+              "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
+              "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
+              "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt."
+            }
+          },
+          "filament": {
+            "name": "Filamentpreise",
+            "description": "Preis je kg nach Material für die Filamentkosten je Druck. Leer lassen = keine Filamentkosten.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Sonstige Materialien"
+            }
+          },
+          "files": {
+            "name": "Dateien",
+            "data": {
+              "files_limit": "Anzahl neuester Dateien",
+              "config_backup": "Drucker-Konfiguration sichern"
+            },
+            "data_description": {
+              "config_backup": "Täglich printer.cfg & Co. nach /config/snapmaker_u1_backup (nur bei Änderung, 10 Stände)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Optional. Adresse leer lassen, wenn du Spoolman nicht nutzt.",
+            "data": {
+              "spoolman_url": "Spoolman-Adresse",
+              "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
+              "spoolman_low": "Warnen unter"
+            },
+            "data_description": {
+              "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
+              "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
+              "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist."
+            }
+          },
+          "timelapse": {
+            "name": "Zeitraffer sichern",
+            "description": "Kopiert neue Zeitraffer in den Medienordner von Home Assistant (snapmaker_u1). Danach können die ältesten auf dem Drucker gelöscht werden.",
+            "data": {
+              "timelapse_archive": "Zeitraffer sichern",
+              "timelapse_keep": "Auf dem Drucker behalten"
+            },
+            "data_description": {
+              "timelapse_keep": "So viele neueste bleiben auf dem Drucker, ältere werden nach der Sicherung gelöscht. 0 = nie löschen."
+            }
+          },
+          "maintenance": {
+            "name": "Wartung",
+            "description": "Intervalle in Druckstunden. 0 = Punkt ausblenden.",
+            "data": {
+              "maint_plate": "Druckplatte reinigen",
+              "maint_nozzle": "Düsen und Abstreifer reinigen",
+              "maint_rails": "Linearführungen schmieren",
+              "maint_belts": "Riemenspannung prüfen",
+              "maint_filter": "Luftfilter wechseln"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "auto_needs_switch": "Auto-Ein und Auto-Aus brauchen einen Netzschalter.",
+      "unknown_notify": "Einer der Benachrichtigungsdienste existiert nicht.",
+      "spoolman_unreachable": "Unter dieser Adresse ist kein Spoolman erreichbar."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "filaments": {
+        "name": "Filamente",
+        "unit_of_measurement": "geladen"
+      },
+      "slot": {
+        "name": "Slot {slot}"
+      },
+      "files": {
+        "name": "Druckdateien",
+        "unit_of_measurement": "Dateien"
+      },
+      "tool_changes": {
+        "name": "Werkzeugwechsel",
+        "unit_of_measurement": "Wechsel"
+      },
+      "tool_changes_print": {
+        "name": "Werkzeugwechsel (Druck)",
+        "unit_of_measurement": "Wechsel"
+      },
+      "print_energy": {
+        "name": "Energie (Druck)"
+      },
+      "print_cost": {
+        "name": "Kosten (Druck)"
+      },
+      "history": {
+        "name": "Druckhistorie",
+        "unit_of_measurement": "Drucke"
+      },
+      "timelapses": {
+        "name": "Zeitraffer",
+        "unit_of_measurement": "Videos"
+      },
+      "queue": {
+        "name": "Warteschlange",
+        "unit_of_measurement": "Aufträge"
+      },
+      "statistics": {
+        "name": "Druckstunden"
+      },
+      "maintenance": {
+        "name": "Wartung fällig",
+        "unit_of_measurement": "Punkte"
+      },
+      "errors": {
+        "name": "Druckermeldungen",
+        "unit_of_measurement": "Meldungen"
+      },
+      "remaining": {
+        "name": "Restzeit"
+      },
+      "finish": {
+        "name": "Fertig um"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Netzschalter"
+      }
+    },
+    "binary_sensor": {
+      "live": {
+        "name": "Live-Verbindung"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    }
+  },
+  "services": {
+    "start_print": {
+      "name": "Druck starten",
+      "description": "Startet eine Druckdatei mit Filamentzuordnung, wie Snapmaker Orca.",
+      "fields": {
+        "filename": {
+          "name": "Datei",
+          "description": "Pfad relativ zum gcodes-Ordner."
+        },
+        "mapping": {
+          "name": "Filamentzuordnung",
+          "description": "Logisches Filament (T0, T1, …) auf Drucker-Slot 0–3, z. B. 0: 2 und 1: 0 als YAML-Zuordnung. Leer = automatischer Vorschlag."
+        },
+        "bed_leveling": {
+          "name": "Bettnivellierung",
+          "description": "Vor dem Druck automatisch nivellieren."
+        },
+        "flow_calibration": {
+          "name": "Flusskalibrierung",
+          "description": "Vor dem Druck den Fluss kalibrieren."
+        },
+        "timelapse": {
+          "name": "Zeitraffer",
+          "description": "Zeitraffer aufnehmen."
+        },
+        "plate": {
+          "name": "Platte",
+          "description": "Plattennummer bei 3MF-Dateien."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        },
+        "pause_layers": {
+          "name": "Pause vor Schicht",
+          "description": "Liste von Schichten (1 = erste). Der Drucker hält vor diesen Schichten an, z. B. zum Einlegen von Magneten. Dafür wird eine Kopie der Datei mit PAUSE angelegt."
+        }
+      }
+    },
+    "refresh": {
+      "name": "Aktualisieren",
+      "description": "Dateiliste und Filamente sofort neu laden.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "power_on": {
+      "name": "Einschalten",
+      "description": "Drucker einschalten.",
+      "fields": {
+        "wait": {
+          "name": "Warten bis bereit",
+          "description": "Erst zurückkehren, wenn Klipper bereit ist (bis 4 min)."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "power_off": {
+      "name": "Sicher ausschalten",
+      "description": "Drucker herunterfahren und dann abschalten. Während eines Drucks gesperrt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        },
+        "force": {
+          "name": "Erzwingen",
+          "description": "Auch ausschalten, wenn noch ein laufender Druck erfasst ist, z. B. nach einem Absturz des Druckers. Der Druckerzustand wird dann nicht geprüft."
+        }
+      }
+    },
+    "set_spool": {
+      "name": "Spule zuordnen",
+      "description": "Ordnet einem Druckkopf eine Spule aus Spoolman zu. Ohne spool_id wählt die Integration wieder automatisch.",
+      "fields": {
+        "slot": {
+          "name": "Druckkopf",
+          "description": "1-4"
+        },
+        "spool_id": {
+          "name": "Spulen-ID",
+          "description": "ID in Spoolman; 0 = keine Spule. Leer = automatisch."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "queue_add": {
+      "name": "Zur Warteschlange",
+      "description": "Plant einen Druck mit Zuordnung und Optionen. Gestartet wird von Hand (queue_start), nachdem das Bett geräumt ist.",
+      "fields": {
+        "filename": {
+          "name": "Datei",
+          "description": "Pfad relativ zum gcodes-Ordner."
+        },
+        "mapping": {
+          "name": "Filamentzuordnung",
+          "description": "Logisches Filament (T0, T1, …) auf Drucker-Slot 0–3, z. B. 0: 2 und 1: 0 als YAML-Zuordnung. Leer = automatischer Vorschlag."
+        },
+        "bed_leveling": {
+          "name": "Bettnivellierung",
+          "description": "Vor dem Druck automatisch nivellieren."
+        },
+        "flow_calibration": {
+          "name": "Flusskalibrierung",
+          "description": "Vor dem Druck den Fluss kalibrieren."
+        },
+        "timelapse": {
+          "name": "Zeitraffer",
+          "description": "Zeitraffer aufnehmen."
+        },
+        "plate": {
+          "name": "Platte",
+          "description": "Plattennummer bei 3MF-Dateien."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        },
+        "pause_layers": {
+          "name": "Pause vor Schicht",
+          "description": "Liste von Schichten (1 = erste). Der Drucker hält vor diesen Schichten an, z. B. zum Einlegen von Magneten. Dafür wird eine Kopie der Datei mit PAUSE angelegt."
+        }
+      }
+    },
+    "queue_remove": {
+      "name": "Aus Warteschlange entfernen",
+      "description": "Entfernt einen Auftrag.",
+      "fields": {
+        "job_id": {
+          "name": "Auftrag",
+          "description": "ID aus dem Attribut jobs des Warteschlangen-Sensors."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "queue_move": {
+      "name": "Auftrag verschieben",
+      "description": "Ändert die Reihenfolge.",
+      "fields": {
+        "job_id": {
+          "name": "Auftrag",
+          "description": "ID aus dem Attribut jobs des Warteschlangen-Sensors."
+        },
+        "position": {
+          "name": "Position",
+          "description": "0 = vorne."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "queue_start": {
+      "name": "Auftrag starten",
+      "description": "Startet den ersten (oder den angegebenen) Auftrag. Vorher Druckbett räumen.",
+      "fields": {
+        "job_id": {
+          "name": "Auftrag",
+          "description": "Leer = erster Auftrag."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "queue_clear": {
+      "name": "Warteschlange leeren",
+      "description": "Entfernt alle Aufträge.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Wartung erledigt",
+      "description": "Setzt den Zähler eines Wartungspunkts zurück.",
+      "fields": {
+        "item": {
+          "name": "Wartungspunkt",
+          "description": ""
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "backup_timelapses": {
+      "name": "Zeitraffer jetzt sichern",
+      "description": "Sichert fehlende Zeitraffer in den Medienordner und räumt danach auf dem Drucker auf.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "backup_config": {
+      "name": "Drucker-Konfiguration sichern",
+      "description": "Lädt printer.cfg & Co. vom Drucker nach /config/snapmaker_u1_backup (neuer Stand nur bei Änderung).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "file_details": {
+      "name": "Datei-Details",
+      "description": "Metadaten und Vorschaubild einer Druckdatei, auch älterer (für die Suche der Karte).",
+      "fields": {
+        "path": {
+          "name": "Datei",
+          "description": "Pfad relativ zu gcodes, z. B. teile/halter.gcode"
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "delete_file": {
+      "name": "Datei löschen",
+      "description": "Löscht eine Druckdatei auf dem Drucker. Nicht während sie gedruckt wird oder in der Warteschlange steht.",
+      "fields": {
+        "path": {
+          "name": "Datei",
+          "description": "Pfad relativ zu gcodes, z. B. teile/halter.gcode"
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "move_file": {
+      "name": "Datei umbenennen/verschieben",
+      "description": "Neuer Name oder Pfad; Unterordner werden angelegt.",
+      "fields": {
+        "source": {
+          "name": "Datei",
+          "description": "Bisheriger Pfad"
+        },
+        "dest": {
+          "name": "Ziel",
+          "description": "Neuer Name oder Pfad"
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "self_test": {
+      "name": "Selbsttest",
+      "description": "Prüft Drucker, Live-Verbindung, Speicher, Moonraker-Integration, Kamera, Strom, Benachrichtigung, Spoolman, Assist und Medienordner.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        },
+        "language": {
+          "name": "Sprache",
+          "description": "de oder en; leer = Sprache von Home Assistant."
+        }
+      }
+    }
+  },
+  "selector": {
+    "notify_events": {
+      "options": {
+        "complete": "Druck fertig",
+        "cancelled": "Druck abgebrochen",
+        "error": "Druckfehler",
+        "paused": "Druck pausiert (z. B. Filament leer)",
+        "alert": "Meldung vom Drucker während des Drucks",
+        "first_layer": "Erste Schicht fertig",
+        "almost_done": "Gleich fertig",
+        "spool_low": "Filament reicht nicht (Spoolman)",
+        "spool_runout": "Spule läuft im Druck gleich leer (Spoolman)",
+        "bed_cool": "Teil entnehmbar (Bett abgekühlt)"
+      }
+    },
+    "maintenance_item": {
+      "options": {
+        "plate": "Druckplatte reinigen",
+        "nozzle": "Düsen und Abstreifer reinigen",
+        "rails": "Linearführungen schmieren",
+        "belts": "Riemenspannung prüfen",
+        "filter": "Luftfilter wechseln"
+      }
+    }
+  }
+}

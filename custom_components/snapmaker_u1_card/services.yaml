@@ -1,0 +1,230 @@
+start_print:
+  fields:
+    filename:
+      required: true
+      example: "Benchy_PLA_1h12m.gcode"
+      selector:
+        text:
+    mapping:
+      example: '{"0": 2, "1": 0}'
+      selector:
+        object:
+    bed_leveling:
+      selector:
+        boolean:
+    flow_calibration:
+      selector:
+        boolean:
+    timelapse:
+      selector:
+        boolean:
+    plate:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    pause_layers:
+      example: "[12, 40]"
+      selector:
+        object:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+refresh:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+power_on:
+  fields:
+    wait:
+      default: false
+      selector:
+        boolean:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+power_off:
+  fields:
+    force:
+      default: false
+      selector:
+        boolean:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+set_spool:
+  fields:
+    slot:
+      required: true
+      example: 2
+      selector:
+        number:
+          min: 1
+          max: 4
+          mode: box
+    spool_id:
+      example: 12
+      selector:
+        number:
+          min: 0
+          mode: box
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+queue_add:
+  fields:
+    filename:
+      required: true
+      example: "Benchy_PLA_1h12m.gcode"
+      selector:
+        text:
+    mapping:
+      example: '{"0": 2, "1": 0}'
+      selector:
+        object:
+    bed_leveling:
+      selector:
+        boolean:
+    flow_calibration:
+      selector:
+        boolean:
+    timelapse:
+      selector:
+        boolean:
+    plate:
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 50
+          mode: box
+    pause_layers:
+      example: "[12, 40]"
+      selector:
+        object:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+queue_remove:
+  fields:
+    job_id:
+      required: true
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+queue_move:
+  fields:
+    job_id:
+      required: true
+      selector:
+        text:
+    position:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100
+          mode: box
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+queue_start:
+  fields:
+    job_id:
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+queue_clear:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+maintenance_done:
+  fields:
+    item:
+      required: true
+      selector:
+        select:
+          translation_key: maintenance_item
+          options:
+            - plate
+            - nozzle
+            - rails
+            - belts
+            - filter
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+backup_timelapses:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+backup_config:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+file_details:
+  fields:
+    path:
+      required: true
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+delete_file:
+  fields:
+    path:
+      required: true
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+move_file:
+  fields:
+    source:
+      required: true
+      selector:
+        text:
+    dest:
+      required: true
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+self_test:
+  fields:
+    language:
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card

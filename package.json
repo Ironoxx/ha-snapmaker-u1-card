@@ -1,0 +1,10 @@
+{
+  "name": "ha-snapmaker-u1-card",
+  "private": true,
+  "scripts": {
+    "test": "node --check custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js && node tests/js/card.test.cjs && node tests/js/power.test.cjs && node tests/js/spoolman.test.cjs && node tests/js/ui.test.cjs && node tests/js/features.test.cjs && node tests/js/layer.test.cjs && node tests/js/lock.test.cjs && node tests/js/zoom.test.cjs && node tests/js/extras.test.cjs && node tests/js/v57.test.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
