@@ -2,6 +2,8 @@
 
 # Snapmaker U1 Card für Home Assistant
 
+[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Kaffee%20spendieren-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
+
 Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapmaker U1**:
 
 - **Geladene Filamente live**: Material, Unterart, Hersteller, Farbe (auch mehrfarbig) und RFID-Erkennung je Druckkopf, direkt aus der Drucker-Firmware.
@@ -381,11 +383,9 @@ Die U1-Firmware meldet Fehler strukturiert (Modul, Kopf, Code). Die Integration 
 
 ## Unterstützen
 
-Die Integration ist kostenlos. Wer sich bedanken möchte: Ein Stern auf GitHub, Rückmeldungen als Beta-Tester und gemeldete Fehler helfen am meisten.
+Die Integration ist kostenlos. Wer sich bedanken möchte: Ein Stern auf GitHub, Rückmeldungen als Beta-Tester und gemeldete Fehler helfen am meisten – und wer mag, spendiert einen Kaffee:
 
-<!-- Buy-Me-a-Coffee: sobald der Account existiert, DEIN_NAME ersetzen und den Kommentar entfernen
-<a href="https://www.buymeacoffee.com/DEIN_NAME"><img src="https://img.buymeacoffee.com/button-api/?text=Buy%20me%20a%20coffee&slug=DEIN_NAME&button_colour=FFDD00&font_colour=000000" alt="Buy me a coffee" height="40"></a>
--->
+[![Unterstützen auf Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ironoxx)
 
 ## Lizenz
 
