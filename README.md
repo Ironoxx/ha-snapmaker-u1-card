@@ -1,202 +1,211 @@
 <img src="custom_components/snapmaker_u1_card/brand/icon.png" width="96" align="right" alt="" />
 
-# Snapmaker U1 Card für Home Assistant
+# Snapmaker U1 Card for Home Assistant
 
-[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Kaffee%20spendieren-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
+**English** | [Deutsch](README.de.md)
 
-Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapmaker U1**:
+[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
 
-- **Geladene Filamente live**: Material, Unterart, Hersteller, Farbe (auch mehrfarbig) und RFID-Erkennung je Druckkopf, direkt aus der Drucker-Firmware.
-- **Druckstart mit Filamentzuordnung wie in Snapmaker Orca**: Du tippst eine Datei an, die Karte schlägt vor, welches Filament der Datei auf welchen Kopf kommt. Grundlage sind Material und Farbe. Du kannst die Zuordnung ändern, Bettnivellierung, Flusskalibrierung und Zeitraffer wählen und dann starten.
-- **Dateiliste mit Vorschaubildern**, Druckzeit, Gewicht und Farbpunkten je Datei.
-- **Kamera** als Livestream über Home Assistant, mit automatischem Rückfall auf Standbilder. Zoom mit zwei Fingern, Doppeltipp, Strg+Mausrad oder Lupen-Knöpfen, Vollbild; gezoomt verschiebt man mit einem Finger bzw. der linken Maustaste. Während des Drucks liegen Fortschritt, Schicht, Restzeit, Fertig-Uhrzeit und aktiver Kopf direkt auf dem Bild.
-- **Schichtansicht** unter dem Kamerabild: Bahnen der aktuellen Schicht in den Farben der geladenen Spulen, gedruckter Teil kräftig, der Rest blass.
-- **Reiter** statt langer Seite: Übersicht, Steuerung, Dateien, Verlauf, Zeitraffer, System. Auf dem Handy nur Symbole.
-- **Mini-Karte** `snapmaker-u1-mini-card` für Übersichts-Dashboards: Status, Fortschritt, Filamente mit Spoolman-Rest, Netzschalter.
-- **Visueller Editor** für beide Karten, kein YAML nötig.
-- **Werkzeugwechsel**: gesamt, je Kopf, im laufenden bzw. letzten Druck und Stand bis zur empfohlenen Wartung.
-- **Netzschalter**: beliebige Steckdose (Shelly, KNX, Zigbee …). Ausschalten fährt den Drucker vorher sauber herunter und ist während eines Drucks gesperrt. Auf Wunsch automatisch aus nach dem Druck und automatisch ein beim Druckstart aus der Karte.
-- **Strom und Kosten je Druck**: Verbrauch aus dem Energiezähler, Kosten mit Preis-Entität (auch dynamische Tarife), Filamentkosten aus Slicer-Gewicht und Preis je kg.
-- **Druckhistorie** der letzten 20 Drucke mit Ergebnis, Dauer, Gewicht, kWh, Wechseln und Kosten.
-- **Live statt Abfragen**: Moonraker meldet Statuswechsel, Schicht, aktiven Kopf und Fehler sofort (WebSocket-Abo). Die regelmäßige Abfrage läuft dann nur noch alle 30 s als Abgleich.
-- **Benachrichtigung** aufs Handy bei Druckende, Fehler oder Pause (z. B. Filament leer), bei neuen Druckermeldungen im Druck, nach der ersten Schicht, kurz vor Ende und wenn eine Spule nicht reicht, mit Kamerabild.
-- **Kosten vor dem Druck** im Startdialog: Filament aus Slicer-Gewicht × Preis, Strom aus Druckzeit × mittlerer Leistung deiner bisherigen Drucke × aktuellem Preis.
-- **Sprachsteuerung über Assist**: „Wie weit ist der Drucker?“, „Pausiere den Drucker“, „Drucker fortsetzen“.
-- **Restzeit aus dem Zeitprofil der Datei**, geeicht mit der echten Druckdauer; Sensoren *Restzeit* und *Fertig um*.
-- **Knöpfe in der Benachrichtigung**: Pausieren, Fortsetzen, Abbrechen (mit Rückfrage), Licht.
-- **Ergebnisfoto** bei Druckende in der Historie, **Temperaturverlauf** der letzten 20 min, **Dateiverwaltung** mit Suche über alle Dateien, Ordnern, Umbenennen und Löschen.
-- **Firmware-Stand** als Update-Entität, **Selbsttest**, **Statistik je Material und Farbe**, **Leerlauf-Abschaltung**.
-- **Sicherung der Drucker-Konfiguration** (printer.cfg & Co.) täglich nach `/config/snapmaker_u1_backup/`, nur bei Änderung.
-- **Diagnose-Download** unter *Geräte & Dienste* für die Fehlersuche, Zugangsdaten geschwärzt, und Diagnose-Entität **Live-Verbindung** (an/aus), auch in der Karte unter *System*.
-- **Zeitraffer** vom Drucker direkt in der Karte abspielen und herunterladen; auf Wunsch automatisch in den Medienordner von Home Assistant sichern.
-- **Datei hochladen** aus der Karte (auch über Nabu Casa), danach direkt der Druckdialog.
-- **Warteschlange** mit Zuordnung und Optionen je Auftrag. Startet nie von selbst: nach dem Druck Bett räumen, antippen.
-- **Pause vor Schicht** (z. B. für Magnete oder Muttern) und **Nachdruck aus der Historie** mit der damaligen Zuordnung.
-- **Druckermeldungen im Klartext** statt Firmware-Codes, mit Hinweis, was zu tun ist.
-- **Diagramme** der letzten 12 Monate (Drucke, Stunden, Filament, Kosten) aus Moonrakers Druckhistorie, also auch rückwirkend.
-- **Wartungsplaner** in Druckstunden (Druckplatte, Düsen, Führungen, Riemen, Filter) plus Werkzeugwechsel-Zähler der Firmware.
-- **Spulenverwaltung mit [Spoolman](https://github.com/Donkie/Spoolman)** (optional): Spule je Kopf mit Restgewicht, automatische Zuordnung, Warnung, wenn eine Spule für den Druck nicht reicht, und Abbuchung des Verbrauchs je Kopf nach dem Druck.
-- Temperaturen, Sollwerte, Lüfter, Licht, Achsen, Diagnose und Statistik.
+A Home Assistant integration with a built-in dashboard card for the **Snapmaker U1**:
 
-Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über VPN und über Nabu Casa gleich, ohne CORS- oder Mixed-Content-Probleme.
+- **Loaded filaments live**: material, sub type, vendor, colour (including multi-colour) and RFID detection per print head, straight from the printer firmware.
+- **Print start with filament mapping like Snapmaker Orca**: tap a file and the card suggests which filament of the file goes to which head, based on material and colour. Change the mapping, choose bed leveling, flow calibration and timelapse, then start.
+- **File list with thumbnails**, print time, weight and colour dots per file.
+- **Camera** as a live stream through Home Assistant, with automatic fallback to still images. Zoom with two fingers, double tap, Ctrl+mouse wheel or the zoom buttons, fullscreen; when zoomed, pan with one finger or the left mouse button. During a print, progress, layer, remaining time, finish time and active head are shown on the image.
+- **Layer view** below the camera: paths of the current layer in the colours of the loaded spools, printed part solid, the rest faded.
+- **Tabs** instead of a long page: overview, control, files, history, timelapse, system. Icons only on phones.
+- **Mini card** `snapmaker-u1-mini-card` for overview dashboards: status, progress, filaments with Spoolman remainder, power switch.
+- **Visual editor** for both cards, no YAML needed.
+- **Tool changes**: total, per head, in the running or last print, and progress towards the recommended maintenance.
+- **Power switch**: any plug (Shelly, KNX, Zigbee …). Switching off shuts the printer down cleanly first and is blocked during a print. Optional auto-off after the print and auto-on when starting a print from the card.
+- **Energy and cost per print**: consumption from an energy meter, cost with a price entity (dynamic tariffs work too), filament cost from slicer weight and price per kg.
+- **Print history** of the last 20 prints with result, duration, weight, kWh, tool changes and cost.
+- **Live instead of polling**: Moonraker reports state changes, layer, active head and errors immediately (WebSocket subscription). Regular polling then only runs every 30 s as a consistency check.
+- **Phone notifications** at print end, error or pause (e.g. filament runout), for new printer messages during a print, after the first layer, shortly before the end and when a spool will not last, with a camera image.
+- **Cost before printing** in the start dialog: filament from slicer weight × price, energy from print time × average power of your previous prints × current price.
+- **Voice control via Assist**: "How far is the printer?", "Pause the printer", "Resume the print".
+- **Remaining time from the file's time profile**, calibrated with the real print duration; sensors *Time remaining* and *Finish time*.
+- **Buttons in the notification**: pause, resume, cancel (with confirmation), light.
+- **Result photo** at print end in the history, **temperature chart** of the last 20 min, **file management** with search across all files, folders, rename and delete.
+- **Firmware version** as an update entity, **self test**, **statistics per material and colour**, **idle shutdown**.
+- **Backup of the printer configuration** (printer.cfg & co.) daily to `/config/snapmaker_u1_backup/`, only when something changed.
+- **Diagnostics download** under *Devices & services* for troubleshooting (credentials redacted), and the diagnostic entity **Live connection**, also in the card under *System*.
+- **Timelapses** from the printer: play and download in the card, optionally back them up to the Home Assistant media folder.
+- **Upload files** from the card (also via Nabu Casa), followed directly by the print dialog.
+- **Queue** with mapping and options per job. Never starts on its own: clear the bed after a print, then tap.
+- **Pause at layer** (e.g. for magnets or nuts) and **reprint from the history** with the original mapping.
+- **Printer messages in plain language** instead of firmware codes, with a hint on what to do.
+- **Charts** of the last 12 months (prints, hours, filament, cost) from Moonraker's print history, so retroactive too.
+- **Maintenance planner** in print hours (build plate, nozzles, rails, belts, filter) plus the firmware's tool changer counter.
+- **Spool management with [Spoolman](https://github.com/Donkie/Spoolman)** (optional): spool per head with remaining weight, automatic assignment, a warning when a spool is not enough for the print, and usage booked per head after the print.
+- Temperatures, targets, fans, light, axes, diagnostics and statistics.
 
-> Sprache: Karte und Integration folgen der Sprache von Home Assistant (Deutsch, sonst Englisch).
+Everything runs through the Home Assistant connection. It works the same locally, over VPN and through Nabu Casa, without CORS or mixed-content problems.
 
-> **Beta-Tester gesucht!** Die Integration läuft im Alltag, ist aber noch jung und bisher an wenigen Druckern erprobt. Wer einen Snapmaker U1 hat und mittesten möchte: einfach installieren und Erfahrungen, Fehler oder Wünsche als [Issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues) melden – am besten mit der Diagnose-Datei (*Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*), der Firmware-Version und, bei Druckproblemen, der G-Code-Datei. Test und Nutzung erfolgen freiwillig, ohne Gewähr und auf eigenes Risiko.
+> Language: card and integration follow the Home Assistant language (German, otherwise English).
 
-> Kein offizielles Produkt von Snapmaker und nicht mit Snapmaker verbunden. „Snapmaker“ und „U1“ sind Marken ihrer Inhaber und stehen hier nur, um den unterstützten Drucker zu nennen. Nutzung auf eigenes Risiko.
+> **Beta testers wanted!** The integration is in daily use but still young and has only been tried on a few printers. If you own a Snapmaker U1 and want to help: install it and report experiences, bugs or ideas as an [issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues), ideally with the diagnostics file (*Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*), the firmware version and, for print problems, the G-code file. Testing and use are voluntary, without warranty and at your own risk.
+
+> Not an official Snapmaker product and not affiliated with Snapmaker. "Snapmaker" and "U1" are trademarks of their owners and are only used to name the supported printer. Use at your own risk.
 
 ## Screenshots
 
-![Übersicht mit Kamera, letztem Druck und Druckköpfen](docs/screenshots/uebersicht.png)
+The screenshots show the German UI; with Home Assistant set to English the card is in English.
 
-| Druckstart mit Filamentzuordnung | Verlauf und Statistik |
+![Overview with camera, last print and print heads](docs/screenshots/uebersicht.png)
+
+| Print start with filament mapping | History and statistics |
 |---|---|
-| ![Druckstart](docs/screenshots/druckstart.png) | ![Verlauf](docs/screenshots/verlauf.png) |
-| **Steuerung** | **System, Wartung und Diagnose** |
-| ![Steuerung](docs/screenshots/steuerung.png) | ![System](docs/screenshots/system.png) |
-| **Zeitraffer** | |
-| ![Zeitraffer](docs/screenshots/zeitraffer.png) | |
+| ![Print start](docs/screenshots/druckstart.png) | ![History](docs/screenshots/verlauf.png) |
+| **Control** | **System, maintenance and diagnostics** |
+| ![Control](docs/screenshots/steuerung.png) | ![System](docs/screenshots/system.png) |
+| **Timelapse** | |
+| ![Timelapse](docs/screenshots/zeitraffer.png) | |
 
-## Voraussetzungen
+## Requirements
 
-| Was | Wozu | Pflicht |
+| What | For | Required |
 |---|---|---|
-| Home Assistant 2025.3 oder neuer | | ja |
-| [HACS](https://hacs.xyz) | Installation und Updates | empfohlen |
-| [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) | Temperaturen, Lüfter, Licht, Achsen, Schicht, Kamera und Systemwerte in der Karte | ja |
-| Snapmaker U1 im Netzwerk, feste IP-Adresse (DHCP-Reservierung im Router) | Verbindung | ja |
-| Drucker-Firmware: Snapmaker-Stock, Extended Firmware (paxx12) oder Stock mit Bespok3d | | ja |
-| Home-Assistant-Companion-App | Push-Benachrichtigungen mit Bild und Knöpfen | optional |
-| Steckdose/Schalter in HA (Shelly, Zigbee, KNX …), Energiezähler, Strompreis-Sensor | Netzschalter, Auto-Ein/-Aus, Strom und Kosten | optional |
-| [Spoolman](https://github.com/Donkie/Spoolman) | Spulenverwaltung | optional |
+| Home Assistant 2025.3 or newer | | yes |
+| [HACS](https://hacs.xyz) | installation and updates | recommended |
+| [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) | temperatures, fans, light, axes, layer, camera and system values in the card | yes |
+| Snapmaker U1 on the network with a fixed IP address (DHCP reservation in the router) | connection | yes |
+| Printer firmware: Snapmaker stock, Extended Firmware (paxx12) or stock with Bespok3d | | yes |
+| Home Assistant Companion app | push notifications with image and buttons | optional |
+| Plug/switch in HA (Shelly, Zigbee, KNX …), energy meter, energy price sensor | power switch, auto-on/-off, energy and cost | optional |
+| [Spoolman](https://github.com/Donkie/Spoolman) | spool management | optional |
 
-Beide Integrationen sprechen direkt mit Moonraker auf dem Drucker (Port 80). Auf der Stock-Firmware ist dafür kein API-Schlüssel nötig.
+Both integrations talk directly to Moonraker on the printer (port 80). The stock firmware needs no API key for that.
 
 ## Installation
 
-### 1. Moonraker-Integration
+### 1. Moonraker integration
 
-1. HACS → *Integrationen* → nach **Moonraker** suchen → installieren → Home Assistant neu starten.
-2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → „Moonraker“*.
-3. **Host:** IP-Adresse des Druckers (z. B. `192.168.1.50`), **Port:** `80`, API-Schlüssel leer lassen.
-4. Prüfen: Unter dem neuen Gerät erscheinen Sensoren wie `sensor.<name>_printer_state` und eine Kamera.
+1. HACS → *Integrations* → search for **Moonraker** → install → restart Home Assistant.
+2. *Settings → Devices & services → Add integration → "Moonraker"*.
+3. **Host:** IP address of the printer (e.g. `192.168.1.50`), **Port:** `80`, leave the API key empty.
+4. Check: the new device shows sensors such as `sensor.<name>_printer_state` and a camera.
 
-Die Karte findet die Entitäten der Moonraker-Integration selbst, auch bei anderem Gerätenamen. Nur bei mehreren Druckern muss man in der Karte den Präfix (`prefix`) angeben.
+The card finds the Moonraker entities by itself, even with a different device name. Only with several printers do you need to set the `prefix` in the card.
 
 ### 2. Snapmaker U1 Card
 
-1. **HACS** → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/Ironoxx/ha-snapmaker-u1-card`, Typ *Integration* → hinzufügen → **Snapmaker U1 Card** installieren → Home Assistant neu starten.
-   *Ohne HACS:* `snapmaker_u1_card-<Version>-install.zip` aus dem [neuesten Release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) entpacken, den Ordner `custom_components/snapmaker_u1_card` nach `/config/custom_components/` kopieren, neu starten.
-2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → „Snapmaker U1 Card“* → IP-Adresse des Druckers, Port `80`.
-3. Im zweiten Schritt die Einstellungen ausfüllen (alles optional, später unter *Konfigurieren* änderbar, siehe [Einstellungen](#einstellungen-der-integration)).
-4. **Selbsttest:** In der Karte unter *System → Selbsttest* (oder Dienst `snapmaker_u1_card.self_test`). Er zeigt, ob Drucker, Moonraker-Integration, Kamera, Strom-Entitäten und Benachrichtigungen passen.
+1. **HACS** → ⋮ → *Custom repositories* → `https://github.com/Ironoxx/ha-snapmaker-u1-card`, type *Integration* → add → install **Snapmaker U1 Card** → restart Home Assistant.
+   *Without HACS:* unpack `snapmaker_u1_card-<version>-install.zip` from the [latest release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest), copy the folder `custom_components/snapmaker_u1_card` to `/config/custom_components/`, restart.
+2. *Settings → Devices & services → Add integration → "Snapmaker U1 Card"* → printer IP address, port `80`.
+3. Fill in the settings in the second step (all optional, can be changed later under *Configure*, see [settings](#integration-settings)).
+4. **Self test:** in the card under *System → Self test* (or the service `snapmaker_u1_card.self_test`). It shows whether printer, Moonraker integration, camera, power entities and notifications are set up correctly.
 
-### 3. Karte ins Dashboard
+### 3. Add the card to a dashboard
 
-Dashboard bearbeiten → *Karte hinzufügen* → **Snapmaker U1** (oder **Snapmaker U1 Mini**) auswählen. Alles Weitere geht im visuellen Editor. In YAML:
+Edit the dashboard → *Add card* → choose **Snapmaker U1** (or **Snapmaker U1 Mini**). Everything else is in the visual editor. In YAML:
 
 ```yaml
 type: custom:snapmaker-u1-card
 ```
 
-Am besten in einer Ansicht vom Typ *Panel* oder *Abschnitte* mit voller Breite; auf dem Handy passt sich die Karte an.
+Works best in a *Panel* view or a *Sections* view at full width; on phones the card adapts.
 
-Fertig. Eine Ressource musst du **nicht** selbst anlegen: Die Integration lädt die Karte auf zwei Wegen selbst.
+Done. You do **not** need to add a resource yourself; the integration loads the card on two paths:
 
-1. Über die Startseite von Home Assistant (`add_extra_js_url`).
-2. Als Dashboard-Ressource `/local/snapmaker_u1_card/snapmaker-u1-card.js?v=…`. Die Integration legt sie an, hält sie bei Updates aktuell und entfernt sie mit der Integration. Unter *Dashboards → Ressourcen* also bitte stehen lassen.
+1. Through the Home Assistant start page (`add_extra_js_url`).
+2. As the dashboard resource `/local/snapmaker_u1_card/snapmaker-u1-card.js?v=…`. The integration creates it, keeps it current on updates and removes it together with the integration. Please leave it under *Dashboards → Resources*.
 
-Der zweite Weg ist nötig, weil Home Assistant Seiten schon ausliefert, bevor eigene Integrationen gestartet sind. Wer in diesem Fenster lädt (Tab oder App während eines Neustarts), bekäme sonst „Custom element doesn't exist: snapmaker-u1-card“, bis er neu lädt. Gab es `/config/www` vorher nicht, greift der zweite Weg erst nach einem weiteren Neustart.
+The second path is needed because Home Assistant serves pages before custom integrations have started. Anyone loading in that window (tab or app during a restart) would otherwise get "Custom element doesn't exist: snapmaker-u1-card" until they reload. If `/config/www` did not exist before, the second path only takes effect after another restart.
 
-## Update
+## Updating
 
-Ordner `custom_components/snapmaker_u1_card` ersetzen (oder in HACS aktualisieren) und Home Assistant neu starten. Einstellungen, Historie, Warteschlange, Wartungsstände, Spulenzuordnung und gesicherte Zeitraffer bleiben erhalten:
+Replace the folder `custom_components/snapmaker_u1_card` (or update in HACS) and restart Home Assistant. Settings, history, queue, maintenance, spool assignment and backed-up timelapses are kept:
 
-| Was | Wo |
+| What | Where |
 |---|---|
-| Einstellungen | Konfigurationseintrag (`.storage/core.config_entries`) |
-| Historie, Warteschlange, Wartung, Spoolman-Zuordnung, offene Buchungen | `.storage/snapmaker_u1_card.<eintrag>.print_switches` |
-| Vorschaubilder, Schichtansicht (Zwischenspeicher, wird neu erzeugt) | `.storage/snapmaker_u1_card/` |
-| Sicherungen der Drucker-Konfiguration | `snapmaker_u1_backup/` |
-| Sätze für Assist (bei jedem Start aktualisiert) | `custom_sentences/de/…` und `custom_sentences/en/…` |
-| gesicherte Zeitraffer | `<Medien>/snapmaker_u1/` |
+| Settings | config entry (`.storage/core.config_entries`) |
+| History, queue, maintenance, Spoolman assignment, pending bookings | `.storage/snapmaker_u1_card.<entry>.print_switches` |
+| Thumbnails, layer view (cache, rebuilt automatically) | `.storage/snapmaker_u1_card/` |
+| Printer configuration backups | `snapmaker_u1_backup/` |
+| Assist sentences (updated on every start) | `custom_sentences/de/…` and `custom_sentences/en/…` |
+| Backed-up timelapses | `<media>/snapmaker_u1/` |
 
-Nicht die Integration löschen und neu hinzufügen: Das legt einen neuen Eintrag an, Einstellungen und Historie gehören dann zum alten.
+Do not delete and re-add the integration: that creates a new entry, and settings and history stay with the old one.
 
-## Einstellungen der Integration
+## Integration settings
 
-Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen Einstellungen. Später stehen sie unter *Geräte & Dienste → Snapmaker U1 Card → Konfigurieren*. Alle Felder sind freiwillig, die Karte übernimmt sie automatisch.
+During setup a second step with all settings follows right after the address. Later they are under *Devices & services → Snapmaker U1 Card → Configure*. All fields are optional; the card picks them up automatically.
 
-| Abschnitt | Felder |
+| Section | Fields |
 |---|---|
-| Strom und Verbrauch | Netzschalter, Leistungssensor (W), Energiezähler (kWh), Strompreis-Entität (EUR/kWh oder ct/kWh), vor dem Abschalten herunterfahren, Auto-Ein beim Druckstart, Auto-Aus nach dem Druck (Temperatur, Verzögerung), Ausschalten nach Leerlauf (Stunden) |
-| Benachrichtigungen | `notify.mobile_app_…`-Dienste, Anlässe (fertig, abgebrochen, Fehler, pausiert, Meldung im Druck, erste Schicht fertig, gleich fertig, Filament reicht nicht), Vorwarnung „gleich fertig“ in Minuten (10), „Teil entnehmbar“ ab Betttemperatur (35 °C), Kamera für Bild und Ergebnisfoto |
-| Filamentpreise | € je kg für PLA, PETG, ABS, ASA, TPU, PA und sonstige. `PLA-CF` nutzt den PLA-Preis |
-| Zeitraffer sichern | Ein/aus, wie viele neueste auf dem Drucker bleiben (0 = nie löschen) |
-| Wartung | Intervall je Punkt in Druckstunden (0 = ausblenden) |
-| Spoolman | Adresse (leer = aus), Verbrauch je Kopf abbuchen (an/aus), Warnschwelle in g |
-| Dateien | Anzahl neuester Dateien, Drucker-Konfiguration sichern (an) |
+| Power and consumption | power switch, power sensor (W), energy meter (kWh), energy price entity (EUR/kWh or ct/kWh), shut down before switching off, auto-on at print start, auto-off after the print (temperature, delay), switch off after idle (hours) |
+| Notifications | `notify.mobile_app_…` services, events (finished, cancelled, error, paused, message during print, first layer done, almost done, not enough filament), "almost done" lead time in minutes (10), "part removable" below bed temperature (35 °C), camera for image and result photo |
+| Filament prices | price per kg for PLA, PETG, ABS, ASA, TPU, PA and others. `PLA-CF` uses the PLA price |
+| Timelapse backup | on/off, how many of the newest stay on the printer (0 = never delete) |
+| Maintenance | interval per item in print hours (0 = hide) |
+| Spoolman | address (empty = off), book usage per head (on/off), warning threshold in g |
+| Files | number of newest files, back up printer configuration (on) |
 
-## Kartenoptionen
+## Card options
 
-Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuellen Editor einstellbar.
+All options are optional; except head names and presets they can also be set in the visual editor.
 
-| Option | Standard | Bedeutung |
+| Option | Default | Meaning |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander |
-| `camera_overlay` | `true` | Fortschritt auf dem Kamerabild (`hide_overlay: true` schaltet es ebenfalls ab) |
-| `camera_height` | automatisch | Höhe des Kamerabilds in px. Leer = Seitenverhältnis des Bildes, höchstens `camera_max_height` |
-| `camera_max_height` | `520` | Obergrenze bei automatischer Höhe in px |
-| `camera_mode` | `stream` | `stream` = Livebild, `still` = Einzelbilder (spart WLAN) |
-| `refresh` | `2` | Sekunden zwischen Einzelbildern (`still` und Rückfall) |
+| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked |
+| `camera_overlay` | `true` | progress on the camera image (`hide_overlay: true` also turns it off) |
+| `camera_height` | automatic | height of the camera image in px. Empty = image aspect ratio, at most `camera_max_height` |
+| `camera_max_height` | `520` | upper limit for the automatic height in px |
+| `camera_mode` | `stream` | `stream` = live image, `still` = still images (saves WiFi) |
+| `refresh` | `2` | seconds between still images (`still` and fallback) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | alle | Bereiche: `stage layer job queue files toolheads climate motion system maintenance charts stats history timelapse` |
-| `hide` | – | Bereiche ausblenden (Gegenstück zu `show`, nutzt der Editor) |
-| `controls_lock` | `60` | Sperre für Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt: `off`, Sekunden (`30`, `60`, `120`, `300`) bis zur automatischen Sperre nach der letzten Bedienung, oder `manual` (offen, bis man wieder sperrt). Im Druck fragt die Karte vor jeder Änderung einer Solltemperatur nach. Alt: `unlock_controls: true` = `off` |
-| `timelapse_limit` | `8` | angezeigte Zeitraffer |
-| `files_limit` | `12` | angezeigte Dateien |
-| `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | Schnellwahl-Temperaturen |
-| `toolheads` | – | Kopfnamen, z. B. `- name: Links` (Material und Farbe kommen vom Drucker) |
-| `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |
-| `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatisch | nur bei mehreren Druckern nötig |
+| `show` | all | sections: `stage layer job queue files toolheads climate motion system maintenance charts stats history timelapse` |
+| `hide` | – | sections to hide (counterpart of `show`, used by the editor) |
+| `controls_lock` | `60` | lock for temperature and fan sliders, presets, heater switches and homing: `off`, seconds (`30`, `60`, `120`, `300`) until it locks again after the last interaction, or `manual` (open until locked again). During a print the card asks before changing a target temperature. Legacy: `unlock_controls: true` = `off` |
+| `timelapse_limit` | `8` | timelapses shown |
+| `files_limit` | `12` | files shown |
+| `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | quick temperature presets |
+| `toolheads` | – | head names, e.g. `- name: Left` (material and colour come from the printer) |
+| `network_tracker` | – | `device_tracker` for a WiFi chip in the header |
+| `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatic | only needed with several printers |
 
-### Mini-Karte
+### Mini card
 
 ```yaml
 type: custom:snapmaker-u1-mini-card
-navigation_path: /dashboard-drucker/0   # optional: beim Antippen dorthin, sonst Statusdialog
+navigation_path: /dashboard-printer/0   # optional: go there on tap, otherwise the status dialog
 ```
 
-| Option | Standard | Bedeutung |
+| Option | Default | Meaning |
 |---|---|---|
-| `printer_name` | `U1` | Anzeigename |
-| `navigation_path` | – | Ziel beim Antippen |
-| `hide_filaments` | `false` | Filamentreihe ausblenden |
-| `prefix` | automatisch | nur bei mehreren Druckern |
+| `printer_name` | `U1` | display name |
+| `navigation_path` | – | target on tap |
+| `hide_filaments` | `false` | hide the filament row |
+| `prefix` | automatic | only with several printers |
 
-## Entitäten
+## Entities
 
-| Entität | Inhalt |
+Entity IDs follow the Home Assistant language at setup time; the English names are:
+
+| Entity | Content |
 |---|---|
-| `sensor.…_filamente` | Anzahl geladener Slots, Attribut `slots` mit allen vier Köpfen, `preferences` |
-| `sensor.…_slot_1` … `_slot_4` | Material des Slots oder `leer`, Farbe und Hersteller als Attribute – gut für Automationen |
-| `sensor.…_druckdateien` | neueste Druckdateien mit Filamenten und Vorschaubild |
-| `sensor.…_werkzeugwechsel` | Kopfwechsel gesamt (Firmware-Zähler), Attribut `heads` je Kopf mit `switches`, `retries`, `errors`, `since_maintenance` |
-| `sensor.…_werkzeugwechsel_druck` | Wechsel im laufenden Druck, sonst im letzten; Attribute `in_progress`, `file`, `result`, `started`, `ended` |
-| `switch.…_netzschalter` | sicherer Netzschalter (nur mit eingetragenem Schalter). **Automationen sollten diesen schalten, nicht die Steckdose direkt.** |
-| `sensor.…_energie_druck` | kWh des laufenden bzw. letzten Drucks (nur mit Energiezähler) |
-| `sensor.…_kosten_druck` | Stromkosten bisher bzw. Gesamtkosten des letzten Drucks; Attribute `energy_cost`, `filament_cost` |
-| `sensor.…_druckhistorie` | Anzahl, Attribut `prints` mit den letzten 20 Drucken |
-| `sensor.…_zeitraffer` | Anzahl, Attribut `videos`; mit Sicherung `archive` (gesicherte Videos, Status) |
-| `sensor.…_warteschlange` | Anzahl Aufträge, Attribut `jobs` (id, Datei, Zuordnung, Optionen, Pause) |
-| `sensor.…_druckstunden` | Druckstunden gesamt (Moonraker), Attribute `months`, `totals`, `top_files` |
-| `sensor.…_wartung_fallig` | Anzahl fälliger Wartungspunkte, Attribut `items` |
-| `sensor.…_druckermeldungen` | Anzahl offener Firmware-Meldungen, Attribut `errors` mit Text (de/en), Hinweis und Rohcode |
+| `sensor.…_filaments` | number of loaded slots, attribute `slots` with all four heads, `preferences` |
+| `sensor.…_slot_1` … `_slot_4` | material of the slot or empty, colour and vendor as attributes, handy for automations |
+| `sensor.…_print_files` | newest print files with filaments and thumbnail |
+| `sensor.…_tool_changes` | total head changes (firmware counter), attribute `heads` per head with `switches`, `retries`, `errors`, `since_maintenance` |
+| `sensor.…_tool_changes_print` | changes in the running print, otherwise the last one; attributes `in_progress`, `file`, `result`, `started`, `ended` |
+| `switch.…_power` | safe power switch (only with a configured switch). **Automations should switch this one, not the plug directly.** |
+| `sensor.…_energy_print` | kWh of the running or last print (only with an energy meter) |
+| `sensor.…_cost_print` | energy cost so far or total cost of the last print; attributes `energy_cost`, `filament_cost` |
+| `sensor.…_print_history` | count, attribute `prints` with the last 20 prints |
+| `sensor.…_timelapses` | count, attribute `videos`; with backup also `archive` (backed-up videos, status) |
+| `sensor.…_queue` | number of jobs, attribute `jobs` (id, file, mapping, options, pauses) |
+| `sensor.…_print_hours` | total print hours (Moonraker), attributes `months`, `totals`, `top_files` |
+| `sensor.…_maintenance_due` | number of maintenance items due, attribute `items` |
+| `sensor.…_printer_messages` | number of open firmware messages, attribute `errors` with text (de/en), hint and raw code |
+| `sensor.…_time_remaining` / `sensor.…_finish_time` | remaining time and expected end of the running print |
+| `binary_sensor.…_live_connection` | live subscription to Moonraker up or not |
+| `update.…_firmware` | installed and latest firmware |
 
-Ereignis `snapmaker_u1_card_print_finished` bei jedem Druckende, mit `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost` – für eigene Automationen.
+The event `snapmaker_u1_card_print_finished` fires at every print end with `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost`, for your own automations.
 
-## Dienste
+## Services
 
 ### `snapmaker_u1_card.start_print`
 
@@ -204,202 +213,202 @@ Ereignis `snapmaker_u1_card_print_finished` bei jedem Druckende, mit `file`, `na
 action: snapmaker_u1_card.start_print
 data:
   filename: Benchy_PLA.gcode
-  mapping: {"0": 2, "1": 0}   # Filament 1 → Kopf 3, Filament 2 → Kopf 1; weglassen = automatisch
+  mapping: {"0": 2, "1": 0}   # filament 1 → head 3, filament 2 → head 1; omit = automatic
   bed_leveling: true
   flow_calibration: false
   timelapse: false
 ```
 
-Ohne `mapping` nimmt der Dienst denselben Vorschlag wie die Karte. Mit `pause_layers: [12, 40]` hält der Drucker vor diesen Schichten an.
+Without `mapping` the service uses the same suggestion as the card. With `pause_layers: [12, 40]` the printer pauses before these layers.
 
-**Wie „Pause vor Schicht“ funktioniert.** Klipper und die U1-Firmware haben dafür keinen Befehl. Die Integration legt deshalb eine Kopie der Datei an (`<Name>.u1pause-12-40.gcode`), schreibt dort `PAUSE` vor den Schichtwechsel (`;LAYER_CHANGE` aus Orca/Snapmaker Orca, auch Cura-Markierungen) und druckt die Kopie. Die Firmware behandelt `PAUSE` in Dateien ausdrücklich. Die Kopie ist in der Dateiliste ausgeblendet und wird nach dem Druck gelöscht; die Historie zeigt die Originaldatei. Fortsetzen am Display oder mit dem Knopf in der Karte.
+**How "pause at layer" works.** Neither Klipper nor the U1 firmware has a command for it. The integration therefore creates a copy of the file (`<name>.u1pause-12-40.gcode`), writes `PAUSE` before the layer change (`;LAYER_CHANGE` from Orca/Snapmaker Orca, Cura markers too) and prints the copy. The firmware handles `PAUSE` in files explicitly. The copy is hidden in the file list and deleted after the print; the history shows the original file. Resume on the display or with the button in the card.
 
-### Warteschlange
+### Queue
 
 ```yaml
-action: snapmaker_u1_card.queue_add      # gleiche Felder wie start_print
-data: {filename: Halter.gcode, mapping: {"0": 1}, pause_layers: [8]}
-action: snapmaker_u1_card.queue_start    # ersten Auftrag starten (oder job_id)
-action: snapmaker_u1_card.queue_move     # job_id, position (0 = vorne)
+action: snapmaker_u1_card.queue_add      # same fields as start_print
+data: {filename: Holder.gcode, mapping: {"0": 1}, pause_layers: [8]}
+action: snapmaker_u1_card.queue_start    # start the first job (or job_id)
+action: snapmaker_u1_card.queue_move     # job_id, position (0 = front)
 action: snapmaker_u1_card.queue_remove   # job_id
 action: snapmaker_u1_card.queue_clear
 ```
 
-Moonrakers eigene Warteschlange (`[job_queue]`) ist auf dem U1 nicht geladen und kennt keine Filamentzuordnung, deshalb führt die Integration die Liste selbst. Sie übersteht Neustarts. Nach einem Druck kommt eine Benachrichtigung „Nächster Auftrag wartet“ (an die eingetragenen Dienste).
+Moonraker's own queue (`[job_queue]`) is not loaded on the U1 and knows nothing about filament mapping, so the integration keeps its own list. It survives restarts. After a print a "Next job waiting" notification is sent (to the configured services).
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 
-`item: plate | nozzle | rails | belts | filter` setzt den Wartungszähler zurück. `backup_timelapses` sichert sofort und räumt danach auf dem Drucker auf. `backup_config` sichert die Drucker-Konfiguration sofort und antwortet mit `status` (`saved`, `unchanged`, `empty`), Anzahl Dateien, übersprungenen Dateien und den vorhandenen Ständen.
+`item: plate | nozzle | rails | belts | filter` resets the maintenance counter. `backup_timelapses` backs up right away and then cleans up the printer. `backup_config` backs up the printer configuration right away and responds with `status` (`saved`, `unchanged`, `empty`), the number of files, skipped files and the existing snapshots.
 
 ### `snapmaker_u1_card.refresh`
 
-Lädt Dateiliste, Zeitraffer und Filamente sofort neu.
+Reloads file list, timelapses and filaments right away.
 
 ### `snapmaker_u1_card.power_on` / `power_off`
 
-Einschalten (optional `wait: true`: erst zurück, wenn Klipper bereit ist) bzw. sicher ausschalten: herunterfahren (`machine.shutdown`), warten bis der Drucker nicht mehr antwortet plus 10 s, dann Strom aus.
+Switch on (optionally `wait: true`: only return once Klipper is ready) or switch off safely: shut down (`machine.shutdown`), wait until the printer stops answering plus 10 s, then cut the power.
 
-Abgelehnt bzw. abgebrochen wird das Ausschalten, wenn
+Switching off is refused or aborted when
 
-- ein Druck läuft oder pausiert ist, auch wenn der Drucker gerade kurz nicht antwortet (WLAN-Aussetzer zählt nicht als „fertig“),
-- der Drucker direkt vor dem Herunterfahren oder vor dem Abschalten meldet, dass er druckt oder eine Heizung einen Sollwert hat (z. B. Druck am Display gestartet),
-- der Drucker gerade über Auto-Ein hochfährt.
+- a print is running or paused, even if the printer briefly does not answer (a WiFi dropout does not count as "finished"),
+- the printer reports right before the shutdown or before cutting power that it is printing or a heater has a target (e.g. a print started on the display),
+- the printer is booting via auto-on.
 
-Für einen abgestürzten Drucker, der noch als druckend erfasst ist: `force: true` (die Karte bietet das nur an, wenn der Drucker nicht antwortet). Während des Herunterfahrens nimmt `start_print` keine Drucke an.
+For a crashed printer that is still recorded as printing: `force: true` (the card only offers this when the printer does not answer). While shutting down, `start_print` accepts no prints.
 
-## Wie die Filamentzuordnung funktioniert
+## How the filament mapping works
 
-Die Integration startet Drucke genauso wie Snapmaker Orca im LAN-Modus, über den Moonraker-Aufruf `server.files.start_local_print` mit `options.map_table`. Der Drucker setzt das in `SDCARD_PRINT_FILE_WITH_PARAMETERS … MAP_TABLE="[[0, 2], [1, 0]]"` um. Die Firmware prüft dabei wie gewohnt, ob der Drucker frei ist und die Düsen passen.
+The integration starts prints exactly like Snapmaker Orca in LAN mode, via the Moonraker call `server.files.start_local_print` with `options.map_table`. The printer turns that into `SDCARD_PRINT_FILE_WITH_PARAMETERS … MAP_TABLE="[[0, 2], [1, 0]]"`. The firmware checks as usual whether the printer is free and the nozzles fit.
 
-Belegt ist das aus Snapmakers offenem Quellcode:
-[u1-klipper](https://github.com/Snapmaker/u1-klipper) (`klippy/extras/print_task_config.py`) und
+This is documented in Snapmaker's open source code:
+[u1-klipper](https://github.com/Snapmaker/u1-klipper) (`klippy/extras/print_task_config.py`) and
 [u1-moonraker](https://github.com/Snapmaker/u1-moonraker) (`components/snapmakercloud.py`, `components/klippy_apis.py`).
 
-Der Vorschlag wählt je Filament der Datei einen geladenen Kopf in dieser Reihenfolge: gleiches Material, ähnlichste Farbe, noch frei. Ein leerer Kopf blockiert den Start. Ein abweichendes Material zeigt die Karte nur als Warnung an.
+The suggestion picks a loaded head for each filament of the file in this order: same material, closest colour, still free. An empty head blocks the start. A different material only shows a warning.
 
-## Werkzeugwechsel
+## Tool changes
 
-Die Firmware zählt jeden erfolgreichen Kopfwechsel dauerhaft pro Kopf (`switch_count` in `extruder` … `extruder3`, Quelle: `ExtruderSwitchRecorder` in u1-klipper `klippy/kinematics/extruder.py`). Ältere Firmware ohne diese Felder: Die beiden Sensoren sind dann *nicht verfügbar*, die Karte blendet die Zeilen aus.
+The firmware permanently counts every successful head change per head (`switch_count` in `extruder` … `extruder3`, source: `ExtruderSwitchRecorder` in u1-klipper `klippy/kinematics/extruder.py`). With older firmware without these fields both sensors are *unavailable* and the card hides the rows.
 
-Einen Zähler pro Druck hat die Firmware nicht. Die Integration merkt sich den Stand bei Druckbeginn und bildet die Differenz bei Druckende. Der Stand wird gespeichert und übersteht einen Neustart von Home Assistant während des Drucks. Mitgezählt wird jeder Wechsel im Druckzeitraum, also auch Aufnahmen für Kalibrierungen am Druckanfang. Läuft Home Assistant während eines ganzen Drucks nicht, fehlt dieser Druck.
+The firmware has no per-print counter. The integration remembers the counter at print start and takes the difference at the end. This baseline is stored and survives a Home Assistant restart during the print. Every change during the print counts, including pickups for calibrations at the start. If Home Assistant is down for a whole print, that print is missing.
 
-Die Wartungsschwelle ist der Firmware-Standard von 25 100 Wechseln je Kopf. Ab 90 % färbt die Karte den Wert gelb. Zurücksetzen nach einer Wartung: `RESET_EXTRUDER_MAINTENANCE_COUNT` in der Konsole.
+The maintenance threshold is the firmware default of 25,100 changes per head. From 90 % the card shows the value in yellow. Reset after maintenance: `RESET_EXTRUDER_MAINTENANCE_COUNT` in the console.
 
-## Strom, Kosten und Historie
+## Energy, cost and history
 
-- **Verbrauch je Druck** ist die Differenz des Energiezählers zwischen Druckbeginn und -ende.
-- **Stromkosten** werden laufend aufsummiert (Verbrauch seit der letzten Abfrage × Preis in diesem Moment). Dynamische Tarife rechnen so richtig.
-- **Filamentkosten**: Gewicht je Material aus den Slicer-Daten der Datei × Preis je kg. Bei abgebrochenen Drucken wird das Gewicht im Verhältnis gefördertes/geplantes Filament gekürzt. Fehlt für ein verwendetes Material ein Preis, entfallen die Filamentkosten statt einer falschen Summe.
-- **Gesamtkosten im Verlauf** (Kachel und Diagramm): Drucke, die die Integration erfasst hat, mit ihren echten Kosten (Filament + Strom). Ältere Drucke aus Moonraker, also vor der Installation, werden mit dem Filamentpreis geschätzt; die Kachel zeigt dann „≈“. Damit passen Summe und Material-Tabelle zusammen. *Strom* zählt nur gemessene Drucke.
-- **Auto-Aus** greift nur nach *fertig* oder *abgebrochen*, nie nach einem Fehler, und erst wenn alle Düsen und das Bett unter der eingestellten Temperatur sind.
-- Ist der Drucker aus, zeigt die Karte Einschalten, Dateien (bei Auto-Ein), Historie und Zeitraffer. Die Filamentzuordnung nutzt dann den Stand vor dem Ausschalten.
+- **Consumption per print** is the difference of the energy meter between start and end of the print.
+- **Energy cost** is accumulated continuously (consumption since the last poll × price at that moment), so dynamic tariffs are handled correctly.
+- **Filament cost**: weight per material from the file's slicer data × price per kg. For cancelled prints the weight is reduced by the ratio of extruded to planned filament. If a price is missing for a material used, the filament cost is left out instead of showing a wrong total.
+- **Total cost in the history** (tile and chart): prints recorded by the integration with their real cost (filament + energy). Older prints from Moonraker, i.e. before installation, are estimated from the filament price; the tile then shows "≈". This way the total matches the material table. *Energy* only counts measured prints.
+- **Auto-off** only triggers after *complete* or *cancelled*, never after an error, and only once all nozzles and the bed are below the configured temperature.
+- While the printer is off, the card shows power on, files (with auto-on), history and timelapses. The filament mapping then uses the state before switching off.
 
-**Vorschaubilder** bekommen je nach Helligkeit des Teils einen passenden Grund: dunkle Teile (schwarzes Filament) einen hellen, sehr helle einen dunklen. Die Karte misst dazu die mittlere Helligkeit der deckenden Pixel; Bilder ohne Transparenz bleiben unverändert.
+**Thumbnails** get a background that fits the brightness of the part: dark parts (black filament) a light one, very light parts a dark one. The card measures the average brightness of the opaque pixels; images without transparency stay unchanged.
 
-**Kosten vor dem Druck.** Der Startdialog zeigt „≈ 0,48 €“ und darunter die Aufteilung. Filament: Gewicht je Material aus den Slicer-Daten × Preis je kg (fehlt ein Preis, entfällt dieser Teil). Strom: geschätzte Druckzeit × mittlere Leistung aller bisherigen Drucke ab 10 min (Energie ÷ Dauer aus der Historie) × aktueller Strompreis. Vor dem ersten gemessenen Druck gibt es nur den Filamentteil.
+**Cost before printing.** The start dialog shows "≈ €0.48" with the breakdown below. Filament: weight per material from the slicer data × price per kg (left out if a price is missing). Energy: estimated print time × average power of all previous prints of 10 min and more (energy ÷ duration from the history) × current energy price. Before the first measured print only the filament part is shown.
 
-## Live-Verbindung und Benachrichtigungen
+## Live connection and notifications
 
-Die Integration abonniert bei Moonraker `print_stats`, `toolhead.extruder`, `virtual_sdcard` und `exception_manager` (`printer.objects.subscribe`). Moonraker schickt nur Änderungen, höchstens alle 250 ms. Statuswechsel und neue Meldungen lösen sofort einen Abgleich aus, ein Kopfwechsel aktualisiert die Karte direkt, und die Schichtansicht holt ihre Dateiposition aus dem Abo statt beim Drucker. Steht das Abo, fragt die Integration nur alle 30 s nach (sonst alle 10 s). Bricht die Verbindung ab, verbindet sie mit 5–60 s Abstand neu; bei ausgeschaltetem Drucker gar nicht.
+The integration subscribes to `print_stats`, `toolhead.extruder`, `virtual_sdcard` and `exception_manager` in Moonraker (`printer.objects.subscribe`). Moonraker only sends changes, at most every 250 ms. State changes and new messages trigger an immediate poll, a head change updates the card directly, and the layer view takes its file position from the subscription instead of asking the printer. While the subscription is up, the integration polls only every 30 s (otherwise every 10 s). If the connection drops it reconnects with 5–60 s backoff; not at all while the printer is off.
 
-| Anlass | Wann |
+| Event | When |
 |---|---|
-| Meldung vom Drucker | neue Firmware-Meldung, während gedruckt wird. Pausiert der Drucker deshalb, kommt nur die Pause-Meldung (mit dem Text) |
-| Erste Schicht fertig | Wechsel von Schicht 1 auf 2. Wer erst mitten im Druck einsteigt (Neustart von HA), bekommt keine |
-| Gleich fertig | Restzeit (siehe unten) unter der eingestellten Minutenzahl, einmal je Druck |
-| Filament reicht nicht | beim Druckstart, wenn laut Spoolman eine Spule weniger Rest hat als die Datei auf diesem Kopf braucht |
-| Spule läuft gleich leer | im Druck, wenn eine Spule laut Zeitprofil in weniger als 30 min leer ist. Mit Hinweis, ob die Firmware per **Auto-Nachfüllen** von einem Kopf mit gleichem Material (und gleicher Farbe, außer „Farbe ignorieren“ ist am Drucker an) weitermacht oder pausieren wird |
-| Teil entnehmbar | nach einem fertigen Druck, sobald das Bett unter die eingestellte Temperatur (35 °C) gefallen ist |
+| Printer message | new firmware message during a print. If the printer pauses because of it, only the pause notification (with the text) is sent |
+| First layer done | change from layer 1 to 2. Joining in the middle of a print (HA restart) does not send one |
+| Almost done | remaining time (see below) below the configured minutes, once per print |
+| Not enough filament | at print start, when according to Spoolman a spool has less left than the file needs on that head |
+| Spool about to run out | during the print, when a spool will be empty in less than 30 min according to the time profile. With a hint whether the firmware will continue via **auto-replenish** from a head with the same material (and colour, unless "ignore colour" is on at the printer) or pause |
+| Part ready to remove | after a finished print, once the bed has cooled below the configured temperature (35 °C) |
 
-**Knöpfe in der Benachrichtigung** (Companion-App): bei Meldungen während des Drucks *Pausieren* und *Licht*, bei Pause *Fortsetzen* und *Abbrechen …*. Abbrechen fragt mit einer zweiten Benachrichtigung nach („Ja, abbrechen“), ein versehentlicher Tipp bricht also nichts ab. Die Knöpfe wirken nur, solange der Zustand passt (Pausieren nur im Druck usw.).
+**Buttons in the notification** (Companion app): *Pause* and *Light* for messages during a print, *Resume* and *Cancel …* when paused. Cancel asks again with a second notification ("Yes, cancel"), so an accidental tap cancels nothing. The buttons only act while the state fits (pause only while printing, etc.).
 
-**Restzeit.** Beim Druckstart lädt die Integration die Datei einmal vom Drucker und erstellt ein Zeitprofil: je Dateiposition die Fahrzeit (Strecke ÷ Vorschub, Pausen per G4) und das geförderte Filament je Werkzeug. Daraus zwei Schätzungen: Slicer-Gesamtzeit nach dem Profil verteilt, und gemessene Dauer × Rest ÷ Erledigtes. Am Anfang zählt der Slicer, gegen Ende die gemessene Geschwindigkeit. Ergebnis als Sensoren *Restzeit* und *Fertig um*; die Karte, „Gleich fertig“ und Assist nutzen sie. Ohne Profil (Datei nicht lesbar) gilt der Dateifortschritt.
+**Remaining time.** At print start the integration downloads the file once and builds a time profile: per file position the move time (distance ÷ feed rate, pauses via G4) and the extruded filament per tool. Two estimates come from it: the slicer's total time distributed along the profile, and measured duration × remaining ÷ done. Early on the slicer counts, towards the end the measured speed. The result is available as the sensors *Time remaining* and *Finish time*; the card, "almost done" and Assist use them. Without a profile (file not readable) the file progress is used.
 
-**Ergebnisfoto.** Mit eingestellter Kamera speichert die Integration direkt nach der letzten Bahn ein Bild – sobald die Dateiposition die letzte Extrusion erreicht (+2 s, weil Klipper der Bewegung vorausliest), also bevor der End-G-Code das Bett absenkt. Ohne Zeitprofil: in der letzten Schicht ab 99,5 %. Bei Abbruch oder Fehler entsteht das Bild in dem Moment. Es liegt unter `.storage/snapmaker_u1_card/thumbs/<Eintrag>/results/` und erscheint in der Historie neben dem Vorschaubild; Antippen vergrößert es in der Karte (Antippen oder Esc schließt). Gespeichert bleiben die Fotos der Drucke in der Historie.
+**Result photo.** With a camera configured, the integration saves an image right after the last extrusion, as soon as the file position reaches the last extrusion (+2 s, because Klipper reads ahead of the motion), so before the end G-code lowers the bed. Without a time profile: in the last layer from 99.5 %. On cancel or error the image is taken at that moment. It is stored under `.storage/snapmaker_u1_card/thumbs/<entry>/results/` and appears in the history next to the thumbnail; tapping enlarges it in the card (tap or Esc closes). Photos are kept for the prints in the history.
 
-## Dateiverwaltung
+## File management
 
-Über der Dateiliste: Suche (über **alle** Dateien auf dem Drucker, nicht nur die neuesten), Sortierung (neueste, Name, Druckzeit) und Ordner-Chips. Ältere Treffer erscheinen als Liste; Antippen lädt Metadaten und Vorschau nach und öffnet den Druckdialog. Im Druckdialog: *Umbenennen / verschieben* (Unterordner mit `/`, werden angelegt) und *Löschen*. Beides ist gesperrt, solange die Datei gedruckt wird oder in der Warteschlange steht. Dienste: `file_details`, `move_file`, `delete_file`.
+Above the file list: search (across **all** files on the printer, not only the newest), sorting (newest, name, print time) and folder chips. Older matches appear as a list; tapping loads metadata and thumbnail and opens the print dialog. In the print dialog: *Rename / move* (subfolders with `/` are created) and *Delete*. Both are blocked while the file is printing or queued. Services: `file_details`, `move_file`, `delete_file`.
 
-## Temperaturverlauf
+## Temperature chart
 
-Im Reiter *Steuerung*: Ist- und Solltemperatur der aktiven Köpfe und des Betts der letzten 20 Minuten. Die Daten speichert Moonraker ohnehin (`/server/temperature_store`); die Karte holt sie alle 10 s über die Integration, nur solange der Reiter sichtbar ist.
+In the *Control* tab: actual and target temperature of the active heads and the bed over the last 20 minutes. Moonraker stores this data anyway (`/server/temperature_store`); the card fetches it every 10 s through the integration, only while the tab is visible.
 
-## Leerlauf-Abschaltung
+## Idle shutdown
 
-Option *Ausschalten nach Leerlauf* (Stunden, 0 = aus): Läuft kein Druck, ist keine Heizung an (auch kein Vorheizen am Display) und ist das länger her als eingestellt, fährt die Integration den Drucker sauber herunter und schaltet die Steckdose aus. Die Firmware selbst kennt nur `idle_timeout` (Heizung und Motoren aus nach 10 min), schaltet aber nie ab.
+Option *Switch off after idle* (hours, 0 = off): when no print is running, no heater is on (including preheating on the display) and that has lasted longer than configured, the integration shuts the printer down cleanly and switches off the plug. The firmware itself only knows `idle_timeout` (heaters and motors off after 10 min) but never powers off.
 
-## Firmware und Selbsttest
+## Firmware and self test
 
-- **Update-Entität „Firmware“**: installiert laut Drucker (`/machine/system_info`), neueste aus Snapmakers Release-Commits der Firmware-Quellen auf GitHub (`Snapmaker/u1-moonraker`, `Snapmaker/u1-klipper`), einmal am Tag. Installiert wird weiter am Drucker (Display oder Snapmaker-App); die Entität meldet nur. Hinweis: Snapmaker kann die Veröffentlichung auf GitHub ändern; dann bleibt „neueste“ beim letzten bekannten Stand.
-- **Selbsttest** (*System*-Reiter oder Dienst `self_test`): Drucker und Klipper, Live-Verbindung, Firmware, freier Speicher am Drucker (Warnung unter 500 MiB), Moonraker-Integration, Kamera (holt ein Bild), Netzschalter/Energie/Preis-Entitäten, Benachrichtigungsdienste, Spoolman, Assist-Sätze, Medienordner. ✓ in Ordnung, ! Hinweis, ✗ Fehler.
+- **Update entity "Firmware"**: installed version from the printer (`/machine/system_info`), latest from Snapmaker's release commits of the firmware sources on GitHub (`Snapmaker/u1-moonraker`, `Snapmaker/u1-klipper`), once a day. Updating still happens on the printer (display or Snapmaker app); the entity only reports. Note: Snapmaker may change how it publishes on GitHub; "latest" then stays at the last known version.
+- **Self test** (*System* tab or service `self_test`): printer and Klipper, live connection, firmware, free space on the printer (warning below 500 MiB), Moonraker integration, camera (fetches an image), power switch/energy/price entities, notification services, Spoolman, Assist sentences, media folder. ✓ fine, ! note, ✗ error.
 
-## Statistik je Material
+## Statistics per material
 
-Unter den Monatsdiagrammen: Drucke, Verbrauch, Kosten und Erfolgsquote je Material sowie die meistgenutzten Farben – aus Moonrakers Druckhistorie, also rückwirkend. Abgebrochene Drucke zählen anteilig.
+Below the monthly charts: prints, consumption, cost and success rate per material plus the most used colours, from Moonraker's print history, so retroactive. Cancelled prints count pro rata.
 
-## Sprachsteuerung (Assist)
+## Voice control (Assist)
 
-Die Integration meldet drei Intents an und legt die Sätze unter `/config/custom_sentences/de/snapmaker_u1_card.yaml` (bzw. `en/`) ab:
+The integration registers three intents and writes the sentences to `/config/custom_sentences/en/snapmaker_u1_card.yaml` (and `de/`):
 
-- „Wie weit ist der Drucker?“, „Wie lange braucht der 3D-Drucker noch?“, „Was macht der Drucker?“, „Status vom Drucker“ → z. B. „benchy ist bei 40 Prozent, Schicht 121 von 300, noch etwa 6 Minuten.“
-- „Pausiere den Drucker“, „Druck pausieren“
-- „Drucker fortsetzen“, „Setze den Druck fort“, „Druck weiter“
+- "How far is the printer?", "How long until the print is done?", "What is the printer doing?", "Printer status" → e.g. "benchy is at 40 percent, layer 121 of 300, about 6 minutes left."
+- "Pause the printer", "Pause the print"
+- "Resume the print", "Continue the printer"
 
-Englisch: „How far is the printer?“, „Pause the printer“, „Resume the print“. Die Dateien aktualisiert die Integration bei jedem Start. Wer eigene Sätze pflegen will, löscht die erste Zeile (`# snapmaker_u1_card: automatisch erzeugt`), dann bleibt die Datei unberührt. Abbrechen per Sprache gibt es absichtlich nicht.
+German: "Wie weit ist der Drucker?", "Pausiere den Drucker", "Drucker fortsetzen". The integration updates the files on every start. To maintain your own sentences, delete the first line (`# snapmaker_u1_card: automatisch erzeugt`) and the file is left alone. Cancelling by voice is deliberately not offered.
 
-## Sicherung der Drucker-Konfiguration
+## Printer configuration backup
 
-Einmal am Tag, nie während eines Drucks, holt die Integration alle Dateien aus Moonrakers Wurzel `config` (printer.cfg, moonraker.conf, Makros …) nach `/config/snapmaker_u1_backup/<Drucker>/<Datum_Uhrzeit>/`. Ein neuer Stand entsteht nur, wenn sich etwas geändert hat; die letzten 10 bleiben. Logs, Datenbanken und Dateien über 2 MB werden übersprungen. Weil die Sicherungen im HA-Konfigordner liegen, sind sie auch in jedem Home-Assistant-Backup. Der letzte Stand steht in der Karte unter *System → Wartung*, mit Knopf zum sofortigen Sichern.
+Once a day, never during a print, the integration fetches all files from Moonraker's `config` root (printer.cfg, moonraker.conf, macros …) to `/config/snapmaker_u1_backup/<printer>/<date_time>/`. A new snapshot is only created when something changed; the last 10 are kept. Logs, databases and files above 2 MB are skipped. Because the backups live in the HA config folder, they are part of every Home Assistant backup. The latest snapshot is shown in the card under *System → Maintenance*, with a button to back up right away.
 
-## Spulenverwaltung mit Spoolman
+## Spool management with Spoolman
 
-Optional. Ohne Spoolman-Adresse erscheint in Karte und Integration nichts davon.
+Optional. Without a Spoolman address none of this appears in the card or the integration.
 
-**Zuordnung Spule → Kopf.** Moonraker kennt für Spoolman nur *eine* aktive Spule; bei vier Köpfen übernimmt das die Integration selbst. Je geladenem Kopf wird eine aktive (nicht archivierte) Spule gesucht:
+**Assigning spools to heads.** Moonraker only knows *one* active spool for Spoolman; with four heads the integration handles this itself. For each loaded head an active (not archived) spool is chosen by:
 
-1. gleiches Material (`PLA-CF` passt zu `PLA`),
-2. ähnliche Farbe (Spule ohne Farbangabe: nur Material). Weicht die Farbe deutlich ab, wird **nichts** zugeordnet. Eine falsche Spule wäre schlimmer, weil von ihr abgebucht würde,
-3. Unterart im Namen (z. B. „Silk“), gleicher Hersteller,
-4. angebrochene, zuletzt benutzte Spule vor neuer.
+1. same material (`PLA-CF` matches `PLA`),
+2. similar colour (spool without colour: material only). If the colour differs clearly, **nothing** is assigned; a wrong spool would be worse because usage would be booked from it,
+3. sub type in the name (e.g. "Silk"), same vendor,
+4. opened, most recently used spool before a new one.
 
-Jede Spule wird höchstens einem Kopf zugeordnet. In der Karte tippst du auf die Spulenzeile eines Kopfes und wählst „Automatisch“, „Keine Spule“ oder eine bestimmte Spule. Eine manuelle Wahl bleibt bestehen, bis in dem Kopf ein anderes Filament erkannt wird (Material, Farbe oder Hersteller ändern sich) oder die Spule in Spoolman archiviert wird.
+Each spool is assigned to at most one head. In the card, tap the spool row of a head and choose "Automatic", "No spool" or a specific spool. A manual choice stays until a different filament is detected in that head (material, colour or vendor change) or the spool is archived in Spoolman.
 
-**Abbuchen.** Nach jedem Druck bucht die Integration je Kopf ab: Gewicht laut Slicer je Filament, über die Zuordnungstabelle des Drucks (`print_task_config.extruder_map_table`) auf die Köpfe verteilt; bei Abbruch anteilig nach tatsächlich geförderter Länge. Ist Spoolman gerade nicht erreichbar, wird die Buchung gespeichert und nachgeholt, auch über einen Neustart von Home Assistant hinweg. Die Historie zeigt je Druck `#Spule −g` (⏳ = noch nicht gebucht).
+**Booking usage.** After every print the integration books usage per head: weight per filament from the slicer, distributed to the heads via the print's map table (`print_task_config.extruder_map_table`); for cancelled prints pro rata by the actually extruded length. If Spoolman is unreachable, the booking is stored and retried later, even across Home Assistant restarts. The history shows `#spool −g` per print (⏳ = not booked yet).
 
-> **Nicht doppelt buchen:** Bucht bereits etwas anderes ab (z. B. ein `[spoolman]`-Abschnitt in Moonrakers Konfiguration oder paxx12 SpoolLink), in der Integration *Verbrauch abbuchen* ausschalten.
+> **Do not book twice:** if something else already books usage (e.g. a `[spoolman]` section in Moonraker's config or paxx12 SpoolLink), turn off *Book usage* in the integration.
 
-Grenzen: Wechselt die Firmware mitten im Druck automatisch auf einen anderen Kopf (Auto-Nachfüllen bei leerer Spule), wird der gesamte Verbrauch dem zuletzt gemeldeten Kopf zugerechnet.
+Limitation: if the firmware switches to another head automatically during a print (auto-replenish on an empty spool), the whole usage is attributed to the last reported head.
 
-Dienst zum Zuordnen, z. B. für Automationen:
+Service for assigning, e.g. in automations:
 
 ```yaml
 action: snapmaker_u1_card.set_spool
 data:
-  slot: 2        # Kopf 1–4
-  spool_id: 12   # 0 = keine Spule; weglassen = wieder automatisch
+  slot: 2        # head 1–4
+  spool_id: 12   # 0 = no spool; omit = automatic again
 ```
 
-Die Spule je Kopf steht auch an `sensor.…_slot_1` … `_slot_4` (Attribute `spool`, `spool_remaining`), z. B. für eine Benachrichtigung bei wenig Restfilament.
+The spool per head is also available on `sensor.…_slot_1` … `_slot_4` (attributes `spool`, `spool_remaining`), e.g. for a notification when filament runs low.
 
-## Zeitraffer
+## Timelapses
 
-Die Stock-Firmware legt Zeitraffer im Moonraker-Ordner `camera` ab (`Name_JJJJMMTThhmmss.mp4` mit `_cover.jpg`). Die Integration durchsucht alle Ordner außer Konfiguration und Logs, findet also auch Fluidd-Zeitraffer (`timelapse`). Abgespielt wird über einen angemeldeten Proxy der Integration mit kurzlebig signierten Links. Er liefert nur Dateien aus der Liste aus, nie beliebige Pfade vom Drucker.
+The stock firmware stores timelapses in the Moonraker folder `camera` (`Name_YYYYMMDDhhmmss.mp4` with `_cover.jpg`). The integration searches all folders except config and logs, so Fluidd timelapses (`timelapse`) are found too. Playback goes through an authenticated proxy of the integration with short-lived signed links. It only serves files from the list, never arbitrary paths from the printer.
 
-**Sichern.** Mit *Zeitraffer sichern* kopiert die Integration jedes neue Video samt Vorschaubild nach `<Medien>/snapmaker_u1/` (im Medienbrowser unter „Lokale Medien“, in der Karte unter „Gesichert in Medien“, abspielbar auch bei ausgeschaltetem Drucker). Während eines Drucks wird nicht kopiert.
+**Backup.** With *Timelapse backup* the integration copies every new video including its preview to `<media>/snapmaker_u1/` ("Local media" in the media browser, "Saved in media" in the card, playable even with the printer off). Nothing is copied during a print.
 
-**Auf dem Drucker aufräumen.** Moonraker gibt den Ordner `camera` nur lesend frei; löschen kann nur Snapmakers interner Kameradienst (`camera.delete_timelapse_instance`), dessen Parameter nicht dokumentiert sind. Die Integration löscht deshalb nur Videos, die vollständig gesichert sind, sichert vorher immer alles, ermittelt die Parameterform beim ersten Mal und merkt sie sich. Lehnt der Dienst alle Formen ab, bleibt alles stehen und die Karte zeigt „Löschen auf dem Drucker wird von der Firmware nicht unterstützt“.
+**Cleaning up on the printer.** Moonraker exposes the `camera` folder read-only; only Snapmaker's internal camera service (`camera.delete_timelapse_instance`) can delete, and its parameters are undocumented. The integration therefore only deletes videos that are fully backed up, always backs up everything first, probes the parameter form once and remembers it. If the service refuses all forms, everything stays and the card shows that deleting on the printer is not supported by the firmware.
 
-## Schichtansicht
+## Layer view
 
-Sobald die Karte die Schichtansicht während eines Drucks zum ersten Mal anfragt, lädt die Integration die Datei einmal vom Drucker und zerlegt sie in Schichten (`;LAYER_CHANGE` bzw. `SET_PRINT_STATS_INFO`). Die Karte holt nur die aktuelle Schicht (`/api/snapmaker_u1_card/layers/…`, angemeldet) und alle 5 s die Dateiposition (`virtual_sdcard.file_position`, aus dem Live-Abo, ohne Anfrage beim Drucker): was davor liegt, ist gedruckt. Farbe je Filament: Kopf laut Zuordnung → Farbe der dort geladenen Spule, sonst die Farbe aus der Datei. Bögen (G2/G3) werden als Gerade gezeichnet, Punkte näher als 0,35 mm zusammengefasst. Bei großen Dateien dauert die Vorbereitung einige Sekunden.
+As soon as the card requests the layer view during a print for the first time, the integration downloads the file once and splits it into layers (`;LAYER_CHANGE` or `SET_PRINT_STATS_INFO`). The card only fetches the current layer (`/api/snapmaker_u1_card/layers/…`, authenticated) and every 5 s the file position (`virtual_sdcard.file_position`, from the live subscription, without asking the printer): everything before it is printed. Colour per filament: head from the mapping → colour of the spool loaded there, otherwise the colour from the file. Arcs (G2/G3) are split into short segments, points closer than 0.35 mm are merged. For large files the preparation takes a few seconds.
 
-## Druckermeldungen
+## Printer messages
 
-Die U1-Firmware meldet Fehler strukturiert (Modul, Kopf, Code). Die Integration übersetzt bekannte Codes, z. B. „Filament leer (Kopf 2)“, „Vorladen: kein Filament erkannt“, „Spaghetti erkannt“, „PEI-Platte liegt nicht richtig“, und hängt einen Hinweis an. Unbekannte Codes erscheinen mit der Rohmeldung der Firmware. Die Meldungen stehen oben in der Karte, in Benachrichtigungen bei Fehler/Pause und in der Historie.
+The U1 firmware reports errors in a structured way (module, head, code). The integration translates known codes, e.g. "Filament runout (head 2)", "Preload: no filament detected", "Spaghetti detected", "PEI plate not seated correctly", and adds a hint. Unknown codes appear with the firmware's raw message. The messages are shown at the top of the card, in notifications on error/pause and in the history.
 
-## Fehlersuche
+## Troubleshooting
 
-- **Karte zeigt keine Temperaturen, kein Licht, keine Kamera**: Die Moonraker-Integration fehlt oder ist nicht verbunden (siehe [Installation](#1-moonraker-integration)). Der Selbsttest meldet das.
-- **Integration findet den Drucker nicht**: IP prüfen (`http://<IP>/server/info` im Browser muss JSON zeigen), Port 80, Drucker eingeschaltet. Nach einem IP-Wechsel: *Geräte & Dienste → Snapmaker U1 Card → ⋮ → Neu konfigurieren* (Einstellungen und Historie bleiben). Besser eine feste IP vergeben.
-- **„401/403“ von Moonraker** (geänderte Firmware mit Anmeldung): API-Schlüssel aus der Weboberfläche des Druckers bei der Einrichtung eintragen.
-- **Kamerabild friert ein**: Prüf, ob noch ein Kamera-Keepalive-Add-on oder eine zweite Kamera-Entität auf den Drucker zugreift. Mit `camera_mode: still` testen.
-- **„Custom element doesn't exist: snapmaker-u1-card“**: Die Seite wurde während eines Neustarts von Home Assistant geladen, und die Ressource unter *Dashboards → Ressourcen* fehlt (oder `/config/www` war beim Start neu). Seite neu laden; bleibt es, prüfen, ob die Ressource `/local/snapmaker_u1_card/…` existiert.
-- **Zeitraffer aus der Sicherung spielen nicht ab**: Die Karte holt die Adresse über die Medienquelle von Home Assistant. Ohne `default_config` muss `media_source:` in der `configuration.yaml` stehen.
-- **Dashboard oder Karten-Auswahl lädt endlos**: Home Assistant spricht HTTP/1.1, auch über HTTPS und Nabu Casa (dort wird die TLS-Verbindung nur durchgereicht). Der Browser öffnet dann höchstens 6 gleichzeitige Verbindungen zu Home Assistant, für alle Tabs und Fenster zusammen. Jede hängende Anfrage belegt eine davon; sind alle belegt, kann das Frontend keinen Code mehr nachladen. Die Karte vermeidet das: Livestream nur, solange sie sichtbar ist und nie im Bearbeitungsmodus; Zeitraffer-Vorschaubilder kommen aus Home Assistant selbst (keine Anfrage an den Drucker); Videos werden bei ausgeschaltetem Drucker gar nicht erst angefragt. Andere Live-Kameras (z. B. Frigate) auf `camera_view: auto` stellen. Prüfen: F12 → Netzwerk; Anfragen mit Status „pending“/„stalled“ zeigen, was hängt.
-- **„Druckstart abgelehnt“**: Den Text liefert der Drucker, z. B. „Printer is busy“ oder einen Düsenkonflikt.
-- **Kein Icon unter Geräte & Dienste**: Eigene Icons zeigt Home Assistant ab 2026.3.
-- **Keine Benachrichtigung**: Dienstname prüfen (Entwicklerwerkzeuge → Aktionen → `notify.mobile_app_…`). Das Kamerabild hängt nur die Companion-App an.
-- **Diagnose**: *Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*. Enthält Optionen, Zustand des Live-Abos, Rohstatus des Druckers, Fehler und Warteschlange; Adresse, API-Schlüssel, Spoolman-Adresse und Benachrichtigungsziele sind geschwärzt.
-- **Sprachbefehl wird nicht erkannt**: Unter *Entwicklerwerkzeuge → Assist* den Satz testen. Steht dort eine andere Absicht, kollidiert er mit einem eingebauten Satz; dann eigene Sätze in der Datei ergänzen (erste Zeile löschen, siehe oben).
-- **Keine Dateien**: Unter *Geräte & Dienste → Snapmaker U1 Card* prüfen, ob die Integration verbunden ist. Danach den Dienst `refresh` aufrufen.
+- **No temperatures, light or camera in the card**: the Moonraker integration is missing or not connected (see [installation](#1-moonraker-integration)). The self test reports this.
+- **The integration cannot find the printer**: check the IP (`http://<IP>/server/info` in a browser must show JSON), port 80, printer switched on. After an IP change: *Devices & services → Snapmaker U1 Card → ⋮ → Reconfigure* (settings and history are kept). Better assign a fixed IP.
+- **"401/403" from Moonraker** (modified firmware with authentication): enter the API key from the printer's web interface during setup.
+- **Camera image freezes**: check whether a camera keepalive add-on or a second camera entity still accesses the printer. Test with `camera_mode: still`.
+- **"Custom element doesn't exist: snapmaker-u1-card"**: the page was loaded during a Home Assistant restart and the resource under *Dashboards → Resources* is missing (or `/config/www` was new at startup). Reload the page; if it persists, check that the resource `/local/snapmaker_u1_card/…` exists.
+- **Backed-up timelapses do not play**: the card gets the address through Home Assistant's media source. Without `default_config`, `media_source:` must be in `configuration.yaml`.
+- **Dashboard or card picker loads forever**: Home Assistant speaks HTTP/1.1, also over HTTPS and Nabu Casa (the TLS connection is only passed through). The browser then opens at most 6 simultaneous connections to Home Assistant, for all tabs and windows together. Every hanging request occupies one; once all are taken, the frontend cannot load code anymore. The card avoids this: live stream only while visible and never in edit mode; timelapse previews come from Home Assistant itself (no request to the printer); videos are not requested while the printer is off. Set other live cameras (e.g. Frigate) to `camera_view: auto`. To check: F12 → Network; requests with status "pending"/"stalled" show what hangs.
+- **"Print start refused"**: the text comes from the printer, e.g. "Printer is busy" or a nozzle conflict.
+- **No icon under Devices & services**: Home Assistant shows custom icons from 2026.3. The HACS list has no icon because HACS only loads icons from the `home-assistant/brands` repository.
+- **No notification**: check the service name (Developer tools → Actions → `notify.mobile_app_…`). Only the Companion app attaches the camera image.
+- **Diagnostics**: *Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*. Contains options, state of the live subscription, raw printer status, errors and queue; address, API key, Spoolman address and notification targets are redacted.
+- **Voice command not recognised**: test the sentence under *Developer tools → Assist*. If a different intent shows up, it collides with a built-in sentence; add your own sentences to the file (delete the first line, see above).
+- **No files**: check under *Devices & services → Snapmaker U1 Card* whether the integration is connected. Then call the `refresh` service.
 
-## Unterstützen
+## Support
 
-Die Integration ist kostenlos. Wer sich bedanken möchte: Ein Stern auf GitHub, Rückmeldungen als Beta-Tester und gemeldete Fehler helfen am meisten – und wer mag, spendiert einen Kaffee:
+The integration is free. If you want to say thanks: a star on GitHub, feedback as a beta tester and bug reports help most, and if you like, buy me a coffee:
 
-[![Unterstützen auf Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ironoxx)
+[![Support on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/ironoxx)
 
-## Lizenz
+## License
 
-MIT – siehe [LICENSE](LICENSE). Ohne Gewähr.
+MIT, see [LICENSE](LICENSE). No warranty.

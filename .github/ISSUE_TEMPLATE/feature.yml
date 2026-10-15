@@ -1,0 +1,14 @@
+name: Feature request
+description: Suggest a new feature (English or German welcome)
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: What do you need it for?

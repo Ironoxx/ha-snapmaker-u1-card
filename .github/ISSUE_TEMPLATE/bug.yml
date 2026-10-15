@@ -1,0 +1,33 @@
+name: Bug report
+description: Something does not work as expected (English or German welcome)
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      placeholder: e.g. 1.1.0
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home Assistant version
+      placeholder: e.g. 2026.10.1
+  - type: input
+    id: firmware
+    attributes:
+      label: Printer firmware
+      placeholder: e.g. stock 2.0.0, Extended Firmware …
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics file / log
+      description: "Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics, then attach it here. Credentials are redacted."
