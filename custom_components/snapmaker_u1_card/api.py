@@ -270,6 +270,20 @@ class MoonrakerClient:
         """pause | resume | cancel via JSON-RPC (Moonraker: printer.print.<action>)."""
         await self.rpc(f"printer.print.{action}", response_timeout=30)
 
+    async def gcode(self, script: str) -> None:
+        """Run a G-code script (JSON-RPC printer.gcode.script); firmware errors raise."""
+        await self.rpc("printer.gcode.script", {"script": script}, response_timeout=30)
+
+    async def camera_wake(self) -> None:
+        """Ask Snapmaker's camera service to (keep) stream(ing) in LAN mode.
+
+        Same call the Snapmaker app makes (u1-moonraker repeater.py proxies
+        camera.start_monitor to the closed camera service). Without it the
+        stock firmware stops the camera after a while.
+        """
+        await self.rpc("camera.start_monitor", {"domain": "lan", "interval": 0, "req_id": next(self._ids)},
+                       response_timeout=10)
+
     def websocket(self) -> Any:
         """Persistent WebSocket connection (context manager) for the live subscription."""
         return self._session.ws_connect(

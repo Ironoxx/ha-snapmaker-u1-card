@@ -9,6 +9,7 @@
 Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapmaker U1**:
 
 - **Geladene Filamente live**: Material, Unterart, Hersteller, Farbe (auch mehrfarbig) und RFID-Erkennung je Druckkopf, direkt aus der Drucker-Firmware.
+- **Kopf-Details**: Das Regler-Symbol am Kopf zeigt die RFID-Daten der Spule (Gewicht, Durchmesser, Düsen-/Bett-/Trocknungstemperatur, Herstelldatum, SKU). Dort lassen sich **Material, Hersteller und Farbe von Hand setzen**, etwa für Spulen ohne Chip.
 - **Druckstart mit Filamentzuordnung wie in Snapmaker Orca**: Du tippst eine Datei an, die Karte schlägt vor, welches Filament der Datei auf welchen Kopf kommt. Grundlage sind Material und Farbe. Du kannst die Zuordnung ändern, Bettnivellierung, Flusskalibrierung und Zeitraffer wählen und dann starten.
 - **Dateiliste mit Vorschaubildern**, Druckzeit, Gewicht und Farbpunkten je Datei.
 - **Kamera** als Livestream über Home Assistant, mit automatischem Rückfall auf Standbilder. Zoom mit zwei Fingern, Doppeltipp, Strg+Mausrad oder Lupen-Knöpfen, Vollbild; gezoomt verschiebt man mit einem Finger bzw. der linken Maustaste. Während des Drucks liegen Fortschritt, Schicht, Restzeit, Fertig-Uhrzeit und aktiver Kopf direkt auf dem Bild.
@@ -38,13 +39,18 @@ Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapm
 - **Diagramme** der letzten 12 Monate (Drucke, Stunden, Filament, Kosten) aus Moonrakers Druckhistorie, also auch rückwirkend.
 - **Wartungsplaner** in Druckstunden (Druckplatte, Düsen, Führungen, Riemen, Filter) plus Werkzeugwechsel-Zähler der Firmware.
 - **Spulenverwaltung mit [Spoolman](https://github.com/Donkie/Spoolman)** (optional): Spule je Kopf mit Restgewicht, automatische Zuordnung, Warnung, wenn eine Spule für den Druck nicht reicht, und Abbuchung des Verbrauchs je Kopf nach dem Druck.
+- **Druckereinstellungen** als Schalter und in der Karte: Filament automatisch nachfüllen, Nachfüllen ohne Farbprüfung, Verhedderungs-Erkennung (mit Empfindlichkeit), Licht aus nach dem Druck. Am Drucker gespeichert, auch während eines Drucks änderbar.
+- **Kamera wach halten** (optional): für Stock-Firmware, deren Kamerabild nach einer Weile stehen bleibt.
+- **Zustandsfarbe**: ein dünner Rahmen in der Farbe des Zustands (druckt, pausiert, Fehler, fertig).
 - Temperaturen, Sollwerte, Lüfter, Licht, Achsen, Diagnose und Statistik.
 
 Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über VPN und über Nabu Casa gleich, ohne CORS- oder Mixed-Content-Probleme.
 
+**Das Design folgt deinem Home-Assistant-Theme**: Farben, Hell/Dunkel, Schrift und Rundungen kommen aus dem aktiven Theme (Material-You-Tokens, wo vorhanden). Die Karte passt sich so jedem Dashboard an.
+
 > Sprache: Karte und Integration folgen der Sprache von Home Assistant (Deutsch, sonst Englisch).
 
-> **Beta-Tester gesucht!** Die Integration läuft im Alltag, ist aber noch jung und bisher an wenigen Druckern erprobt. Wer einen Snapmaker U1 hat und mittesten möchte: einfach installieren und Erfahrungen, Fehler oder Wünsche als [Issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues) melden – am besten mit der Diagnose-Datei (*Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*), der Firmware-Version und, bei Druckproblemen, der G-Code-Datei. Test und Nutzung erfolgen freiwillig, ohne Gewähr und auf eigenes Risiko.
+> **Tester gesucht!** Die Integration läuft im Alltag, ist aber noch jung und bisher an wenigen Druckern erprobt. Wer einen Snapmaker U1 hat und mittesten möchte: einfach installieren und Erfahrungen, Fehler oder Wünsche als [Issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues) melden – am besten mit der Diagnose-Datei (*Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*), der Firmware-Version und, bei Druckproblemen, der G-Code-Datei. Test und Nutzung erfolgen freiwillig, ohne Gewähr und auf eigenes Risiko.
 
 > Kein offizielles Produkt von Snapmaker und nicht mit Snapmaker verbunden. „Snapmaker“ und „U1“ sind Marken ihrer Inhaber und stehen hier nur, um den unterstützten Drucker zu nennen. Nutzung auf eigenes Risiko.
 
@@ -133,7 +139,7 @@ Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen 
 | Abschnitt | Felder |
 |---|---|
 | Strom und Verbrauch | Netzschalter, Leistungssensor (W), Energiezähler (kWh), Strompreis-Entität (EUR/kWh oder ct/kWh), vor dem Abschalten herunterfahren, Auto-Ein beim Druckstart, Auto-Aus nach dem Druck (Temperatur, Verzögerung), Ausschalten nach Leerlauf (Stunden) |
-| Benachrichtigungen | `notify.mobile_app_…`-Dienste, Anlässe (fertig, abgebrochen, Fehler, pausiert, Meldung im Druck, erste Schicht fertig, gleich fertig, Filament reicht nicht), Vorwarnung „gleich fertig“ in Minuten (10), „Teil entnehmbar“ ab Betttemperatur (35 °C), Kamera für Bild und Ergebnisfoto |
+| Benachrichtigungen & Kamera | `notify.mobile_app_…`-Dienste, Anlässe (fertig, abgebrochen, Fehler, pausiert, Meldung im Druck, erste Schicht fertig, gleich fertig, Filament reicht nicht), Vorwarnung „gleich fertig“ in Minuten (10), „Teil entnehmbar“ ab Betttemperatur (35 °C), Kamera für Bild und Ergebnisfoto, **Kamera wach halten** (aus / während eines Drucks / immer) |
 | Filamentpreise | € je kg für PLA, PETG, ABS, ASA, TPU, PA und sonstige. `PLA-CF` nutzt den PLA-Preis |
 | Zeitraffer sichern | Ein/aus, wie viele neueste auf dem Drucker bleiben (0 = nie löschen) |
 | Wartung | Intervall je Punkt in Druckstunden (0 = ausblenden) |
@@ -148,6 +154,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 |---|---|---|
 | `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander |
 | `camera_overlay` | `true` | Fortschritt auf dem Kamerabild (`hide_overlay: true` schaltet es ebenfalls ab) |
+| `state_accent` | `true` | Rahmen in der Theme-Farbe des Zustands (druckt, pausiert, Fehler, fertig) |
 | `camera_height` | automatisch | Höhe des Kamerabilds in px. Leer = Seitenverhältnis des Bildes, höchstens `camera_max_height` |
 | `camera_max_height` | `520` | Obergrenze bei automatischer Höhe in px |
 | `camera_mode` | `stream` | `stream` = Livebild, `still` = Einzelbilder (spart WLAN) |
@@ -195,6 +202,10 @@ navigation_path: /dashboard-drucker/0   # optional: beim Antippen dorthin, sonst
 | `sensor.…_druckstunden` | Druckstunden gesamt (Moonraker), Attribute `months`, `totals`, `top_files` |
 | `sensor.…_wartung_fallig` | Anzahl fälliger Wartungspunkte, Attribut `items` |
 | `sensor.…_druckermeldungen` | Anzahl offener Firmware-Meldungen, Attribut `errors` mit Text (de/en), Hinweis und Rohcode |
+| `switch.…_filament_automatisch_nachfullen`, `…_nachfullen_ohne_farbprufung`, `…_verhedderungs_erkennung`, `…_licht_aus_nach_dem_druck` | Firmware-Einstellungen (am Drucker gespeichert) |
+| `select.…_empfindlichkeit_verhedderungs_erkennung` | `low`, `medium`, `high` |
+
+Die Slot-Sensoren tragen zusätzlich das Attribut `rfid` mit den Daten des Spulen-Chips.
 
 Ereignis `snapmaker_u1_card_print_finished` bei jedem Druckende, mit `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost` – für eigene Automationen.
 
@@ -232,6 +243,26 @@ Moonrakers eigene Warteschlange (`[job_queue]`) ist auf dem U1 nicht geladen und
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 
 `item: plate | nozzle | rails | belts | filter` setzt den Wartungszähler zurück. `backup_timelapses` sichert sofort und räumt danach auf dem Drucker auf. `backup_config` sichert die Drucker-Konfiguration sofort und antwortet mit `status` (`saved`, `unchanged`, `empty`), Anzahl Dateien, übersprungenen Dateien und den vorhandenen Ständen.
+
+### `snapmaker_u1_card.set_filament` / `set_preference`
+
+```yaml
+action: snapmaker_u1_card.set_filament   # Spule ohne RFID; nicht während eines Drucks
+data:
+  slot: 2            # Kopf 1–4
+  type: PETG
+  sub_type: HF       # optional
+  vendor: Generic    # optional
+  color: "#1B5E20"   # optional
+  force: false       # true = auch eine offizielle Snapmaker-Spule überschreiben
+
+action: snapmaker_u1_card.set_preference
+data:
+  preference: auto_replenish   # replenish_ignore_color | entangle_detect | end_led_off | entangle_sensitivity
+  value: true                  # entangle_sensitivity: low | medium | high
+```
+
+Beides geht an die Firmware (`SET_PRINT_FILAMENT_CONFIG`, `SET_PRINT_PREFERENCES` aus u1-klipper `print_task_config.py`). Der Drucker speichert die Werte selbst, das Display zeigt sie ebenfalls.
 
 ### `snapmaker_u1_card.refresh`
 
@@ -390,7 +421,8 @@ Die U1-Firmware meldet Fehler strukturiert (Modul, Kopf, Code). Die Integration 
 - **Zeitraffer aus der Sicherung spielen nicht ab**: Die Karte holt die Adresse über die Medienquelle von Home Assistant. Ohne `default_config` muss `media_source:` in der `configuration.yaml` stehen.
 - **Dashboard oder Karten-Auswahl lädt endlos**: Home Assistant spricht HTTP/1.1, auch über HTTPS und Nabu Casa (dort wird die TLS-Verbindung nur durchgereicht). Der Browser öffnet dann höchstens 6 gleichzeitige Verbindungen zu Home Assistant, für alle Tabs und Fenster zusammen. Jede hängende Anfrage belegt eine davon; sind alle belegt, kann das Frontend keinen Code mehr nachladen. Die Karte vermeidet das: Livestream nur, solange sie sichtbar ist und nie im Bearbeitungsmodus; Zeitraffer-Vorschaubilder kommen aus Home Assistant selbst (keine Anfrage an den Drucker); Videos werden bei ausgeschaltetem Drucker gar nicht erst angefragt. Andere Live-Kameras (z. B. Frigate) auf `camera_view: auto` stellen. Prüfen: F12 → Netzwerk; Anfragen mit Status „pending“/„stalled“ zeigen, was hängt.
 - **„Druckstart abgelehnt“**: Den Text liefert der Drucker, z. B. „Printer is busy“ oder einen Düsenkonflikt.
-- **Kein Icon unter Geräte & Dienste**: Eigene Icons zeigt Home Assistant ab 2026.3. In der HACS-Liste fehlt das Icon, weil HACS Icons nur aus dem Repository `home-assistant/brands` lädt.
+- **Kein Icon unter Geräte & Dienste**: Eigene Icons zeigt Home Assistant ab 2026.3. In der HACS-Liste zeigen derzeit alle eigenen Integrationen einen grauen Platzhalter; das ist ein bekannter HACS-Fehler ([hacs/integration#5171](https://github.com/hacs/integration/issues/5171)) und erledigt sich mit einem HACS-Update.
+- **Kamerabild bleibt nach einer Weile stehen (Stock-Firmware)**: In den Optionen der Integration *Kamera wach halten* einschalten. Sie schickt alle 10 s `camera.start_monitor`, wie die Snapmaker-App.
 - **Keine Benachrichtigung**: Dienstname prüfen (Entwicklerwerkzeuge → Aktionen → `notify.mobile_app_…`). Das Kamerabild hängt nur die Companion-App an.
 - **Diagnose**: *Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*. Enthält Optionen, Zustand des Live-Abos, Rohstatus des Druckers, Fehler und Warteschlange; Adresse, API-Schlüssel, Spoolman-Adresse und Benachrichtigungsziele sind geschwärzt.
 - **Sprachbefehl wird nicht erkannt**: Unter *Entwicklerwerkzeuge → Assist* den Satz testen. Steht dort eine andere Absicht, kollidiert er mit einem eingebauten Satz; dann eigene Sätze in der Datei ergänzen (erste Zeile löschen, siehe oben).

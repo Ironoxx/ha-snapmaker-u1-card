@@ -1,8 +1,11 @@
-"""The printer's power switch with protection when switching off.
+"""Switches: the printer's power switch and the firmware preferences.
 
-The entity mirrors any switch (Shelly, KNX, Zigbee ...). Switching off through
-it is blocked during a print and shuts the printer down cleanly first.
+Power: the entity mirrors any switch (Shelly, KNX, Zigbee ...). Switching off
+through it is blocked during a print and shuts the printer down cleanly first.
 Automations should therefore switch this entity, not the switch behind it.
+
+Preferences: auto-replenish, replenish ignoring colour, entangle detection and
+LED off after the print. The firmware stores them itself (print_task_config).
 """
 
 from __future__ import annotations
@@ -10,7 +13,12 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
@@ -28,15 +36,44 @@ from .const import (
     DEFAULT_AUTO_OFF_TEMP,
 )
 from .coordinator import U1Coordinator
+from .parsing import PRINTER_PREFERENCES
 from .sensor import U1Entity
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: U1ConfigEntry, async_add_entities: AddConfigEntryEntitiesCallback
 ) -> None:
-    """Add the power switch if one is configured."""
+    """Add the firmware preference switches and the power switch if one is configured."""
+    coordinator = entry.runtime_data
+    entities: list[SwitchEntity] = [PreferenceSwitch(coordinator, key) for key in PRINTER_PREFERENCES]
     if entry.options.get(CONF_POWER_SWITCH):
-        async_add_entities([PowerSwitch(entry.runtime_data)])
+        entities.append(PowerSwitch(coordinator))
+    async_add_entities(entities)
+
+
+class PreferenceSwitch(U1Entity, SwitchEntity):
+    """One firmware preference (stored on the printer, changeable during a print)."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: U1Coordinator, key: str) -> None:
+        super().__init__(coordinator, f"pref_{key}")
+        self._key = key
+        self._attr_translation_key = key
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.data.preferences.get(self._key) is not None
+
+    @property
+    def is_on(self) -> bool | None:
+        return self.coordinator.data.preferences.get(self._key)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_preference(self._key, True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_preference(self._key, False)
 
 
 class PowerSwitch(U1Entity, SwitchEntity):

@@ -53,7 +53,55 @@ def test_slots_empty_payload():
 
 
 def test_preferences():
-    assert p.parse_preferences(PTC) == {"bed_leveling": True, "flow_calibration": False, "timelapse": True}
+    prefs = p.parse_preferences(PTC)
+    assert {k: prefs[k] for k in ("bed_leveling", "flow_calibration", "timelapse")} == \
+        {"bed_leveling": True, "flow_calibration": False, "timelapse": True}
+    # Firmware preferences the printer does not report stay None
+    assert prefs["auto_replenish"] is None and prefs["entangle_sensitivity"] is None
+    full = p.parse_preferences({"auto_replenish_filament": True, "replenish_ignore_color": False,
+                                "filament_entangle_detect": True, "filament_entangle_sen": "high",
+                                "end_led_turn_off": False})
+    assert (full["auto_replenish"], full["replenish_ignore_color"], full["entangle_detect"],
+            full["end_led_off"], full["entangle_sensitivity"]) == (True, False, True, False, "high")
+
+
+def test_preference_and_filament_gcode():
+    assert p.preference_gcode("auto_replenish", True) == "SET_PRINT_PREFERENCES AUTO_REPLENISH_FILAMENT=1"
+    assert p.preference_gcode("end_led_off", False) == "SET_PRINT_PREFERENCES END_LED_TURN_OFF=0"
+    assert p.preference_gcode("entangle_sensitivity", "low") == "SET_PRINT_PREFERENCES FILAMENT_ENTANGLE_SEN=low"
+    for bad in (("entangle_sensitivity", "max"), ("unknown", True)):
+        try:
+            p.preference_gcode(*bad)
+            raise AssertionError(bad)
+        except ValueError:
+            pass
+    assert p.filament_gcode(2, "petg", "HF", "Generic", "#1b5e20") == (
+        'SET_PRINT_FILAMENT_CONFIG CONFIG_EXTRUDER=2 VENDOR="Generic" FILAMENT_TYPE="PETG" '
+        'FILAMENT_SUBTYPE="HF" FILAMENT_COLOR_RGBA=1B5E20FF')
+    # Empty sub type becomes NONE (the firmware's placeholder), force for official spools
+    assert p.filament_gcode(0, "PLA", "", "", None, True).endswith(
+        'VENDOR="NONE" FILAMENT_TYPE="PLA" FILAMENT_SUBTYPE="NONE" FORCE=1')
+    for args in ((0, "PLA", "a;b", "x"), (4, "PLA", "", ""), (0, "", "", ""), (0, "PLA", "", "", "blue")):
+        try:
+            p.filament_gcode(*args)
+            raise AssertionError(args)
+        except ValueError:
+            pass
+
+
+def test_rfid():
+    tag = {"VENDOR": "Snapmaker", "MANUFACTURER": "Polymaker", "OFFICIAL": True, "DIAMETER": 175,
+           "WEIGHT": 1000, "LENGTH": 330, "DRYING_TEMP": 55, "DRYING_TIME": 8, "HOTEND_MIN_TEMP": 190,
+           "HOTEND_MAX_TEMP": 230, "BED_TEMP": 60, "FIRST_LAYER_TEMP": 220, "OTHER_LAYER_TEMP": 210,
+           "SKU": 900001, "MF_DATE": "20250812"}
+    r = p.parse_rfid(tag)
+    assert r["diameter_mm"] == 1.75 and r["weight_g"] == 1000 and r["nozzle_temp"] == [190, 230]
+    assert r["manufactured"] == "2025-08-12" and r["official"] and r["manufacturer"] == "Polymaker"
+    assert p.parse_rfid({"VENDOR": "NONE", "OFFICIAL": False}) is None
+    assert p.parse_rfid(None) is None
+    assert p.parse_rfid({**tag, "MF_DATE": "19700101", "SKU": 0})["manufactured"] is None
+    slots = p.parse_slots(PTC, {"info": [tag, {"VENDOR": "NONE"}]})
+    assert slots[0]["rfid"]["sku"] == 900001 and slots[1]["rfid"] is None and slots[3]["rfid"] is None
 
 
 def test_file_filaments():

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -92,6 +92,8 @@ SERVICE_REFRESH = "refresh"
 SERVICE_POWER_ON = "power_on"
 SERVICE_POWER_OFF = "power_off"
 SERVICE_SET_SPOOL = "set_spool"
+SERVICE_SET_PREFERENCE = "set_preference"
+SERVICE_SET_FILAMENT = "set_filament"
 SERVICE_QUEUE_ADD = "queue_add"
 SERVICE_QUEUE_REMOVE = "queue_remove"
 SERVICE_QUEUE_MOVE = "queue_move"
@@ -105,3 +107,10 @@ SERVICE_BACKUP_TIMELAPSES = "backup_timelapses"
 # (Range requests for the video player, no printer IP in the browser).
 VIDEO_URL = f"/api/{DOMAIN}/video"
 UPLOAD_URL = f"/api/{DOMAIN}/upload"
+
+# Keep Snapmaker's camera service streaming (camera.start_monitor): off | printing | always.
+# Stock firmware stops the camera after a while; modified firmware usually does not need it.
+CONF_CAMERA_WAKE = "camera_wake"
+CAMERA_WAKE_MODES = ("off", "printing", "always")
+DEFAULT_CAMERA_WAKE = "off"
+CAMERA_WAKE_S = 10

@@ -51,20 +51,22 @@
             }
           },
           "notify": {
-            "name": "Benachrichtigungen",
+            "name": "Benachrichtigungen & Kamera",
             "description": "Push aufs Handy: Druckende, Fehler, Pause, Meldungen, erste Schicht, gleich fertig, Filament knapp.",
             "data": {
               "notify_targets": "Benachrichtigungsdienste",
               "notify_events": "Benachrichtigen bei",
               "camera": "Kamera für das Bild",
               "almost_done_minutes": "Vorwarnung „Gleich fertig“",
-              "bed_cool_temp": "„Teil entnehmbar“ ab"
+              "bed_cool_temp": "„Teil entnehmbar“ ab",
+              "camera_wake": "Kamera wach halten"
             },
             "data_description": {
               "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
               "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
               "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
-              "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt."
+              "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
+              "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht."
             }
           },
           "filament": {
@@ -176,20 +178,22 @@
             }
           },
           "notify": {
-            "name": "Benachrichtigungen",
+            "name": "Benachrichtigungen & Kamera",
             "description": "Push aufs Handy: Druckende, Fehler, Pause, Meldungen, erste Schicht, gleich fertig, Filament knapp.",
             "data": {
               "notify_targets": "Benachrichtigungsdienste",
               "notify_events": "Benachrichtigen bei",
               "camera": "Kamera für das Bild",
               "almost_done_minutes": "Vorwarnung „Gleich fertig“",
-              "bed_cool_temp": "„Teil entnehmbar“ ab"
+              "bed_cool_temp": "„Teil entnehmbar“ ab",
+              "camera_wake": "Kamera wach halten"
             },
             "data_description": {
               "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
               "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
               "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
-              "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt."
+              "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
+              "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht."
             }
           },
           "filament": {
@@ -320,6 +324,18 @@
     "switch": {
       "power": {
         "name": "Netzschalter"
+      },
+      "auto_replenish": {
+        "name": "Filament automatisch nachfüllen"
+      },
+      "replenish_ignore_color": {
+        "name": "Nachfüllen ohne Farbprüfung"
+      },
+      "entangle_detect": {
+        "name": "Verhedderungs-Erkennung"
+      },
+      "end_led_off": {
+        "name": "Licht aus nach dem Druck"
       }
     },
     "binary_sensor": {
@@ -330,6 +346,16 @@
     "update": {
       "firmware": {
         "name": "Firmware"
+      }
+    },
+    "select": {
+      "entangle_sensitivity": {
+        "name": "Empfindlichkeit Verhedderungs-Erkennung",
+        "state": {
+          "low": "Niedrig",
+          "medium": "Mittel",
+          "high": "Hoch"
+        }
       }
     }
   },
@@ -615,6 +641,58 @@
           "description": "de oder en; leer = Sprache von Home Assistant."
         }
       }
+    },
+    "set_preference": {
+      "name": "Druckereinstellung setzen",
+      "description": "Ändert eine Firmware-Einstellung des Druckers. Auch während eines Drucks möglich.",
+      "fields": {
+        "preference": {
+          "name": "Einstellung",
+          "description": "auto_replenish, replenish_ignore_color, entangle_detect, end_led_off oder entangle_sensitivity."
+        },
+        "value": {
+          "name": "Wert",
+          "description": "true/false; bei entangle_sensitivity low, medium oder high."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "set_filament": {
+      "name": "Filament setzen",
+      "description": "Setzt Material, Unterart, Hersteller und Farbe eines Kopfes von Hand, z. B. für Spulen ohne RFID. Nicht während eines Drucks.",
+      "fields": {
+        "slot": {
+          "name": "Druckkopf",
+          "description": "1-4"
+        },
+        "type": {
+          "name": "Material",
+          "description": "z. B. PLA, PETG, TPU."
+        },
+        "sub_type": {
+          "name": "Unterart",
+          "description": "z. B. Silk, Matte, HF. Leer = keine."
+        },
+        "vendor": {
+          "name": "Hersteller",
+          "description": "z. B. Generic."
+        },
+        "color": {
+          "name": "Farbe",
+          "description": "Hex-Farbe, z. B. #FF0000."
+        },
+        "force": {
+          "name": "Offizielle Spule überschreiben",
+          "description": "Auch die RFID-Daten einer offiziellen Snapmaker-Spule überschreiben."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {
@@ -639,6 +717,13 @@
         "rails": "Linearführungen schmieren",
         "belts": "Riemenspannung prüfen",
         "filter": "Luftfilter wechseln"
+      }
+    },
+    "camera_wake": {
+      "options": {
+        "off": "Aus",
+        "printing": "Während eines Drucks",
+        "always": "Immer, solange der Drucker an ist"
       }
     }
   }

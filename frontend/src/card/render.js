@@ -38,9 +38,10 @@ export const RenderMixin = (Base) => class extends Base {
       d.stats ? `${d.stats.hours}|${JSON.stringify(d.stats.totals)}|${this._metric || ""}` : "nos",
       d.timelapses && d.timelapses.archive ? `${d.timelapses.archive.count}${d.timelapses.archive.busy}${d.timelapses.archive.cleanup}${d.timelapses.archive.last_backup}` : "noa",
       this._up ? `up${!!this._up.error}${this._up.done}` : "",
+      JSON.stringify(this._prefs()),
     ].join("~");
 
-    if (key === this._renderKey && this._root()) { this._patch(); return; }
+    if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
     this._renderKey = key;
 
     const card = this._root(true);
@@ -59,6 +60,16 @@ export const RenderMixin = (Base) => class extends Base {
     }
     this._wire();
     this._patch();
+    this._accent();
+  }
+
+  /** Thin frame in the theme colour of the state (printing, paused, error, done); option state_accent. */
+  _accent() {
+    const card = this._root();
+    if (!card || !this._d) return;
+    const tone = this._cfg.state_accent === false ? "" : this._statusTone();
+    if (["active", "warn", "error", "ok"].includes(tone)) card.dataset.accent = tone;
+    else delete card.dataset.accent;
   }
 
   /** ha-card as a fixed container; the dialog sits next to it and survives rebuilds. */
@@ -126,6 +137,14 @@ export const RenderMixin = (Base) => class extends Base {
     r.querySelectorAll("[data-tab]").forEach((b) =>
       b.addEventListener("click", () => this._selectTab(b.dataset.tab)));
 
+    r.querySelectorAll("[data-headinfo]").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); this._openHeadInfo(Number(b.dataset.headinfo)); }));
+    r.querySelectorAll("[data-prefset]").forEach((b) =>
+      b.addEventListener("click", () => this._call("set_preference",
+        { preference: b.dataset.prefset, value: b.getAttribute("aria-pressed") !== "true" })));
+    r.querySelectorAll("[data-prefsen]").forEach((b) =>
+      b.addEventListener("click", () => this._call("set_preference",
+        { preference: "entangle_sensitivity", value: b.dataset.prefsen })));
     r.querySelectorAll("[data-spoolpick]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._openSpoolPicker(Number(b.dataset.spoolpick)); }));
 

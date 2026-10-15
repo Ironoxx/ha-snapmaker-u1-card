@@ -48,6 +48,8 @@ from .const import (
     SERVICE_QUEUE_REMOVE,
     SERVICE_QUEUE_START,
     SERVICE_REFRESH,
+    SERVICE_SET_FILAMENT,
+    SERVICE_SET_PREFERENCE,
     SERVICE_SET_SPOOL,
     SERVICE_START_PRINT,
     THUMB_URL,
@@ -56,6 +58,7 @@ from .const import (
 from .coordinator import U1Coordinator
 from .i18n import tr
 from .layer_view import LayerView, TempsView
+from .parsing import ENTANGLE_SENSITIVITIES, PRINTER_PREFERENCES
 from .stats import MAINTENANCE_ITEMS
 from .upload import UploadView
 from .video import TimelapseView
@@ -63,7 +66,7 @@ from .voice import async_setup_voice
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type U1ConfigEntry = ConfigEntry[U1Coordinator]
@@ -106,6 +109,26 @@ SET_SPOOL_SCHEMA = vol.Schema(
         vol.Required("slot"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
         # Spoolman spool ID; 0 = deliberately no spool. Omitted = automatic.
         vol.Optional("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(ATTR_ENTRY): cv.string,
+    }
+)
+SET_PREFERENCE_SCHEMA = vol.Schema(
+    {
+        vol.Required("preference"): vol.In([*PRINTER_PREFERENCES, "entangle_sensitivity"]),
+        # bool for switches, low | medium | high for entangle_sensitivity
+        vol.Required("value"): vol.Any(cv.boolean, vol.In(ENTANGLE_SENSITIVITIES)),
+        vol.Optional(ATTR_ENTRY): cv.string,
+    }
+)
+SET_FILAMENT_SCHEMA = vol.Schema(
+    {
+        vol.Required("slot"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+        vol.Required("type"): cv.string,
+        vol.Optional("sub_type", default=""): cv.string,
+        vol.Optional("vendor", default="Generic"): cv.string,
+        vol.Optional("color"): cv.string,
+        # Overwrite an official Snapmaker spool (RFID data)
+        vol.Optional("force", default=False): cv.boolean,
         vol.Optional(ATTR_ENTRY): cv.string,
     }
 )
@@ -173,6 +196,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await coordinator.async_set_spool(call.data["slot"] - 1, spool_id, automatic)
 
     hass.services.async_register(DOMAIN, SERVICE_SET_SPOOL, set_spool, schema=SET_SPOOL_SCHEMA)
+
+    async def set_preference(call: ServiceCall) -> None:
+        coordinator = _coordinator(hass, call.data.get(ATTR_ENTRY))
+        key, value = call.data["preference"], call.data["value"]
+        if key == "entangle_sensitivity":
+            if value not in ENTANGLE_SENSITIVITIES:
+                raise ServiceValidationError("value: low | medium | high")
+        elif not isinstance(value, bool):
+            raise ServiceValidationError("value: true | false")
+        await coordinator.async_set_preference(key, value)
+
+    async def set_filament(call: ServiceCall) -> None:
+        await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_set_filament(
+            call.data["slot"] - 1, call.data["type"], call.data.get("sub_type"),
+            call.data.get("vendor"), call.data.get("color"), call.data["force"],
+        )
+
+    hass.services.async_register(DOMAIN, SERVICE_SET_PREFERENCE, set_preference, schema=SET_PREFERENCE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_SET_FILAMENT, set_filament, schema=SET_FILAMENT_SCHEMA)
 
     async def power_on(call: ServiceCall) -> None:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_power_on(wait=call.data["wait"])

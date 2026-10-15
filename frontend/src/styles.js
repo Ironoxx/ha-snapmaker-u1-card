@@ -55,7 +55,7 @@ export const STYLES = `
     overflow: hidden;
   }
 
-  /* ── Typografie nach Typescale ───────────────────────────────────────── */
+  /* ── Typography (Material type scale) ────────────────────────────────── */
   .t-title {
     font-size: var(--md-sys-typescale-title-large-size, 22px);
     font-weight: var(--md-sys-typescale-title-large-weight, 400);
@@ -74,7 +74,7 @@ export const STYLES = `
   }
   .mono { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
 
-  /* ── Kopfzeile ───────────────────────────────────────────────────────── */
+  /* ── Header ──────────────────────────────────────────────────────────── */
   .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .head-icon {
     width: 48px; height: 48px; flex-shrink: 0;
@@ -112,7 +112,7 @@ export const STYLES = `
   .chip.live .dot { animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
 
-  /* ── Raster ──────────────────────────────────────────────────────────── */
+  /* ── Grid ────────────────────────────────────────────────────────────── */
   .layout { display: grid; gap: var(--u1-gap); grid-template-columns: 1fr; }
   @container u1 (min-width: 660px) {
     .layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -139,7 +139,7 @@ export const STYLES = `
     letter-spacing: var(--md-sys-typescale-title-small-tracking, .1px);
   }
 
-  /* ── Bildflaeche ─────────────────────────────────────────────────────── */
+  /* ── Image area ──────────────────────────────────────────────────────── */
   .stage { padding: 0; overflow: hidden; gap: 0; }
   .frame {
     position: relative; width: 100%;
@@ -164,7 +164,7 @@ export const STYLES = `
     font-size: var(--md-sys-typescale-label-small-size, 11px); font-weight: 700;
   }
   .frame[data-stale="1"] .badge-stale { display: inline-flex; }
-  /* Zoom: Seite scrollt senkrecht, zwei Finger gehen an die Karte */
+  /* Zoom: the page scrolls vertically, two fingers go to the card */
   .stage .frame { touch-action: pan-y; }
   .stage .frame.zoomed { touch-action: none; cursor: grab; user-select: none; }
   .stage .frame.zoomed:active { cursor: grabbing; }
@@ -220,7 +220,7 @@ export const STYLES = `
     border-top: 1px solid var(--u1-outline);
   }
 
-  /* ── Bedienelemente ──────────────────────────────────────────────────── */
+  /* ── Controls ────────────────────────────────────────────────────────── */
   button {
     font-family: inherit; cursor: pointer; border: none;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -246,7 +246,7 @@ export const STYLES = `
   button.grow { flex: 1 1 130px; }
   button.icon { width: 40px; padding: 0; }
 
-  /* ── Wertegitter ─────────────────────────────────────────────────────── */
+  /* ── Value grid ──────────────────────────────────────────────────────── */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; }
   .stat {
     background: var(--u1-panel-high); border-radius: var(--u1-r-m);
@@ -265,7 +265,7 @@ export const STYLES = `
   }
   .stat .v.sm { font-size: 14px; }
 
-  /* ── Fortschritt ─────────────────────────────────────────────────────── */
+  /* ── Progress ────────────────────────────────────────────────────────── */
   .job-file {
     font-family: var(--u1-mono); font-size: 13px; color: var(--u1-on-variant);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -291,7 +291,7 @@ export const STYLES = `
   .track[data-tone="warn"]  > i { background: var(--u1-warn); }
   .track[data-tone="error"] > i { background: var(--u1-error); }
 
-  /* ── Druckkoepfe ─────────────────────────────────────────────────────── */
+  /* ── Print heads ─────────────────────────────────────────────────────── */
   .heads { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .head-card {
     background: var(--u1-panel-high); border-radius: var(--u1-r-m);
@@ -315,7 +315,7 @@ export const STYLES = `
   }
   .pill[data-empty="1"] { background: color-mix(in srgb, var(--u1-error) 18%, transparent); color: var(--u1-error); }
 
-  /* ── Schieberegler ───────────────────────────────────────────────────── */
+  /* ── Sliders ─────────────────────────────────────────────────────────── */
   .ctl { display: flex; flex-direction: column; gap: 6px; }
   .ctl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .ctl-val { font-family: var(--u1-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -352,7 +352,7 @@ export const STYLES = `
   }
   .preset:hover { background: var(--u1-panel-highest); color: var(--u1-on); }
 
-  /* ── Liste ───────────────────────────────────────────────────────────── */
+  /* ── List ────────────────────────────────────────────────────────────── */
   .rows { display: flex; flex-direction: column; }
   .row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -377,7 +377,7 @@ export const STYLES = `
 
   .switches { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  /* ── Dateien ─────────────────────────────────────────────────────────── */
+  /* ── Files ───────────────────────────────────────────────────────────── */
   .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 10px; }
   button.file {
     height: auto; padding: 8px; flex-direction: column; gap: 6px;
@@ -426,11 +426,11 @@ export const STYLES = `
   .colors { display: flex; flex-wrap: wrap; gap: 6px; }
   .colors span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--u1-on-variant); }
   .colors i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--u1-outline); display: inline-block; }
-  /* Vorschaubild dunkel (schwarzes Teil) -> heller Grund, sehr hell -> dunkler Grund */
+  /* Dark thumbnail (black part) -> light background, very light -> dark background */
   .file-thumb, .dlg-thumb, .hist-thumb, .thumb { transition: background var(--u1-motion); }
   [data-tone-bg="dark"] { background: #d4d6dc !important; }
   [data-tone-bg="light"] { background: #24262c !important; }
-  /* Dateiname im Kamera-Vorschaubild: Schrift passend zum umgefaerbten Grund */
+  /* File name in the camera thumbnail: text colour matching the recoloured background */
   .thumb[data-tone-bg="dark"] span { color: #2b2d33; }
   .thumb[data-tone-bg="light"] span { color: #d4d6dc; }
   .file-thumb ha-icon { --mdc-icon-size: 32px; color: var(--u1-on-variant); }
@@ -482,7 +482,7 @@ export const STYLES = `
     background: var(--u1-primary-container); color: var(--u1-on-primary-container);
   }
 
-  /* ── Druckdialog ─────────────────────────────────────────────────────── */
+  /* ── Print dialog ────────────────────────────────────────────────────── */
   dialog.u1dlg {
     border: none; padding: 0; margin: auto;
     width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 32px);
@@ -561,12 +561,36 @@ export const STYLES = `
     font-size: 13px; line-height: 1.4;
   }
   .dlg-error ha-icon { --mdc-icon-size: 18px; flex-shrink: 0; }
+  /* State accent: thin frame in the theme colour of the state (option state_accent) */
+  ha-card[data-accent] { transition: box-shadow var(--u1-motion); }
+  ha-card[data-accent="active"] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-primary) 70%, transparent), 0 0 22px -4px color-mix(in srgb, var(--u1-primary) 45%, transparent); }
+  ha-card[data-accent="warn"]   { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-warn) 75%, transparent), 0 0 22px -4px color-mix(in srgb, var(--u1-warn) 45%, transparent); }
+  ha-card[data-accent="error"]  { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-error) 80%, transparent), 0 0 22px -4px color-mix(in srgb, var(--u1-error) 50%, transparent); }
+  ha-card[data-accent="ok"]     { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-ok) 70%, transparent); }
+
+  /* Head details */
+  .head-info { margin-left: auto; width: 32px; height: 32px; background: transparent; color: var(--u1-on-variant); box-shadow: none; }
+  .head-info ha-icon { --mdc-icon-size: 20px; }
+  .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }
+  .head-sub { margin: 12px 0 4px; }
+  .head-rfid .row { padding: 4px 0; }
+  .head-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .head-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--u1-on-variant); }
+  .head-form label.check { flex-direction: row; align-items: center; grid-column: 1 / -1; color: var(--u1-on); font-size: 13px; }
+  .head-form select, .head-form input:not([type="checkbox"]) {
+    font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high);
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; min-height: 38px; box-sizing: border-box; }
+  .head-form input[type="color"] { padding: 2px; cursor: pointer; }
+  .head-form .dlg-error, .head-form .dlg-actions { grid-column: 1 / -1; }
+  .chip-row { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .rows .chip[data-prefset], .rows .chip[data-prefsen] { height: 28px; padding: 0 12px; font-size: 12px; cursor: pointer; box-shadow: none; }
+  .rows .chip[aria-pressed="true"], .rows .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
   .dlg-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
   .dlg-actions button { min-width: 120px; }
   ha-icon.spin { animation: u1spin 1s linear infinite; }
   ha-icon.spin-slow { animation: pulse 2s ease-in-out infinite; }
 
-  /* ── Netzschalter ────────────────────────────────────────────────────── */
+  /* ── Power switch ────────────────────────────────────────────────────── */
   button.chip.pwr { cursor: pointer; box-shadow: none; padding: 0 12px; min-width: 0; height: 32px; }
   button.chip.pwr[disabled] { opacity: 1; }
   button.chip.pwr span { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
@@ -580,7 +604,7 @@ export const STYLES = `
   .dlg-note[data-tone="error"] { background: var(--u1-error-container); color: var(--u1-on-error-container); }
   .dlg-note ha-icon { --mdc-icon-size: 18px; flex-shrink: 0; }
 
-  /* ── Historie ────────────────────────────────────────────────────────── */
+  /* ── History ─────────────────────────────────────────────────────────── */
   .hist-list { display: flex; flex-direction: column; }
   .hist {
     display: flex; align-items: center; gap: 12px; padding: 8px 0;
@@ -601,7 +625,7 @@ export const STYLES = `
   .last-thumb { width: 64px; height: 64px; }
   .hist-cost { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
 
-  /* ── Zeitraffer ──────────────────────────────────────────────────────── */
+  /* ── Timelapses ──────────────────────────────────────────────────────── */
   .tl-thumb { position: relative; aspect-ratio: 16 / 9; height: auto; }
   .tl-thumb img { object-fit: cover; }
   .tl-play {
@@ -627,7 +651,7 @@ export const STYLES = `
     .map-slots { justify-content: flex-start; }
   }
 
-  /* ── Meldungen ───────────────────────────────────────────────────────── */
+  /* ── Messages ────────────────────────────────────────────────────────── */
   .alerts { display: flex; flex-direction: column; gap: 6px; }
   .alert {
     display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--u1-r-m);
@@ -638,7 +662,7 @@ export const STYLES = `
   .alert[data-level="error"] ha-icon { color: inherit; }
   .alert-text { font-weight: 500; }
 
-  /* ── Warteschlange, Upload, Nachdruck ────────────────────────────────── */
+  /* ── Queue, upload, reprint ──────────────────────────────────────────── */
   button.ghost { background: transparent; box-shadow: none; }
   button.ghost:hover { background: color-mix(in srgb, var(--u1-on) 8%, transparent); }
   .q-list { display: flex; flex-direction: column; gap: 6px; }
@@ -667,7 +691,7 @@ export const STYLES = `
   }
   label.pause-in input:focus { outline: 2px solid var(--u1-primary); outline-offset: -1px; }
 
-  /* ── Diagramm ────────────────────────────────────────────────────────── */
+  /* ── Chart ───────────────────────────────────────────────────────────── */
   .chart-chips { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .chart-chips .chip { height: 28px; padding: 0 10px; font-size: 12px; cursor: pointer; box-shadow: none; }
   .chart-chips .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
@@ -684,7 +708,7 @@ export const STYLES = `
   .legend i:first-child { margin-left: 0; }
   .top-file { margin-right: 10px; }
 
-  /* ── Wartung, Archiv ─────────────────────────────────────────────────── */
+  /* ── Maintenance, archive ────────────────────────────────────────────── */
   .m-list { display: flex; flex-direction: column; gap: 10px; }
   .m-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
   .m-name { flex: 1; min-width: 0; font-size: 14px; }
@@ -693,9 +717,9 @@ export const STYLES = `
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
-  /* ── Schichtansicht ──────────────────────────────────────────────────── */
+  /* ── Layer view ──────────────────────────────────────────────────────── */
   .lv { position: relative; aspect-ratio: 1 / 1; max-height: 360px; width: 100%; border-radius: var(--u1-r-m);
-    /* Mittelgrau: schwarze und weisse Filamente bleiben in hellem und dunklem Design sichtbar */
+    /* Mid grey: black and white filaments stay visible in light and dark themes */
     background: color-mix(in srgb, #7a7d86 70%, var(--u1-panel)); overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .lv svg { width: 100%; height: 100%; display: block; }
   .lv-bed { fill: none; stroke: rgba(255,255,255,.18); stroke-width: .3; stroke-dasharray: 2 2; }
@@ -710,7 +734,7 @@ export const STYLES = `
   .lv-legend i.lv-todo { background: var(--u1-on); opacity: .2; border-radius: 2px; margin-left: 6px; }
   .lv-hint { margin-left: auto; }
 
-  /* ── Mini-Karte ───────────────────────────────────────────────────────── */
+  /* ── Mini card ────────────────────────────────────────────────────────── */
   .mini-wrap { display: flex; flex-direction: column; gap: 12px; cursor: pointer; }
   .mini-top { display: flex; align-items: center; gap: 12px; }
   .mini-top .head-icon { width: 40px; height: 40px; }
@@ -735,7 +759,7 @@ export const STYLES = `
   .mini-q { display: flex; gap: 6px; align-items: center; }
   .mini-g[data-low="1"] { color: var(--u1-warn); }
 
-  /* ── Reiter ────────────────────────────────────────────────────────── */
+  /* ── Tabs ──────────────────────────────────────────────────────────── */
   .tabs {
     display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
     border-bottom: 1px solid var(--u1-outline); margin: 0 calc(-1 * var(--u1-pad)); padding: 0 var(--u1-pad);
@@ -757,7 +781,7 @@ export const STYLES = `
   @container u1 (max-width: 520px) { .tab span { display: none; } .tab { padding: 10px 14px; } .tab[aria-selected="true"] span { display: inline; } }
   .layout[hidden] { display: none; }
 
-  /* ── Overlay auf dem Kamerabild ──────────────────────────────────────── */
+  /* ── Overlay on the camera image ─────────────────────────────────────── */
   .hud {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     padding: 28px 12px 0;

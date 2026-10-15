@@ -48,7 +48,7 @@ def normalize_color(value: Any) -> str | None:
     return f"#{match.group(1).upper()}" if match else None
 
 
-def parse_slots(ptc: dict[str, Any] | None) -> list[dict[str, Any]]:
+def parse_slots(ptc: dict[str, Any] | None, detect: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """print_task_config -> a list of four slots."""
     ptc = ptc or {}
     slots = []
@@ -72,19 +72,117 @@ def parse_slots(ptc: dict[str, Any] | None) -> list[dict[str, Any]]:
                 "color": color or (colors[0] if colors else None),
                 "colors": colors[: max(1, int(nums))],
                 "official": bool(_at(ptc.get("filament_official"), i, False)),
+                "rfid": parse_rfid(_at((detect or {}).get("info"), i)),
             }
         )
     return slots
 
 
-def parse_preferences(ptc: dict[str, Any] | None) -> dict[str, bool]:
-    """Print options currently set on the printer (bed leveling, flow, timelapse)."""
+# Firmware preferences that can be changed at any time, also during a print
+# (u1-klipper print_task_config.py, cmd_SET_PRINT_PREFERENCES): our key ->
+# (print_task_config key, SET_PRINT_PREFERENCES parameter).
+PRINTER_PREFERENCES: dict[str, tuple[str, str]] = {
+    "auto_replenish": ("auto_replenish_filament", "AUTO_REPLENISH_FILAMENT"),
+    "replenish_ignore_color": ("replenish_ignore_color", "REPLENISH_IGNORE_COLOR"),
+    "entangle_detect": ("filament_entangle_detect", "FILAMENT_ENTANGLE_DETECT"),
+    "end_led_off": ("end_led_turn_off", "END_LED_TURN_OFF"),
+}
+ENTANGLE_SENSITIVITIES = ("low", "medium", "high")
+
+
+def parse_preferences(ptc: dict[str, Any] | None) -> dict[str, Any]:
+    """Print options and firmware preferences currently set on the printer.
+
+    Firmware preferences the printer does not report stay None (older firmware).
+    """
     ptc = ptc or {}
-    return {
+    prefs: dict[str, Any] = {
         "bed_leveling": bool(ptc.get("auto_bed_leveling", False)),
         "flow_calibration": bool(ptc.get("flow_calibrate", False)),
         "timelapse": bool(ptc.get("time_lapse_camera", False)),
     }
+    for key, (field, _param) in PRINTER_PREFERENCES.items():
+        prefs[key] = bool(ptc[field]) if field in ptc else None
+    sen = ptc.get("filament_entangle_sen")
+    prefs["entangle_sensitivity"] = sen if sen in ENTANGLE_SENSITIVITIES else None
+    return prefs
+
+
+def preference_gcode(key: str, value: Any) -> str:
+    """G-code for one firmware preference (validated)."""
+    if key == "entangle_sensitivity":
+        if value not in ENTANGLE_SENSITIVITIES:
+            raise ValueError(f"Invalid sensitivity: {value}")
+        return f"SET_PRINT_PREFERENCES FILAMENT_ENTANGLE_SEN={value}"
+    if key not in PRINTER_PREFERENCES:
+        raise ValueError(f"Unknown preference: {key}")
+    return f"SET_PRINT_PREFERENCES {PRINTER_PREFERENCES[key][1]}={1 if value else 0}"
+
+
+def _tag_number(value: Any) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value > 0 else None
+
+
+def parse_rfid(info: Any) -> dict[str, Any] | None:
+    """Data read from a spool's RFID tag (filament_detect.info), None without a tag.
+
+    Field layout: u1-klipper filament_protocol.FILAMENT_INFO_STRUCT. The tag
+    stores the diameter in 1/100 mm, weight in g, length in m, drying time in h.
+    """
+    if not isinstance(info, dict):
+        return None
+    vendor = _clean(info.get("VENDOR"))
+    if not vendor and not info.get("OFFICIAL"):
+        return None
+    diameter = _tag_number(info.get("DIAMETER"))
+    date = str(info.get("MF_DATE") or "")
+    nozzle = (_tag_number(info.get("HOTEND_MIN_TEMP")), _tag_number(info.get("HOTEND_MAX_TEMP")))
+    return {
+        "official": bool(info.get("OFFICIAL")),
+        "vendor": vendor,
+        "manufacturer": _clean(info.get("MANUFACTURER")),
+        "sku": _tag_number(info.get("SKU")),
+        "weight_g": _tag_number(info.get("WEIGHT")),
+        "length_m": _tag_number(info.get("LENGTH")),
+        "diameter_mm": round(diameter / 100, 2) if diameter else None,
+        "nozzle_temp": [t for t in nozzle] if any(nozzle) else None,
+        "first_layer_temp": _tag_number(info.get("FIRST_LAYER_TEMP")),
+        "other_layer_temp": _tag_number(info.get("OTHER_LAYER_TEMP")),
+        "bed_temp": _tag_number(info.get("BED_TEMP")),
+        "drying_temp": _tag_number(info.get("DRYING_TEMP")),
+        "drying_time_h": _tag_number(info.get("DRYING_TIME")),
+        "manufactured": f"{date[:4]}-{date[4:6]}-{date[6:8]}" if len(date) == 8 and date != "19700101" else None,
+    }
+
+
+def filament_gcode(slot: int, ftype: str, sub_type: str, vendor: str,
+                   color: str | None = None, force: bool = False) -> str:
+    """SET_PRINT_FILAMENT_CONFIG for a slot (0-3), e.g. a spool without RFID tag.
+
+    The firmware wants vendor, type and sub type together and refuses a slot
+    with an official spool unless FORCE=1 (print_task_config.py). Klipper cuts
+    a command at '#', '*' or ';', and quotes may not appear inside a value.
+    """
+    def quote(text: str) -> str:
+        value = str(text or "").strip() or "NONE"
+        if any(c in value for c in "\"'#*;\n\r"):
+            raise ValueError(f"Invalid character in {value!r}")
+        return f'"{value}"'
+
+    if not 0 <= slot < PHYSICAL_SLOTS:
+        raise ValueError(f"Invalid slot {slot + 1}")
+    if not str(ftype or "").strip():
+        raise ValueError("Filament type missing")
+    parts = ["SET_PRINT_FILAMENT_CONFIG", f"CONFIG_EXTRUDER={slot}", f"VENDOR={quote(vendor)}",
+             f"FILAMENT_TYPE={quote(str(ftype).upper())}", f"FILAMENT_SUBTYPE={quote(sub_type)}"]
+    if color:
+        rgb = normalize_color(color)
+        if rgb is None:
+            raise ValueError(f"Invalid colour {color!r}")
+        parts.append(f"FILAMENT_COLOR_RGBA={rgb.lstrip('#')}FF")
+    if force:
+        parts.append("FORCE=1")
+    return " ".join(parts)
 
 
 def _split(value: Any) -> list[str]:

@@ -9,6 +9,7 @@
 A Home Assistant integration with a built-in dashboard card for the **Snapmaker U1**:
 
 - **Loaded filaments live**: material, sub type, vendor, colour (including multi-colour) and RFID detection per print head, straight from the printer firmware.
+- **Head details**: tap the settings icon on a head to see the spool's RFID data (weight, diameter, nozzle/bed/drying temperatures, manufacturing date, SKU) and to **set material, vendor and colour by hand** for spools without a tag.
 - **Print start with filament mapping like Snapmaker Orca**: tap a file and the card suggests which filament of the file goes to which head, based on material and colour. Change the mapping, choose bed leveling, flow calibration and timelapse, then start.
 - **File list with thumbnails**, print time, weight and colour dots per file.
 - **Camera** as a live stream through Home Assistant, with automatic fallback to still images. Zoom with two fingers, double tap, Ctrl+mouse wheel or the zoom buttons, fullscreen; when zoomed, pan with one finger or the left mouse button. During a print, progress, layer, remaining time, finish time and active head are shown on the image.
@@ -38,13 +39,18 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **Charts** of the last 12 months (prints, hours, filament, cost) from Moonraker's print history, so retroactive too.
 - **Maintenance planner** in print hours (build plate, nozzles, rails, belts, filter) plus the firmware's tool changer counter.
 - **Spool management with [Spoolman](https://github.com/Donkie/Spoolman)** (optional): spool per head with remaining weight, automatic assignment, a warning when a spool is not enough for the print, and usage booked per head after the print.
+- **Printer settings** as switches and in the card: auto-replenish filament, replenish ignoring colour, filament entangle detection (with sensitivity), light off after print. Stored on the printer, changeable during a print.
+- **Keep the camera awake** (optional): for stock firmware whose camera image stops after a while.
+- **State accent**: a thin frame in the colour of the state (printing, paused, error, done).
 - Temperatures, targets, fans, light, axes, diagnostics and statistics.
 
 Everything runs through the Home Assistant connection. It works the same locally, over VPN and through Nabu Casa, without CORS or mixed-content problems.
 
+**The design follows your Home Assistant theme**: colours, light/dark mode, fonts and corner radii come from the active theme (Material You tokens where available), so the card blends into any dashboard.
+
 > Language: card and integration follow the Home Assistant language (German, otherwise English).
 
-> **Beta testers wanted!** The integration is in daily use but still young and has only been tried on a few printers. If you own a Snapmaker U1 and want to help: install it and report experiences, bugs or ideas as an [issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues), ideally with the diagnostics file (*Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*), the firmware version and, for print problems, the G-code file. Testing and use are voluntary, without warranty and at your own risk.
+> **Testers wanted!** The integration is in daily use but still young and has only been tried on a few printers. If you own a Snapmaker U1 and want to help: install it and report experiences, bugs or ideas as an [issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues), ideally with the diagnostics file (*Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*), the firmware version and, for print problems, the G-code file. Testing and use are voluntary, without warranty and at your own risk.
 
 > Not an official Snapmaker product and not affiliated with Snapmaker. "Snapmaker" and "U1" are trademarks of their owners and are only used to name the supported printer. Use at your own risk.
 
@@ -135,7 +141,7 @@ During setup a second step with all settings follows right after the address. La
 | Section | Fields |
 |---|---|
 | Power and consumption | power switch, power sensor (W), energy meter (kWh), energy price entity (EUR/kWh or ct/kWh), shut down before switching off, auto-on at print start, auto-off after the print (temperature, delay), switch off after idle (hours) |
-| Notifications | `notify.mobile_app_…` services, events (finished, cancelled, error, paused, message during print, first layer done, almost done, not enough filament), "almost done" lead time in minutes (10), "part removable" below bed temperature (35 °C), camera for image and result photo |
+| Notifications & camera | `notify.mobile_app_…` services, events (finished, cancelled, error, paused, message during print, first layer done, almost done, not enough filament), "almost done" lead time in minutes (10), "part removable" below bed temperature (35 °C), camera for image and result photo, **keep camera awake** (off / during a print / always) |
 | Filament prices | price per kg for PLA, PETG, ABS, ASA, TPU, PA and others. `PLA-CF` uses the PLA price |
 | Timelapse backup | on/off, how many of the newest stay on the printer (0 = never delete) |
 | Maintenance | interval per item in print hours (0 = hide) |
@@ -150,6 +156,7 @@ All options are optional; except head names and presets they can also be set in 
 |---|---|---|
 | `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked |
 | `camera_overlay` | `true` | progress on the camera image (`hide_overlay: true` also turns it off) |
+| `state_accent` | `true` | frame in the theme colour of the state (printing, paused, error, done) |
 | `camera_height` | automatic | height of the camera image in px. Empty = image aspect ratio, at most `camera_max_height` |
 | `camera_max_height` | `520` | upper limit for the automatic height in px |
 | `camera_mode` | `stream` | `stream` = live image, `still` = still images (saves WiFi) |
@@ -202,6 +209,8 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 | `sensor.…_time_remaining` / `sensor.…_finish_time` | remaining time and expected end of the running print |
 | `binary_sensor.…_live_connection` | live subscription to Moonraker up or not |
 | `update.…_firmware` | installed and latest firmware |
+| `switch.…_auto_replenish_filament`, `…_replenish_ignoring_colour`, `…_filament_entangle_detection`, `…_light_off_after_print` | firmware preferences (stored on the printer) |
+| `select.…_entangle_detection_sensitivity` | `low`, `medium`, `high` |
 
 The event `snapmaker_u1_card_print_finished` fires at every print end with `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost`, for your own automations.
 
@@ -239,6 +248,26 @@ Moonraker's own queue (`[job_queue]`) is not loaded on the U1 and knows nothing 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 
 `item: plate | nozzle | rails | belts | filter` resets the maintenance counter. `backup_timelapses` backs up right away and then cleans up the printer. `backup_config` backs up the printer configuration right away and responds with `status` (`saved`, `unchanged`, `empty`), the number of files, skipped files and the existing snapshots.
+
+### `snapmaker_u1_card.set_filament` / `set_preference`
+
+```yaml
+action: snapmaker_u1_card.set_filament   # spool without RFID tag; not during a print
+data:
+  slot: 2            # head 1–4
+  type: PETG
+  sub_type: HF       # optional
+  vendor: Generic    # optional
+  color: "#1B5E20"   # optional
+  force: false       # true = also overwrite an official Snapmaker spool
+
+action: snapmaker_u1_card.set_preference
+data:
+  preference: auto_replenish   # replenish_ignore_color | entangle_detect | end_led_off | entangle_sensitivity
+  value: true                  # entangle_sensitivity: low | medium | high
+```
+
+Both go to the firmware (`SET_PRINT_FILAMENT_CONFIG`, `SET_PRINT_PREFERENCES` from u1-klipper `print_task_config.py`). The printer stores the values itself, the display shows them too.
 
 ### `snapmaker_u1_card.refresh`
 
@@ -397,7 +426,8 @@ The U1 firmware reports errors in a structured way (module, head, code). The int
 - **Backed-up timelapses do not play**: the card gets the address through Home Assistant's media source. Without `default_config`, `media_source:` must be in `configuration.yaml`.
 - **Dashboard or card picker loads forever**: Home Assistant speaks HTTP/1.1, also over HTTPS and Nabu Casa (the TLS connection is only passed through). The browser then opens at most 6 simultaneous connections to Home Assistant, for all tabs and windows together. Every hanging request occupies one; once all are taken, the frontend cannot load code anymore. The card avoids this: live stream only while visible and never in edit mode; timelapse previews come from Home Assistant itself (no request to the printer); videos are not requested while the printer is off. Set other live cameras (e.g. Frigate) to `camera_view: auto`. To check: F12 → Network; requests with status "pending"/"stalled" show what hangs.
 - **"Print start refused"**: the text comes from the printer, e.g. "Printer is busy" or a nozzle conflict.
-- **No icon under Devices & services**: Home Assistant shows custom icons from 2026.3. The HACS list has no icon because HACS only loads icons from the `home-assistant/brands` repository.
+- **No icon under Devices & services**: Home Assistant shows custom icons from 2026.3. In the HACS list every custom integration currently shows a grey placeholder; this is a known HACS issue ([hacs/integration#5171](https://github.com/hacs/integration/issues/5171)) and will resolve itself with a HACS update.
+- **Camera image stops after a while (stock firmware)**: turn on *Keep camera awake* in the integration options. It sends `camera.start_monitor` every 10 s, the same call the Snapmaker app makes.
 - **No notification**: check the service name (Developer tools → Actions → `notify.mobile_app_…`). Only the Companion app attaches the camera image.
 - **Diagnostics**: *Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*. Contains options, state of the live subscription, raw printer status, errors and queue; address, API key, Spoolman address and notification targets are redacted.
 - **Voice command not recognised**: test the sentence under *Developer tools → Assist*. If a different intent shows up, it collides with a built-in sentence; add your own sentences to the file (delete the first line, see above).

@@ -228,3 +228,59 @@ self_test:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+set_preference:
+  fields:
+    preference:
+      required: true
+      example: auto_replenish
+      selector:
+        select:
+          options:
+            - auto_replenish
+            - replenish_ignore_color
+            - entangle_detect
+            - end_led_off
+            - entangle_sensitivity
+    value:
+      required: true
+      example: true
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+set_filament:
+  fields:
+    slot:
+      required: true
+      example: 2
+      selector:
+        number:
+          min: 1
+          max: 4
+          mode: box
+    type:
+      required: true
+      example: PLA
+      selector:
+        text:
+    sub_type:
+      example: Silk
+      selector:
+        text:
+    vendor:
+      example: Generic
+      selector:
+        text:
+    color:
+      example: "#FF0000"
+      selector:
+        text:
+    force:
+      selector:
+        boolean:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card

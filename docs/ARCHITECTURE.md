@@ -45,7 +45,7 @@ Nabu Casa.
 | `voice.py` | Assist intents and the sentence files they need |
 | `resource.py` | Registers the card as a dashboard resource (second loading path) |
 | `i18n.py` | German/English choice for messages created in Python |
-| `sensor.py`, `binary_sensor.py`, `switch.py`, `update.py` | Entities |
+| `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `update.py` | Entities |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
 | `config_flow.py`, `diagnostics.py` | Setup/options UI and the diagnostics download |
 
@@ -63,6 +63,7 @@ poll loop. Feature logic lives in mixins that only add methods:
 | `MediaMixin` (`media.py`) | Timelapses, file list, file management, thumbnails |
 | `NotifyMixin` (`notify.py`) | Print end, notifications with actions, result photo |
 | `PowerMixin` (`power.py`) | Power switch, clean shutdown, auto-off, idle-off |
+| `PrinterSettingsMixin` (`printer.py`) | Firmware preferences, setting a slot's filament, camera wake-up |
 
 `data.py` holds the `U1Data` snapshot handed to entities; `helpers.py` holds
 constants and pure helper functions.
@@ -120,3 +121,8 @@ Facts taken from Snapmaker's published firmware sources (u1-klipper, u1-moonrake
 - Klipper semantics apply to G-code parsing: `G90` does not reset relative
   extrusion set by `M83` (Orca writes both).
 - `virtual_sdcard.file_position` runs about 1-2 s ahead of the motion.
+- Firmware preferences are changed with `SET_PRINT_PREFERENCES`, a slot's filament with
+  `SET_PRINT_FILAMENT_CONFIG` (refused for official spools without `FORCE=1`); both in
+  u1-klipper `print_task_config.py`. RFID tag data comes from `filament_detect.info`.
+- The stock camera stops after a while; `camera.start_monitor` (WebSocket, proxied by
+  u1-moonraker `repeater.py` to the closed camera service) keeps it running.

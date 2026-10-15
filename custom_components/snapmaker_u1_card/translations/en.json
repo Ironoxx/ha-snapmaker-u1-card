@@ -51,20 +51,22 @@
             }
           },
           "notify": {
-            "name": "Notifications",
+            "name": "Notifications & camera",
             "description": "Phone push: print end, errors, pause, messages, first layer, almost done, low filament.",
             "data": {
               "notify_targets": "Notify services",
               "notify_events": "Notify on",
               "camera": "Camera for the picture",
               "almost_done_minutes": "“Almost done” warning",
-              "bed_cool_temp": "“Part ready” at"
+              "bed_cool_temp": "“Part ready” at",
+              "camera_wake": "Keep camera awake"
             },
             "data_description": {
               "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
               "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
               "almost_done_minutes": "Minutes before the estimated end.",
-              "bed_cool_temp": "Bed temperature after a finished print at which the message is sent."
+              "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
+              "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it."
             }
           },
           "filament": {
@@ -176,20 +178,22 @@
             }
           },
           "notify": {
-            "name": "Notifications",
+            "name": "Notifications & camera",
             "description": "Phone push: print end, errors, pause, messages, first layer, almost done, low filament.",
             "data": {
               "notify_targets": "Notify services",
               "notify_events": "Notify on",
               "camera": "Camera for the picture",
               "almost_done_minutes": "“Almost done” warning",
-              "bed_cool_temp": "“Part ready” at"
+              "bed_cool_temp": "“Part ready” at",
+              "camera_wake": "Keep camera awake"
             },
             "data_description": {
               "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
               "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
               "almost_done_minutes": "Minutes before the estimated end.",
-              "bed_cool_temp": "Bed temperature after a finished print at which the message is sent."
+              "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
+              "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it."
             }
           },
           "filament": {
@@ -320,6 +324,18 @@
     "switch": {
       "power": {
         "name": "Power"
+      },
+      "auto_replenish": {
+        "name": "Auto-replenish filament"
+      },
+      "replenish_ignore_color": {
+        "name": "Replenish ignoring colour"
+      },
+      "entangle_detect": {
+        "name": "Filament entangle detection"
+      },
+      "end_led_off": {
+        "name": "Light off after print"
       }
     },
     "binary_sensor": {
@@ -330,6 +346,16 @@
     "update": {
       "firmware": {
         "name": "Firmware"
+      }
+    },
+    "select": {
+      "entangle_sensitivity": {
+        "name": "Entangle detection sensitivity",
+        "state": {
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
       }
     }
   },
@@ -615,6 +641,58 @@
           "description": "de or en; empty = Home Assistant language."
         }
       }
+    },
+    "set_preference": {
+      "name": "Set printer preference",
+      "description": "Changes a firmware preference of the printer. Possible during a print.",
+      "fields": {
+        "preference": {
+          "name": "Preference",
+          "description": "auto_replenish, replenish_ignore_color, entangle_detect, end_led_off or entangle_sensitivity."
+        },
+        "value": {
+          "name": "Value",
+          "description": "true/false; for entangle_sensitivity low, medium or high."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "set_filament": {
+      "name": "Set filament",
+      "description": "Sets material, sub type, vendor and colour of a toolhead by hand, e.g. for spools without RFID. Not during a print.",
+      "fields": {
+        "slot": {
+          "name": "Toolhead",
+          "description": "1-4"
+        },
+        "type": {
+          "name": "Material",
+          "description": "e.g. PLA, PETG, TPU."
+        },
+        "sub_type": {
+          "name": "Sub type",
+          "description": "e.g. Silk, Matte, HF. Empty = none."
+        },
+        "vendor": {
+          "name": "Vendor",
+          "description": "e.g. Generic."
+        },
+        "color": {
+          "name": "Colour",
+          "description": "Hex colour, e.g. #FF0000."
+        },
+        "force": {
+          "name": "Overwrite official spool",
+          "description": "Also overwrite the RFID data of an official Snapmaker spool."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {
@@ -639,6 +717,13 @@
         "rails": "Lubricate linear rails",
         "belts": "Check belt tension",
         "filter": "Replace air filter"
+      }
+    },
+    "camera_wake": {
+      "options": {
+        "off": "Off",
+        "printing": "During a print",
+        "always": "Always while the printer is on"
       }
     }
   }

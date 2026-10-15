@@ -12,6 +12,7 @@ export const SECTION_LABELS = {
 export const FORM_LABELS = {
   printer_name: "Name", printer_brand: "Marke", layout: "Darstellung", hide: "Bereiche ausblenden",
   camera: "Kamera-Entität", camera_mode: "Kameramodus", hide_overlay: "Fortschritt auf dem Kamerabild ausblenden",
+  state_accent: "Rahmen in der Farbe des Zustands",
   camera_fit: "Skalierung", camera_height: "Bildhöhe (px)", refresh: "Bildrate (s)",
   stale_after: "„Bild veraltet“ ab (s)", printer_image: "Statisches Bild statt Kamera",
   prefix: "Moonraker-Präfix", network_tracker: "WLAN-Tracker", files_limit: "Angezeigte Dateien",
@@ -28,6 +29,7 @@ export const FORM_HELPERS = {
   camera_mode: "Leer = Livestream",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
   camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
+  state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
   navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog",
 };
 
@@ -59,6 +61,7 @@ export function configForm(mini) {
     { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"]]) } } },
     { name: "hide", selector: { select: { multiple: true, mode: "list",
       options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
+    { name: "state_accent", selector: { boolean: {} } },
     { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
       ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },
     {

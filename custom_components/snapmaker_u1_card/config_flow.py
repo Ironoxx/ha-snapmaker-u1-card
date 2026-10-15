@@ -24,6 +24,7 @@ from .api import (
     SpoolmanClient,
 )
 from .const import (
+    CAMERA_WAKE_MODES,
     CONF_ALMOST_DONE,
     CONF_API_KEY,
     CONF_ARCHIVE,
@@ -35,6 +36,7 @@ from .const import (
     CONF_BACKUP,
     CONF_BED_COOL,
     CONF_CAMERA,
+    CONF_CAMERA_WAKE,
     CONF_ENERGY_PRICE,
     CONF_ENERGY_SENSOR,
     CONF_FILAMENT_PRICES,
@@ -58,6 +60,7 @@ from .const import (
     DEFAULT_AUTO_ON,
     DEFAULT_BACKUP,
     DEFAULT_BED_COOL,
+    DEFAULT_CAMERA_WAKE,
     DEFAULT_FILES_LIMIT,
     DEFAULT_IDLE_OFF,
     DEFAULT_NOTIFY_EVENTS,
@@ -135,6 +138,12 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             vol.Required(CONF_BED_COOL, default=DEFAULT_BED_COOL): _box(20, 60, 1, "°C"),
             vol.Optional(CONF_CAMERA): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="camera")
+            ),
+            vol.Required(CONF_CAMERA_WAKE, default=DEFAULT_CAMERA_WAKE): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(CAMERA_WAKE_MODES), translation_key="camera_wake",
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
             ),
         }
     )
@@ -220,7 +229,7 @@ def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
         SEC_POWER: (CONF_POWER_SWITCH, CONF_POWER_SENSOR, CONF_ENERGY_SENSOR, CONF_ENERGY_PRICE,
                     CONF_SHUTDOWN_HOST, CONF_AUTO_ON, CONF_AUTO_OFF, CONF_AUTO_OFF_TEMP,
                     CONF_AUTO_OFF_DELAY, CONF_IDLE_OFF),
-        SEC_NOTIFY: (CONF_NOTIFY, CONF_NOTIFY_EVENTS, CONF_ALMOST_DONE, CONF_BED_COOL, CONF_CAMERA),
+        SEC_NOTIFY: (CONF_NOTIFY, CONF_NOTIFY_EVENTS, CONF_ALMOST_DONE, CONF_BED_COOL, CONF_CAMERA, CONF_CAMERA_WAKE),
         SEC_FILAMENT: tuple(PRICE_FIELDS),
         SEC_SPOOLMAN: (CONF_SPOOLMAN_URL, CONF_SPOOLMAN_DEDUCT, CONF_SPOOLMAN_LOW),
         SEC_FILES: (CONF_FILES_LIMIT, CONF_BACKUP),

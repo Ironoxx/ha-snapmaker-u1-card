@@ -197,6 +197,7 @@ export const OverviewMixin = (Base) => class extends Base {
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
+            <button type="button" class="icon head-info" data-headinfo="${h.idx}" title="${tr("Details und Filament bearbeiten")}" aria-label="${tr("Details und Filament bearbeiten")}"><ha-icon icon="mdi:tune-vertical"></ha-icon></button>
           </div>
           ${this._spoolLine(h)}
           <span class="pill" data-empty="${h.loaded ? 0 : 1}" data-su1="pill:${h.idx}">

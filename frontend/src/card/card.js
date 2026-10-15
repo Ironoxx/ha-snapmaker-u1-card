@@ -28,6 +28,7 @@
  *   printer_name / printer_brand
  *   layout            tabs | scroll                          (tabs)
  *   camera_overlay    progress on the camera image           (true)
+ *   state_accent      frame in the state colour              (true)
  *   hide / show       sections: stage layer job queue files toolheads climate
  *                     motion system maintenance charts stats history timelapse
  *   controls_lock     off | 30 | 60 | 120 | 300 | manual     (60)
@@ -57,12 +58,14 @@ import { RenderMixin } from "./render.js";
 import { ZoomMixin } from "./zoom.js";
 import { PrintDialogMixin } from "./dialog.js";
 import { CameraMixin } from "./camera.js";
+import { HeadDialogMixin } from "./head-dialog.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
+  HeadDialogMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -138,6 +141,7 @@ export class SnapmakerU1Card extends U1Base {
       compact: false,
       layout: "tabs",
       camera_overlay: true,
+      state_accent: true,
       show: SECTIONS,
       nozzle_presets: [0, 210, 240, 260],
       bed_presets: [0, 55, 65, 85],

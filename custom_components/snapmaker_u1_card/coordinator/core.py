@@ -71,6 +71,7 @@ from .media import MediaMixin
 from .monitor import PrintMonitorMixin
 from .notify import NotifyMixin
 from .power import PowerMixin
+from .printer import PrinterSettingsMixin
 from .spools import SpoolMixin
 from .upkeep import UpkeepMixin
 
@@ -79,7 +80,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, MediaMixin, NotifyMixin, PowerMixin, DataUpdateCoordinator[U1Data]):
+class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, MediaMixin, NotifyMixin, PowerMixin, PrinterSettingsMixin, DataUpdateCoordinator[U1Data]):
     """Central data hub: polls the printer, tracks prints, power, files and media.
 
     Polling runs every 10 s (30 s while the live subscription is up), the file
@@ -162,6 +163,8 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         self._idle_since: float | None = None  # idle shutdown
         self._unsub_action = None
         self._backup_task: asyncio.Task | None = None
+        self._unsub_wake: Any = None  # camera wake-up timer (printer.py)
+        self._wake_busy = False
 
     # ── Options ─────────────────────────────────────────────────────────────
     @property
@@ -219,6 +222,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         self._timelapses = list(self._print_state.get("timelapses") or [])
         self._prev = self._offline()
         self._unsub_action = self.hass.bus.async_listen(EVENT_NOTIFY_ACTION, self._on_notify_action)
+        self._start_camera_wake()
 
     async def async_shutdown(self) -> None:
         """Cancel background tasks, stop the live subscription and save state."""
@@ -236,6 +240,9 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         if self._backup_task and not self._backup_task.done():
             self._backup_task.cancel()
         await self.live.stop()
+        if self._unsub_wake:
+            self._unsub_wake()
+            self._unsub_wake = None
         if self._unsub_action:
             self._unsub_action()
             self._unsub_action = None
@@ -344,6 +351,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
             status = await self.client.query_objects(
                 "print_task_config",
                 fields={
+                    "filament_detect": ("info",),
                     "print_stats": ("state", "filename", "print_duration", "filament_used", "exception", "info"),
                     "exception_manager": ("exceptions",),
                     "toolhead": ("extruder",),
@@ -410,7 +418,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         data = U1Data(
             online=True,
             targets=targets,
-            slots=parse_slots(ptc),
+            slots=parse_slots(ptc, status.get("filament_detect")),
             preferences=parse_preferences(ptc),
             map_table=list(ptc.get("extruder_map_table") or [])[:8],
             tool_changes=tool_changes,

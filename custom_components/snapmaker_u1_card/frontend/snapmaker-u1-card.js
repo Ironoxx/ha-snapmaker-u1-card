@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.1.0";
+  var CARD_VERSION = "1.2.0";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -67,6 +67,41 @@
     return out;
   }
   var EN = {
+    "Details und Filament bearbeiten": "Details and edit filament",
+    "Druckkopf": "Print head",
+    "Hersteller": "Vendor",
+    "Spulengewicht": "Spool weight",
+    "Länge": "Length",
+    "Durchmesser": "Diameter",
+    "Düsentemperatur": "Nozzle temperature",
+    "Erste Schicht / weitere": "First layer / other layers",
+    "Trocknen": "Drying",
+    "Hergestellt": "Manufactured",
+    "unbekannt": "unknown",
+    "Daten der Spule (RFID)": "Spool data (RFID)",
+    "Filament von Hand setzen": "Set filament by hand",
+    "Während eines Drucks nicht möglich.": "Not possible during a print.",
+    "Der Drucker ist ausgeschaltet.": "The printer is switched off.",
+    "Unterart": "Sub type",
+    "z. B. Silk, Matte, HF": "e.g. Silk, Matte, HF",
+    "Farbe": "Colour",
+    "RFID-Daten der Snapmaker-Spule überschreiben": "Overwrite the RFID data of the Snapmaker spool",
+    "Übernehmen": "Apply",
+    "Filament für {head} gesetzt": "Filament set for {head}",
+    "Filament automatisch nachfüllen": "Auto-replenish filament",
+    "Läuft eine Spule leer, druckt ein Kopf mit gleichem Material weiter.": "When a spool runs out, a head with the same material continues.",
+    "Nachfüllen ohne Farbprüfung": "Replenish ignoring colour",
+    "Auch ein Kopf mit anderer Farbe darf übernehmen.": "A head with a different colour may also take over.",
+    "Verhedderungs-Erkennung": "Filament entangle detection",
+    "Pausiert, wenn sich das Filament verhakt.": "Pauses when the filament gets tangled.",
+    "Licht aus nach dem Druck": "Light off after print",
+    "Empfindlichkeit": "Sensitivity",
+    "Niedrig": "Low",
+    "Mittel": "Medium",
+    "Hoch": "High",
+    "Druckereinstellungen": "Printer settings",
+    "Rahmen in der Farbe des Zustands": "Frame in the state colour",
+    "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs": "Printing, paused, error, done – in the colours of your Home Assistant theme",
     "Snapmaker U1: Kamera, geladene Filamente, Druckstart mit Filamentzuordnung, Diagnose.": "Snapmaker U1: camera, loaded filaments, print start with filament mapping, diagnostics.",
     "Kompakt: Status, Fortschritt, Filamente und Netzschalter – ohne Kamera.": "Compact: status, progress, filaments and power switch, no camera.",
     "{h} übernimmt": "{h} takes over",
@@ -419,6 +454,7 @@
     camera: "Kamera-Entität",
     camera_mode: "Kameramodus",
     hide_overlay: "Fortschritt auf dem Kamerabild ausblenden",
+    state_accent: "Rahmen in der Farbe des Zustands",
     camera_fit: "Skalierung",
     camera_height: "Bildhöhe (px)",
     refresh: "Bildrate (s)",
@@ -441,6 +477,7 @@
     camera_mode: "Leer = Livestream",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
     camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
+    state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
     navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog"
   };
   function configForm(mini) {
@@ -481,6 +518,7 @@
         mode: "list",
         options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) }))
       } } },
+      { name: "state_accent", selector: { boolean: {} } },
       { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
         ["off", "Aus"],
         ["30", "30 s"],
@@ -1243,6 +1281,7 @@
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
+            <button type="button" class="icon head-info" data-headinfo="${h.idx}" title="${tr("Details und Filament bearbeiten")}" aria-label="${tr("Details und Filament bearbeiten")}"><ha-icon icon="mdi:tune-vertical"></ha-icon></button>
           </div>
           ${this._spoolLine(h)}
           <span class="pill" data-empty="${h.loaded ? 0 : 1}" data-su1="pill:${h.idx}">
@@ -1808,6 +1847,7 @@
               <span class="k">${tr("Systemlast (Ø 1 min)")}</span><span class="v" data-su1="sys">${this._loadText()}</span></div>
             ${d.stepX !== null ? this._row(tr("Stepper X"), `<span data-su1="stepx">${num(d.stepX, 1, "°C")}</span>`) : ""}
             ${d.stepY !== null ? this._row(tr("Stepper Y"), `<span data-su1="stepy">${num(d.stepY, 1, "°C")}</span>`) : ""}
+            ${this._printerSettingsHtml()}
             <div class="selftest-wrap">
               <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
               <div class="selftest" data-selftest>${this._selfTestHtml()}</div>
@@ -1816,6 +1856,24 @@
           </div>
         </details>
       </section>`;
+    }
+    /** Firmware preferences (stored on the printer); only those the firmware reports. */
+    _printerSettingsHtml() {
+      const p = this._prefs();
+      const items = [
+        ["auto_replenish", tr("Filament automatisch nachfüllen"), tr("Läuft eine Spule leer, druckt ein Kopf mit gleichem Material weiter.")],
+        ["replenish_ignore_color", tr("Nachfüllen ohne Farbprüfung"), tr("Auch ein Kopf mit anderer Farbe darf übernehmen.")],
+        ["entangle_detect", tr("Verhedderungs-Erkennung"), tr("Pausiert, wenn sich das Filament verhakt.")],
+        ["end_led_off", tr("Licht aus nach dem Druck"), ""]
+      ].filter(([k]) => p[k] !== null && p[k] !== void 0);
+      if (!items.length) return "";
+      const off = !this._d.online;
+      const rows = items.map(([k, label, hint]) => `<div class="row"${hint ? ` title="${esc(hint)}"` : ""}>
+        <span class="k">${label}</span>
+        <span class="v"><button type="button" class="chip" data-prefset="${k}" aria-pressed="${p[k] ? "true" : "false"}"${off ? " disabled" : ""}>${p[k] ? tr("An") : tr("Aus")}</button></span></div>`).join("");
+      const sen = p.entangle_detect && p.entangle_sensitivity ? `<div class="row"><span class="k">${tr("Empfindlichkeit")}</span>
+        <span class="v chip-row">${[["low", tr("Niedrig")], ["medium", tr("Mittel")], ["high", tr("Hoch")]].map(([v, l]) => `<button type="button" class="chip ${p.entangle_sensitivity === v ? "sel" : ""}" data-prefsen="${v}"${off ? " disabled" : ""}>${l}</button>`).join("")}</span></div>` : "";
+      return `<div class="t-label" style="padding-top:8px">${tr("Druckereinstellungen")}</div>${rows}${sen}`;
     }
     _fwText() {
       const st = this._st(this._ents && this._ents.firmware);
@@ -2607,7 +2665,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     overflow: hidden;
   }
 
-  /* ── Typografie nach Typescale ───────────────────────────────────────── */
+  /* ── Typography (Material type scale) ────────────────────────────────── */
   .t-title {
     font-size: var(--md-sys-typescale-title-large-size, 22px);
     font-weight: var(--md-sys-typescale-title-large-weight, 400);
@@ -2626,7 +2684,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .mono { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
 
-  /* ── Kopfzeile ───────────────────────────────────────────────────────── */
+  /* ── Header ──────────────────────────────────────────────────────────── */
   .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .head-icon {
     width: 48px; height: 48px; flex-shrink: 0;
@@ -2664,7 +2722,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .chip.live .dot { animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
 
-  /* ── Raster ──────────────────────────────────────────────────────────── */
+  /* ── Grid ────────────────────────────────────────────────────────────── */
   .layout { display: grid; gap: var(--u1-gap); grid-template-columns: 1fr; }
   @container u1 (min-width: 660px) {
     .layout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2691,7 +2749,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     letter-spacing: var(--md-sys-typescale-title-small-tracking, .1px);
   }
 
-  /* ── Bildflaeche ─────────────────────────────────────────────────────── */
+  /* ── Image area ──────────────────────────────────────────────────────── */
   .stage { padding: 0; overflow: hidden; gap: 0; }
   .frame {
     position: relative; width: 100%;
@@ -2716,7 +2774,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     font-size: var(--md-sys-typescale-label-small-size, 11px); font-weight: 700;
   }
   .frame[data-stale="1"] .badge-stale { display: inline-flex; }
-  /* Zoom: Seite scrollt senkrecht, zwei Finger gehen an die Karte */
+  /* Zoom: the page scrolls vertically, two fingers go to the card */
   .stage .frame { touch-action: pan-y; }
   .stage .frame.zoomed { touch-action: none; cursor: grab; user-select: none; }
   .stage .frame.zoomed:active { cursor: grabbing; }
@@ -2772,7 +2830,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     border-top: 1px solid var(--u1-outline);
   }
 
-  /* ── Bedienelemente ──────────────────────────────────────────────────── */
+  /* ── Controls ────────────────────────────────────────────────────────── */
   button {
     font-family: inherit; cursor: pointer; border: none;
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -2798,7 +2856,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   button.grow { flex: 1 1 130px; }
   button.icon { width: 40px; padding: 0; }
 
-  /* ── Wertegitter ─────────────────────────────────────────────────────── */
+  /* ── Value grid ──────────────────────────────────────────────────────── */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; }
   .stat {
     background: var(--u1-panel-high); border-radius: var(--u1-r-m);
@@ -2817,7 +2875,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .stat .v.sm { font-size: 14px; }
 
-  /* ── Fortschritt ─────────────────────────────────────────────────────── */
+  /* ── Progress ────────────────────────────────────────────────────────── */
   .job-file {
     font-family: var(--u1-mono); font-size: 13px; color: var(--u1-on-variant);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -2843,7 +2901,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .track[data-tone="warn"]  > i { background: var(--u1-warn); }
   .track[data-tone="error"] > i { background: var(--u1-error); }
 
-  /* ── Druckkoepfe ─────────────────────────────────────────────────────── */
+  /* ── Print heads ─────────────────────────────────────────────────────── */
   .heads { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .head-card {
     background: var(--u1-panel-high); border-radius: var(--u1-r-m);
@@ -2867,7 +2925,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .pill[data-empty="1"] { background: color-mix(in srgb, var(--u1-error) 18%, transparent); color: var(--u1-error); }
 
-  /* ── Schieberegler ───────────────────────────────────────────────────── */
+  /* ── Sliders ─────────────────────────────────────────────────────────── */
   .ctl { display: flex; flex-direction: column; gap: 6px; }
   .ctl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .ctl-val { font-family: var(--u1-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -2904,7 +2962,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .preset:hover { background: var(--u1-panel-highest); color: var(--u1-on); }
 
-  /* ── Liste ───────────────────────────────────────────────────────────── */
+  /* ── List ────────────────────────────────────────────────────────────── */
   .rows { display: flex; flex-direction: column; }
   .row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -2929,7 +2987,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
   .switches { display: flex; gap: 6px; flex-wrap: wrap; }
 
-  /* ── Dateien ─────────────────────────────────────────────────────────── */
+  /* ── Files ───────────────────────────────────────────────────────────── */
   .files { display: grid; grid-template-columns: repeat(auto-fill, minmax(116px, 1fr)); gap: 10px; }
   button.file {
     height: auto; padding: 8px; flex-direction: column; gap: 6px;
@@ -2978,11 +3036,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .colors { display: flex; flex-wrap: wrap; gap: 6px; }
   .colors span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--u1-on-variant); }
   .colors i { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--u1-outline); display: inline-block; }
-  /* Vorschaubild dunkel (schwarzes Teil) -> heller Grund, sehr hell -> dunkler Grund */
+  /* Dark thumbnail (black part) -> light background, very light -> dark background */
   .file-thumb, .dlg-thumb, .hist-thumb, .thumb { transition: background var(--u1-motion); }
   [data-tone-bg="dark"] { background: #d4d6dc !important; }
   [data-tone-bg="light"] { background: #24262c !important; }
-  /* Dateiname im Kamera-Vorschaubild: Schrift passend zum umgefaerbten Grund */
+  /* File name in the camera thumbnail: text colour matching the recoloured background */
   .thumb[data-tone-bg="dark"] span { color: #2b2d33; }
   .thumb[data-tone-bg="light"] span { color: #d4d6dc; }
   .file-thumb ha-icon { --mdc-icon-size: 32px; color: var(--u1-on-variant); }
@@ -3034,7 +3092,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     background: var(--u1-primary-container); color: var(--u1-on-primary-container);
   }
 
-  /* ── Druckdialog ─────────────────────────────────────────────────────── */
+  /* ── Print dialog ────────────────────────────────────────────────────── */
   dialog.u1dlg {
     border: none; padding: 0; margin: auto;
     width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 32px);
@@ -3113,12 +3171,36 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     font-size: 13px; line-height: 1.4;
   }
   .dlg-error ha-icon { --mdc-icon-size: 18px; flex-shrink: 0; }
+  /* State accent: thin frame in the theme colour of the state (option state_accent) */
+  ha-card[data-accent] { transition: box-shadow var(--u1-motion); }
+  ha-card[data-accent="active"] { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-primary) 70%, transparent), 0 0 22px -4px color-mix(in srgb, var(--u1-primary) 45%, transparent); }
+  ha-card[data-accent="warn"]   { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-warn) 75%, transparent), 0 0 22px -4px color-mix(in srgb, var(--u1-warn) 45%, transparent); }
+  ha-card[data-accent="error"]  { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-error) 80%, transparent), 0 0 22px -4px color-mix(in srgb, var(--u1-error) 50%, transparent); }
+  ha-card[data-accent="ok"]     { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-ok) 70%, transparent); }
+
+  /* Head details */
+  .head-info { margin-left: auto; width: 32px; height: 32px; background: transparent; color: var(--u1-on-variant); box-shadow: none; }
+  .head-info ha-icon { --mdc-icon-size: 20px; }
+  .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }
+  .head-sub { margin: 12px 0 4px; }
+  .head-rfid .row { padding: 4px 0; }
+  .head-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .head-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--u1-on-variant); }
+  .head-form label.check { flex-direction: row; align-items: center; grid-column: 1 / -1; color: var(--u1-on); font-size: 13px; }
+  .head-form select, .head-form input:not([type="checkbox"]) {
+    font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high);
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; min-height: 38px; box-sizing: border-box; }
+  .head-form input[type="color"] { padding: 2px; cursor: pointer; }
+  .head-form .dlg-error, .head-form .dlg-actions { grid-column: 1 / -1; }
+  .chip-row { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .rows .chip[data-prefset], .rows .chip[data-prefsen] { height: 28px; padding: 0 12px; font-size: 12px; cursor: pointer; box-shadow: none; }
+  .rows .chip[aria-pressed="true"], .rows .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
   .dlg-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
   .dlg-actions button { min-width: 120px; }
   ha-icon.spin { animation: u1spin 1s linear infinite; }
   ha-icon.spin-slow { animation: pulse 2s ease-in-out infinite; }
 
-  /* ── Netzschalter ────────────────────────────────────────────────────── */
+  /* ── Power switch ────────────────────────────────────────────────────── */
   button.chip.pwr { cursor: pointer; box-shadow: none; padding: 0 12px; min-width: 0; height: 32px; }
   button.chip.pwr[disabled] { opacity: 1; }
   button.chip.pwr span { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
@@ -3132,7 +3214,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .dlg-note[data-tone="error"] { background: var(--u1-error-container); color: var(--u1-on-error-container); }
   .dlg-note ha-icon { --mdc-icon-size: 18px; flex-shrink: 0; }
 
-  /* ── Historie ────────────────────────────────────────────────────────── */
+  /* ── History ─────────────────────────────────────────────────────────── */
   .hist-list { display: flex; flex-direction: column; }
   .hist {
     display: flex; align-items: center; gap: 12px; padding: 8px 0;
@@ -3153,7 +3235,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .last-thumb { width: 64px; height: 64px; }
   .hist-cost { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
 
-  /* ── Zeitraffer ──────────────────────────────────────────────────────── */
+  /* ── Timelapses ──────────────────────────────────────────────────────── */
   .tl-thumb { position: relative; aspect-ratio: 16 / 9; height: auto; }
   .tl-thumb img { object-fit: cover; }
   .tl-play {
@@ -3179,7 +3261,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     .map-slots { justify-content: flex-start; }
   }
 
-  /* ── Meldungen ───────────────────────────────────────────────────────── */
+  /* ── Messages ────────────────────────────────────────────────────────── */
   .alerts { display: flex; flex-direction: column; gap: 6px; }
   .alert {
     display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: var(--u1-r-m);
@@ -3190,7 +3272,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .alert[data-level="error"] ha-icon { color: inherit; }
   .alert-text { font-weight: 500; }
 
-  /* ── Warteschlange, Upload, Nachdruck ────────────────────────────────── */
+  /* ── Queue, upload, reprint ──────────────────────────────────────────── */
   button.ghost { background: transparent; box-shadow: none; }
   button.ghost:hover { background: color-mix(in srgb, var(--u1-on) 8%, transparent); }
   .q-list { display: flex; flex-direction: column; gap: 6px; }
@@ -3219,7 +3301,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   label.pause-in input:focus { outline: 2px solid var(--u1-primary); outline-offset: -1px; }
 
-  /* ── Diagramm ────────────────────────────────────────────────────────── */
+  /* ── Chart ───────────────────────────────────────────────────────────── */
   .chart-chips { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
   .chart-chips .chip { height: 28px; padding: 0 10px; font-size: 12px; cursor: pointer; box-shadow: none; }
   .chart-chips .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
@@ -3236,7 +3318,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .legend i:first-child { margin-left: 0; }
   .top-file { margin-right: 10px; }
 
-  /* ── Wartung, Archiv ─────────────────────────────────────────────────── */
+  /* ── Maintenance, archive ────────────────────────────────────────────── */
   .m-list { display: flex; flex-direction: column; gap: 10px; }
   .m-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
   .m-name { flex: 1; min-width: 0; font-size: 14px; }
@@ -3245,9 +3327,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
-  /* ── Schichtansicht ──────────────────────────────────────────────────── */
+  /* ── Layer view ──────────────────────────────────────────────────────── */
   .lv { position: relative; aspect-ratio: 1 / 1; max-height: 360px; width: 100%; border-radius: var(--u1-r-m);
-    /* Mittelgrau: schwarze und weisse Filamente bleiben in hellem und dunklem Design sichtbar */
+    /* Mid grey: black and white filaments stay visible in light and dark themes */
     background: color-mix(in srgb, #7a7d86 70%, var(--u1-panel)); overflow: hidden; display: flex; align-items: center; justify-content: center; }
   .lv svg { width: 100%; height: 100%; display: block; }
   .lv-bed { fill: none; stroke: rgba(255,255,255,.18); stroke-width: .3; stroke-dasharray: 2 2; }
@@ -3262,7 +3344,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .lv-legend i.lv-todo { background: var(--u1-on); opacity: .2; border-radius: 2px; margin-left: 6px; }
   .lv-hint { margin-left: auto; }
 
-  /* ── Mini-Karte ───────────────────────────────────────────────────────── */
+  /* ── Mini card ────────────────────────────────────────────────────────── */
   .mini-wrap { display: flex; flex-direction: column; gap: 12px; cursor: pointer; }
   .mini-top { display: flex; align-items: center; gap: 12px; }
   .mini-top .head-icon { width: 40px; height: 40px; }
@@ -3287,7 +3369,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .mini-q { display: flex; gap: 6px; align-items: center; }
   .mini-g[data-low="1"] { color: var(--u1-warn); }
 
-  /* ── Reiter ────────────────────────────────────────────────────────── */
+  /* ── Tabs ──────────────────────────────────────────────────────────── */
   .tabs {
     display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
     border-bottom: 1px solid var(--u1-outline); margin: 0 calc(-1 * var(--u1-pad)); padding: 0 var(--u1-pad);
@@ -3309,7 +3391,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   @container u1 (max-width: 520px) { .tab span { display: none; } .tab { padding: 10px 14px; } .tab[aria-selected="true"] span { display: inline; } }
   .layout[hidden] { display: none; }
 
-  /* ── Overlay auf dem Kamerabild ──────────────────────────────────────── */
+  /* ── Overlay on the camera image ─────────────────────────────────────── */
   .hud {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
     padding: 28px 12px 0;
@@ -3377,10 +3459,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.maint ? d.maint.map((m) => `${m.key}${m.due}${m.progress}${m.done_at || ""}`).join(",") : "nom",
         d.stats ? `${d.stats.hours}|${JSON.stringify(d.stats.totals)}|${this._metric || ""}` : "nos",
         d.timelapses && d.timelapses.archive ? `${d.timelapses.archive.count}${d.timelapses.archive.busy}${d.timelapses.archive.cleanup}${d.timelapses.archive.last_backup}` : "noa",
-        this._up ? `up${!!this._up.error}${this._up.done}` : ""
+        this._up ? `up${!!this._up.error}${this._up.done}` : "",
+        JSON.stringify(this._prefs())
       ].join("~");
       if (key === this._renderKey && this._root()) {
         this._patch();
+        this._accent();
         return;
       }
       this._renderKey = key;
@@ -3402,6 +3486,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       this._wire();
       this._patch();
+      this._accent();
+    }
+    /** Thin frame in the theme colour of the state (printing, paused, error, done); option state_accent. */
+    _accent() {
+      const card = this._root();
+      if (!card || !this._d) return;
+      const tone = this._cfg.state_accent === false ? "" : this._statusTone();
+      if (["active", "warn", "error", "ok"].includes(tone)) card.dataset.accent = tone;
+      else delete card.dataset.accent;
     }
     /** ha-card as a fixed container; the dialog sits next to it and survives rebuilds. */
     _root(create = false) {
@@ -3467,6 +3560,18 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (confirm(tr("„{x}“ als erledigt markieren?", { x: label }))) this._call("maintenance_done", { item: b.dataset.maint });
       }));
       r.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => this._selectTab(b.dataset.tab)));
+      r.querySelectorAll("[data-headinfo]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._openHeadInfo(Number(b.dataset.headinfo));
+      }));
+      r.querySelectorAll("[data-prefset]").forEach((b) => b.addEventListener("click", () => this._call(
+        "set_preference",
+        { preference: b.dataset.prefset, value: b.getAttribute("aria-pressed") !== "true" }
+      )));
+      r.querySelectorAll("[data-prefsen]").forEach((b) => b.addEventListener("click", () => this._call(
+        "set_preference",
+        { preference: "entangle_sensitivity", value: b.dataset.prefsen }
+      )));
       r.querySelectorAll("[data-spoolpick]").forEach((b) => b.addEventListener("click", (e) => {
         e.stopPropagation();
         this._openSpoolPicker(Number(b.dataset.spoolpick));
@@ -4290,6 +4395,113 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/card/head-dialog.js
+  var MATERIALS = ["PLA", "PLA-CF", "PETG", "PETG-CF", "ABS", "ASA", "TPU", "PA", "PA-CF", "PC", "PVA", "HIPS"];
+  var HeadDialogMixin = (Base) => class extends Base {
+    /** RFID tag data as label/value rows; only fields the tag actually contains. */
+    _rfidRows(r) {
+      if (!r) return [];
+      const range = (a, b) => a && b ? `${a}–${b} °C` : a || b ? `${a || b} °C` : null;
+      return [
+        [tr("Hersteller"), r.manufacturer || r.vendor],
+        [tr("Spulengewicht"), r.weight_g ? num(r.weight_g, 0, "g") : null],
+        [tr("Länge"), r.length_m ? num(r.length_m, 0, "m") : null],
+        [tr("Durchmesser"), r.diameter_mm ? num(r.diameter_mm, 2, "mm") : null],
+        [tr("Düsentemperatur"), r.nozzle_temp ? range(r.nozzle_temp[0], r.nozzle_temp[1]) : null],
+        [tr("Erste Schicht / weitere"), r.first_layer_temp || r.other_layer_temp ? `${r.first_layer_temp || "—"} / ${r.other_layer_temp || "—"} °C` : null],
+        [tr("Bett"), r.bed_temp ? num(r.bed_temp, 0, "°C") : null],
+        [tr("Trocknen"), r.drying_temp ? `${num(r.drying_temp, 0, "°C")}${r.drying_time_h ? ` · ${num(r.drying_time_h, 0, "h")}` : ""}` : null],
+        [tr("Hergestellt"), r.manufactured ? (/* @__PURE__ */ new Date(`${r.manufactured}T12:00:00`)).toLocaleDateString(LOCALE) : null],
+        ["SKU", r.sku ? String(r.sku) : null]
+      ].filter(([, v]) => v);
+    }
+    _openHeadInfo(idx) {
+      const slot = (this._slots() || [])[idx];
+      if (!slot) return;
+      const head = this._d && this._d.heads[idx] || { name: `E${idx}` };
+      const host = this.shadowRoot.getElementById("u1dlg");
+      let dlg = host.querySelector("dialog.u1head");
+      if (!dlg) {
+        host.insertAdjacentHTML("beforeend", `<dialog class="u1dlg u1head" aria-label="${tr("Druckkopf")}"></dialog>`);
+        dlg = host.querySelector("dialog.u1head");
+        dlg.addEventListener("click", (e) => {
+          if (e.target === dlg) dlg.close();
+        });
+      }
+      const printing = !!(this._d && (this._d.printing || this._d.paused));
+      const offline = !!(this._d && !this._d.online);
+      const rfid = this._rfidRows(slot.rfid);
+      const sm = this._spoolman();
+      const spool = sm ? this._slotSpool(idx) : null;
+      const types = [.../* @__PURE__ */ new Set([...slot.type ? [slot.type.toUpperCase()] : [], ...MATERIALS])];
+      const color = /^#[0-9a-f]{6}$/i.test(slot.color || "") ? slot.color : "#ffffff";
+      const locked = printing || offline;
+      dlg.innerHTML = `<div class="dlg">
+        <header class="dlg-head">
+          <span class="spool-dot big" style="--fil:${esc(slot.loaded ? slot.color || "var(--u1-outline)" : "transparent")}"></span>
+          <div style="min-width:0">
+            <div class="dlg-title">${esc(head.name)}${slot.official ? ` <span class="rfid">RFID</span>` : ""}</div>
+            <div class="t-label">${esc(slot.loaded ? [slot.type, slot.sub_type, slot.vendor].filter(Boolean).join(" · ") || tr("unbekannt") : tr("Leer"))}</div>
+          </div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        ${rfid.length ? `<div class="t-label head-sub">${tr("Daten der Spule (RFID)")}</div>
+          <div class="rows head-rfid">${rfid.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>` : ""}
+        ${sm ? `<div class="t-label head-sub">Spoolman</div>
+          <button type="button" class="spool-line" data-headspool>
+            <ha-icon icon="mdi:database-outline"></ha-icon>
+            <span>${spool ? esc(`#${spool.id} ${spool.name}${spool.remaining_weight != null ? ` · ${Math.round(spool.remaining_weight)} g` : ""}`) : tr("Spule wählen")}</span>
+          </button>` : ""}
+        <div class="t-label head-sub">${tr("Filament von Hand setzen")}</div>
+        ${locked ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${printing ? tr("Während eines Drucks nicht möglich.") : tr("Der Drucker ist ausgeschaltet.")}</div>` : ""}
+        <form class="head-form" data-headform>
+          <label>${tr("Material")}<select name="type" ${locked ? "disabled" : ""}>
+            ${types.map((t) => `<option value="${esc(t)}" ${t === (slot.type || "").toUpperCase() ? "selected" : ""}>${esc(t)}</option>`).join("")}
+          </select></label>
+          <label>${tr("Unterart")}<input name="sub_type" value="${esc(slot.sub_type || "")}" placeholder="${tr("z. B. Silk, Matte, HF")}" ${locked ? "disabled" : ""} /></label>
+          <label>${tr("Hersteller")}<input name="vendor" value="${esc(slot.vendor || "Generic")}" ${locked ? "disabled" : ""} /></label>
+          <label>${tr("Farbe")}<input name="color" type="color" value="${esc(color)}" ${locked ? "disabled" : ""} /></label>
+          ${slot.official ? `<label class="check"><input type="checkbox" name="force" ${locked ? "disabled" : ""} />${tr("RFID-Daten der Snapmaker-Spule überschreiben")}</label>` : ""}
+          <div class="dlg-error" hidden></div>
+          <div class="dlg-actions"><button type="submit" class="filled" ${locked ? "disabled" : ""}><ha-icon icon="mdi:content-save-outline"></ha-icon>${tr("Übernehmen")}</button></div>
+        </form>
+      </div>`;
+      dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+      const sp = dlg.querySelector("[data-headspool]");
+      if (sp) sp.addEventListener("click", () => {
+        dlg.close();
+        this._openSpoolPicker(idx);
+      });
+      const form = dlg.querySelector("[data-headform]");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const f = new FormData(form);
+        const data = {
+          slot: idx + 1,
+          type: f.get("type"),
+          sub_type: (f.get("sub_type") || "").trim(),
+          vendor: (f.get("vendor") || "").trim() || "Generic",
+          color: f.get("color"),
+          ...f.get("force") ? { force: true } : {},
+          ...this._entryData()
+        };
+        const err = form.querySelector(".dlg-error");
+        try {
+          await this._hass.callService(DOMAIN, "set_filament", data, void 0, false);
+          dlg.close();
+          this._toast(tr("Filament für {head} gesetzt", { head: head.name }));
+        } catch (ex) {
+          err.hidden = false;
+          err.textContent = ex && ex.message || String(ex);
+        }
+      });
+      if (!dlg.open) {
+        if (typeof dlg.showModal === "function") dlg.showModal();
+        else dlg.setAttribute("open", "");
+      }
+    }
+  };
+
   // frontend/src/card/card.js
   var MIXINS = [
     StateMixin,
@@ -4305,7 +4517,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     RenderMixin,
     ZoomMixin,
     PrintDialogMixin,
-    CameraMixin
+    CameraMixin,
+    HeadDialogMixin
   ];
   var U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
   var SnapmakerU1Card = class extends U1Base {
@@ -4386,6 +4599,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         compact: false,
         layout: "tabs",
         camera_overlay: true,
+        state_accent: true,
         show: SECTIONS,
         nozzle_presets: [0, 210, 240, 260],
         bed_presets: [0, 55, 65, 85],

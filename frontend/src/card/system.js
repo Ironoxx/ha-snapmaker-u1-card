@@ -34,6 +34,7 @@ export const SystemMixin = (Base) => class extends Base {
               <span class="k">${tr("Systemlast (Ø 1 min)")}</span><span class="v" data-su1="sys">${this._loadText()}</span></div>
             ${d.stepX !== null ? this._row(tr("Stepper X"), `<span data-su1="stepx">${num(d.stepX, 1, "°C")}</span>`) : ""}
             ${d.stepY !== null ? this._row(tr("Stepper Y"), `<span data-su1="stepy">${num(d.stepY, 1, "°C")}</span>`) : ""}
+            ${this._printerSettingsHtml()}
             <div class="selftest-wrap">
               <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
               <div class="selftest" data-selftest>${this._selfTestHtml()}</div>
@@ -42,6 +43,26 @@ export const SystemMixin = (Base) => class extends Base {
           </div>
         </details>
       </section>`;
+  }
+
+  /** Firmware preferences (stored on the printer); only those the firmware reports. */
+  _printerSettingsHtml() {
+    const p = this._prefs();
+    const items = [
+      ["auto_replenish", tr("Filament automatisch nachfüllen"), tr("Läuft eine Spule leer, druckt ein Kopf mit gleichem Material weiter.")],
+      ["replenish_ignore_color", tr("Nachfüllen ohne Farbprüfung"), tr("Auch ein Kopf mit anderer Farbe darf übernehmen.")],
+      ["entangle_detect", tr("Verhedderungs-Erkennung"), tr("Pausiert, wenn sich das Filament verhakt.")],
+      ["end_led_off", tr("Licht aus nach dem Druck"), ""],
+    ].filter(([k]) => p[k] !== null && p[k] !== undefined);
+    if (!items.length) return "";
+    const off = !this._d.online;
+    const rows = items.map(([k, label, hint]) => `<div class="row"${hint ? ` title="${esc(hint)}"` : ""}>
+        <span class="k">${label}</span>
+        <span class="v"><button type="button" class="chip" data-prefset="${k}" aria-pressed="${p[k] ? "true" : "false"}"${off ? " disabled" : ""}>${p[k] ? tr("An") : tr("Aus")}</button></span></div>`).join("");
+    const sen = p.entangle_detect && p.entangle_sensitivity ? `<div class="row"><span class="k">${tr("Empfindlichkeit")}</span>
+        <span class="v chip-row">${[["low", tr("Niedrig")], ["medium", tr("Mittel")], ["high", tr("Hoch")]].map(([v, l]) =>
+          `<button type="button" class="chip ${p.entangle_sensitivity === v ? "sel" : ""}" data-prefsen="${v}"${off ? " disabled" : ""}>${l}</button>`).join("")}</span></div>` : "";
+    return `<div class="t-label" style="padding-top:8px">${tr("Druckereinstellungen")}</div>${rows}${sen}`;
   }
 
   _fwText() {
