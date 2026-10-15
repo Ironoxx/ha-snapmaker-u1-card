@@ -230,6 +230,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                 ny = float(vals["Y"]) if absolute else y + float(vals["Y"])
             if "Z" in vals:
                 nz = float(vals["Z"]) if absolute else z + float(vals["Z"])
+            arc = _arc_points(cmd, x, y, nx, ny, vals) if cmd in ("G2", "G3") else None
             extruding = False
             de = 0.0
             if "E" in vals:
@@ -237,10 +238,14 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                 de = ev - e if abs_e else ev
                 if abs_e:
                     e = ev
-                extruding = de > 0 and (nx != x or ny != y)
+                extruding = de > 0 and (nx != x or ny != y or bool(arc))
                 if de > 0:
                     e_tool[tool] = e_tool.get(tool, 0.0) + de
-            dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2 + (nz - z) ** 2) or abs(de)
+            if arc:
+                flat = sum(math.dist(a, b) for a, b in zip([(x, y), *arc[:-1]], arc, strict=True))
+                dist = math.sqrt(flat ** 2 + (nz - z) ** 2) or abs(de)
+            else:
+                dist = math.sqrt((nx - x) ** 2 + (ny - y) ** 2 + (nz - z) ** 2) or abs(de)
             t_kin += dist / (feed / 60)
             if extruding:
                 last_extrude = line_offset
@@ -253,13 +258,14 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                     poly = [round(x, 2), round(y, 2)]
                     poly_tool = tool
                     poly_start = line_offset
-                lx, ly = poly[-2], poly[-1]
-                if (nx - lx) ** 2 + (ny - ly) ** 2 >= MIN_STEP * MIN_STEP and points < MAX_POINTS_PER_LAYER:
-                    poly += [round(nx, 2), round(ny, 2)]
-                    points += 1
-                    take((nx, ny))
+                for px, py in arc or [(nx, ny)]:
+                    lx, ly = poly[-2], poly[-1]
+                    if (px - lx) ** 2 + (py - ly) ** 2 >= MIN_STEP * MIN_STEP and points < MAX_POINTS_PER_LAYER:
+                        poly += [round(px, 2), round(py, 2)]
+                        points += 1
+                        take((px, py))
                 tail = (round(nx, 2), round(ny, 2))
-            elif poly is not None and (nx != x or ny != y):
+            elif poly is not None and (nx != x or ny != y or arc):
                 close()
             x, y, z = nx, ny, nz
     close()
@@ -276,6 +282,36 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
         "timeline": timeline,
         "last_extrude": last_extrude,
     }
+
+
+ARC_STEP = 0.5  # mm Sehnenlaenge beim Zerlegen von G2/G3
+
+
+def _arc_points(cmd: str, x: float, y: float, nx: float, ny: float,
+                vals: dict[str, str]) -> list[tuple[float, float]] | None:
+    """G2 (im Uhrzeigersinn) / G3 (gegen) mit I/J in Punkte zerlegen.
+
+    Orca schreibt bei "Arc fitting" Rundungen als Boegen; als gerade Linie
+    gezeichnet wuerden sie zur Sehne. Gleicher Start und Ziel = Vollkreis.
+    """
+    if "I" not in vals and "J" not in vals:
+        return None
+    cx, cy = x + float(vals.get("I", 0)), y + float(vals.get("J", 0))
+    r = math.hypot(x - cx, y - cy)
+    if r < 1e-6:
+        return None
+    a0 = math.atan2(y - cy, x - cx)
+    a1 = math.atan2(ny - cy, nx - cx)
+    sweep = a1 - a0
+    if cmd == "G2":
+        if sweep >= -1e-9:
+            sweep -= 2 * math.pi
+    elif sweep <= 1e-9:
+        sweep += 2 * math.pi
+    n = max(1, min(720, math.ceil(abs(sweep) * r / ARC_STEP)))
+    pts = [(cx + r * math.cos(a0 + sweep * i / n), cy + r * math.sin(a0 + sweep * i / n)) for i in range(1, n)]
+    pts.append((nx, ny))
+    return pts
 
 
 def _e_row(e_tool: dict[int, float]) -> list[float]:

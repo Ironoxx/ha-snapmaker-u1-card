@@ -375,3 +375,22 @@ def test_stats_cost_matches_history_and_estimates_rest() -> None:
     # ohne Preis keine Schaetzung, nur die echten Kosten
     st2 = build_stats(jobs, history[:1], 1.7e9 + 4000)
     assert st2["totals"]["cost"] == 2.5 and st2["totals"]["cost_estimated"] is False
+
+
+def test_layers_arcs(tmp_path) -> None:
+    import json
+
+    from custom_components.snapmaker_u1_card.layers import parse_layers
+
+    g = tmp_path / "a.gcode"
+    g.write_text(";LAYER_CHANGE\n;Z:0.2\nG1 Z0.2\nG1 X10 Y0 F3000\nG3 X-10 Y0 I-10 J0 E5\nG2 X10 Y0 I10 J0 E10\n"
+                 ";LAYER_CHANGE\n;Z:0.4\nG1 Z0.4\nG3 X10 Y0 I-10 J0 E20\n")
+    meta = parse_layers(g, tmp_path / "a.jsonl")
+    assert meta["bbox"] is not None
+    layers = [json.loads(line) for line in (tmp_path / "a.jsonl").read_text().splitlines()]
+    pts = layers[0]["segs"][0][1]
+    ys = pts[1::2]
+    # Boegen statt Sehne: Halbkreis oben, kein Punkt unterhalb
+    assert len(pts) // 2 > 50 and max(ys) == 10.0 and min(ys) >= 0
+    full = layers[1]["segs"][0][1]
+    assert min(full[1::2]) == -10.0 and max(full[1::2]) == 10.0  # Vollkreis

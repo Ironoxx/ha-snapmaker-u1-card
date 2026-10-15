@@ -44,7 +44,7 @@
  */
 
 const DOMAIN = "snapmaker_u1_card";
-const CARD_VERSION = "1.0.3";
+const CARD_VERSION = "1.0.4";
 // 1x1-GIF: Zuweisen bricht einen laufenden MJPEG-Request zuverlaessig ab.
 const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -957,6 +957,9 @@ const STYLES = `
   .file-thumb, .dlg-thumb, .hist-thumb, .thumb { transition: background var(--u1-motion); }
   [data-tone-bg="dark"] { background: #d4d6dc !important; }
   [data-tone-bg="light"] { background: #24262c !important; }
+  /* Dateiname im Kamera-Vorschaubild: Schrift passend zum umgefaerbten Grund */
+  .thumb[data-tone-bg="dark"] span { color: #2b2d33; }
+  .thumb[data-tone-bg="light"] span { color: #d4d6dc; }
   .file-thumb ha-icon { --mdc-icon-size: 32px; color: var(--u1-on-variant); }
   .file-name {
     font-size: 12px; font-weight: 500; line-height: 1.3;
