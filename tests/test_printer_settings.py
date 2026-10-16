@@ -142,3 +142,35 @@ async def test_archive_limits(hass: HomeAssistant, tmp_path) -> None:
     again = TimelapseArchive(client, folder, arch.as_stored())
     saved = await again.backup(hass, [{"root": "camera", "path": "v3.mp4", "size": 1}], tmp_path, None)
     assert saved == [] and client.download_to.await_count == 0
+
+
+async def test_energy_price_sources(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Price entity first, then a fixed price, then the energy dashboard."""
+    from custom_components.snapmaker_u1_card.parsing import energy_dashboard_price
+
+    entry = await _setup(hass)  # test setup: price entity at 30 ct/kWh
+    assert entry.runtime_data.energy_price_source == (0.3, "sensor.strompreis")
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "energy_price": None,
+                                                           "energy_price_fixed": 0.29})
+    await hass.async_block_till_done()  # options change reloads the entry
+    assert entry.runtime_data.energy_price_source == (0.29, "fixed")
+
+    hass.states.async_set("sensor.tarif", "31.5", {"unit_of_measurement": "ct/kWh"})
+    prefs = {"energy_sources": [
+        {"type": "solar", "stat_energy_from": "x"},
+        {"type": "grid", "flow_from": [{"stat_energy_from": "a", "entity_energy_price": "sensor.tarif",
+                                        "number_energy_price": None}]},
+    ]}
+    assert energy_dashboard_price(prefs, hass.states) == (0.315, "sensor.tarif")
+    prefs["energy_sources"][1]["flow_from"][0].update(entity_energy_price=None, number_energy_price=0.25)
+    assert energy_dashboard_price(prefs, hass.states) == (0.25, "fixed")
+    assert energy_dashboard_price({"energy_sources": []}, hass.states) == (None, None)
+    assert energy_dashboard_price(None, hass.states) == (None, None)
+
+    class Manager:
+        data = prefs
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "energy_price_fixed": None})
+    await hass.async_block_till_done()
+    coord = entry.runtime_data
+    coord._energy_manager = Manager()
+    assert coord.energy_price_source == (0.25, "energy:fixed")

@@ -35,19 +35,21 @@
               "auto_off": "Nach dem Druck automatisch ausschalten",
               "auto_off_temp": "Auto-Aus unter Temperatur",
               "auto_off_delay": "Auto-Aus frühestens nach",
-              "idle_off_hours": "Ausschalten nach Leerlauf"
+              "idle_off_hours": "Ausschalten nach Leerlauf",
+              "energy_price_fixed": "Fester Strompreis"
             },
             "data_description": {
               "power_switch": "Für den Ein/Aus-Knopf der Karte. Ausschalten ist während eines Drucks gesperrt.",
               "power_sensor": "Aktuelle Leistung, meist von derselben Steckdose.",
               "energy_sensor": "Zählerstand. Daraus wird der Verbrauch je Druck berechnet.",
-              "energy_price": "Sensor oder Helfer mit dem aktuellen Preis je kWh (EUR/kWh oder ct/kWh). Dynamische Tarife werden über den Druck aufsummiert.",
+              "energy_price": "Sensor oder Helfer mit dem aktuellen Preis (dynamische Tarife). Leer = fester Preis darunter oder Energie-Dashboard.",
               "shutdown_host": "Fährt den Drucker herunter, wartet bis er weg ist plus 10 s und schaltet dann ab. Lehnt der Drucker ab, wird nach 10 s abgeschaltet wie mit dem Kippschalter.",
               "auto_on": "Druckstart aus der Karte bei ausgeschaltetem Drucker: einschalten und warten, bis er bereit ist (ca. 1–2 min).",
               "auto_off": "Nach fertigem oder abgebrochenem Druck, sobald alle Heizungen abgekühlt sind.",
               "auto_off_temp": "Düsen und Bett müssen unter dieser Temperatur liegen.",
               "auto_off_delay": "Mindestzeit zwischen Druckende und Abschalten.",
-              "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus."
+              "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus.",
+              "energy_price_fixed": "Je kWh, gilt ohne Preis-Entität. Ist beides leer, wird der Preis aus dem Energie-Dashboard genommen."
             }
           },
           "notify": {
@@ -166,19 +168,21 @@
               "auto_off": "Nach dem Druck automatisch ausschalten",
               "auto_off_temp": "Auto-Aus unter Temperatur",
               "auto_off_delay": "Auto-Aus frühestens nach",
-              "idle_off_hours": "Ausschalten nach Leerlauf"
+              "idle_off_hours": "Ausschalten nach Leerlauf",
+              "energy_price_fixed": "Fester Strompreis"
             },
             "data_description": {
               "power_switch": "Für den Ein/Aus-Knopf der Karte. Ausschalten ist während eines Drucks gesperrt.",
               "power_sensor": "Aktuelle Leistung, meist von derselben Steckdose.",
               "energy_sensor": "Zählerstand. Daraus wird der Verbrauch je Druck berechnet.",
-              "energy_price": "Sensor oder Helfer mit dem aktuellen Preis je kWh (EUR/kWh oder ct/kWh). Dynamische Tarife werden über den Druck aufsummiert.",
+              "energy_price": "Sensor oder Helfer mit dem aktuellen Preis (dynamische Tarife). Leer = fester Preis darunter oder Energie-Dashboard.",
               "shutdown_host": "Fährt den Drucker herunter, wartet bis er weg ist plus 10 s und schaltet dann ab. Lehnt der Drucker ab, wird nach 10 s abgeschaltet wie mit dem Kippschalter.",
               "auto_on": "Druckstart aus der Karte bei ausgeschaltetem Drucker: einschalten und warten, bis er bereit ist (ca. 1–2 min).",
               "auto_off": "Nach fertigem oder abgebrochenem Druck, sobald alle Heizungen abgekühlt sind.",
               "auto_off_temp": "Düsen und Bett müssen unter dieser Temperatur liegen.",
               "auto_off_delay": "Mindestzeit zwischen Druckende und Abschalten.",
-              "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus."
+              "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus.",
+              "energy_price_fixed": "Je kWh, gilt ohne Preis-Entität. Ist beides leer, wird der Preis aus dem Energie-Dashboard genommen."
             }
           },
           "notify": {

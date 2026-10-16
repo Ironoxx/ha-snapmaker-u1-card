@@ -24,6 +24,7 @@ from ..archive import ARCHIVE_DIR, TimelapseArchive, list_archive, media_root
 from ..const import (
     CONF_ARCHIVE,
     CONF_ENERGY_PRICE,
+    CONF_ENERGY_PRICE_FIXED,
     CONF_ENERGY_SENSOR,
     CONF_FILAMENT_PRICES,
     CONF_POWER_SWITCH,
@@ -60,6 +61,7 @@ from ..spools import SpoolManager
 from ..stats import Maintenance
 
 _LOGGER = logging.getLogger(__name__)
+from ..parsing import energy_dashboard_price
 from .data import U1Data
 from .helpers import (
     FILES_PRINTING_S,
@@ -165,6 +167,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         self._backup_task: asyncio.Task | None = None
         self._unsub_wake: Any = None  # camera wake-up timer (printer.py)
         self._wake_busy = False
+        self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
 
     # ── Options ─────────────────────────────────────────────────────────────
     @property
@@ -177,12 +180,26 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
 
     @property
     def energy_price(self) -> float | None:
-        """Current energy price per kWh from the price entity."""
+        """Current energy price per kWh (see energy_price_source)."""
+        return self.energy_price_source[0]
+
+    @property
+    def energy_price_source(self) -> tuple[float | None, str | None]:
+        """(price per kWh, source): own price entity, else fixed price, else the energy dashboard."""
         entity = self.options.get(CONF_ENERGY_PRICE)
-        st = self.hass.states.get(entity) if isinstance(entity, str) and entity else None
-        if st is None:
-            return None
-        return price_per_kwh(st.state, st.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        if isinstance(entity, str) and entity:
+            st = self.hass.states.get(entity)
+            price = price_per_kwh(st.state, st.attributes.get(ATTR_UNIT_OF_MEASUREMENT)) if st else None
+            return price, entity
+        fixed = self.options.get(CONF_ENERGY_PRICE_FIXED)
+        if isinstance(fixed, (int, float)) and fixed > 0:
+            return float(fixed), "fixed"
+        manager = self._energy_manager
+        if manager is not None:
+            price, source = energy_dashboard_price(manager.data, self.hass.states)
+            if source:
+                return price, f"energy:{source}"
+        return None, None
 
     @property
     def filament_prices(self) -> dict[str, float | None]:
@@ -223,6 +240,12 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         self._prev = self._offline()
         self._unsub_action = self.hass.bus.async_listen(EVENT_NOTIFY_ACTION, self._on_notify_action)
         self._start_camera_wake()
+        try:  # energy dashboard as a price source (optional component)
+            from homeassistant.components.energy.data import async_get_manager
+
+            self._energy_manager = await async_get_manager(self.hass)
+        except Exception as err:  # noqa: BLE001 - energy is optional
+            _LOGGER.debug("Energy dashboard not available: %s", err)
 
     async def async_shutdown(self) -> None:
         """Cancel background tasks, stop the live subscription and save state."""

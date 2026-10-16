@@ -140,7 +140,7 @@ During setup a second step with all settings follows right after the address. La
 
 | Section | Fields |
 |---|---|
-| Power and consumption | power switch, power sensor (W), energy meter (kWh), energy price entity (EUR/kWh or ct/kWh), shut down before switching off, auto-on at print start, auto-off after the print (temperature, delay), switch off after idle (hours) |
+| Power and consumption | power switch, power sensor (W), energy meter (kWh), energy price: price entity (EUR/kWh or ct/kWh, dynamic tariffs) **or** a fixed price per kWh; if both are empty, the price from the Home Assistant **energy dashboard** is used, shut down before switching off, auto-on at print start, auto-off after the print (temperature, delay), switch off after idle (hours) |
 | Notifications & camera | `notify.mobile_app_…` services, events (finished, cancelled, error, paused, message during print, first layer done, almost done, not enough filament), "almost done" lead time in minutes (10), "part removable" below bed temperature (35 °C), camera for image and result photo, **keep camera awake** (off / during a print / always) |
 | Filament prices | price per kg for PLA, PETG, ABS, ASA, TPU, PA and others. `PLA-CF` uses the PLA price |
 | Timelapse backup | on/off, how many of the newest stay on the printer (0 = never delete), how many stay in the media folder (50, 0 = all), delete backups older than x days (0 = never) |

@@ -138,7 +138,7 @@ Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen 
 
 | Abschnitt | Felder |
 |---|---|
-| Strom und Verbrauch | Netzschalter, Leistungssensor (W), Energiezähler (kWh), Strompreis-Entität (EUR/kWh oder ct/kWh), vor dem Abschalten herunterfahren, Auto-Ein beim Druckstart, Auto-Aus nach dem Druck (Temperatur, Verzögerung), Ausschalten nach Leerlauf (Stunden) |
+| Strom und Verbrauch | Netzschalter, Leistungssensor (W), Energiezähler (kWh), Strompreis: Preis-Entität (EUR/kWh oder ct/kWh, dynamische Tarife) **oder** fester Preis je kWh; ist beides leer, gilt der Preis aus dem **Energie-Dashboard** von Home Assistant, vor dem Abschalten herunterfahren, Auto-Ein beim Druckstart, Auto-Aus nach dem Druck (Temperatur, Verzögerung), Ausschalten nach Leerlauf (Stunden) |
 | Benachrichtigungen & Kamera | `notify.mobile_app_…`-Dienste, Anlässe (fertig, abgebrochen, Fehler, pausiert, Meldung im Druck, erste Schicht fertig, gleich fertig, Filament reicht nicht), Vorwarnung „gleich fertig“ in Minuten (10), „Teil entnehmbar“ ab Betttemperatur (35 °C), Kamera für Bild und Ergebnisfoto, **Kamera wach halten** (aus / während eines Drucks / immer) |
 | Filamentpreise | € je kg für PLA, PETG, ABS, ASA, TPU, PA und sonstige. `PLA-CF` nutzt den PLA-Preis |
 | Zeitraffer sichern | Ein/aus, wie viele neueste auf dem Drucker bleiben (0 = nie löschen), wie viele im Medienordner bleiben (50, 0 = alle), Sicherungen nach x Tagen löschen (0 = nie) |

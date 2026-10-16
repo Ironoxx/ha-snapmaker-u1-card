@@ -40,6 +40,7 @@ from .const import (
     CONF_CAMERA,
     CONF_CAMERA_WAKE,
     CONF_ENERGY_PRICE,
+    CONF_ENERGY_PRICE_FIXED,
     CONF_ENERGY_SENSOR,
     CONF_FILAMENT_PRICES,
     CONF_FILES_LIMIT,
@@ -115,6 +116,7 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             vol.Optional(CONF_ENERGY_PRICE): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["sensor", "input_number", "number"])
             ),
+            vol.Optional(CONF_ENERGY_PRICE_FIXED): _box(0, 5, 0.001, "€/kWh"),
             vol.Required(CONF_SHUTDOWN_HOST, default=DEFAULT_SHUTDOWN_HOST): selector.BooleanSelector(),
             vol.Required(CONF_AUTO_ON, default=DEFAULT_AUTO_ON): selector.BooleanSelector(),
             vol.Required(CONF_AUTO_OFF, default=DEFAULT_AUTO_OFF): selector.BooleanSelector(),
@@ -232,7 +234,7 @@ def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
     for key, value in (opts.pop(CONF_MAINTENANCE, {}) or {}).items():
         opts[f"maint_{key}"] = value
     groups = {
-        SEC_POWER: (CONF_POWER_SWITCH, CONF_POWER_SENSOR, CONF_ENERGY_SENSOR, CONF_ENERGY_PRICE,
+        SEC_POWER: (CONF_POWER_SWITCH, CONF_POWER_SENSOR, CONF_ENERGY_SENSOR, CONF_ENERGY_PRICE, CONF_ENERGY_PRICE_FIXED,
                     CONF_SHUTDOWN_HOST, CONF_AUTO_ON, CONF_AUTO_OFF, CONF_AUTO_OFF_TEMP,
                     CONF_AUTO_OFF_DELAY, CONF_IDLE_OFF),
         SEC_NOTIFY: (CONF_NOTIFY, CONF_NOTIFY_EVENTS, CONF_ALMOST_DONE, CONF_BED_COOL, CONF_CAMERA, CONF_CAMERA_WAKE),

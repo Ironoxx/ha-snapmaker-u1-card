@@ -636,6 +636,31 @@ def summarize_print(record: dict[str, Any], prices: dict[str, float | None]) -> 
     return out
 
 
+def energy_dashboard_price(prefs: Any, states: Any) -> tuple[float | None, str | None]:
+    """Grid price from Home Assistant's energy dashboard: (price per kWh, source).
+
+    The first grid import (flow_from) with a price entity or a fixed price is
+    used; ``states`` is ``hass.states``. Newer schemas without flow_from are
+    read the same way from the grid source itself.
+    """
+    if not isinstance(prefs, dict):
+        return None, None
+    for src in prefs.get("energy_sources") or []:
+        if not isinstance(src, dict) or src.get("type") != "grid":
+            continue
+        for flow in src.get("flow_from") or [src]:
+            entity = flow.get("entity_energy_price")
+            if entity:
+                st = states.get(entity)
+                price = price_per_kwh(st.state, st.attributes.get("unit_of_measurement")) if st else None
+                if price is not None:
+                    return price, entity
+            number = flow.get("number_energy_price")
+            if isinstance(number, (int, float)) and not isinstance(number, bool):
+                return float(number), "fixed"
+    return None, None
+
+
 def price_per_kwh(state: str | None, unit: str | None) -> float | None:
     """Price entity in currency per kWh; ct/kWh and per MWh are converted."""
     try:

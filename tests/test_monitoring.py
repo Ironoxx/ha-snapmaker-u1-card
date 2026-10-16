@@ -311,6 +311,19 @@ async def test_self_test(hass: HomeAssistant, mock_client, notifications) -> Non
     notify = [c for c in res["checks"] if c["key"] == "notify"]
     assert [c["ok"] for c in notify] == [True, False]
     assert res["ok"] is False
+    assert keys["price"]["ok"] is True and "sensor.strompreis" in keys["price"]["detail"]
+
+
+async def test_self_test_spoolman_reachable(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Reachable Spoolman without changes must not be reported as unreachable."""
+    with patch("custom_components.snapmaker_u1_card.api.SpoolmanClient.info",
+               AsyncMock(return_value={"version": "0.22"})), \
+         patch("custom_components.snapmaker_u1_card.api.SpoolmanClient.spools", AsyncMock(return_value=[])):
+        await _setup(hass, spoolman_url="http://192.0.2.4:8000")
+        with patch(f"{API}.rpc", AsyncMock(return_value={"free_space": 9000, "total_space": 9000})):
+            res = await hass.services.async_call(DOMAIN, "self_test", {}, blocking=True, return_response=True)
+    spoolman = next(c for c in res["checks"] if c["key"] == "spoolman")
+    assert spoolman["ok"] is True, spoolman
 
 
 async def test_early_result_photo(hass: HomeAssistant, mock_client, notifications, timed_file) -> None:

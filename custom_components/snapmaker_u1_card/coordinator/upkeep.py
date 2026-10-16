@@ -20,7 +20,6 @@ from ..const import (
     BACKUP_DIR,
     CONF_BACKUP,
     CONF_CAMERA,
-    CONF_ENERGY_PRICE,
     CONF_ENERGY_SENSOR,
     CONF_MAINTENANCE,
     CONF_NOTIFY,
@@ -152,8 +151,7 @@ class UpkeepMixin:
                 add("camera", False, f"{camera}: {err}")
         # power
         for key, conf, label in (("power_switch", CONF_POWER_SWITCH, t("Netzschalter", "Power switch")),
-                                 ("energy", CONF_ENERGY_SENSOR, t("Energiezähler", "Energy meter")),
-                                 ("price", CONF_ENERGY_PRICE, t("Strompreis", "Energy price"))):
+                                 ("energy", CONF_ENERGY_SENSOR, t("Energiezähler", "Energy meter"))):
             entity = self.options.get(conf)
             if not entity:
                 add(key, None, t(f"{label}: nicht eingerichtet", f"{label}: not set up"))
@@ -161,6 +159,20 @@ class UpkeepMixin:
             st = self.hass.states.get(entity)
             good = st is not None and st.state not in ("unavailable", "unknown")
             add(key, good, f"{label}: {entity} = {st.state if st else t('fehlt', 'missing')}")
+        price, source = self.energy_price_source
+        label = t("Strompreis", "Energy price")
+        if source is None:
+            add("price", None, t(f"{label}: nicht eingerichtet (Entität, fester Preis oder Energie-Dashboard)",
+                                 f"{label}: not set up (entity, fixed price or energy dashboard)"))
+        else:
+            fixed = t("fester Preis", "fixed price")
+            if source.startswith("energy:"):
+                inner = source.removeprefix("energy:")
+                where = t("Energie-Dashboard", "energy dashboard") + f" ({fixed if inner == 'fixed' else inner})"
+            else:
+                where = fixed if source == "fixed" else source
+            value = f"{price:.4f}".rstrip("0").rstrip(".") + "/kWh" if price is not None else t("fehlt", "missing")
+            add("price", price is not None, f"{label}: {where} = {value}")
         # notifications
         targets = self.options.get(CONF_NOTIFY) or []
         if not targets:
@@ -171,7 +183,8 @@ class UpkeepMixin:
                 f"notify.{name}" + ("" if self.hass.services.has_service("notify", name) else t(" fehlt", " missing")))
         # Spoolman
         if self.spools.enabled:
-            okay = await self.spools.async_refresh()
+            await self.spools.async_refresh()
+            okay = self.spools.online  # async_refresh returns "state changed", not reachability
             add("spoolman", okay, t(f"Spoolman: {len(self.spools.spools)} Spulen", f"Spoolman: {len(self.spools.spools)} spools")
                 if okay else t(f"Spoolman nicht erreichbar ({self.spools.client.url}): {self.spools.error or '?'}",
                                f"Spoolman unreachable ({self.spools.client.url}): {self.spools.error or '?'}"))

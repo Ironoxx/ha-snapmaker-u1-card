@@ -5,13 +5,14 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
 CONF_POWER_SWITCH = "power_switch"
 CONF_POWER_SENSOR = "power_sensor"
 CONF_ENERGY_SENSOR = "energy_sensor"
+CONF_ENERGY_PRICE_FIXED = "energy_price_fixed"  # fixed price per kWh (without price entity)
 CONF_ENERGY_PRICE = "energy_price"  # Price entity (sensor/input_number)
 CONF_AUTO_ON = "auto_on"
 CONF_NOTIFY = "notify_targets"

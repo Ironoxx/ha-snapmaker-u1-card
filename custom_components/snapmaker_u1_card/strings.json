@@ -35,19 +35,21 @@
               "auto_off": "Switch off automatically after a print",
               "auto_off_temp": "Auto-off below temperature",
               "auto_off_delay": "Auto-off delay after the print",
-              "idle_off_hours": "Switch off after idle"
+              "idle_off_hours": "Switch off after idle",
+              "energy_price_fixed": "Fixed energy price"
             },
             "data_description": {
               "power_switch": "Used for the on/off button on the card. Switching off is blocked while printing.",
               "power_sensor": "Live power draw, usually from the same plug.",
               "energy_sensor": "Total energy counter. Used for the consumption of each print.",
-              "energy_price": "Sensor or helper with the current price per kWh (EUR/kWh or ct/kWh). Dynamic tariffs are summed up over the print.",
+              "energy_price": "Sensor or helper with the current price (dynamic tariffs). Empty = fixed price below or the energy dashboard.",
               "shutdown_host": "Sends a shutdown to the printer, waits until it is gone plus 10 s, then switches off. If the printer refuses, it is switched off after 10 s like with its rocker switch.",
               "auto_on": "Starting a print from the card while the printer is off switches it on and waits until it is ready (about 1–2 min).",
               "auto_off": "After a finished or cancelled print, once all heaters have cooled down.",
               "auto_off_temp": "Nozzles and bed must be below this temperature.",
               "auto_off_delay": "Minimum time between the end of the print and switching off.",
-              "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off."
+              "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off.",
+              "energy_price_fixed": "Per kWh, used when no price entity is set. Without both, the price from the energy dashboard is used."
             }
           },
           "notify": {
@@ -166,19 +168,21 @@
               "auto_off": "Switch off automatically after a print",
               "auto_off_temp": "Auto-off below temperature",
               "auto_off_delay": "Auto-off delay after the print",
-              "idle_off_hours": "Switch off after idle"
+              "idle_off_hours": "Switch off after idle",
+              "energy_price_fixed": "Fixed energy price"
             },
             "data_description": {
               "power_switch": "Used for the on/off button on the card. Switching off is blocked while printing.",
               "power_sensor": "Live power draw, usually from the same plug.",
               "energy_sensor": "Total energy counter. Used for the consumption of each print.",
-              "energy_price": "Sensor or helper with the current price per kWh (EUR/kWh or ct/kWh). Dynamic tariffs are summed up over the print.",
+              "energy_price": "Sensor or helper with the current price (dynamic tariffs). Empty = fixed price below or the energy dashboard.",
               "shutdown_host": "Sends a shutdown to the printer, waits until it is gone plus 10 s, then switches off. If the printer refuses, it is switched off after 10 s like with its rocker switch.",
               "auto_on": "Starting a print from the card while the printer is off switches it on and waits until it is ready (about 1–2 min).",
               "auto_off": "After a finished or cancelled print, once all heaters have cooled down.",
               "auto_off_temp": "Nozzles and bed must be below this temperature.",
               "auto_off_delay": "Minimum time between the end of the print and switching off.",
-              "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off."
+              "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off.",
+              "energy_price_fixed": "Per kWh, used when no price entity is set. Without both, the price from the energy dashboard is used."
             }
           },
           "notify": {
