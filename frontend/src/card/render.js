@@ -139,6 +139,9 @@ export const RenderMixin = (Base) => class extends Base {
 
     r.querySelectorAll("[data-headinfo]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._openHeadInfo(Number(b.dataset.headinfo)); }));
+    // The spool and name open the same dialog (larger target than the button)
+    r.querySelectorAll("[data-headopen]").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); this._openHeadInfo(Number(b.dataset.headopen)); }));
     r.querySelectorAll("[data-prefset]").forEach((b) =>
       b.addEventListener("click", () => this._call("set_preference",
         { preference: b.dataset.prefset, value: b.getAttribute("aria-pressed") !== "true" })));
@@ -224,6 +227,7 @@ export const RenderMixin = (Base) => class extends Base {
     };
 
     set("status", this._statusLabel());
+    set("camstate", this._statusLabel());
     const pwr = r.querySelector('[data-su1="pwr"]');
     if (pwr && d.power) {
       const html = this._powerLabel(d.power);

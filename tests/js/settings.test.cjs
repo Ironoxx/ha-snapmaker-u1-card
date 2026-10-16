@@ -79,6 +79,13 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   states["sensor.snapmaker_u1_card_filamente"].attributes.preferences = prefs;
   card.hass = hass();
 
+  // Camera: state in the corner, no dimmed overlay while idle; visible edit button
+  const camState = R().querySelector(".cam-state");
+  assert.ok(camState && /Bereit/.test(camState.textContent), "state pill on the camera");
+  assert.strictEqual(R().querySelector(".frame").dataset.dim, "0", "idle camera not dimmed");
+  assert.ok(!R().querySelector(".frame .overlay"), "no idle overlay");
+  assert.match(R().querySelector('[data-headinfo="0"]').textContent, /Filament/);
+
   // 2. Head details with RFID data
   R().querySelector('[data-headinfo="0"]').click();
   const dlg = D().querySelector("dialog.u1head");
@@ -111,6 +118,7 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   states[`sensor.${P}_current_print_state`].state = "printing";
   card.hass = hass();
   assert.strictEqual(R().dataset.accent, "active", "accent while printing");
+  assert.strictEqual(R().querySelector(".cam-state").dataset.tone, "active");
   R().querySelector('[data-headinfo="1"]').click();
   assert.ok(D().querySelector('dialog.u1head button[type="submit"]').disabled, "no editing during a print");
   states[`sensor.${P}_current_print_state`].state = "paused";

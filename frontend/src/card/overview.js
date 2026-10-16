@@ -43,14 +43,13 @@ export const OverviewMixin = (Base) => class extends Base {
         <div class="overlay-title">${tr("Druck gestoppt")}</div>
         <div class="overlay-sub">${esc((d.errors[0] && this._errText(d.errors[0])) || d.message || tr("Der Drucker meldet einen Fehler"))}</div>
       </div>`;
-    } else if (!d.printing) {
-      dim = "1";
-      overlay = `<div class="overlay">
-        <div class="overlay-ring"><ha-icon icon="mdi:power-standby"></ha-icon></div>
-        <div class="overlay-title">${d.state === "complete" ? tr("Fertig") : tr("Bereit")}</div>
-        <div class="overlay-sub">${esc(d.display || d.message || "")}</div>
-      </div>`;
     }
+    // State in the corner instead of a full overlay: the camera stays visible while idle.
+    const tone = this._statusTone();
+    const sub = !d.active && (d.display || d.message) ? `<small>${esc(d.display || d.message)}</small>` : "";
+    const pill = `<div class="cam-state" data-tone="${tone}" role="status">
+        <span class="dot"></span><span class="cam-state-text"><b data-su1="camstate">${this._statusLabel()}</b>${sub}</span>
+      </div>`;
 
     const actions = [];
     if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
@@ -70,6 +69,7 @@ export const OverviewMixin = (Base) => class extends Base {
             ${document.fullscreenEnabled || document.webkitFullscreenEnabled ? `<button type="button" class="zoom-btn" data-zoom="full" title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
           </div>
           <span class="zoom-badge" hidden></span>
+          ${pill}
           ${thumb}
           ${overlay}
           ${hud}
@@ -190,19 +190,23 @@ export const OverviewMixin = (Base) => class extends Base {
         : "";
       return `
         <div class="head-card" data-active="${h.active ? 1 : 0}" data-head="${h.idx}">
-          <div class="head-card-top">
+          <div class="head-card-top" data-headopen="${h.idx}" title="${tr("Details und Filament bearbeiten")}">
             ${this._spoolSvg(h.color, h.active, h.colors)}
             <div style="min-width:0">
               <div class="head-name">${esc(h.name)}${h.official ? ` <span class="rfid" title="${tr("Snapmaker-Spule, per RFID erkannt")}">RFID</span>` : ""}</div>
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
-            <button type="button" class="icon head-info" data-headinfo="${h.idx}" title="${tr("Details und Filament bearbeiten")}" aria-label="${tr("Details und Filament bearbeiten")}"><ha-icon icon="mdi:tune-vertical"></ha-icon></button>
           </div>
           ${this._spoolLine(h)}
-          <span class="pill" data-empty="${h.loaded ? 0 : 1}" data-su1="pill:${h.idx}">
-            ${h.loaded ? tr("Geladen") : tr("Leer")}
-          </span>
+          <div class="head-tags">
+            <span class="pill" data-empty="${h.loaded ? 0 : 1}" data-su1="pill:${h.idx}">
+              ${h.loaded ? tr("Geladen") : tr("Leer")}
+            </span>
+            <button type="button" class="head-info" data-headinfo="${h.idx}" title="${tr("Details und Filament bearbeiten")}" aria-label="${tr("Details und Filament bearbeiten")}">
+              <ha-icon icon="mdi:pencil-outline"></ha-icon><span>${tr("Filament")}</span>
+            </button>
+          </div>
           <div class="head-temp" data-su1="htemp:${h.idx}">
             ${num(h.temp, 0, "°C")}${h.target > 0 ? ` <span class="tgt">→ ${h.target.toFixed(0)} °C</span>` : ""}
           </div>

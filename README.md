@@ -9,7 +9,7 @@
 A Home Assistant integration with a built-in dashboard card for the **Snapmaker U1**:
 
 - **Loaded filaments live**: material, sub type, vendor, colour (including multi-colour) and RFID detection per print head, straight from the printer firmware.
-- **Head details**: tap the settings icon on a head to see the spool's RFID data (weight, diameter, nozzle/bed/drying temperatures, manufacturing date, SKU) and to **set material, vendor and colour by hand** for spools without a tag.
+- **Head details**: tap **Filament** on a head (or the spool itself) to see the spool's RFID data (weight, diameter, nozzle/bed/drying temperatures, manufacturing date, SKU) and to **set material, vendor and colour by hand** for spools without a tag.
 - **Print start with filament mapping like Snapmaker Orca**: tap a file and the card suggests which filament of the file goes to which head, based on material and colour. Change the mapping, choose bed leveling, flow calibration and timelapse, then start.
 - **File list with thumbnails**, print time, weight and colour dots per file.
 - **Camera** as a live stream through Home Assistant, with automatic fallback to still images. Zoom with two fingers, double tap, Ctrl+mouse wheel or the zoom buttons, fullscreen; when zoomed, pan with one finger or the left mouse button. During a print, progress, layer, remaining time, finish time and active head are shown on the image.
@@ -155,7 +155,7 @@ All options are optional; except head names and presets they can also be set in 
 | Option | Default | Meaning |
 |---|---|---|
 | `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked |
-| `camera_overlay` | `true` | progress on the camera image (`hide_overlay: true` also turns it off) |
+| `camera_overlay` | `true` | progress on the camera image; the printer state is always shown in the top-left corner (`hide_overlay: true` also turns it off) |
 | `state_accent` | `true` | frame in the theme colour of the state (printing, paused, error, done) |
 | `camera_height` | automatic | height of the camera image in px. Empty = image aspect ratio, at most `camera_max_height` |
 | `camera_max_height` | `520` | upper limit for the automatic height in px |

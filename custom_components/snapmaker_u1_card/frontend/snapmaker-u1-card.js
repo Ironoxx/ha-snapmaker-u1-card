@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.2.2";
+  var CARD_VERSION = "1.2.3";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -215,7 +215,6 @@
     "{n} Dateien": "{n} files",
     "{n} Datei": "{n} file",
     "Drucker-Konfiguration gesichert": "Printer configuration backed up",
-    "Jetzt sichern": "Back up now",
     "Leer = automatisch (Seitenverhältnis des Bildes)": "Empty = automatic (image aspect ratio)",
     "Stunden": "Hours",
     "Verbindung abgebrochen": "Connection lost",
@@ -278,7 +277,6 @@
     "Alle Achsen": "All axes",
     "An": "On",
     "Arbeitsspeicher": "Memory",
-    "Aus": "Off",
     "Automatisch": "Automatic",
     "Bauteillüfter": "Part fan",
     "Bereit": "Ready",
@@ -1137,14 +1135,12 @@
         <div class="overlay-title">${tr("Druck gestoppt")}</div>
         <div class="overlay-sub">${esc(d.errors[0] && this._errText(d.errors[0]) || d.message || tr("Der Drucker meldet einen Fehler"))}</div>
       </div>`;
-      } else if (!d.printing) {
-        dim = "1";
-        overlay = `<div class="overlay">
-        <div class="overlay-ring"><ha-icon icon="mdi:power-standby"></ha-icon></div>
-        <div class="overlay-title">${d.state === "complete" ? tr("Fertig") : tr("Bereit")}</div>
-        <div class="overlay-sub">${esc(d.display || d.message || "")}</div>
-      </div>`;
       }
+      const tone = this._statusTone();
+      const sub = !d.active && (d.display || d.message) ? `<small>${esc(d.display || d.message)}</small>` : "";
+      const pill = `<div class="cam-state" data-tone="${tone}" role="status">
+        <span class="dot"></span><span class="cam-state-text"><b data-su1="camstate">${this._statusLabel()}</b>${sub}</span>
+      </div>`;
       const actions = [];
       if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
       if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
@@ -1162,6 +1158,7 @@
             ${document.fullscreenEnabled || document.webkitFullscreenEnabled ? `<button type="button" class="zoom-btn" data-zoom="full" title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
           </div>
           <span class="zoom-badge" hidden></span>
+          ${pill}
           ${thumb}
           ${overlay}
           ${hud}
@@ -1274,19 +1271,23 @@
            </button>` : "";
         return `
         <div class="head-card" data-active="${h.active ? 1 : 0}" data-head="${h.idx}">
-          <div class="head-card-top">
+          <div class="head-card-top" data-headopen="${h.idx}" title="${tr("Details und Filament bearbeiten")}">
             ${this._spoolSvg(h.color, h.active, h.colors)}
             <div style="min-width:0">
               <div class="head-name">${esc(h.name)}${h.official ? ` <span class="rfid" title="${tr("Snapmaker-Spule, per RFID erkannt")}">RFID</span>` : ""}</div>
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
-            <button type="button" class="icon head-info" data-headinfo="${h.idx}" title="${tr("Details und Filament bearbeiten")}" aria-label="${tr("Details und Filament bearbeiten")}"><ha-icon icon="mdi:tune-vertical"></ha-icon></button>
           </div>
           ${this._spoolLine(h)}
-          <span class="pill" data-empty="${h.loaded ? 0 : 1}" data-su1="pill:${h.idx}">
-            ${h.loaded ? tr("Geladen") : tr("Leer")}
-          </span>
+          <div class="head-tags">
+            <span class="pill" data-empty="${h.loaded ? 0 : 1}" data-su1="pill:${h.idx}">
+              ${h.loaded ? tr("Geladen") : tr("Leer")}
+            </span>
+            <button type="button" class="head-info" data-headinfo="${h.idx}" title="${tr("Details und Filament bearbeiten")}" aria-label="${tr("Details und Filament bearbeiten")}">
+              <ha-icon icon="mdi:pencil-outline"></ha-icon><span>${tr("Filament")}</span>
+            </button>
+          </div>
           <div class="head-temp" data-su1="htemp:${h.idx}">
             ${num(h.temp, 0, "°C")}${h.target > 0 ? ` <span class="tgt">→ ${h.target.toFixed(0)} °C</span>` : ""}
           </div>
@@ -2786,7 +2787,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   button.zoom-btn { width: 36px; height: 36px; padding: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; box-shadow: none; }
   button.zoom-btn ha-icon { --mdc-icon-size: 20px; }
   button.zoom-btn[hidden] { display: none; }
-  .zoom-badge { position: absolute; left: 10px; top: 10px; z-index: 3; padding: 2px 8px; border-radius: var(--u1-r-s);
+  .zoom-badge { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; padding: 2px 8px; border-radius: var(--u1-r-s);
     background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-family: var(--u1-mono); }
   .zoom-badge[hidden] { display: none; }
   .frame:fullscreen { height: 100% !important; min-height: 0 !important; background: #000; }
@@ -3179,8 +3180,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   ha-card[data-accent="ok"]     { box-shadow: 0 0 0 2px color-mix(in srgb, var(--u1-ok) 70%, transparent); }
 
   /* Head details */
-  .head-info { margin-left: auto; width: 32px; height: 32px; background: transparent; color: var(--u1-on-variant); box-shadow: none; }
-  .head-info ha-icon { --mdc-icon-size: 20px; }
+  .head-card-top[data-headopen] { cursor: pointer; border-radius: var(--u1-r-m); }
+  .head-card-top[data-headopen]:hover .head-name { color: var(--u1-primary); }
+  .head-tags { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+  .head-tags .pill { margin: 0; align-self: center; }
+  button.head-info {
+    height: 28px; padding: 0 10px 0 8px; gap: 4px; font-size: 12px;
+    background: var(--u1-primary-container); color: var(--u1-on-primary-container); box-shadow: none; }
+  button.head-info:hover { background: color-mix(in srgb, var(--u1-on-primary-container) 12%, var(--u1-primary-container)); }
+  button.head-info ha-icon { --mdc-icon-size: 16px; }
   .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }
   .head-sub { margin: 12px 0 4px; }
   .head-rfid .row { padding: 4px 0; }
@@ -3408,7 +3416,25 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .hud-head i { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255,255,255,.6); }
   .hud-track { height: 4px; margin: 0 -12px; background: rgba(255,255,255,.2); }
   .hud-track i { display: block; height: 100%; background: var(--u1-primary); transition: width var(--u1-motion); }
-  .thumb.top { top: 10px; bottom: auto; }
+  .thumb.top { top: 52px; bottom: auto; }
+  /* State in the top-left corner of the camera (replaces the idle overlay) */
+  .cam-state {
+    position: absolute; left: 10px; top: 10px; z-index: 3; max-width: calc(100% - 80px);
+    display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 10px;
+    border-radius: var(--u1-r-full); background: rgba(0,0,0,.55); color: #fff;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    font-size: 13px; line-height: 1.2; pointer-events: none; }
+  .cam-state .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; background: #9e9e9e; }
+  .cam-state[data-tone="active"] .dot { background: var(--u1-primary); box-shadow: 0 0 0 0 var(--u1-primary); animation: u1pulse 1.8s ease-out infinite; }
+  .cam-state[data-tone="ok"] .dot { background: var(--u1-ok); }
+  .cam-state[data-tone="warn"] .dot { background: var(--u1-warn); }
+  .cam-state[data-tone="error"] .dot { background: var(--u1-error); }
+  .cam-state-text { display: flex; flex-direction: column; min-width: 0; }
+  .cam-state-text b { font-weight: 600; }
+  .cam-state-text small { font-size: 11px; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @keyframes u1pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--u1-primary) 70%, transparent); }
+    100% { box-shadow: 0 0 0 8px transparent; } }
+  @media (prefers-reduced-motion: reduce) { .cam-state .dot { animation: none !important; } }
 
   .danger-zone {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
@@ -3564,6 +3590,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         e.stopPropagation();
         this._openHeadInfo(Number(b.dataset.headinfo));
       }));
+      r.querySelectorAll("[data-headopen]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._openHeadInfo(Number(b.dataset.headopen));
+      }));
       r.querySelectorAll("[data-prefset]").forEach((b) => b.addEventListener("click", () => this._call(
         "set_preference",
         { preference: b.dataset.prefset, value: b.getAttribute("aria-pressed") !== "true" }
@@ -3653,6 +3683,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (el) el.style.width = `${v}%`;
       };
       set("status", this._statusLabel());
+      set("camstate", this._statusLabel());
       const pwr = r.querySelector('[data-su1="pwr"]');
       if (pwr && d.power) {
         const html = this._powerLabel(d.power);

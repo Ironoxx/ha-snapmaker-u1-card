@@ -9,7 +9,7 @@
 Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapmaker U1**:
 
 - **Geladene Filamente live**: Material, Unterart, Hersteller, Farbe (auch mehrfarbig) und RFID-Erkennung je Druckkopf, direkt aus der Drucker-Firmware.
-- **Kopf-Details**: Das Regler-Symbol am Kopf zeigt die RFID-Daten der Spule (Gewicht, Durchmesser, Düsen-/Bett-/Trocknungstemperatur, Herstelldatum, SKU). Dort lassen sich **Material, Hersteller und Farbe von Hand setzen**, etwa für Spulen ohne Chip.
+- **Kopf-Details**: **Filament** am Kopf (oder ein Tipp auf die Spule) zeigt die RFID-Daten der Spule (Gewicht, Durchmesser, Düsen-/Bett-/Trocknungstemperatur, Herstelldatum, SKU). Dort lassen sich **Material, Hersteller und Farbe von Hand setzen**, etwa für Spulen ohne Chip.
 - **Druckstart mit Filamentzuordnung wie in Snapmaker Orca**: Du tippst eine Datei an, die Karte schlägt vor, welches Filament der Datei auf welchen Kopf kommt. Grundlage sind Material und Farbe. Du kannst die Zuordnung ändern, Bettnivellierung, Flusskalibrierung und Zeitraffer wählen und dann starten.
 - **Dateiliste mit Vorschaubildern**, Druckzeit, Gewicht und Farbpunkten je Datei.
 - **Kamera** als Livestream über Home Assistant, mit automatischem Rückfall auf Standbilder. Zoom mit zwei Fingern, Doppeltipp, Strg+Mausrad oder Lupen-Knöpfen, Vollbild; gezoomt verschiebt man mit einem Finger bzw. der linken Maustaste. Während des Drucks liegen Fortschritt, Schicht, Restzeit, Fertig-Uhrzeit und aktiver Kopf direkt auf dem Bild.
@@ -153,7 +153,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | Option | Standard | Bedeutung |
 |---|---|---|
 | `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander |
-| `camera_overlay` | `true` | Fortschritt auf dem Kamerabild (`hide_overlay: true` schaltet es ebenfalls ab) |
+| `camera_overlay` | `true` | Fortschritt auf dem Kamerabild; der Druckerstatus steht immer oben links (`hide_overlay: true` schaltet es ebenfalls ab) |
 | `state_accent` | `true` | Rahmen in der Theme-Farbe des Zustands (druckt, pausiert, Fehler, fertig) |
 | `camera_height` | automatisch | Höhe des Kamerabilds in px. Leer = Seitenverhältnis des Bildes, höchstens `camera_max_height` |
 | `camera_max_height` | `520` | Obergrenze bei automatischer Höhe in px |
