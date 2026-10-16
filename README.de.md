@@ -141,7 +141,7 @@ Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen 
 | Strom und Verbrauch | Netzschalter, Leistungssensor (W), Energiezähler (kWh), Strompreis-Entität (EUR/kWh oder ct/kWh), vor dem Abschalten herunterfahren, Auto-Ein beim Druckstart, Auto-Aus nach dem Druck (Temperatur, Verzögerung), Ausschalten nach Leerlauf (Stunden) |
 | Benachrichtigungen & Kamera | `notify.mobile_app_…`-Dienste, Anlässe (fertig, abgebrochen, Fehler, pausiert, Meldung im Druck, erste Schicht fertig, gleich fertig, Filament reicht nicht), Vorwarnung „gleich fertig“ in Minuten (10), „Teil entnehmbar“ ab Betttemperatur (35 °C), Kamera für Bild und Ergebnisfoto, **Kamera wach halten** (aus / während eines Drucks / immer) |
 | Filamentpreise | € je kg für PLA, PETG, ABS, ASA, TPU, PA und sonstige. `PLA-CF` nutzt den PLA-Preis |
-| Zeitraffer sichern | Ein/aus, wie viele neueste auf dem Drucker bleiben (0 = nie löschen) |
+| Zeitraffer sichern | Ein/aus, wie viele neueste auf dem Drucker bleiben (0 = nie löschen), wie viele im Medienordner bleiben (50, 0 = alle), Sicherungen nach x Tagen löschen (0 = nie) |
 | Wartung | Intervall je Punkt in Druckstunden (0 = ausblenden) |
 | Spoolman | Adresse (leer = aus), Verbrauch je Kopf abbuchen (an/aus), Warnschwelle in g |
 | Dateien | Anzahl neuester Dateien, Drucker-Konfiguration sichern (an) |
@@ -363,7 +363,7 @@ Englisch: „How far is the printer?“, „Pause the printer“, „Resume the 
 
 ## Sicherung der Drucker-Konfiguration
 
-Einmal am Tag, nie während eines Drucks, holt die Integration alle Dateien aus Moonrakers Wurzel `config` (printer.cfg, moonraker.conf, Makros …) nach `/config/snapmaker_u1_backup/<Drucker>/<Datum_Uhrzeit>/`. Ein neuer Stand entsteht nur, wenn sich etwas geändert hat; die letzten 10 bleiben. Logs, Datenbanken und Dateien über 2 MB werden übersprungen. Weil die Sicherungen im HA-Konfigordner liegen, sind sie auch in jedem Home-Assistant-Backup. Der letzte Stand steht in der Karte unter *System → Wartung*, mit Knopf zum sofortigen Sichern.
+Einmal am Tag, nie während eines Drucks, holt die Integration alle Dateien aus Moonrakers Wurzel `config` (printer.cfg, moonraker.conf, Makros …) nach `/config/snapmaker_u1_backup/<Drucker>/<Datum_Uhrzeit>/`. Ein neuer Stand entsteht nur, wenn sich etwas geändert hat; die letzten 5 bleiben. Logs, Datenbanken und Dateien über 2 MB werden übersprungen. Weil die Sicherungen im HA-Konfigordner liegen, sind sie auch in jedem Home-Assistant-Backup. Der letzte Stand steht in der Karte unter *System → Wartung*, mit Knopf zum sofortigen Sichern.
 
 ## Spulenverwaltung mit Spoolman
 
@@ -399,7 +399,7 @@ Die Spule je Kopf steht auch an `sensor.…_slot_1` … `_slot_4` (Attribute `sp
 
 Die Stock-Firmware legt Zeitraffer im Moonraker-Ordner `camera` ab (`Name_JJJJMMTThhmmss.mp4` mit `_cover.jpg`). Die Integration durchsucht alle Ordner außer Konfiguration und Logs, findet also auch Fluidd-Zeitraffer (`timelapse`). Abgespielt wird über einen angemeldeten Proxy der Integration mit kurzlebig signierten Links. Er liefert nur Dateien aus der Liste aus, nie beliebige Pfade vom Drucker.
 
-**Sichern.** Mit *Zeitraffer sichern* kopiert die Integration jedes neue Video samt Vorschaubild nach `<Medien>/snapmaker_u1/` (im Medienbrowser unter „Lokale Medien“, in der Karte unter „Gesichert in Medien“, abspielbar auch bei ausgeschaltetem Drucker). Während eines Drucks wird nicht kopiert.
+**Sichern.** Mit *Zeitraffer sichern* kopiert die Integration jedes neue Video samt Vorschaubild nach `<Medien>/snapmaker_u1/` (im Medienbrowser unter „Lokale Medien“, in der Karte unter „Gesichert in Medien“, abspielbar auch bei ausgeschaltetem Drucker). Während eines Drucks wird nicht kopiert. Damit der Ordner nicht vollläuft, bleiben standardmäßig die neuesten 50 Videos (Option *Im Medienordner behalten*), auf Wunsch zusätzlich eine Altersgrenze in Tagen. Entfernte Sicherungen werden nicht erneut geladen.
 
 **Auf dem Drucker aufräumen.** Moonraker gibt den Ordner `camera` nur lesend frei; löschen kann nur Snapmakers interner Kameradienst (`camera.delete_timelapse_instance`), dessen Parameter nicht dokumentiert sind. Die Integration löscht deshalb nur Videos, die vollständig gesichert sind, sichert vorher immer alles, ermittelt die Parameterform beim ersten Mal und merkt sie sich. Lehnt der Dienst alle Formen ab, bleibt alles stehen und die Karte zeigt „Löschen auf dem Drucker wird von der Firmware nicht unterstützt“.
 

@@ -28,7 +28,9 @@ from .const import (
     CONF_ALMOST_DONE,
     CONF_API_KEY,
     CONF_ARCHIVE,
+    CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_KEEP,
+    CONF_ARCHIVE_MAX,
     CONF_AUTO_OFF,
     CONF_AUTO_OFF_DELAY,
     CONF_AUTO_OFF_TEMP,
@@ -53,7 +55,9 @@ from .const import (
     CONF_SPOOLMAN_URL,
     DEFAULT_ALMOST_DONE,
     DEFAULT_ARCHIVE,
+    DEFAULT_ARCHIVE_DAYS,
     DEFAULT_ARCHIVE_KEEP,
+    DEFAULT_ARCHIVE_MAX,
     DEFAULT_AUTO_OFF,
     DEFAULT_AUTO_OFF_DELAY,
     DEFAULT_AUTO_OFF_TEMP,
@@ -79,7 +83,7 @@ SEC_SPOOLMAN = "spoolman"
 SEC_TIMELAPSE, SEC_MAINT = "timelapse", "maintenance"
 PRICE_FIELDS = [f"price_{k.lower()}" for k in (*FILAMENT_PRICE_KEYS, "OTHER")]
 MAINT_FIELDS = [f"maint_{k}" for k in MAINTENANCE_ITEMS]
-INT_FIELDS = (CONF_FILES_LIMIT, CONF_AUTO_OFF_TEMP, CONF_AUTO_OFF_DELAY, CONF_SPOOLMAN_LOW, CONF_ARCHIVE_KEEP,
+INT_FIELDS = (CONF_FILES_LIMIT, CONF_AUTO_OFF_TEMP, CONF_AUTO_OFF_DELAY, CONF_SPOOLMAN_LOW, CONF_ARCHIVE_KEEP, CONF_ARCHIVE_MAX, CONF_ARCHIVE_DAYS,
               CONF_ALMOST_DONE, CONF_BED_COOL, CONF_IDLE_OFF)
 
 
@@ -167,6 +171,8 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
         {
             vol.Required(CONF_ARCHIVE, default=DEFAULT_ARCHIVE): selector.BooleanSelector(),
             vol.Required(CONF_ARCHIVE_KEEP, default=DEFAULT_ARCHIVE_KEEP): _box(0, 100, 1),
+            vol.Required(CONF_ARCHIVE_MAX, default=DEFAULT_ARCHIVE_MAX): _box(0, 1000, 1),
+            vol.Required(CONF_ARCHIVE_DAYS, default=DEFAULT_ARCHIVE_DAYS): _box(0, 3650, 1, "d"),
         }
     )
     maintenance = vol.Schema(
@@ -233,7 +239,7 @@ def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
         SEC_FILAMENT: tuple(PRICE_FIELDS),
         SEC_SPOOLMAN: (CONF_SPOOLMAN_URL, CONF_SPOOLMAN_DEDUCT, CONF_SPOOLMAN_LOW),
         SEC_FILES: (CONF_FILES_LIMIT, CONF_BACKUP),
-        SEC_TIMELAPSE: (CONF_ARCHIVE, CONF_ARCHIVE_KEEP),
+        SEC_TIMELAPSE: (CONF_ARCHIVE, CONF_ARCHIVE_KEEP, CONF_ARCHIVE_MAX, CONF_ARCHIVE_DAYS),
         SEC_MAINT: tuple(MAINT_FIELDS),
     }
     return {sec: {k: opts[k] for k in keys if k in opts} for sec, keys in groups.items()}

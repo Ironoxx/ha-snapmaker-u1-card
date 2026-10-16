@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -27,6 +27,9 @@ CONF_AUTO_OFF_TEMP = "auto_off_temp"
 CONF_AUTO_OFF_DELAY = "auto_off_delay"
 CONF_ARCHIVE = "timelapse_archive"      # Back up timelapses to /media
 CONF_ARCHIVE_KEEP = "timelapse_keep"    # keep this many newest on the printer (0 = never delete)
+# Limits for the backup in the media folder (0 = no limit)
+CONF_ARCHIVE_MAX = "timelapse_archive_max"    # newest videos kept
+CONF_ARCHIVE_DAYS = "timelapse_archive_days"  # delete backups older than this
 CONF_MAINTENANCE = "maintenance"        # {"plate": 30, ...} intervals in print hours
 
 DEFAULT_PORT = 80
@@ -52,7 +55,7 @@ CONF_ALMOST_DONE = "almost_done_minutes"
 DEFAULT_ALMOST_DONE = 10  # minutes before the end
 CONF_BACKUP = "config_backup"
 DEFAULT_BACKUP = True
-BACKUP_KEEP = 10
+BACKUP_KEEP = 5
 BACKUP_MAX_BYTES = 2 * 1024**2
 BACKUP_DIR = "snapmaker_u1_backup"
 HISTORY_SIZE = 20
@@ -61,6 +64,8 @@ DEFAULT_SPOOLMAN_LOW = 100  # g
 SPOOLMAN_INTERVAL_S = 60
 DEFAULT_ARCHIVE = False
 DEFAULT_ARCHIVE_KEEP = 5
+DEFAULT_ARCHIVE_MAX = 50
+DEFAULT_ARCHIVE_DAYS = 0
 STATS_INTERVAL_S = 900
 UPLOAD_MAX_BYTES = 2 * 1024**3
 TIMELAPSE_INTERVAL_S = 300

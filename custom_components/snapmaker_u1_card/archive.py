@@ -59,6 +59,19 @@ def list_archive(folder: Path) -> list[dict[str, Any]]:
     return out
 
 
+PRUNED_MEMORY = 1000
+
+
+def _delete_backups(folder: Path, names: list[str], poster_cache: Path | None) -> None:
+    """Delete backed-up videos with their preview images (blocking)."""
+    for name in names:
+        video = folder / name
+        video.unlink(missing_ok=True)
+        video.with_suffix(".jpg").unlink(missing_ok=True)
+        if poster_cache is not None:
+            (poster_cache / f"{video.stem}.jpg").unlink(missing_ok=True)
+
+
 def _copy(src: Path, dst: Path) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
@@ -75,11 +88,35 @@ class TimelapseArchive:
         self.cleanup: str | None = stored.get("cleanup")  # Status for display
         self.last_backup: float | None = stored.get("last_backup")
         self.errors: list[str] = []
+        # Backups removed by the limits: never download them again while they
+        # are still on the printer (newest last, capped)
+        self.pruned: list[str] = list(stored.get("pruned") or [])
         # Retry after every restart (e.g. after a firmware update)
         self._unsupported = False
 
     def as_stored(self) -> dict[str, Any]:
-        return {"delete_style": self.delete_style, "cleanup": self.cleanup, "last_backup": self.last_backup}
+        return {"delete_style": self.delete_style, "cleanup": self.cleanup, "last_backup": self.last_backup,
+                "pruned": self.pruned[-PRUNED_MEMORY:]}
+
+    async def prune_archive(self, hass: Any, max_count: int, max_days: int,
+                            poster_cache: Path | None = None) -> list[str]:
+        """Apply the limits to the media folder: newest ``max_count``, not older than ``max_days``.
+
+        0 means no limit. Deletes the video and its preview image.
+        """
+        if max_count <= 0 and max_days <= 0:
+            return []
+        videos = await hass.async_add_executor_job(list_archive, self.folder)
+        cutoff = time.time() - max_days * 86400 if max_days > 0 else None
+        drop = [v for i, v in enumerate(videos)
+                if (max_count > 0 and i >= max_count) or (cutoff is not None and v["modified"] < cutoff)]
+        if not drop:
+            return []
+        names = [v["file"] for v in drop]
+        await hass.async_add_executor_job(_delete_backups, self.folder, names, poster_cache)
+        self.pruned = [n for n in self.pruned if n not in names] + names
+        _LOGGER.info("Timelapse backups removed (limit): %s", ", ".join(names))
+        return names
 
     async def backup(
         self, hass: Any, videos: list[dict[str, Any]], poster_dir: Path, poster_cache: Path | None = None
@@ -97,6 +134,8 @@ class TimelapseArchive:
             size = video.get("size")
             if name in have and (size is None or have[name] == size):
                 continue
+            if name in self.pruned and name not in have:
+                continue  # removed by the archive limits, do not fetch again
             target = self.folder / name
             try:
                 await self.client.download_to(video["root"], video["path"], target, hass)

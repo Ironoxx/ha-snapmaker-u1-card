@@ -173,7 +173,8 @@ class UpkeepMixin:
         if self.spools.enabled:
             okay = await self.spools.async_refresh()
             add("spoolman", okay, t(f"Spoolman: {len(self.spools.spools)} Spulen", f"Spoolman: {len(self.spools.spools)} spools")
-                if okay else t("Spoolman nicht erreichbar", "Spoolman unreachable"))
+                if okay else t(f"Spoolman nicht erreichbar ({self.spools.client.url}): {self.spools.error or '?'}",
+                               f"Spoolman unreachable ({self.spools.client.url}): {self.spools.error or '?'}"))
         # Assist
         sentences = Path(self.hass.config.path("custom_sentences", "de", f"{DOMAIN}.yaml"))
         exists = await self.hass.async_add_executor_job(sentences.exists)

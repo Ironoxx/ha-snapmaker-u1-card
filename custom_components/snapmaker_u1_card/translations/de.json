@@ -111,10 +111,14 @@
             "description": "Kopiert neue Zeitraffer in den Medienordner von Home Assistant (snapmaker_u1). Danach können die ältesten auf dem Drucker gelöscht werden.",
             "data": {
               "timelapse_archive": "Zeitraffer sichern",
-              "timelapse_keep": "Auf dem Drucker behalten"
+              "timelapse_keep": "Auf dem Drucker behalten",
+              "timelapse_archive_max": "Im Medienordner behalten",
+              "timelapse_archive_days": "Sicherungen löschen nach"
             },
             "data_description": {
-              "timelapse_keep": "So viele neueste bleiben auf dem Drucker, ältere werden nach der Sicherung gelöscht. 0 = nie löschen."
+              "timelapse_keep": "So viele neueste bleiben auf dem Drucker, ältere werden nach der Sicherung gelöscht. 0 = nie löschen.",
+              "timelapse_archive_max": "So viele neueste Videos bleiben im Medienordner, ältere werden gelöscht. 0 = alle behalten.",
+              "timelapse_archive_days": "Tage; 0 = ohne Altersgrenze."
             }
           },
           "maintenance": {
@@ -238,10 +242,14 @@
             "description": "Kopiert neue Zeitraffer in den Medienordner von Home Assistant (snapmaker_u1). Danach können die ältesten auf dem Drucker gelöscht werden.",
             "data": {
               "timelapse_archive": "Zeitraffer sichern",
-              "timelapse_keep": "Auf dem Drucker behalten"
+              "timelapse_keep": "Auf dem Drucker behalten",
+              "timelapse_archive_max": "Im Medienordner behalten",
+              "timelapse_archive_days": "Sicherungen löschen nach"
             },
             "data_description": {
-              "timelapse_keep": "So viele neueste bleiben auf dem Drucker, ältere werden nach der Sicherung gelöscht. 0 = nie löschen."
+              "timelapse_keep": "So viele neueste bleiben auf dem Drucker, ältere werden nach der Sicherung gelöscht. 0 = nie löschen.",
+              "timelapse_archive_max": "So viele neueste Videos bleiben im Medienordner, ältere werden gelöscht. 0 = alle behalten.",
+              "timelapse_archive_days": "Tage; 0 = ohne Altersgrenze."
             }
           },
           "maintenance": {

@@ -112,3 +112,33 @@ async def test_camera_wake(hass: HomeAssistant, mock_client, notifications) -> N
 async def test_camera_wake_off_by_default(hass: HomeAssistant, mock_client, notifications) -> None:
     entry = await _setup(hass)
     assert entry.runtime_data._unsub_wake is None
+
+
+async def test_archive_limits(hass: HomeAssistant, tmp_path) -> None:
+    """Media folder limits: newest N kept, pruned videos are not fetched again."""
+    import os
+    import time as _time
+
+    from custom_components.snapmaker_u1_card.archive import TimelapseArchive
+
+    folder, cache = tmp_path / "media", tmp_path / "cache"
+    folder.mkdir()
+    cache.mkdir()
+    now = _time.time()
+    for i in range(4):
+        (folder / f"v{i}.mp4").write_bytes(b"x")
+        (folder / f"v{i}.jpg").write_bytes(b"j")
+        (cache / f"v{i}.jpg").write_bytes(b"j")
+        os.utime(folder / f"v{i}.mp4", (now - i * 86400 * 10, now - i * 86400 * 10))  # v0 newest
+    client = AsyncMock()
+    arch = TimelapseArchive(client, folder, None)
+    assert await arch.prune_archive(hass, 0, 0) == []
+    assert sorted(await arch.prune_archive(hass, 2, 0, cache)) == ["v2.mp4", "v3.mp4"]
+    assert sorted(p.name for p in folder.iterdir()) == ["v0.jpg", "v0.mp4", "v1.jpg", "v1.mp4"]
+    assert sorted(p.name for p in cache.iterdir()) == ["v0.jpg", "v1.jpg"]
+    # Age limit: v1 is 10 days old
+    assert await arch.prune_archive(hass, 0, 5) == ["v1.mp4"]
+    # Still on the printer: not downloaded again, the state survives a restart
+    again = TimelapseArchive(client, folder, arch.as_stored())
+    saved = await again.backup(hass, [{"root": "camera", "path": "v3.mp4", "size": 1}], tmp_path, None)
+    assert saved == [] and client.download_to.await_count == 0

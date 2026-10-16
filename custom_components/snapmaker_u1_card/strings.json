@@ -111,10 +111,14 @@
             "description": "Copies new timelapses to Home Assistant's media folder (snapmaker_u1). The oldest can then be deleted on the printer.",
             "data": {
               "timelapse_archive": "Back up timelapses",
-              "timelapse_keep": "Keep on the printer"
+              "timelapse_keep": "Keep on the printer",
+              "timelapse_archive_max": "Keep in media folder",
+              "timelapse_archive_days": "Delete backups older than"
             },
             "data_description": {
-              "timelapse_keep": "This many newest stay on the printer, older ones are deleted after the backup. 0 = never delete."
+              "timelapse_keep": "This many newest stay on the printer, older ones are deleted after the backup. 0 = never delete.",
+              "timelapse_archive_max": "Newest videos kept in the media folder; older ones are deleted. 0 = keep all.",
+              "timelapse_archive_days": "Days; 0 = no age limit."
             }
           },
           "maintenance": {
@@ -238,10 +242,14 @@
             "description": "Copies new timelapses to Home Assistant's media folder (snapmaker_u1). The oldest can then be deleted on the printer.",
             "data": {
               "timelapse_archive": "Back up timelapses",
-              "timelapse_keep": "Keep on the printer"
+              "timelapse_keep": "Keep on the printer",
+              "timelapse_archive_max": "Keep in media folder",
+              "timelapse_archive_days": "Delete backups older than"
             },
             "data_description": {
-              "timelapse_keep": "This many newest stay on the printer, older ones are deleted after the backup. 0 = never delete."
+              "timelapse_keep": "This many newest stay on the printer, older ones are deleted after the backup. 0 = never delete.",
+              "timelapse_archive_max": "Newest videos kept in the media folder; older ones are deleted. 0 = keep all.",
+              "timelapse_archive_days": "Days; 0 = no age limit."
             }
           },
           "maintenance": {

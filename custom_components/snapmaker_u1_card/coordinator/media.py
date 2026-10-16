@@ -16,8 +16,12 @@ from ..api import (
 )
 from ..archive import list_archive
 from ..const import (
+    CONF_ARCHIVE_DAYS,
     CONF_ARCHIVE_KEEP,
+    CONF_ARCHIVE_MAX,
+    DEFAULT_ARCHIVE_DAYS,
     DEFAULT_ARCHIVE_KEEP,
+    DEFAULT_ARCHIVE_MAX,
     DOMAIN,
     THUMB_URL,
 )
@@ -105,6 +109,10 @@ class MediaMixin:
         self.async_update_listeners()
         try:
             await self.archive.backup(self.hass, videos, self._own_dir / "tl", self._own_dir / "archive")
+            await self.archive.prune_archive(
+                self.hass, int(self.options.get(CONF_ARCHIVE_MAX, DEFAULT_ARCHIVE_MAX)),
+                int(self.options.get(CONF_ARCHIVE_DAYS, DEFAULT_ARCHIVE_DAYS)), self._own_dir / "archive",
+            )
             keep = int(self.options.get(CONF_ARCHIVE_KEEP, DEFAULT_ARCHIVE_KEEP))
             if keep > 0 and not (self.data and self.data.print_state in ACTIVE_PRINT_STATES):
                 deleted = await self.archive.cleanup_printer(self.hass, videos, keep)

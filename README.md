@@ -143,7 +143,7 @@ During setup a second step with all settings follows right after the address. La
 | Power and consumption | power switch, power sensor (W), energy meter (kWh), energy price entity (EUR/kWh or ct/kWh), shut down before switching off, auto-on at print start, auto-off after the print (temperature, delay), switch off after idle (hours) |
 | Notifications & camera | `notify.mobile_app_…` services, events (finished, cancelled, error, paused, message during print, first layer done, almost done, not enough filament), "almost done" lead time in minutes (10), "part removable" below bed temperature (35 °C), camera for image and result photo, **keep camera awake** (off / during a print / always) |
 | Filament prices | price per kg for PLA, PETG, ABS, ASA, TPU, PA and others. `PLA-CF` uses the PLA price |
-| Timelapse backup | on/off, how many of the newest stay on the printer (0 = never delete) |
+| Timelapse backup | on/off, how many of the newest stay on the printer (0 = never delete), how many stay in the media folder (50, 0 = all), delete backups older than x days (0 = never) |
 | Maintenance | interval per item in print hours (0 = hide) |
 | Spoolman | address (empty = off), book usage per head (on/off), warning threshold in g |
 | Files | number of newest files, back up printer configuration (on) |
@@ -368,7 +368,7 @@ German: "Wie weit ist der Drucker?", "Pausiere den Drucker", "Drucker fortsetzen
 
 ## Printer configuration backup
 
-Once a day, never during a print, the integration fetches all files from Moonraker's `config` root (printer.cfg, moonraker.conf, macros …) to `/config/snapmaker_u1_backup/<printer>/<date_time>/`. A new snapshot is only created when something changed; the last 10 are kept. Logs, databases and files above 2 MB are skipped. Because the backups live in the HA config folder, they are part of every Home Assistant backup. The latest snapshot is shown in the card under *System → Maintenance*, with a button to back up right away.
+Once a day, never during a print, the integration fetches all files from Moonraker's `config` root (printer.cfg, moonraker.conf, macros …) to `/config/snapmaker_u1_backup/<printer>/<date_time>/`. A new snapshot is only created when something changed; the last 5 are kept. Logs, databases and files above 2 MB are skipped. Because the backups live in the HA config folder, they are part of every Home Assistant backup. The latest snapshot is shown in the card under *System → Maintenance*, with a button to back up right away.
 
 ## Spool management with Spoolman
 
@@ -404,7 +404,7 @@ The spool per head is also available on `sensor.…_slot_1` … `_slot_4` (attri
 
 The stock firmware stores timelapses in the Moonraker folder `camera` (`Name_YYYYMMDDhhmmss.mp4` with `_cover.jpg`). The integration searches all folders except config and logs, so Fluidd timelapses (`timelapse`) are found too. Playback goes through an authenticated proxy of the integration with short-lived signed links. It only serves files from the list, never arbitrary paths from the printer.
 
-**Backup.** With *Timelapse backup* the integration copies every new video including its preview to `<media>/snapmaker_u1/` ("Local media" in the media browser, "Saved in media" in the card, playable even with the printer off). Nothing is copied during a print.
+**Backup.** With *Timelapse backup* the integration copies every new video including its preview to `<media>/snapmaker_u1/` ("Local media" in the media browser, "Saved in media" in the card, playable even with the printer off). Nothing is copied during a print. So the folder does not fill up, only the newest 50 videos are kept by default (option *Keep in media folder*); optionally also an age limit in days. Removed backups are not downloaded again.
 
 **Cleaning up on the printer.** Moonraker exposes the `camera` folder read-only; only Snapmaker's internal camera service (`camera.delete_timelapse_instance`) can delete, and its parameters are undocumented. The integration therefore only deletes videos that are fully backed up, always backs up everything first, probes the parameter form once and remembers it. If the service refuses all forms, everything stays and the card shows that deleting on the printer is not supported by the firmware.
 
