@@ -19,7 +19,7 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **Visual editor** for both cards, no YAML needed.
 - **Tool changes**: total, per head, in the running or last print, and progress towards the recommended maintenance.
 - **Power switch**: any plug (Shelly, KNX, Zigbee …). Switching off shuts the printer down cleanly first and is blocked during a print. Optional auto-off after the print and auto-on when starting a print from the card.
-- **Energy and cost per print**: consumption from an energy meter, cost with a price entity (dynamic tariffs work too), filament cost from slicer weight and price per kg.
+- **Energy and cost per print**: consumption from an energy meter, cost with a price entity (dynamic tariffs work too), a fixed price or the price from the Home Assistant energy dashboard, filament cost from slicer weight and price per kg.
 - **Print history** of the last 20 prints with result, duration, weight, kWh, tool changes and cost.
 - **Live instead of polling**: Moonraker reports state changes, layer, active head and errors immediately (WebSocket subscription). Regular polling then only runs every 30 s as a consistency check.
 - **Phone notifications** at print end, error or pause (e.g. filament runout), for new printer messages during a print, after the first layer, shortly before the end and when a spool will not last, with a camera image.
@@ -431,6 +431,7 @@ The U1 firmware reports errors in a structured way (module, head, code). The int
 - **No notification**: check the service name (Developer tools → Actions → `notify.mobile_app_…`). Only the Companion app attaches the camera image.
 - **Diagnostics**: *Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*. Contains options, state of the live subscription, raw printer status, errors and queue; address, API key, Spoolman address and notification targets are redacted.
 - **Voice command not recognised**: test the sentence under *Developer tools → Assist*. If a different intent shows up, it collides with a built-in sentence; add your own sentences to the file (delete the first line, see above).
+- **Spoolman not reachable**: use the IP address instead of `homeassistant.local` (Home Assistant often cannot resolve its own mDNS name) and the port Spoolman is published on; for the add-on see *Settings → Add-ons → Spoolman → Configuration → Network*. Check in a browser: `http://<IP>:<port>/api/v1/info` must return JSON with `version`. The self-test shows the address and the exact error.
 - **No files**: check under *Devices & services → Snapmaker U1 Card* whether the integration is connected. Then call the `refresh` service.
 
 ## Support

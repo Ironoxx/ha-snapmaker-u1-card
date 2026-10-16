@@ -19,7 +19,7 @@ Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapm
 - **Visueller Editor** für beide Karten, kein YAML nötig.
 - **Werkzeugwechsel**: gesamt, je Kopf, im laufenden bzw. letzten Druck und Stand bis zur empfohlenen Wartung.
 - **Netzschalter**: beliebige Steckdose (Shelly, KNX, Zigbee …). Ausschalten fährt den Drucker vorher sauber herunter und ist während eines Drucks gesperrt. Auf Wunsch automatisch aus nach dem Druck und automatisch ein beim Druckstart aus der Karte.
-- **Strom und Kosten je Druck**: Verbrauch aus dem Energiezähler, Kosten mit Preis-Entität (auch dynamische Tarife), Filamentkosten aus Slicer-Gewicht und Preis je kg.
+- **Strom und Kosten je Druck**: Verbrauch aus dem Energiezähler, Kosten mit Preis-Entität (auch dynamische Tarife), festem Preis oder dem Preis aus dem Energie-Dashboard von Home Assistant, Filamentkosten aus Slicer-Gewicht und Preis je kg.
 - **Druckhistorie** der letzten 20 Drucke mit Ergebnis, Dauer, Gewicht, kWh, Wechseln und Kosten.
 - **Live statt Abfragen**: Moonraker meldet Statuswechsel, Schicht, aktiven Kopf und Fehler sofort (WebSocket-Abo). Die regelmäßige Abfrage läuft dann nur noch alle 30 s als Abgleich.
 - **Benachrichtigung** aufs Handy bei Druckende, Fehler oder Pause (z. B. Filament leer), bei neuen Druckermeldungen im Druck, nach der ersten Schicht, kurz vor Ende und wenn eine Spule nicht reicht, mit Kamerabild.
@@ -426,6 +426,7 @@ Die U1-Firmware meldet Fehler strukturiert (Modul, Kopf, Code). Die Integration 
 - **Keine Benachrichtigung**: Dienstname prüfen (Entwicklerwerkzeuge → Aktionen → `notify.mobile_app_…`). Das Kamerabild hängt nur die Companion-App an.
 - **Diagnose**: *Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*. Enthält Optionen, Zustand des Live-Abos, Rohstatus des Druckers, Fehler und Warteschlange; Adresse, API-Schlüssel, Spoolman-Adresse und Benachrichtigungsziele sind geschwärzt.
 - **Sprachbefehl wird nicht erkannt**: Unter *Entwicklerwerkzeuge → Assist* den Satz testen. Steht dort eine andere Absicht, kollidiert er mit einem eingebauten Satz; dann eigene Sätze in der Datei ergänzen (erste Zeile löschen, siehe oben).
+- **Spoolman nicht erreichbar**: IP-Adresse statt `homeassistant.local` eintragen (Home Assistant löst den eigenen mDNS-Namen oft nicht auf) und den Port, unter dem Spoolman erreichbar ist; beim Add-on unter *Einstellungen → Add-ons → Spoolman → Konfiguration → Netzwerk*. Prüfen im Browser: `http://<IP>:<Port>/api/v1/info` muss JSON mit `version` liefern. Der Selbsttest zeigt Adresse und genauen Fehler.
 - **Keine Dateien**: Unter *Geräte & Dienste → Snapmaker U1 Card* prüfen, ob die Integration verbunden ist. Danach den Dienst `refresh` aufrufen.
 
 ## Unterstützen
