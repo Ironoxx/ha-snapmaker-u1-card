@@ -163,3 +163,6 @@ async def test_diagnostics_redacts(hass: HomeAssistant, mock_client, notificatio
     assert diag["entry"]["options"]["notify_targets"] == "**REDACTED**"
     assert diag["live"]["connected"] is False and diag["online"] is True
     assert "printer" in diag and diag["version"]
+    assert "installed" in diag["firmware"]
+    if diag["spoolman"]:
+        assert diag["spoolman"].get("url") in (None, "**REDACTED**")

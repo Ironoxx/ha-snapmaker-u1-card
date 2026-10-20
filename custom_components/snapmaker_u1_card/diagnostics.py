@@ -16,7 +16,9 @@ from homeassistant.core import HomeAssistant
 from .api import MoonrakerError
 from .const import CONF_NOTIFY, CONF_SPOOLMAN_URL, VERSION
 
-TO_REDACT = {"api_key", CONF_SPOOLMAN_URL, CONF_NOTIFY, "host", "access_token", "token"}
+# "url" covers the Spoolman address inside the spoolman block (diagnostics are
+# often posted publicly, e.g. on Reddit)
+TO_REDACT = {"api_key", CONF_SPOOLMAN_URL, CONF_NOTIFY, "host", "access_token", "token", "url"}
 
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
@@ -36,6 +38,8 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
                         "size": meta.get("size")}
     return async_redact_data({
         "version": VERSION,
+        "firmware": {"installed": coord.firmware.get("installed"),
+                     "latest": (coord.firmware.get("latest") or {}).get("version")},
         "entry": {"data": dict(entry.data), "options": dict(entry.options)},
         "live": {"connected": coord.live.connected, "messages": coord.live.messages,
                  "interval_s": coord.update_interval.total_seconds() if coord.update_interval else None},
