@@ -13,8 +13,9 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 - Diagnostics include the installed and the latest firmware version.
 
 ---
-**Behoben:** Diagnose-Download schwärzt jetzt die Spoolman-Adresse (stand vorher im Spoolman-Abschnitt im Klartext).
-**Verbessert:** Diagnose enthält die installierte und die neueste Firmware-Version.
+**Deutsch**
+- Behoben: Diagnose-Download schwärzt jetzt die Spoolman-Adresse (stand vorher im Spoolman-Abschnitt im Klartext).
+- Verbessert: Diagnose enthält die installierte und die neueste Firmware-Version.
 
 ## 1.3.1
 
@@ -25,8 +26,9 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 - If the HA camera stream delivers nothing, the card switches to still images after 6 s instead of 10 s.
 
 ---
-**Neu:** Schnellere Kamera – Stream direkt vom Drucker statt über HA (`camera_direct: auto`, Standard). Greift, wenn HA im Heimnetz per `http://` geöffnet ist; bei `https://` oder unterwegs nimmt die Karte automatisch den Weg über HA. Eigene Adresse: `camera_direct_url`, abschalten mit `camera_direct: off`.
-**Verbessert:** Liefert der HA-Stream nichts, wechselt die Karte nach 6 s statt 10 s auf Einzelbilder.
+**Deutsch**
+- Neu: Schnellere Kamera – Stream direkt vom Drucker statt über HA (`camera_direct: auto`, Standard). Greift, wenn HA im Heimnetz per `http://` geöffnet ist; bei `https://` oder unterwegs nimmt die Karte automatisch den Weg über HA. Eigene Adresse: `camera_direct_url`, abschalten mit `camera_direct: off`.
+- Verbessert: Liefert der HA-Stream nichts, wechselt die Karte nach 6 s statt 10 s auf Einzelbilder.
 
 ## 1.3.0
 
@@ -38,7 +40,8 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 - Notice when the browser still runs an old card after an update, with a reload button.
 
 ---
-**Neu:** Not-Halt anzeigen / gesichert (1 s halten) / ausblenden · eigener Bestätigungsdialog · Tablet-/Monitor-Layout · Kamera wecken bei stehendem Bild (Stock-Firmware) · Hinweis bei veralteter Karte im Browser-Cache.
+**Deutsch**
+- Neu: Not-Halt anzeigen / gesichert (1 s halten) / ausblenden · eigener Bestätigungsdialog · Tablet-/Monitor-Layout · Kamera wecken bei stehendem Bild (Stock-Firmware) · Hinweis bei veralteter Karte im Browser-Cache.
 
 ## 1.2.3
 
