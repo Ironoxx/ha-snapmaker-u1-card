@@ -705,6 +705,16 @@
           "description": "Nur bei mehreren Druckern nötig."
         }
       }
+    },
+    "camera_wake": {
+      "name": "Kamera wecken",
+      "description": "Schickt einmal camera.start_monitor (wie die Snapmaker-App). Die Karte ruft das automatisch auf, wenn das Kamerabild stehen bleibt.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {

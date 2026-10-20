@@ -39,6 +39,7 @@ export const RenderMixin = (Base) => class extends Base {
       d.timelapses && d.timelapses.archive ? `${d.timelapses.archive.count}${d.timelapses.archive.busy}${d.timelapses.archive.cleanup}${d.timelapses.archive.last_backup}` : "noa",
       this._up ? `up${!!this._up.error}${this._up.done}` : "",
       JSON.stringify(this._prefs()),
+      this._st(this._ents.files)?.attributes.version || "",
     ].join("~");
 
     if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
@@ -108,15 +109,18 @@ export const RenderMixin = (Base) => class extends Base {
         if (a === "lock") return this._toggleLock();
         if (a === "power") return this._togglePower();
         if (a === "cancel") {
-          if (confirm(tr("Druck wirklich abbrechen?"))) this._press("cancel_print");
-          return;
-        }
-        if (a === "estop") {
-          if (confirm(tr("Not-Halt auslösen? Klipper muss danach neu gestartet werden.")))
-            this._press("emergency_stop");
+          this._confirmAction({
+            icon: "mdi:stop-circle-outline", tone: "error", title: tr("Druck wirklich abbrechen?"),
+            text: tr("Der laufende Druck lässt sich danach nicht fortsetzen."), ok: tr("Druck abbrechen"),
+            cancel: tr("Weiterdrucken"),
+          }).then((yes) => { if (yes) this._press("cancel_print"); });
         }
       })
     );
+    this._wireEstop(r);
+    const rl = r.querySelector("[data-reload]");
+    // Reload bypassing the cache for the card resource (the URL carries ?v=)
+    if (rl) rl.addEventListener("click", () => window.location.reload());
 
     const inp = r.querySelector("input[data-upload]");
     if (inp) inp.addEventListener("change", () => { if (inp.files && inp.files[0]) this._upload(inp.files[0]); inp.value = ""; });

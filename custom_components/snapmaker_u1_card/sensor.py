@@ -185,7 +185,7 @@ class FilesSensor(U1Entity, SensorEntity):
 
     _attr_translation_key = "files"
     _attr_icon = "mdi:file-document-multiple-outline"
-    _unrecorded_attributes = frozenset({"files", "entry_id", "updated", "all", "cost_basis"})
+    _unrecorded_attributes = frozenset({"files", "entry_id", "updated", "all", "cost_basis", "version"})
 
     def __init__(self, coordinator: U1Coordinator) -> None:
         super().__init__(coordinator, "files")
@@ -214,6 +214,8 @@ class FilesSensor(U1Entity, SensorEntity):
             "all": coord.data.all_files,
             "updated": self.coordinator.data.files_updated,
             "entry_id": self.coordinator.config_entry.entry_id,
+            # the card compares it with its own version (outdated browser cache)
+            "version": VERSION,
         }
 
 

@@ -705,6 +705,16 @@
           "description": "Only needed with several printers."
         }
       }
+    },
+    "camera_wake": {
+      "name": "Wake camera",
+      "description": "Sends camera.start_monitor once (like the Snapmaker app). The card calls this automatically when the camera image stops.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {

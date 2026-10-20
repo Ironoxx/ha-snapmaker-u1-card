@@ -114,6 +114,18 @@ async def test_camera_wake_off_by_default(hass: HomeAssistant, mock_client, noti
     assert entry.runtime_data._unsub_wake is None
 
 
+async def test_camera_wake_service(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Card-requested wake works with the option off and is limited to one call per 5 s."""
+    entry = await _setup(hass)
+    with patch(f"{API}.camera_wake", AsyncMock()) as wake:
+        await hass.services.async_call(DOMAIN, "camera_wake", {}, blocking=True)
+        await hass.services.async_call(DOMAIN, "camera_wake", {}, blocking=True)
+        wake.assert_awaited_once()
+        entry.runtime_data._wake_last -= 10
+        await hass.services.async_call(DOMAIN, "camera_wake", {}, blocking=True)
+        assert wake.await_count == 2
+
+
 async def test_archive_limits(hass: HomeAssistant, tmp_path) -> None:
     """Media folder limits: newest N kept, pruned videos are not fetched again."""
     import os

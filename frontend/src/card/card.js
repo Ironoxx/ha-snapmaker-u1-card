@@ -26,7 +26,9 @@
  *   stream_check      stream check interval in seconds       (10)
  *   stale_after       "image outdated" after x seconds       (90)
  *   printer_name / printer_brand
- *   layout            tabs | scroll                          (tabs)
+ *   layout            tabs | scroll | tablet                 (tabs)
+ *   emergency_stop    show | hold | hide                     (show)
+ *   camera_wake       wake the camera when the image stops   (true)
  *   camera_overlay    progress on the camera image           (true)
  *   state_accent      frame in the state colour              (true)
  *   hide / show       sections: stage layer job queue files toolheads climate
@@ -59,13 +61,14 @@ import { ZoomMixin } from "./zoom.js";
 import { PrintDialogMixin } from "./dialog.js";
 import { CameraMixin } from "./camera.js";
 import { HeadDialogMixin } from "./head-dialog.js";
+import { SafetyMixin } from "./safety.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin,
+  HeadDialogMixin, SafetyMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -142,6 +145,8 @@ export class SnapmakerU1Card extends U1Base {
       layout: "tabs",
       camera_overlay: true,
       state_accent: true,
+      emergency_stop: "show",
+      camera_wake: true,
       show: SECTIONS,
       nozzle_presets: [0, 210, 240, 260],
       bed_presets: [0, 55, 65, 85],

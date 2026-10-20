@@ -167,6 +167,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         self._backup_task: asyncio.Task | None = None
         self._unsub_wake: Any = None  # camera wake-up timer (printer.py)
         self._wake_busy = False
+        self._wake_last = 0.0  # monotonic time of the last card-requested wake
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
 
     # ── Options ─────────────────────────────────────────────────────────────

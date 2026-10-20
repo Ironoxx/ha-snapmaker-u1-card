@@ -124,6 +124,48 @@ export const STYLES = `
     :host { --u1-pad: 20px; --u1-gap: 16px; }
   }
 
+  /* layout: tablet – camera/job column beside the tabs. Both columns are
+     containers named u1 themselves, so the grid rules above follow the
+     column width instead of the card width. */
+  .tablet { display: grid; gap: var(--u1-gap); grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .tablet-side, .tablet-main {
+    container-type: inline-size; container-name: u1;
+    display: flex; flex-direction: column; gap: var(--u1-gap); min-width: 0;
+  }
+  .tablet-side > .panel { width: 100%; }
+  .tablet-main > .tabs { margin: 0; padding: 0; }
+  @container u1 (min-width: 900px) {
+    .tablet { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); }
+  }
+  @container u1 (min-width: 1500px) {
+    .tablet { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
+
+  /* Emergency stop: hold mode fills the button while pressed */
+  button.danger { position: relative; overflow: hidden; }
+  button.danger > span { position: relative; }
+  button.danger .hold-fill {
+    position: absolute; inset: 0; transform-origin: left; transform: scaleX(0);
+    background: color-mix(in srgb, var(--u1-error) 55%, transparent);
+  }
+  button.danger.holding .hold-fill { transform: scaleX(1); transition: transform 1s linear; }
+  button.danger.hold { touch-action: none; user-select: none; -webkit-user-select: none; }
+  button.danger.strong { background: var(--u1-error); color: var(--md-sys-color-on-error, #690005); }
+
+  /* Confirm dialog */
+  dialog.u1confirm {
+    border: none; padding: 0; margin: auto; width: min(420px, calc(100vw - 32px));
+    border-radius: var(--u1-r-xl); background: var(--u1-panel-high); color: var(--u1-on);
+    box-shadow: var(--md-sys-elevation-level3, 0 8px 24px rgba(0,0,0,.4));
+  }
+  dialog.u1confirm::backdrop { background: rgba(0,0,0,.5); }
+  dialog.u1confirm .confirm-head { display: flex; gap: 12px; align-items: center; }
+  dialog.u1confirm .confirm-head ha-icon { --mdc-icon-size: 28px; color: var(--u1-primary); flex-shrink: 0; }
+  dialog.u1confirm[data-tone="error"] .confirm-head ha-icon { color: var(--u1-error); }
+  dialog.u1confirm .t-body { color: var(--u1-on-variant); }
+  dialog.u1confirm .dlg-actions { flex-wrap: wrap; }
+  dialog.u1confirm .dlg-actions button { min-width: 0; flex: 1 1 140px; }
+
   .panel {
     background: var(--u1-panel);
     border-radius: var(--u1-r-l);
@@ -666,6 +708,8 @@ export const STYLES = `
   }
   .alert[data-level="error"] { background: var(--u1-error-container); color: var(--u1-on-error-container); }
   .alert ha-icon { --mdc-icon-size: 20px; flex-shrink: 0; color: var(--u1-warn); }
+  .alert > div { flex: 1; min-width: 0; }
+  .alert > button { flex-shrink: 0; align-self: center; }
   .alert[data-level="error"] ha-icon { color: inherit; }
   .alert-text { font-weight: 500; }
 

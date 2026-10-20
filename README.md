@@ -154,7 +154,9 @@ All options are optional; except head names and presets they can also be set in 
 
 | Option | Default | Meaning |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked |
+| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked, `tablet` = camera and job always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px) |
+| `emergency_stop` | `show` | `show` = button with confirmation, `hold` = hold for 1 s (no dialog), `hide` = no button in the card (the HA button entity stays) |
+| `camera_wake` | `true` | while the card is visible and the image stops (no stream, frozen frame), it asks the integration to send `camera.start_monitor` once (at most every 10 s) |
 | `camera_overlay` | `true` | progress on the camera image; the printer state is always shown in the top-left corner (`hide_overlay: true` also turns it off) |
 | `state_accent` | `true` | frame in the theme colour of the state (printing, paused, error, done) |
 | `camera_height` | automatic | height of the camera image in px. Empty = image aspect ratio, at most `camera_max_height` |

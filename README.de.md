@@ -152,7 +152,9 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 
 | Option | Standard | Bedeutung |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander |
+| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander, `tablet` = Kamera und Druckauftrag immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander) |
+| `emergency_stop` | `show` | `show` = Button mit Rückfrage, `hold` = 1 s gedrückt halten (ohne Dialog), `hide` = kein Button in der Karte (die HA-Button-Entität bleibt) |
+| `camera_wake` | `true` | Solange die Karte sichtbar ist und das Bild steht (kein Stream, eingefrorenes Bild), lässt sie die Integration einmal `camera.start_monitor` senden (höchstens alle 10 s) |
 | `camera_overlay` | `true` | Fortschritt auf dem Kamerabild; der Druckerstatus steht immer oben links (`hide_overlay: true` schaltet es ebenfalls ab) |
 | `state_accent` | `true` | Rahmen in der Theme-Farbe des Zustands (druckt, pausiert, Fehler, fertig) |
 | `camera_height` | automatisch | Höhe des Kamerabilds in px. Leer = Seitenverhältnis des Bildes, höchstens `camera_max_height` |

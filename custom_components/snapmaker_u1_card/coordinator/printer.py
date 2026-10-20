@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from datetime import timedelta
 from typing import Any
 
@@ -81,6 +82,22 @@ class PrinterSettingsMixin:
             return
         self._wake_busy = True
         self.hass.async_create_background_task(self._camera_wake(), "snapmaker_u1_card camera wake")
+
+    async def async_camera_wake_once(self) -> None:
+        """One-off camera.start_monitor on request of the card (image stale or stream missing).
+
+        Ignored while the printer is off/offline or a wake call is still running;
+        at most one call every 5 s, no matter how many cards ask.
+        """
+        data = self.data
+        if data is None or not data.online or self.power_is_off() or self._wake_busy:
+            return
+        now = time.monotonic()
+        if now - self._wake_last < 5:
+            return
+        self._wake_last = now
+        self._wake_busy = True
+        await self._camera_wake()
 
     async def _camera_wake(self) -> None:
         try:

@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.2.3";
+  var CARD_VERSION = "1.3.0";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -30,6 +30,7 @@
     { id: "timelapse", icon: "mdi:filmstrip", label: "Zeitraffer", sections: ["timelapse"] },
     { id: "system", icon: "mdi:chip", label: "System", sections: ["maintenance", "system"] }
   ];
+  var TABLET_SIDE = ["stage", "job"];
   var TAB_STORE = "snapmaker-u1-card.tab";
   var RESULT = {
     complete: ["Fertig", "ok"],
@@ -365,7 +366,25 @@
     "Neu laden": "Reload",
     "Noch keine Drucke erfasst. Die Historie füllt sich ab dem nächsten Druck.": "No prints recorded yet. The history fills up from the next print.",
     "Not-Halt": "Emergency stop",
-    "Not-Halt auslösen? Klipper muss danach neu gestartet werden.": "Trigger emergency stop? Klipper must be restarted afterwards.",
+    "Not-Halt auslösen?": "Trigger emergency stop?",
+    "Klipper stoppt sofort, Heizungen und Motoren gehen aus. Danach ist ein Neustart der Firmware nötig.": "Klipper stops immediately, heaters and motors switch off. A firmware restart is needed afterwards.",
+    "Not-Halt 1 s gedrückt halten. Klipper stoppt sofort, danach ist ein Neustart der Firmware nötig.": "Hold the emergency stop for 1 s. Klipper stops immediately, a firmware restart is needed afterwards.",
+    "Der laufende Druck lässt sich danach nicht fortsetzen.": "The running print cannot be resumed afterwards.",
+    "Die Integration ist auf {v}, im Browser läuft noch die Karte {c}. Seite neu laden; hilft das nicht, den Browser-Cache leeren (Companion App: Einstellungen → Companion App → Fehlerbehebung → Frontend-Cache zurücksetzen).": "The integration is on {v}, the browser still runs card {c}. Reload the page; if that does not help, clear the browser cache (Companion app: Settings → Companion app → Troubleshooting → Reset frontend cache).",
+    "Die Karte ist auf {c}, die Integration noch auf {v}. Home Assistant neu starten, damit das Update vollständig aktiv wird.": "The card is on {c}, the integration still on {v}. Restart Home Assistant to finish the update.",
+    "Veraltete Karte im Browser-Cache": "Outdated card in the browser cache",
+    "Neustart von Home Assistant nötig": "Home Assistant restart required",
+    "Neu laden": "Reload",
+    "Druck abbrechen": "Cancel print",
+    "Weiterdrucken": "Keep printing",
+    "Anzeigen, mit Rückfrage": "Show, with confirmation",
+    "Gesichert: 1 s gedrückt halten": "Guarded: hold for 1 s",
+    "Ausblenden": "Hide",
+    "Tablet / Monitor": "Tablet / monitor",
+    "Kamera bei stehendem Bild wecken": "Wake the camera when the image stops",
+    "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)": "Empty = tabs. Tablet / monitor: camera and job on the left, tabs on the right (from about 900 px width)",
+    "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.": "Empty = show. The emergency stop button entity in Home Assistant is always kept.",
+    "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).": "Empty = on. If the image stops, the card sends camera.start_monitor to the printer (only while it is visible).",
     "Not-Halt stoppt Klipper sofort. Ein Neustart der Firmware ist danach nötig.": "Emergency stop halts Klipper immediately. A firmware restart is needed afterwards.",
     "Offline": "Offline",
     "Optionen": "Options",
@@ -464,14 +483,18 @@
     navigation_path: "Beim Antippen öffnen",
     hide_filaments: "Filamente ausblenden",
     unlock_controls: "Regler nicht sperren",
-    controls_lock: "Sperre für Regler"
+    controls_lock: "Sperre für Regler",
+    emergency_stop: "Not-Halt",
+    camera_wake: "Kamera bei stehendem Bild wecken"
   };
   var FORM_HELPERS = {
     camera: "Leer = automatisch erkannt",
     prefix: "Nur bei mehreren Druckern nötig",
     network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
-    layout: "Leer = Reiter",
+    layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+    emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
+    camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = Livestream",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
     camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
@@ -510,13 +533,18 @@
       advanced
     ] : [
       { type: "grid", name: "", schema: name },
-      { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"]]) } } },
+      { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"], ["tablet", "Tablet / Monitor"]]) } } },
       { name: "hide", selector: { select: {
         multiple: true,
         mode: "list",
         options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) }))
       } } },
       { name: "state_accent", selector: { boolean: {} } },
+      { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
+        ["show", "Anzeigen, mit Rückfrage"],
+        ["hold", "Gesichert: 1 s gedrückt halten"],
+        ["hide", "Ausblenden"]
+      ]) } } },
       { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
         ["off", "Aus"],
         ["30", "30 s"],
@@ -541,6 +569,7 @@
             { name: "stale_after", selector: { number: { min: 10, max: 3600, mode: "box" } } }
           ] },
           { name: "hide_overlay", selector: { boolean: {} } },
+          { name: "camera_wake", selector: { boolean: {} } },
           { name: "printer_image", selector: { text: {} } }
         ]
       },
@@ -2450,6 +2479,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   };
 
   // frontend/src/card/layout.js
+  function cmpVersion(a, b) {
+    const pa = String(a).split(/[.+-]/).map((x) => parseInt(x, 10) || 0);
+    const pb = String(b).split(/[.+-]/).map((x) => parseInt(x, 10) || 0);
+    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+      const d = (pa[i] || 0) - (pb[i] || 0);
+      if (d) return d > 0 ? 1 : -1;
+    }
+    return 0;
+  }
   var LayoutMixin = (Base) => class extends Base {
     _head() {
       const d = this._d;
@@ -2516,12 +2554,27 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       return `
       ${this._head()}
+      ${this._versionNotice()}
       ${this._alerts()}
       ${this._layout(this._cfg.show)}
-      <div class="danger-zone">
-        <ha-icon icon="mdi:alert-octagon-outline" style="color:var(--u1-error)"></ha-icon>
-        <span class="t-label">${tr("Not-Halt stoppt Klipper sofort. Ein Neustart der Firmware ist danach nötig.")}</span>
-        <button class="danger" data-act="estop">${tr("Not-Halt")}</button>
+      ${this._dangerZone()}`;
+    }
+    /**
+     * Card and integration out of step: usually the browser or the Companion
+     * app still runs the old card from its cache after an update, or Home
+     * Assistant has not been restarted yet.
+     */
+    _versionNotice() {
+      const st = this._ents && this._ents.files && this._st(this._ents.files);
+      const v = st && st.attributes && st.attributes.version;
+      if (!v || v === CARD_VERSION) return "";
+      const newer = cmpVersion(v, CARD_VERSION) > 0;
+      const text = newer ? tr("Die Integration ist auf {v}, im Browser läuft noch die Karte {c}. Seite neu laden; hilft das nicht, den Browser-Cache leeren (Companion App: Einstellungen → Companion App → Fehlerbehebung → Frontend-Cache zurücksetzen).", { v, c: CARD_VERSION }) : tr("Die Karte ist auf {c}, die Integration noch auf {v}. Home Assistant neu starten, damit das Update vollständig aktiv wird.", { v, c: CARD_VERSION });
+      return `<div class="alert" data-level="warn">
+        <ha-icon icon="mdi:update"></ha-icon>
+        <div><div class="alert-text">${newer ? tr("Veraltete Karte im Browser-Cache") : tr("Neustart von Home Assistant nötig")}</div>
+        <div class="t-label">${esc(text)}</div></div>
+        ${newer ? `<button class="tonal" data-reload>${tr("Neu laden")}</button>` : ""}
       </div>`;
     }
     /** Open firmware messages in plain language, visible on every tab. */
@@ -2577,12 +2630,25 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _activeTab(tabs) {
       return tabs.find((t) => t.id === this._tab) ? this._tab : tabs.length ? tabs[0].id : null;
     }
-    /** Sections as tabs or stacked (layout: scroll). */
+    /** Sections as tabs, stacked (layout: scroll) or camera beside the tabs (layout: tablet). */
     _layout(sections) {
       if (!sections.length) return "";
       if (this._cfg.layout === "scroll") {
         return `<div class="layout">${SECTIONS.filter((s) => sections.includes(s)).map((s) => this._section(s)).join("")}</div>`;
       }
+      if (this._cfg.layout === "tablet") {
+        const side = TABLET_SIDE.filter((s) => sections.includes(s));
+        const rest = sections.filter((s) => !side.includes(s));
+        if (side.length) {
+          return `<div class="tablet">
+          <div class="tablet-side">${side.map((s) => this._section(s)).join("")}</div>
+          ${rest.length ? `<div class="tablet-main">${this._tabbed(rest)}</div>` : ""}
+        </div>`;
+        }
+      }
+      return this._tabbed(sections);
+    }
+    _tabbed(sections) {
       const tabs = this._tabs(sections);
       const cur = this._activeTab(tabs);
       const nav = tabs.length > 1 ? `<nav class="tabs" role="tablist">${tabs.map((t) => `
@@ -2734,6 +2800,48 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     .span3 { grid-column: span 3; }
     :host { --u1-pad: 20px; --u1-gap: 16px; }
   }
+
+  /* layout: tablet – camera/job column beside the tabs. Both columns are
+     containers named u1 themselves, so the grid rules above follow the
+     column width instead of the card width. */
+  .tablet { display: grid; gap: var(--u1-gap); grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .tablet-side, .tablet-main {
+    container-type: inline-size; container-name: u1;
+    display: flex; flex-direction: column; gap: var(--u1-gap); min-width: 0;
+  }
+  .tablet-side > .panel { width: 100%; }
+  .tablet-main > .tabs { margin: 0; padding: 0; }
+  @container u1 (min-width: 900px) {
+    .tablet { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); }
+  }
+  @container u1 (min-width: 1500px) {
+    .tablet { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  }
+
+  /* Emergency stop: hold mode fills the button while pressed */
+  button.danger { position: relative; overflow: hidden; }
+  button.danger > span { position: relative; }
+  button.danger .hold-fill {
+    position: absolute; inset: 0; transform-origin: left; transform: scaleX(0);
+    background: color-mix(in srgb, var(--u1-error) 55%, transparent);
+  }
+  button.danger.holding .hold-fill { transform: scaleX(1); transition: transform 1s linear; }
+  button.danger.hold { touch-action: none; user-select: none; -webkit-user-select: none; }
+  button.danger.strong { background: var(--u1-error); color: var(--md-sys-color-on-error, #690005); }
+
+  /* Confirm dialog */
+  dialog.u1confirm {
+    border: none; padding: 0; margin: auto; width: min(420px, calc(100vw - 32px));
+    border-radius: var(--u1-r-xl); background: var(--u1-panel-high); color: var(--u1-on);
+    box-shadow: var(--md-sys-elevation-level3, 0 8px 24px rgba(0,0,0,.4));
+  }
+  dialog.u1confirm::backdrop { background: rgba(0,0,0,.5); }
+  dialog.u1confirm .confirm-head { display: flex; gap: 12px; align-items: center; }
+  dialog.u1confirm .confirm-head ha-icon { --mdc-icon-size: 28px; color: var(--u1-primary); flex-shrink: 0; }
+  dialog.u1confirm[data-tone="error"] .confirm-head ha-icon { color: var(--u1-error); }
+  dialog.u1confirm .t-body { color: var(--u1-on-variant); }
+  dialog.u1confirm .dlg-actions { flex-wrap: wrap; }
+  dialog.u1confirm .dlg-actions button { min-width: 0; flex: 1 1 140px; }
 
   .panel {
     background: var(--u1-panel);
@@ -3277,6 +3385,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .alert[data-level="error"] { background: var(--u1-error-container); color: var(--u1-on-error-container); }
   .alert ha-icon { --mdc-icon-size: 20px; flex-shrink: 0; color: var(--u1-warn); }
+  .alert > div { flex: 1; min-width: 0; }
+  .alert > button { flex-shrink: 0; align-self: center; }
   .alert[data-level="error"] ha-icon { color: inherit; }
   .alert-text { font-weight: 500; }
 
@@ -3486,7 +3596,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.stats ? `${d.stats.hours}|${JSON.stringify(d.stats.totals)}|${this._metric || ""}` : "nos",
         d.timelapses && d.timelapses.archive ? `${d.timelapses.archive.count}${d.timelapses.archive.busy}${d.timelapses.archive.cleanup}${d.timelapses.archive.last_backup}` : "noa",
         this._up ? `up${!!this._up.error}${this._up.done}` : "",
-        JSON.stringify(this._prefs())
+        JSON.stringify(this._prefs()),
+        this._st(this._ents.files)?.attributes.version || ""
       ].join("~");
       if (key === this._renderKey && this._root()) {
         this._patch();
@@ -3559,15 +3670,22 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           if (a === "lock") return this._toggleLock();
           if (a === "power") return this._togglePower();
           if (a === "cancel") {
-            if (confirm(tr("Druck wirklich abbrechen?"))) this._press("cancel_print");
-            return;
-          }
-          if (a === "estop") {
-            if (confirm(tr("Not-Halt auslösen? Klipper muss danach neu gestartet werden.")))
-              this._press("emergency_stop");
+            this._confirmAction({
+              icon: "mdi:stop-circle-outline",
+              tone: "error",
+              title: tr("Druck wirklich abbrechen?"),
+              text: tr("Der laufende Druck lässt sich danach nicht fortsetzen."),
+              ok: tr("Druck abbrechen"),
+              cancel: tr("Weiterdrucken")
+            }).then((yes) => {
+              if (yes) this._press("cancel_print");
+            });
           }
         })
       );
+      this._wireEstop(r);
+      const rl = r.querySelector("[data-reload]");
+      if (rl) rl.addEventListener("click", () => window.location.reload());
       const inp = r.querySelector("input[data-upload]");
       if (inp) inp.addEventListener("change", () => {
         if (inp.files && inp.files[0]) this._upload(inp.files[0]);
@@ -4249,6 +4367,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   };
 
   // frontend/src/card/camera.js
+  var WAKE_AFTER_MS = 15e3;
+  var WAKE_EVERY_MS = 1e4;
   var CameraMixin = (Base) => class extends Base {
     // The camera entity stays "idle" permanently; its last_updated says nothing
     // about the picture. So frames are compared heavily downscaled: as long as
@@ -4316,6 +4436,26 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       if (this._streamImg) this._stopStream();
       this._tickStill(img, cam);
+      if (Date.now() - this._lastChange > WAKE_AFTER_MS) this._wakeCamera();
+    }
+    // Stock firmware stops the camera after a while unless the Snapmaker app
+    // keeps calling camera.start_monitor. While the card is visible and the
+    // image does not move (no stream, frozen stream, unchanged still image) it
+    // asks the integration for one wake-up call, at most every 10 s. Option
+    // camera_wake: false turns it off.
+    _wakeCamera() {
+      if (this._cfg.camera_wake === false || this._preview || !this._hass) return;
+      const svc = this._hass.services && this._hass.services[DOMAIN];
+      if (!svc || !svc.camera_wake || !this._d || !this._d.online) return;
+      const now = Date.now();
+      if (now - (this._wakeAt || 0) < WAKE_EVERY_MS) return;
+      this._wakeAt = now;
+      try {
+        const p = this._hass.callService(DOMAIN, "camera_wake", this._entryData());
+        if (p && p.catch) p.catch(() => {
+        });
+      } catch {
+      }
     }
     // ── Stream ────────────────────────────────────────────────────────────────
     // HA tunnels the camera entity's MJPEG stream over its own connection.
@@ -4355,12 +4495,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           this._proveStream();
           return;
         }
+        if (now - this._streamStart > 5e3) this._wakeCamera();
         if (now - this._streamStart > 1e4) this._fallback(img, cam);
         return;
       }
       if (now - this._lastCheck < Math.max(2, this._cfg.stream_check || 10) * 1e3) return;
       this._lastCheck = now;
       this._markFresh(img, img);
+      if (now - this._lastChange > WAKE_AFTER_MS) this._wakeCamera();
       if ((now - this._lastChange) / 1e3 > (this._cfg.stale_after || 90)) {
         this._streamImg = null;
         this._lastChange = now;
@@ -4385,6 +4527,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const wait = Math.min(15e3 * 2 ** this._failCount, 3e5);
       this._failCount = Math.min(this._failCount + 1, 5);
       this._streamFailUntil = Date.now() + wait;
+      this._wakeCamera();
       if (img && cam) this._tickStill(img, cam, true);
     }
     _stopStream() {
@@ -4421,7 +4564,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (pre.decode) pre.decode().then(swap).catch(swap);
         else swap();
       };
-      pre.onerror = done;
+      pre.onerror = () => {
+        done();
+        this._wakeCamera();
+      };
       pre.src = url;
     }
   };
@@ -4533,6 +4679,121 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/card/safety.js
+  var HOLD_MS = 1e3;
+  var SafetyMixin = (Base) => class extends Base {
+    _estopMode() {
+      const m = this._cfg.emergency_stop;
+      if (m === false || m === "hide") return "hide";
+      return m === "hold" ? "hold" : "show";
+    }
+    /** Bottom bar with the emergency stop; empty when hidden. */
+    _dangerZone() {
+      const mode = this._estopMode();
+      if (mode === "hide") return "";
+      const hold = mode === "hold";
+      const hint = hold ? tr("Not-Halt 1 s gedrückt halten. Klipper stoppt sofort, danach ist ein Neustart der Firmware nötig.") : tr("Not-Halt stoppt Klipper sofort. Ein Neustart der Firmware ist danach nötig.");
+      return `
+      <div class="danger-zone">
+        <ha-icon icon="mdi:alert-octagon-outline" style="color:var(--u1-error)"></ha-icon>
+        <span class="t-label">${hint}</span>
+        <button class="danger${hold ? " hold" : ""}" data-estop="${mode}">
+          <span class="hold-fill"></span><span>${tr("Not-Halt")}</span>
+        </button>
+      </div>`;
+    }
+    _wireEstop(root) {
+      const btn = root.querySelector("[data-estop]");
+      if (!btn) return;
+      if (btn.dataset.estop !== "hold") {
+        btn.addEventListener("click", async () => {
+          if (await this._confirmAction({
+            icon: "mdi:alert-octagon",
+            tone: "error",
+            title: tr("Not-Halt auslösen?"),
+            text: tr("Klipper stoppt sofort, Heizungen und Motoren gehen aus. Danach ist ein Neustart der Firmware nötig."),
+            ok: tr("Not-Halt")
+          })) this._press("emergency_stop");
+        });
+        return;
+      }
+      let timer = null;
+      const stop = () => {
+        if (timer) {
+          clearTimeout(timer);
+          timer = null;
+        }
+        btn.classList.remove("holding");
+      };
+      btn.addEventListener("pointerdown", (e) => {
+        if (e.button !== void 0 && e.button !== 0) return;
+        stop();
+        btn.classList.add("holding");
+        timer = setTimeout(() => {
+          timer = null;
+          btn.classList.remove("holding");
+          this._press("emergency_stop");
+        }, HOLD_MS);
+      });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => btn.addEventListener(ev, stop));
+      btn.addEventListener("contextmenu", (e) => e.preventDefault());
+      btn.addEventListener("keydown", async (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        if (await this._confirmAction({
+          icon: "mdi:alert-octagon",
+          tone: "error",
+          title: tr("Not-Halt auslösen?"),
+          text: tr("Klipper stoppt sofort, Heizungen und Motoren gehen aus. Danach ist ein Neustart der Firmware nötig."),
+          ok: tr("Not-Halt")
+        })) this._press("emergency_stop");
+      });
+    }
+    /**
+     * Confirm dialog in the card style instead of window.confirm (looks the same
+     * in the Companion app, the critical button is clearly coloured).
+     * Resolves true on OK, false on cancel, Esc or the backdrop.
+     */
+    _confirmAction({ icon = "mdi:help-circle-outline", tone = "", title, text = "", ok, cancel }) {
+      let dlg = this.shadowRoot.querySelector("dialog.u1confirm");
+      if (!dlg) {
+        dlg = document.createElement("dialog");
+        dlg.className = "u1confirm";
+        this.shadowRoot.appendChild(dlg);
+      }
+      if (dlg._resolve) dlg._resolve(false);
+      dlg.dataset.tone = tone;
+      dlg.setAttribute("aria-label", title);
+      dlg.innerHTML = `
+      <div class="dlg">
+        <div class="confirm-head"><ha-icon icon="${esc(icon)}"></ha-icon><div class="dlg-title">${esc(title)}</div></div>
+        ${text ? `<div class="t-body">${esc(text)}</div>` : ""}
+        <div class="dlg-actions">
+          <button class="outline" data-cf="no">${esc(cancel || tr("Abbrechen"))}</button>
+          <button class="${tone === "error" ? "danger strong" : "filled"}" data-cf="yes">${esc(ok || "OK")}</button>
+        </div>
+      </div>`;
+      return new Promise((resolve) => {
+        const finish = (v) => {
+          if (dlg._resolve !== finish) return;
+          dlg._resolve = null;
+          if (dlg.open) dlg.close();
+          resolve(v);
+        };
+        dlg._resolve = finish;
+        dlg.querySelector('[data-cf="yes"]').addEventListener("click", () => finish(true));
+        dlg.querySelector('[data-cf="no"]').addEventListener("click", () => finish(false));
+        dlg.onclick = (e) => {
+          if (e.target === dlg) finish(false);
+        };
+        dlg.onclose = () => finish(false);
+        dlg.showModal();
+        const no = dlg.querySelector('[data-cf="no"]');
+        if (no && no.focus) no.focus();
+      });
+    }
+  };
+
   // frontend/src/card/card.js
   var MIXINS = [
     StateMixin,
@@ -4549,7 +4810,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     ZoomMixin,
     PrintDialogMixin,
     CameraMixin,
-    HeadDialogMixin
+    HeadDialogMixin,
+    SafetyMixin
   ];
   var U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
   var SnapmakerU1Card = class extends U1Base {
@@ -4631,6 +4893,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         layout: "tabs",
         camera_overlay: true,
         state_accent: true,
+        emergency_stop: "show",
+        camera_wake: true,
         show: SECTIONS,
         nozzle_presets: [0, 210, 240, 260],
         bed_presets: [0, 55, 65, 85],

@@ -291,6 +291,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "self_test", self_test, schema=SELF_TEST_SCHEMA,
                                  supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, SERVICE_BACKUP_TIMELAPSES, backup_timelapses, schema=REFRESH_SCHEMA)
+
+    async def camera_wake(call: ServiceCall) -> None:
+        await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_camera_wake_once()
+
+    hass.services.async_register(DOMAIN, "camera_wake", camera_wake, schema=REFRESH_SCHEMA)
     return True
 
 

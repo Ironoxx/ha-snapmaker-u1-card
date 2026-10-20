@@ -19,13 +19,17 @@ export const FORM_LABELS = {
   navigation_path: "Beim Antippen öffnen", hide_filaments: "Filamente ausblenden",
   unlock_controls: "Regler nicht sperren",
   controls_lock: "Sperre für Regler",
+  emergency_stop: "Not-Halt",
+  camera_wake: "Kamera bei stehendem Bild wecken",
 };
 export const FORM_HELPERS = {
   camera: "Leer = automatisch erkannt",
   prefix: "Nur bei mehreren Druckern nötig",
   network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
-  layout: "Leer = Reiter",
+  layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+  emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
+  camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = Livestream",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
   camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
@@ -58,10 +62,12 @@ export function configForm(mini) {
     advanced,
   ] : [
     { type: "grid", name: "", schema: name },
-    { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"]]) } } },
+    { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"], ["tablet", "Tablet / Monitor"]]) } } },
     { name: "hide", selector: { select: { multiple: true, mode: "list",
       options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
     { name: "state_accent", selector: { boolean: {} } },
+    { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
+      ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },
     { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
       ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },
     {
@@ -76,6 +82,7 @@ export function configForm(mini) {
           { name: "stale_after", selector: { number: { min: 10, max: 3600, mode: "box" } } },
         ] },
         { name: "hide_overlay", selector: { boolean: {} } },
+        { name: "camera_wake", selector: { boolean: {} } },
         { name: "printer_image", selector: { text: {} } },
       ],
     },

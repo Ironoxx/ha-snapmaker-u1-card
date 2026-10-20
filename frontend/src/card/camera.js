@@ -1,6 +1,10 @@
-/** Camera: MJPEG stream with liveness check, still image fallback and auto height. */
+/** Camera: MJPEG stream with liveness check, still image fallback, wake-up and auto height. */
 
-import { BLANK } from "../const.js";
+import { BLANK, DOMAIN } from "../const.js";
+
+// Image unchanged this long while visible: ask the printer to restart the camera.
+const WAKE_AFTER_MS = 15000;
+const WAKE_EVERY_MS = 10000;
 
 export const CameraMixin = (Base) => class extends Base {
   // The camera entity stays "idle" permanently; its last_updated says nothing
@@ -66,6 +70,25 @@ export const CameraMixin = (Base) => class extends Base {
     }
     if (this._streamImg) this._stopStream();
     this._tickStill(img, cam);
+    if (Date.now() - this._lastChange > WAKE_AFTER_MS) this._wakeCamera();
+  }
+
+  // Stock firmware stops the camera after a while unless the Snapmaker app
+  // keeps calling camera.start_monitor. While the card is visible and the
+  // image does not move (no stream, frozen stream, unchanged still image) it
+  // asks the integration for one wake-up call, at most every 10 s. Option
+  // camera_wake: false turns it off.
+  _wakeCamera() {
+    if (this._cfg.camera_wake === false || this._preview || !this._hass) return;
+    const svc = this._hass.services && this._hass.services[DOMAIN];
+    if (!svc || !svc.camera_wake || !this._d || !this._d.online) return;
+    const now = Date.now();
+    if (now - (this._wakeAt || 0) < WAKE_EVERY_MS) return;
+    this._wakeAt = now;
+    try {
+      const p = this._hass.callService(DOMAIN, "camera_wake", this._entryData());
+      if (p && p.catch) p.catch(() => {});
+    } catch { /* service missing: nothing to do */ }
   }
 
   // ── Stream ────────────────────────────────────────────────────────────────
@@ -104,6 +127,7 @@ export const CameraMixin = (Base) => class extends Base {
     if (!this._streamProven) {
       const h = this._frameHash(img);
       if (h !== null && h !== this._preHash) { this._proveStream(); return; }
+      if (now - this._streamStart > 5000) this._wakeCamera();
       if (now - this._streamStart > 10000) this._fallback(img, cam);
       return;
     }
@@ -113,6 +137,7 @@ export const CameraMixin = (Base) => class extends Base {
     if (now - this._lastCheck < Math.max(2, this._cfg.stream_check || 10) * 1000) return;
     this._lastCheck = now;
     this._markFresh(img, img);
+    if (now - this._lastChange > WAKE_AFTER_MS) this._wakeCamera();
     if ((now - this._lastChange) / 1000 > (this._cfg.stale_after || 90)) {
       this._streamImg = null;   // the next tick reconnects, the image stays
       this._lastChange = now;
@@ -136,6 +161,7 @@ export const CameraMixin = (Base) => class extends Base {
     const wait = Math.min(15000 * 2 ** this._failCount, 300000);
     this._failCount = Math.min(this._failCount + 1, 5);
     this._streamFailUntil = Date.now() + wait;
+    this._wakeCamera();
     if (img && cam) this._tickStill(img, cam, true);
   }
 
@@ -175,7 +201,7 @@ export const CameraMixin = (Base) => class extends Base {
       if (pre.decode) pre.decode().then(swap).catch(swap);
       else swap();
     };
-    pre.onerror = done;
+    pre.onerror = () => { done(); this._wakeCamera(); };
     pre.src = url;
   }
 };
