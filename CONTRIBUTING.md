@@ -62,8 +62,13 @@ npm test                       # card tests in jsdom against the bundle
 
 1. Bump the version in `manifest.json`, `const.py` (`VERSION`) and
    `frontend/src/const.js` (`CARD_VERSION`); a test checks they match.
-2. `npm run build`, run all checks, push to `main`.
-3. The release workflow creates the tag, the GitHub release and the HACS zip.
+2. Add a `## <version>` section at the top of `CHANGELOG.md` (what users get,
+   English first, short German summary below). It becomes the release text that
+   HACS shows in the update dialog; the release fails without it.
+3. `npm run build`, run all checks, push to `main`.
+4. The release workflow creates the tag, the GitHub release and the HACS zip.
+   Later edits to `CHANGELOG.md` update the text of existing releases
+   (`release-notes.yml`).
 
 ## Code style
 

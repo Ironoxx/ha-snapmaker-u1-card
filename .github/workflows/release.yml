@@ -1,8 +1,9 @@
 name: Release
 
 # New version = new release, no manual tagging:
-# bump the version in manifest.json, const.py and frontend/src/const.js, run
-# `npm run build` and push to main. If the tag v<version> does not exist yet,
+# bump the version in manifest.json, const.py and frontend/src/const.js, add a
+# "## <version>" section to CHANGELOG.md (becomes the release text that HACS
+# shows), run `npm run build` and push to main. If the tag v<version> does not exist yet,
 # the tests run and then tag, release and zips are created
 # (snapmaker_u1_card.zip for HACS + install zip).
 # Manually: Actions -> Release -> Run workflow.
@@ -60,6 +61,15 @@ jobs:
           V="${{ steps.ver.outputs.version }}"
           (cd custom_components/snapmaker_u1_card && zip -qr "$GITHUB_WORKSPACE/snapmaker_u1_card.zip" . -x "__pycache__/*")
           zip -qr "snapmaker_u1_card-$V-install.zip" custom_components/snapmaker_u1_card -x "*/__pycache__/*"
+      - name: Release notes from CHANGELOG.md
+        if: steps.ver.outputs.exists == 'false'
+        run: |
+          V="${{ steps.ver.outputs.version }}"
+          awk -v v="## $V" '$0 == v {f=1; next} /^## / && f {exit} f' CHANGELOG.md > release_notes.md
+          if ! grep -q '[^[:space:]]' release_notes.md; then
+            echo "::error::CHANGELOG.md has no section '## $V'"; exit 1
+          fi
+          cat release_notes.md
       - uses: softprops/action-gh-release@v2
         if: steps.ver.outputs.exists == 'false'
         with:
@@ -69,4 +79,5 @@ jobs:
           files: |
             snapmaker_u1_card.zip
             snapmaker_u1_card-*-install.zip
+          body_path: release_notes.md
           generate_release_notes: true

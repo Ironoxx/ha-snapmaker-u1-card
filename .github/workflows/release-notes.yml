@@ -1,0 +1,34 @@
+name: Release notes
+
+# Keeps the text of existing releases in sync with CHANGELOG.md (HACS shows it
+# in the update dialog). Runs when CHANGELOG.md changes on main; every
+# "## x.y.z" section with an existing release v x.y.z replaces that release's
+# text, the generated "Full Changelog" link is kept below it.
+on:
+  push:
+    branches: [main]
+    paths: ["CHANGELOG.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Update release texts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for V in $(grep -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 5); do
+            gh release view "v$V" >/dev/null 2>&1 || continue
+            awk -v v="## $V" '$0 == v {f=1; next} /^## / && f {exit} f' CHANGELOG.md > notes.md
+            prev=$(git ls-remote --tags origin | grep -oP 'refs/tags/\Kv[0-9.]+$' | sort -V | grep -B1 -x "v$V" | head -n 1)
+            if [ -n "$prev" ] && [ "$prev" != "v$V" ]; then
+              printf '\n**Full Changelog**: https://github.com/%s/compare/%s...v%s\n' "$GITHUB_REPOSITORY" "$prev" "$V" >> notes.md
+            fi
+            gh release edit "v$V" --notes-file notes.md
+            echo "updated v$V"
+          done
