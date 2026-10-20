@@ -29,6 +29,8 @@
  *   layout            tabs | scroll | tablet                 (tabs)
  *   emergency_stop    show | hold | hide                     (show)
  *   camera_wake       wake the camera when the image stops   (true)
+ *   camera_direct     auto | off: stream straight from the printer (auto)
+ *   camera_direct_url own URL for the direct stream          (http://<printer>/webcam/?action=stream)
  *   camera_overlay    progress on the camera image           (true)
  *   state_accent      frame in the state colour              (true)
  *   hide / show       sections: stage layer job queue files toolheads climate
@@ -147,6 +149,7 @@ export class SnapmakerU1Card extends U1Base {
       state_accent: true,
       emergency_stop: "show",
       camera_wake: true,
+      camera_direct: "auto",
       show: SECTIONS,
       nozzle_presets: [0, 210, 240, 260],
       bed_presets: [0, 55, 65, 85],
@@ -163,6 +166,7 @@ export class SnapmakerU1Card extends U1Base {
     this._lastChange = Date.now();
     this._streamFailUntil = 0;
     this._failCount = 0;
+    this._directFailUntil = 0;
     this._lastStill = 0;
     this._ents = null;
     this._dlg = null;

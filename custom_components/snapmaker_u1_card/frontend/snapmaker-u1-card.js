@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.3.0";
+  var CARD_VERSION = "1.3.1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -382,6 +382,11 @@
     "Ausblenden": "Hide",
     "Tablet / Monitor": "Tablet / monitor",
     "Kamera bei stehendem Bild wecken": "Wake the camera when the image stops",
+    "Direktstream vom Drucker": "Direct stream from the printer",
+    "Adresse des Direktstreams": "Direct stream URL",
+    "Aus (immer über Home Assistant)": "Off (always through Home Assistant)",
+    "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant": "Empty = automatic: directly from the printer at home (less delay), through Home Assistant on https or away from home",
+    "Leer = http://<Drucker>/webcam/?action=stream": "Empty = http://<printer>/webcam/?action=stream",
     "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)": "Empty = tabs. Tablet / monitor: camera and job on the left, tabs on the right (from about 900 px width)",
     "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.": "Empty = show. The emergency stop button entity in Home Assistant is always kept.",
     "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).": "Empty = on. If the image stops, the card sends camera.start_monitor to the printer (only while it is visible).",
@@ -485,7 +490,9 @@
     unlock_controls: "Regler nicht sperren",
     controls_lock: "Sperre für Regler",
     emergency_stop: "Not-Halt",
-    camera_wake: "Kamera bei stehendem Bild wecken"
+    camera_wake: "Kamera bei stehendem Bild wecken",
+    camera_direct: "Direktstream vom Drucker",
+    camera_direct_url: "Adresse des Direktstreams"
   };
   var FORM_HELPERS = {
     camera: "Leer = automatisch erkannt",
@@ -494,6 +501,8 @@
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
     layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
     emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
+    camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
+    camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = Livestream",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
@@ -570,6 +579,8 @@
           ] },
           { name: "hide_overlay", selector: { boolean: {} } },
           { name: "camera_wake", selector: { boolean: {} } },
+          { name: "camera_direct", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (immer über Home Assistant)"]]) } } },
+          { name: "camera_direct_url", selector: { text: {} } },
           { name: "printer_image", selector: { text: {} } }
         ]
       },
@@ -4369,6 +4380,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   // frontend/src/card/camera.js
   var WAKE_AFTER_MS = 15e3;
   var WAKE_EVERY_MS = 1e4;
+  var PROVE_DIRECT_MS = 4e3;
+  var PROVE_PROXY_MS = 6e3;
+  var DIRECT_RETRY_MS = 10 * 60 * 1e3;
   var CameraMixin = (Base) => class extends Base {
     // The camera entity stays "idle" permanently; its last_updated says nothing
     // about the picture. So frames are compared heavily downscaled: as long as
@@ -4467,14 +4481,39 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (!token) return null;
       return `/api/camera_proxy_stream/${this._ents.camera}?token=${encodeURIComponent(token)}`;
     }
+    /**
+     * Direct MJPEG stream from the printer (option camera_direct, default auto):
+     * no hop through Home Assistant, so less delay and no load on HA. Skipped
+     * when the page is https (the browser blocks an http stream there) and for
+     * a while after it failed, e.g. away from home; then the HA proxy is used.
+     */
+    _directUrl() {
+      const mode = this._cfg.camera_direct;
+      if (mode === false || mode === "off" || this._preview) return null;
+      if (Date.now() < (this._directFailUntil || 0)) return null;
+      const custom = typeof this._cfg.camera_direct_url === "string" ? this._cfg.camera_direct_url.trim() : "";
+      const st = this._ents && this._ents.files && this._st(this._ents.files);
+      const url = custom || st && st.attributes && st.attributes.stream_url;
+      if (!url) return null;
+      if (window.location.protocol === "https:" && /^http:/i.test(url)) return null;
+      return url;
+    }
+    _directFailed() {
+      this._directFailUntil = Date.now() + DIRECT_RETRY_MS;
+      this._streamImg = null;
+      this._streamDirect = false;
+      this._streamProven = false;
+    }
     _tickStream(img, cam) {
       const now = Date.now();
       if (this._streamImg !== img) {
-        const url = this._streamUrl(cam);
+        const direct = this._directUrl();
+        const url = direct || this._streamUrl(cam);
         if (!url) {
           this._fallback(img, cam);
           return;
         }
+        this._streamDirect = !!direct;
         this._preHash = this._frameHash(img);
         this._streamImg = img;
         this._streamProven = false;
@@ -4484,7 +4523,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           if (this._streamImg === img) this._proveStream();
         };
         img.onerror = () => {
-          if (this._streamImg === img) this._fallback(img, cam);
+          if (this._streamImg !== img) return;
+          if (this._streamDirect) this._directFailed();
+          else this._fallback(img, cam);
         };
         img.src = url;
         return;
@@ -4495,8 +4536,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           this._proveStream();
           return;
         }
-        if (now - this._streamStart > 5e3) this._wakeCamera();
-        if (now - this._streamStart > 1e4) this._fallback(img, cam);
+        const age = now - this._streamStart;
+        if (this._streamDirect) {
+          if (age > PROVE_DIRECT_MS) this._directFailed();
+          return;
+        }
+        if (age > PROVE_PROXY_MS / 2) this._wakeCamera();
+        if (age > PROVE_PROXY_MS) this._fallback(img, cam);
         return;
       }
       if (now - this._lastCheck < Math.max(2, this._cfg.stream_check || 10) * 1e3) return;
@@ -4519,6 +4565,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     // Repeated failures extend the pause: 15 s, 30 s, 60 s ... 5 min.
     _fallback(img, cam) {
       this._streamImg = null;
+      this._streamDirect = false;
       this._streamProven = false;
       if (img) {
         img.onload = null;
@@ -4895,6 +4942,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         state_accent: true,
         emergency_stop: "show",
         camera_wake: true,
+        camera_direct: "auto",
         show: SECTIONS,
         nozzle_presets: [0, 210, 240, 260],
         bed_presets: [0, 55, 65, 85],
@@ -4911,6 +4959,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._lastChange = Date.now();
       this._streamFailUntil = 0;
       this._failCount = 0;
+      this._directFailUntil = 0;
       this._lastStill = 0;
       this._ents = null;
       this._dlg = null;

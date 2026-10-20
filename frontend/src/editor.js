@@ -21,6 +21,8 @@ export const FORM_LABELS = {
   controls_lock: "Sperre für Regler",
   emergency_stop: "Not-Halt",
   camera_wake: "Kamera bei stehendem Bild wecken",
+  camera_direct: "Direktstream vom Drucker",
+  camera_direct_url: "Adresse des Direktstreams",
 };
 export const FORM_HELPERS = {
   camera: "Leer = automatisch erkannt",
@@ -29,6 +31,8 @@ export const FORM_HELPERS = {
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
   layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
   emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
+  camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
+  camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = Livestream",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
@@ -83,6 +87,8 @@ export function configForm(mini) {
         ] },
         { name: "hide_overlay", selector: { boolean: {} } },
         { name: "camera_wake", selector: { boolean: {} } },
+        { name: "camera_direct", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (immer über Home Assistant)"]]) } } },
+        { name: "camera_direct_url", selector: { text: {} } },
         { name: "printer_image", selector: { text: {} } },
       ],
     },

@@ -154,6 +154,8 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 |---|---|---|
 | `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander, `tablet` = Kamera und Druckauftrag immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander) |
 | `emergency_stop` | `show` | `show` = Button mit Rückfrage, `hold` = 1 s gedrückt halten (ohne Dialog), `hide` = kein Button in der Karte (die HA-Button-Entität bleibt) |
+| `camera_direct` | `auto` | `auto` = Stream direkt vom Drucker (`camera_direct_url`, Standard `http://<Drucker>/webcam/?action=stream`): weniger Verzögerung, keine Last auf HA. Nicht auf https-Seiten (der Browser blockiert dort http-Streams); kommt binnen 4 s kein Bild (z. B. unterwegs), nimmt die Karte 10 min den HA-Proxy. `off` = immer über HA |
+| `camera_direct_url` | – | eigene Adresse für den Direktstream |
 | `camera_wake` | `true` | Solange die Karte sichtbar ist und das Bild steht (kein Stream, eingefrorenes Bild), lässt sie die Integration einmal `camera.start_monitor` senden (höchstens alle 10 s) |
 | `camera_overlay` | `true` | Fortschritt auf dem Kamerabild; der Druckerstatus steht immer oben links (`hide_overlay: true` schaltet es ebenfalls ab) |
 | `state_accent` | `true` | Rahmen in der Theme-Farbe des Zustands (druckt, pausiert, Fehler, fertig) |

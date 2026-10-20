@@ -156,6 +156,8 @@ All options are optional; except head names and presets they can also be set in 
 |---|---|---|
 | `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked, `tablet` = camera and job always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px) |
 | `emergency_stop` | `show` | `show` = button with confirmation, `hold` = hold for 1 s (no dialog), `hide` = no button in the card (the HA button entity stays) |
+| `camera_direct` | `auto` | `auto` = stream straight from the printer (`camera_direct_url`, default `http://<printer>/webcam/?action=stream`): less delay, no load on HA. Not used on https pages (the browser blocks http streams there); if no frame arrives within 4 s (e.g. away from home) the card uses the HA proxy for 10 min. `off` = always through HA |
+| `camera_direct_url` | – | own URL for the direct stream |
 | `camera_wake` | `true` | while the card is visible and the image stops (no stream, frozen frame), it asks the integration to send `camera.start_monitor` once (at most every 10 s) |
 | `camera_overlay` | `true` | progress on the camera image; the printer state is always shown in the top-left corner (`hide_overlay: true` also turns it off) |
 | `state_accent` | `true` | frame in the theme colour of the state (printing, paused, error, done) |

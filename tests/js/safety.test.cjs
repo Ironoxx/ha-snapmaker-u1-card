@@ -25,7 +25,7 @@ add(`sensor.${P}_printer_state`, "ready");
 add(`sensor.${P}_current_print_state`, "printing");
 add(`sensor.${P}_filename`, "teil.gcode");
 add(`camera.${P}_webcam`, "idle", { entity_picture: "/api/camera_proxy/cam?token=A", access_token: "A" });
-add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.3.0" }, "snapmaker_u1_card", "files");
+add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.3.1" }, "snapmaker_u1_card", "files");
 
 const calls = [];
 const hass = () => ({
@@ -130,16 +130,53 @@ const pressed = (name) => calls.some((c) => c[0] === "button" && c[2].entity_id 
 
   // 6. Version notice: integration newer → reload hint; older → restart hint
   assert.ok(!card.shadowRoot.querySelector("[data-reload]"), "no notice when equal");
-  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.3.1";
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "9.0.0";
   card = make();
   R = card.shadowRoot.getElementById("u1card");
   assert.match(R.textContent, /Veraltete Karte im Browser-Cache/);
   assert.ok(R.querySelector("[data-reload]"), "reload button");
-  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.2.9";
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.0.0";
   card = make();
   R = card.shadowRoot.getElementById("u1card");
   assert.match(R.textContent, /Neustart von Home Assistant nötig/);
   assert.ok(!R.querySelector("[data-reload]"));
 
-  console.log("SAFETY OK – emergency stop modes, confirm dialog, tablet layout, camera wake, version notice");
+  // 7. Direct stream: printer URL on an http page, HA proxy after an error
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.3.1";
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.stream_url = "http://192.168.0.25/webcam/?action=stream";
+  card = make();
+  card._onScreen = true;
+  const live = () => card.shadowRoot.querySelector("img[data-live]");
+  card._stopStream();
+  card._tickCamera();
+  assert.strictEqual(live().getAttribute("src"), "http://192.168.0.25/webcam/?action=stream", "direct stream first");
+  live().onerror();
+  card._tickCamera();
+  assert.match(live().getAttribute("src"), /camera_proxy_stream/, "proxy after a failed direct stream");
+  card._stopStream();
+  card._tickCamera();
+  assert.match(live().getAttribute("src"), /camera_proxy_stream/, "stays on the proxy for a while");
+  // No first frame in time: proxy as well
+  card._directFailUntil = 0;
+  card._stopStream();
+  card._tickCamera();
+  assert.ok(card._streamDirect);
+  card._streamStart -= 5000;
+  card._tickCamera();
+  card._tickCamera();
+  assert.match(live().getAttribute("src"), /camera_proxy_stream/, "timeout falls back to the proxy");
+  // camera_direct: off
+  card = make({ camera_direct: "off" });
+  card._onScreen = true;
+  card._stopStream();
+  card._tickCamera();
+  assert.match(card.shadowRoot.querySelector("img[data-live]").getAttribute("src"), /camera_proxy_stream/, "off: proxy");
+  // Own URL
+  card = make({ camera_direct_url: "http://u1.lan:8080/stream" });
+  card._onScreen = true;
+  card._stopStream();
+  card._tickCamera();
+  assert.strictEqual(card.shadowRoot.querySelector("img[data-live]").getAttribute("src"), "http://u1.lan:8080/stream");
+
+  console.log("SAFETY OK – emergency stop modes, confirm dialog, tablet layout, camera wake, version notice, direct stream");
 })().catch((e) => { console.error(e); process.exit(1); });

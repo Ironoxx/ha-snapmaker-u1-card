@@ -5,6 +5,11 @@ import { BLANK, DOMAIN } from "../const.js";
 // Image unchanged this long while visible: ask the printer to restart the camera.
 const WAKE_AFTER_MS = 15000;
 const WAKE_EVERY_MS = 10000;
+// First frame must arrive within this time, otherwise the next source is used.
+const PROVE_DIRECT_MS = 4000;
+const PROVE_PROXY_MS = 6000;
+// After a failed direct stream the card stays on the HA proxy this long.
+const DIRECT_RETRY_MS = 10 * 60 * 1000;
 
 export const CameraMixin = (Base) => class extends Base {
   // The camera entity stays "idle" permanently; its last_updated says nothing
@@ -102,12 +107,39 @@ export const CameraMixin = (Base) => class extends Base {
     return `/api/camera_proxy_stream/${this._ents.camera}?token=${encodeURIComponent(token)}`;
   }
 
+  /**
+   * Direct MJPEG stream from the printer (option camera_direct, default auto):
+   * no hop through Home Assistant, so less delay and no load on HA. Skipped
+   * when the page is https (the browser blocks an http stream there) and for
+   * a while after it failed, e.g. away from home; then the HA proxy is used.
+   */
+  _directUrl() {
+    const mode = this._cfg.camera_direct;
+    if (mode === false || mode === "off" || this._preview) return null;
+    if (Date.now() < (this._directFailUntil || 0)) return null;
+    const custom = typeof this._cfg.camera_direct_url === "string" ? this._cfg.camera_direct_url.trim() : "";
+    const st = this._ents && this._ents.files && this._st(this._ents.files);
+    const url = custom || (st && st.attributes && st.attributes.stream_url);
+    if (!url) return null;
+    if (window.location.protocol === "https:" && /^http:/i.test(url)) return null;
+    return url;
+  }
+
+  _directFailed() {
+    this._directFailUntil = Date.now() + DIRECT_RETRY_MS;
+    this._streamImg = null;      // next tick connects through the HA proxy
+    this._streamDirect = false;
+    this._streamProven = false;
+  }
+
   _tickStream(img, cam) {
     const now = Date.now();
 
     if (this._streamImg !== img) {
-      const url = this._streamUrl(cam);
+      const direct = this._directUrl();
+      const url = direct || this._streamUrl(cam);
       if (!url) { this._fallback(img, cam); return; }
+      this._streamDirect = !!direct;
       // The previous image stays visible until the stream delivers its first
       // frame (the browser only swaps once the new image is there).
       this._preHash = this._frameHash(img);
@@ -116,19 +148,30 @@ export const CameraMixin = (Base) => class extends Base {
       this._streamStart = now;
       this._lastCheck = now;
       img.onload = () => { if (this._streamImg === img) this._proveStream(); };
-      img.onerror = () => { if (this._streamImg === img) this._fallback(img, cam); };
+      img.onerror = () => {
+        if (this._streamImg !== img) return;
+        if (this._streamDirect) this._directFailed();
+        else this._fallback(img, cam);
+      };
       img.src = url;
       return;
     }
 
     // First frame not confirmed yet: check via image comparison whether
-    // anything happened. If nothing arrives within 10 s the stream counts as
-    // dead; the proxy can keep the connection open without ever sending a frame.
+    // anything happened (a direct stream is cross-origin and cannot be
+    // compared; it is proven by its load event). If nothing arrives in time,
+    // direct falls back to the HA proxy and the proxy to still images; the
+    // proxy can keep the connection open without ever sending a frame.
     if (!this._streamProven) {
       const h = this._frameHash(img);
       if (h !== null && h !== this._preHash) { this._proveStream(); return; }
-      if (now - this._streamStart > 5000) this._wakeCamera();
-      if (now - this._streamStart > 10000) this._fallback(img, cam);
+      const age = now - this._streamStart;
+      if (this._streamDirect) {
+        if (age > PROVE_DIRECT_MS) this._directFailed();
+        return;
+      }
+      if (age > PROVE_PROXY_MS / 2) this._wakeCamera();
+      if (age > PROVE_PROXY_MS) this._fallback(img, cam);
       return;
     }
 
@@ -156,6 +199,7 @@ export const CameraMixin = (Base) => class extends Base {
   // Repeated failures extend the pause: 15 s, 30 s, 60 s ... 5 min.
   _fallback(img, cam) {
     this._streamImg = null;
+    this._streamDirect = false;
     this._streamProven = false;
     if (img) { img.onload = null; img.onerror = null; }
     const wait = Math.min(15000 * 2 ** this._failCount, 300000);
