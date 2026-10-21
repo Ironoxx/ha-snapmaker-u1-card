@@ -73,7 +73,7 @@ own("sensor.snapmaker_u1_card_wartung", "1", { entry_id: "E1", items: [
   { key: "tool_changer", interval: 25100, used: 23000, remaining: 2100, progress: 92, due: false, firmware: true },
 ], config_backup: { enabled: true, snapshot: "2026-10-12_030000", saved_at: "2026-10-12T03:00:00+00:00", status: "saved", files: 14, folder: "snapmaker_u1_backup/192.168.1.50" } }, "maintenance");
 own("binary_sensor.snapmaker_u1_card_live_verbindung", "on", { connected_since: "2026-10-13T06:00:00+00:00", poll_interval_s: 30, entry_id: "E1" }, "live");
-own("sensor.snapmaker_u1_card_restzeit", "42.5", {}, "remaining");
+own("sensor.snapmaker_u1_card_restzeit", "42.5", { unit_of_measurement: "min" }, "remaining");
 own("sensor.snapmaker_u1_card_fertig_um", "2026-10-13T18:30:00+00:00", {}, "finish");
 own("update.snapmaker_u1_card_firmware", "on", { installed_version: "1.6.0", latest_version: "2.0.0" }, "firmware");
 own("sensor.snapmaker_u1_card_meldungen", "1", { errors: [
@@ -110,7 +110,20 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 
 (async () => {
   // 1. Remaining/finish time from our own sensors
-  assert.strictEqual(card._d.remaining, 42.5 * 60);
+  // own sensor is in minutes: no * 60 (was 60x too high up to 1.4.3)
+  assert.strictEqual(card._d.remaining, 42.5);
+  // display unit changed by the user: follow unit_of_measurement
+  states["sensor.snapmaker_u1_card_restzeit"].attributes.unit_of_measurement = "h";
+  states["sensor.snapmaker_u1_card_restzeit"].state = "1.5";
+  card.hass = hass();
+  assert.strictEqual(card._d.remaining, 90);
+  states["sensor.snapmaker_u1_card_restzeit"].attributes.unit_of_measurement = "s";
+  states["sensor.snapmaker_u1_card_restzeit"].state = "600";
+  card.hass = hass();
+  assert.strictEqual(card._d.remaining, 10);
+  states["sensor.snapmaker_u1_card_restzeit"].attributes.unit_of_measurement = "min";
+  states["sensor.snapmaker_u1_card_restzeit"].state = "42.5";
+  card.hass = hass();
   assert.strictEqual(card._d.eta, "2026-10-13T18:30:00+00:00");
 
   // 2. Spool runout: hint on the head, with takeover

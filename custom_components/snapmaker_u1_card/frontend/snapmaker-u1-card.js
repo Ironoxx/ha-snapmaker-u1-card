@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.4.3";
+  var CARD_VERSION = "1.4.4";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -724,6 +724,15 @@
       if (!e || ["unknown", "unavailable", ""].includes(e.state)) return fb;
       return e.state;
     }
+    /** Duration entity in minutes, converted from its unit_of_measurement (fallback: ``unit``). */
+    _minutes(id, unit, fb = null) {
+      const v = this._n(id, null);
+      if (v === null) return fb;
+      const st = this._st(id);
+      const u = String(st && st.attributes && st.attributes.unit_of_measurement || unit).toLowerCase();
+      const f = { d: 1440, h: 60, min: 1, s: 1 / 60, ms: 1 / 6e4 }[u];
+      return v * (f === void 0 ? { h: 60, min: 1, s: 1 / 60 }[unit] || 1 : f);
+    }
     _n(id, fb = null) {
       const v = this._s(id, null);
       if (v === null) return fb;
@@ -812,15 +821,17 @@
         display: this._s(`sensor.${P("current_display_message")}`, ""),
         filename: (this._s(`sensor.${P("filename")}`, "") || "").replace(/\.(gcode|3mf)$/i, ""),
         progress: this._n(`sensor.${P("progress")}`, 0),
-        elapsed: this._n(`sensor.${P("print_duration")}`, 0),
+        // Durations in minutes (fmtMin). The unit comes from the entity: users can
+        // change the display unit, and the own sensor (min) differs from Moonraker's (h).
+        elapsed: this._minutes(`sensor.${P("print_duration")}`, "min", 0),
         // Remaining/finish time: own sensors (file time profile), else the Moonraker integration
         remaining: (() => {
-          const v = this._ents.remaining && this._n(this._ents.remaining);
-          return v !== null && v !== void 0 && !Number.isNaN(v) ? v * 60 : this._n(`sensor.${P("print_time_left")}`, 0) * 60;
+          const v = this._ents.remaining && this._minutes(this._ents.remaining, "min");
+          return v !== null && v !== void 0 ? v : this._minutes(`sensor.${P("print_time_left")}`, "h", 0);
         })(),
-        projected: this._n(`sensor.${P("print_projected_total_duration")}`, 0) * 60,
-        slicerLeft: this._n(`sensor.${P("slicer_print_time_left_estimate")}`, 0) * 60,
-        slicerTotal: this._n(`sensor.${P("slicer_print_duration_estimate")}`, 0) * 60,
+        projected: this._minutes(`sensor.${P("print_projected_total_duration")}`, "h", 0),
+        slicerLeft: this._minutes(`sensor.${P("slicer_print_time_left_estimate")}`, "h", 0),
+        slicerTotal: this._minutes(`sensor.${P("slicer_print_duration_estimate")}`, "h", 0),
         eta: this._ents.finish && this._s(this._ents.finish) || this._s(`sensor.${P("print_eta")}`),
         filamentUsed: this._n(`sensor.${P("filament_used")}`, 0),
         layer: this._n(`sensor.${P("current_layer")}`, 0),
