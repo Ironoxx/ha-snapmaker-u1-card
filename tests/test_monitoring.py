@@ -340,7 +340,8 @@ async def test_early_result_photo(hass: HomeAssistant, mock_client, notification
     fake.async_get_image = AsyncMock(return_value=Img())
     with patch.dict(sys.modules, {"homeassistant.components.camera": fake}), \
          patch("custom_components.snapmaker_u1_card.coordinator.notify.EARLY_PHOTO_DELAY_S", 0):
-        entry = await _setup(hass, camera="camera.u1")
+        entry = await _setup(hass, camera="camera.u1", notify_targets=["notify.mobile_app_handy"],
+                             notify_events=["complete"])
         coord = entry.runtime_data
         st = _status(mock_client, "printing", "sub/new.gcode", print_duration=100)
         st["virtual_sdcard"] = {"file_position": 10, "progress": 0.01}
@@ -362,6 +363,10 @@ async def test_early_result_photo(hass: HomeAssistant, mock_client, notification
         await hass.async_block_till_done(wait_background_tasks=True)
     last = coord._print_state["last"]
     assert last["photo"] == early, "Foto von der letzten Bahn, kein zweites"
+    # the "finished" notification shows that photo, not a live image of the lowered bed
+    done = [c for c in notifications if (c.data.get("data") or {}).get("tag", "").endswith(entry.entry_id)
+            and not c.data["data"]["tag"].startswith("snapmaker_u1_card_live")]
+    assert done and done[-1].data["data"]["image"] == early
     assert fake.async_get_image.await_count == 1
     assert (coord._own_dir / "results" / Path(early).name).read_bytes() == b"\xff\xd8EARLY"
 

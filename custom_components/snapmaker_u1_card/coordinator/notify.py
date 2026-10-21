@@ -19,6 +19,7 @@ from ..const import (
     CONF_AUTO_OFF,
     CONF_NOTIFY,
     CONF_NOTIFY_EVENTS,
+    CONF_NOTIFY_URL,
     DEFAULT_NOTIFY_EVENTS,
     DOMAIN,
     EVENT_PRINT_FINISHED,
@@ -41,6 +42,7 @@ from .helpers import (
     EARLY_PHOTO_DELAY_S,
     PHOTO_BED_DROP_MM,
     PHOTO_MARGIN_MM,
+    PHOTO_NOTIFY_WAIT_S,
     PHOTO_WAIT_S,
     RESULT_TEXT,
     RESULT_TEXT_EN,
@@ -106,7 +108,14 @@ class NotifyMixin:
         if photo:
             summary["photo"] = photo
         if summary.get("result") in RESULT_TEXT:
-            self._notify(summary["result"], summary)
+            task = self._photo_task
+            if photo and task is not None and not task.done():
+                # Attach the result photo, not a live image: by the time the print
+                # counts as finished the bed is already lowered.
+                self.hass.async_create_background_task(
+                    self._notify_after_photo(summary["result"], summary, task), f"{DOMAIN} notify with photo")
+            else:
+                self._notify(summary["result"], summary)
         self._force_stats = True
         if self.queue.jobs and summary.get("result") in ("complete", "cancelled", "error"):
             nxt = self.queue.jobs[0]
@@ -118,6 +127,14 @@ class NotifyMixin:
         ):
             self.auto_off_armed = time.time()
             _LOGGER.info("Auto-off armed after %s", summary.get("file"))
+
+    async def _notify_after_photo(self, event: str, info: dict[str, Any], task: Any) -> None:
+        """Send the notification once the result photo is stored (at most PHOTO_NOTIFY_WAIT_S)."""
+        try:
+            await asyncio.wait_for(asyncio.shield(task), PHOTO_NOTIFY_WAIT_S)
+        except (TimeoutError, asyncio.CancelledError, Exception) as err:  # noqa: BLE001 - notify anyway
+            _LOGGER.debug("Result photo not ready for the notification: %s", err)
+        self._notify(event, info)
 
     def _notify_transition(self, state: str | None, filename: str | None) -> bool:
         """Report a pause (e.g. filament runout). End/error go through _finished."""
@@ -139,9 +156,13 @@ class NotifyMixin:
         message = notify_message(info, de)
         data: dict[str, Any] = {"tag": f"{DOMAIN}_{self.config_entry.entry_id}", "group": DOMAIN}
         camera = self.camera_entity()
-        if camera:
+        if info.get("photo"):
+            # Result photo (stored by the integration, served by HA)
+            data["image"] = info["photo"]
+        elif camera:
             # The companion app loads the image with its own authentication.
             data["image"] = f"/api/camera_proxy/{camera}"
+        data.update(self._click_data())
         actions = self._actions(event, de)
         if actions:
             data["actions"] = actions
@@ -160,6 +181,11 @@ class NotifyMixin:
                 ),
                 f"{DOMAIN} notify {service}",
             )
+
+    def _click_data(self) -> dict[str, str]:
+        """Tap on a notification opens this dashboard path or URL (Android clickAction, iOS url)."""
+        url = str(self.options.get(CONF_NOTIFY_URL) or "").strip()
+        return {"clickAction": url, "url": url} if url else {}
 
     # ── Notification actions (companion app) ───────────────────────────────
     def _action_id(self, name: str) -> str:
@@ -252,8 +278,8 @@ class NotifyMixin:
             objs = meta.get("objects") or []
             box = ([min(o[0] for o in objs), min(o[1] for o in objs), max(o[2] for o in objs), max(o[3] for o in objs)]
                    if objs else meta.get("bbox"))
-        self.hass.async_create_background_task(self._photo_when_clear(camera, target, box),
-                                               f"{DOMAIN} result photo")
+        self._photo_task = self.hass.async_create_background_task(
+            self._photo_when_clear(camera, target, box), f"{DOMAIN} result photo")
 
     async def _photo_when_clear(self, camera: str, target: Path, box: list[float] | None) -> None:
         """Take the result photo once the head has left the part, before the bed goes down.
@@ -305,10 +331,12 @@ class NotifyMixin:
         early, self._early_photo = self._early_photo, None
         if early and early.get("started") == summary.get("started") and summary.get("result") == "complete":
             return early["url"]
+        self._photo_task = None
         if not camera or summary.get("result") not in ("complete", "cancelled", "error"):
             return None
         url, target = self._photo_target()
-        self.hass.async_create_background_task(self._save_photo(camera, target), f"{DOMAIN} result photo")
+        self._photo_task = self.hass.async_create_background_task(
+            self._save_photo(camera, target), f"{DOMAIN} result photo")
         return url
 
     async def _save_photo(self, camera: str, target: Path, delay: float = 0) -> None:

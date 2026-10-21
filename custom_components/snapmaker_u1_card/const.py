@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.5.1"
+VERSION = "1.5.2"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -118,6 +118,10 @@ UPLOAD_URL = f"/api/{DOMAIN}/upload"
 # Keep Snapmaker's camera service streaming (camera.start_monitor): off | printing | always.
 # Stock firmware stops the camera after a while; modified firmware usually does not need it.
 CONF_LIVE_BUDGET = "live_notify_budget"
+CONF_LIVE_IMAGE = "live_notify_image"
+DEFAULT_LIVE_IMAGE = True
+# Tapping a notification opens this path/URL (e.g. /dashboard-drucker/0)
+CONF_NOTIFY_URL = "notify_click_url"
 DEFAULT_LIVE_BUDGET = 150  # progress updates per day and device
 CONF_CAMERA_WAKE = "camera_wake"
 CAMERA_WAKE_MODES = ("off", "printing", "always")

@@ -15,6 +15,7 @@ POLL_S = 3  # poll interval while shutting down
 EARLY_PHOTO_DELAY_S = 2  # result photo: file position runs ahead of the motion
 PHOTO_WAIT_S = 15  # result photo: wait at most this long for the head to clear the part
 PHOTO_MARGIN_MM = 25  # head this far outside the parts' outline = part visible
+PHOTO_NOTIFY_WAIT_S = 20  # "print finished" waits this long for the result photo
 PHOTO_BED_DROP_MM = 15  # bed already this far down: take the photo anyway
 FILES_PRINTING_S = 600  # file list interval during a print
 BOOT_POLL_S = 5  # poll interval while booting

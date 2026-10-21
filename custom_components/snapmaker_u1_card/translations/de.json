@@ -62,7 +62,9 @@
               "almost_done_minutes": "Vorwarnung „Gleich fertig“",
               "bed_cool_temp": "„Teil entnehmbar“ ab",
               "camera_wake": "Kamera wach halten",
-              "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag"
+              "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag",
+              "live_notify_image": "Fortschritts-Benachrichtigung: Kamerabild",
+              "notify_click_url": "Beim Antippen öffnen"
             },
             "data_description": {
               "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
@@ -70,7 +72,9 @@
               "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
               "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
               "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht.",
-              "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht."
+              "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht.",
+              "live_notify_image": "Zeigt das Kamerabild, wenn die Fortschritts-Benachrichtigung aufgeklappt wird (aktualisiert mit jedem Fortschritts-Update, keine zusätzlichen Pushes).",
+              "notify_click_url": "Dashboard-Pfad oder URL, die beim Antippen einer Benachrichtigung geöffnet wird, z. B. /dashboard-drucker/0 oder /lovelace/drucker. Leer = Standard der App."
             }
           },
           "filament": {
@@ -197,7 +201,9 @@
               "almost_done_minutes": "Vorwarnung „Gleich fertig“",
               "bed_cool_temp": "„Teil entnehmbar“ ab",
               "camera_wake": "Kamera wach halten",
-              "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag"
+              "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag",
+              "live_notify_image": "Fortschritts-Benachrichtigung: Kamerabild",
+              "notify_click_url": "Beim Antippen öffnen"
             },
             "data_description": {
               "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
@@ -205,7 +211,9 @@
               "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
               "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
               "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht.",
-              "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht."
+              "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht.",
+              "live_notify_image": "Zeigt das Kamerabild, wenn die Fortschritts-Benachrichtigung aufgeklappt wird (aktualisiert mit jedem Fortschritts-Update, keine zusätzlichen Pushes).",
+              "notify_click_url": "Dashboard-Pfad oder URL, die beim Antippen einer Benachrichtigung geöffnet wird, z. B. /dashboard-drucker/0 oder /lovelace/drucker. Leer = Standard der App."
             }
           },
           "filament": {

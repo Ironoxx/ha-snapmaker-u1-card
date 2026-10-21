@@ -27,7 +27,14 @@ from typing import Any
 
 from homeassistant.util import slugify
 
-from ..const import CONF_LIVE_BUDGET, CONF_NOTIFY, DEFAULT_LIVE_BUDGET, DOMAIN
+from ..const import (
+    CONF_LIVE_BUDGET,
+    CONF_LIVE_IMAGE,
+    CONF_NOTIFY,
+    DEFAULT_LIVE_BUDGET,
+    DEFAULT_LIVE_IMAGE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,6 +190,12 @@ class ProgressNotifyMixin:
             "live_update": True,
             "critical_text": f"{pct}%",
         }
+        # Larger view: camera image when the notification is expanded (refreshed
+        # with every update, no extra push); tap opens the configured dashboard.
+        camera = self.camera_entity() if self.options.get(CONF_LIVE_IMAGE, DEFAULT_LIVE_IMAGE) else None
+        if camera:
+            data["image"] = f"/api/camera_proxy/{camera}?ts={int(time.time())}"
+        data.update(self._click_data())
         if eta is not None and not paused:
             data["chronometer"] = True
             data["when"] = math.ceil(eta)

@@ -164,6 +164,7 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
         self._last_layer: int | None = None
         self._backup: dict[str, Any] = {}
         self._early_photo: dict[str, Any] | None = None  # photo after the last extrusion
+        self._photo_task: Any = None  # task storing the current result photo
         self._cool_watch: float | None = None  # print ended "complete": watch the bed temperature
         self._idle_since: float | None = None  # idle shutdown
         self._unsub_action = None

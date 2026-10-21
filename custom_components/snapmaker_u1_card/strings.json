@@ -62,7 +62,9 @@
               "almost_done_minutes": "“Almost done” warning",
               "bed_cool_temp": "“Part ready” at",
               "camera_wake": "Keep camera awake",
-              "live_notify_budget": "Progress notification: updates per day"
+              "live_notify_budget": "Progress notification: updates per day",
+              "live_notify_image": "Progress notification: camera image",
+              "notify_click_url": "Open when tapped"
             },
             "data_description": {
               "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
@@ -70,7 +72,9 @@
               "almost_done_minutes": "Minutes before the estimated end.",
               "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
               "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it.",
-              "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here."
+              "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here.",
+              "live_notify_image": "Shows the camera image when the progress notification is expanded (updated with every progress update, no extra pushes).",
+              "notify_click_url": "Dashboard path or URL opened when a notification is tapped, e.g. /dashboard-printer/0 or /lovelace/printer. Empty = the app's default."
             }
           },
           "filament": {
@@ -197,7 +201,9 @@
               "almost_done_minutes": "“Almost done” warning",
               "bed_cool_temp": "“Part ready” at",
               "camera_wake": "Keep camera awake",
-              "live_notify_budget": "Progress notification: updates per day"
+              "live_notify_budget": "Progress notification: updates per day",
+              "live_notify_image": "Progress notification: camera image",
+              "notify_click_url": "Open when tapped"
             },
             "data_description": {
               "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
@@ -205,7 +211,9 @@
               "almost_done_minutes": "Minutes before the estimated end.",
               "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
               "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it.",
-              "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here."
+              "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here.",
+              "live_notify_image": "Shows the camera image when the progress notification is expanded (updated with every progress update, no extra pushes).",
+              "notify_click_url": "Dashboard path or URL opened when a notification is tapped, e.g. /dashboard-printer/0 or /lovelace/printer. Empty = the app's default."
             }
           },
           "filament": {

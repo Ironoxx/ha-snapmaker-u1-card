@@ -237,3 +237,32 @@ async def test_exclude_object_service(hass: HomeAssistant, mock_client, notifica
         with pytest.raises(HomeAssistantError):  # last remaining object
             await hass.services.async_call("snapmaker_u1_card", "exclude_object", {"name": "A"}, blocking=True)
         assert gc.await_count == 1
+
+
+async def test_progress_notification_link_and_image(hass: HomeAssistant, mock_client, notifications) -> None:
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], camera="camera.cam",
+                         notify_click_url="/dashboard-drucker/0")
+    coord = entry.runtime_data
+    await coord.async_set_live_notify(True)
+    coord._live_tick("printing", {"file": "a", "started": 1.0, "begin_s": 50}, 0.1, 3600, 1, 10)
+    await hass.async_block_till_done()
+    d = _live(notifications)[0].data["data"]
+    assert d["clickAction"] == "/dashboard-drucker/0"
+    assert d["image"].startswith("/api/camera_proxy/camera.cam?ts=")
+    # normal notifications open the same link
+    coord._notify("complete", {"name": "Teil"})
+    await hass.async_block_till_done()
+    done = [c for c in notifications if "Fertig" in c.data["title"] or "complete" in c.data["title"].lower()
+            or "finished" in c.data["title"].lower()]
+    assert done and done[-1].data["data"]["clickAction"] == "/dashboard-drucker/0"
+
+
+async def test_progress_notification_without_image(hass: HomeAssistant, mock_client, notifications) -> None:
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], camera="camera.cam",
+                         live_notify_image=False)
+    coord = entry.runtime_data
+    await coord.async_set_live_notify(True)
+    coord._live_tick("printing", {"file": "a", "started": 1.0, "begin_s": 50}, 0.1, 3600, 1, 10)
+    await hass.async_block_till_done()
+    d = _live(notifications)[0].data["data"]
+    assert "image" not in d and "clickAction" not in d

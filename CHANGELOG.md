@@ -4,6 +4,21 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.5.2
+
+**New**
+- Notifications: new option *Open when tapped* (`notify_click_url`) – tapping a notification of the integration (also the progress notification) opens this dashboard, e.g. `/dashboard-printer/0`.
+- Progress notification: shows the camera image when expanded (option *Progress notification: camera image*, on by default; refreshed with each progress update, no extra pushes).
+
+**Fixed**
+- The "print finished" notification attached a live camera image taken when the print already counted as finished – the bed was lowered by then. It now shows the result photo (taken once the head has left the part) and waits up to 20 s for it.
+
+---
+**Deutsch**
+- Neu: Option *Beim Antippen öffnen* (`notify_click_url`) – ein Tipp auf eine Benachrichtigung der Integration (auch die Fortschritts-Benachrichtigung) öffnet dieses Dashboard, z. B. `/dashboard-drucker/0`.
+- Neu: Die Fortschritts-Benachrichtigung zeigt aufgeklappt das Kamerabild (Option *Fortschritts-Benachrichtigung: Kamerabild*, standardmäßig an; aktualisiert mit jedem Fortschritts-Update, keine zusätzlichen Pushes).
+- Behoben: Die „Druck fertig“-Meldung hängte ein Live-Bild an, das erst entstand, als der Druck schon als fertig galt – da war das Bett bereits abgesenkt. Jetzt kommt das Ergebnisfoto (aufgenommen, sobald der Kopf vom Teil weg ist); die Meldung wartet bis zu 20 s darauf.
+
 ## 1.5.1
 
 **Fixed**
