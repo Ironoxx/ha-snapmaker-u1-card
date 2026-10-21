@@ -25,11 +25,15 @@ add(`sensor.${P}_printer_state`, "ready");
 add(`sensor.${P}_current_print_state`, "printing");
 add(`sensor.${P}_filename`, "teil.gcode");
 add(`camera.${P}_webcam`, "idle", { entity_picture: "/api/camera_proxy/cam?token=A", access_token: "A" });
-add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.3.2" }, "snapmaker_u1_card", "files");
+add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.4.0" }, "snapmaker_u1_card", "files");
 
+add("switch.snapmaker_u1_card_fortschritt", "off", { targets: ["notify.mobile_app_handy"], sent_today: 4, budget: 150 },
+  "snapmaker_u1_card", "live_notify");
 const calls = [];
+const ws = [];
 const hass = () => ({
   states: JSON.parse(JSON.stringify(states)), entities: reg,
+  callWS: async (m) => { ws.push(m); return { path: `${m.path}?authSig=X` }; },
   services: { snapmaker_u1_card: { camera_wake: {} } },
   locale: { language: "de" }, language: "de",
   callService: async (...a) => { calls.push(a); },
@@ -142,7 +146,7 @@ const pressed = (name) => calls.some((c) => c[0] === "button" && c[2].entity_id 
   assert.ok(!R.querySelector("[data-reload]"));
 
   // 7. Direct stream: printer URL on an http page, HA proxy after an error
-  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.3.2";
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.4.0";
   states["sensor.snapmaker_u1_card_druckdateien"].attributes.stream_url = "http://192.168.0.25/webcam/?action=stream";
   card = make();
   card._onScreen = true;
@@ -178,5 +182,21 @@ const pressed = (name) => calls.some((c) => c[0] === "button" && c[2].entity_id 
   card._tickCamera();
   assert.strictEqual(card.shadowRoot.querySelector("img[data-live]").getAttribute("src"), "http://u1.lan:8080/stream");
 
-  console.log("SAFETY OK – emergency stop modes, confirm dialog, tablet layout, camera wake, version notice, direct stream");
+  // 8. Progress notification switch in the system tab; G-code download
+  card = make();
+  R = card.shadowRoot.getElementById("u1card");
+  const ln = R.querySelector("[data-livenotify]");
+  assert.ok(ln && ln.getAttribute("aria-pressed") === "false", "switch shown");
+  assert.match(ln.closest(".row").textContent, /Heute 4 von 150/);
+  calls.length = 0;
+  ln.click();
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(calls[0])), ["switch", "toggle", { entity_id: "switch.snapmaker_u1_card_fortschritt" }]);
+  card._dlg = { file: { path: "sub/Teil 1.gcode", name: "Teil 1" } };
+  let clicked = null;
+  w.HTMLAnchorElement.prototype.click = function () { clicked = { href: this.getAttribute("href"), download: this.download }; };
+  await card._downloadFile();
+  assert.strictEqual(ws[0].path, "/api/snapmaker_u1_card/gcode/E1/sub/Teil%201.gcode");
+  assert.deepStrictEqual(clicked, { href: "/api/snapmaker_u1_card/gcode/E1/sub/Teil%201.gcode?authSig=X", download: "Teil 1.gcode" });
+
+  console.log("SAFETY OK – emergency stop modes, confirm dialog, tablet layout, camera wake, version notice, direct stream, progress switch, download");
 })().catch((e) => { console.error(e); process.exit(1); });

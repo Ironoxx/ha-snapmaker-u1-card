@@ -20,7 +20,7 @@ from ..const import (
     UPDATE_INTERVAL,
 )
 from ..errors import error_text
-from ..layers import estimate_remaining, parse_layers, timeline_at
+from ..layers import estimate_remaining, parse_layers, slicer_left, timeline_at
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     grams_per_slot,
@@ -143,14 +143,54 @@ class PrintMonitorMixin:
                                          "left_min": max(1, round(left / 60))})
 
     def _remaining(self, stats: dict[str, Any], vsd: dict[str, Any]) -> float | None:
-        """Remaining time: file time profile (calibrated), else duration x rest/progress."""
+        """Remaining time: slicer marks / time profile calibrated from the first layer on, else duration x rest/progress."""
         active = self._print_state.get("active") or {}
         meta = self._profile(active)
-        left = estimate_remaining(meta, _position(vsd, meta), stats.get("print_duration"),
-                                  active.get("estimated_time"))
+        pos = _position(vsd, meta)
+        duration = stats.get("print_duration")
+        self._mark_begin(active, meta, pos, duration)
+        factor, prep = self._speed_prior()
+        left = estimate_remaining(meta, pos, duration, active.get("estimated_time"),
+                                  begin_duration=active.get("begin_s"), factor=factor, prep_s=prep)
         if left is None:
             left = remaining_seconds(stats.get("print_duration"), vsd.get("progress"))
         return left
+
+    def _mark_begin(self, active: dict[str, Any], meta: dict[str, Any] | None, pos: int | None,
+                    duration: Any) -> None:
+        """Remember the print duration when the first layer starts (end of the start sequence).
+
+        Stored in the active print (survives restarts) together with the slicer
+        time from there; at the end both give the start duration and the speed
+        factor of this printer (``_speed_prior``).
+        """
+        if not active or "begin_s" in active or not meta or meta.get("begin") is None:
+            return
+        if pos is None or not isinstance(duration, (int, float)) or pos < meta["begin"]:
+            return
+        # Joined late (HA restart, layer view parsed late): no clean reference point
+        late = slicer_left(meta, pos)
+        at_begin = slicer_left(meta, meta["begin"])
+        if late is not None and at_begin is not None:
+            behind = at_begin - late
+        else:
+            a, b = timeline_at(meta, pos), timeline_at(meta, meta["begin"])
+            behind = (a["t"] - b["t"]) if a and b else 0.0
+        if behind > 120:
+            active["begin_s"] = None
+            return
+        active["begin_s"] = round(float(duration), 1)
+        if at_begin is not None:
+            active["slicer_print_s"] = round(at_begin)
+        self._save()
+
+    def _speed_prior(self) -> tuple[float | None, float | None]:
+        """Median speed factor and start duration of the last finished prints with slicer marks."""
+        rows = [h for h in self._history()[:12] if h.get("result") == "complete"]
+        factors = sorted(h["speed_factor"] for h in rows if isinstance(h.get("speed_factor"), (int, float)))
+        preps = sorted(h["prep_s"] for h in rows if isinstance(h.get("prep_s"), (int, float)))
+        med = (lambda v: v[len(v) // 2] if v else None)
+        return med(factors), med(preps)
 
     def _profile(self, active: dict[str, Any]) -> dict[str, Any] | None:
         view = self.layer_view

@@ -13,12 +13,13 @@ from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING
+from urllib.parse import quote
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 
 from .api import MoonrakerError
-from .const import DOMAIN, VIDEO_URL
+from .const import DOMAIN, GCODE_URL, VIDEO_URL
 
 if TYPE_CHECKING:
     from .coordinator import U1Coordinator
@@ -89,6 +90,61 @@ class TimelapseView(HomeAssistantView):
             return response
         except (ConnectionResetError, OSError):
             # The player aborted (seeking, dialog closed): normal.
+            return response if response is not None else web.Response(status=499)
+        finally:
+            upstream.release()
+
+
+def gcode_allowed(coordinator: U1Coordinator, path: str) -> bool:
+    """Whether ``path`` is a print file the integration currently lists."""
+    data = coordinator.data
+    if data is None:
+        return False
+    return any(f.get("path") == path for f in (data.all_files or [])) or any(
+        f.get("path") == path for f in (data.files or []))
+
+
+class GcodeView(HomeAssistantView):
+    """Authenticated download of a print file (card: file dialog -> download)."""
+    url = GCODE_URL + "/{entry_id}/{path:.+}"
+    name = f"api:{DOMAIN}:gcode"
+    requires_auth = True
+
+    async def get(self, request: web.Request, entry_id: str, path: str) -> web.StreamResponse:
+        """Stream the file from the printer as an attachment."""
+        hass = request.app["hass"]
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is None or entry.domain != DOMAIN or not hasattr(entry, "runtime_data"):
+            return web.Response(status=404)
+        coordinator: U1Coordinator = entry.runtime_data
+        if not gcode_allowed(coordinator, path):
+            return web.Response(status=404)
+        if not reachable(coordinator):
+            return web.Response(status=503, text="Printer is off or not reachable")
+        try:
+            upstream = await coordinator.client.open_file("gcodes", path, {})
+        except MoonrakerError as err:
+            _LOGGER.debug("G-code %s not available: %s", path, err)
+            return web.Response(status=502)
+
+        response: web.StreamResponse | None = None
+        try:
+            if upstream.status >= 400:
+                return web.Response(status=upstream.status)
+            response = web.StreamResponse(status=200)
+            for key in ("Content-Length", "Last-Modified"):
+                if key in upstream.headers:
+                    response.headers[key] = upstream.headers[key]
+            name = path.rsplit("/", 1)[-1]
+            response.headers["Content-Type"] = "application/octet-stream"
+            response.headers["Content-Disposition"] = f"attachment; filename*=UTF-8''{quote(name)}"
+            response.headers["Cache-Control"] = "no-store"
+            await response.prepare(request)
+            async for chunk in upstream.content.iter_chunked(64 * 1024):
+                await response.write(chunk)
+            await response.write_eof()
+            return response
+        except (ConnectionResetError, OSError):
             return response if response is not None else web.Response(status=499)
         finally:
             upstream.release()

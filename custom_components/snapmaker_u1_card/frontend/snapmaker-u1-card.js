@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.3.2";
+  var CARD_VERSION = "1.4.0";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -375,6 +375,12 @@
     "Veraltete Karte im Browser-Cache": "Outdated card in the browser cache",
     "Neustart von Home Assistant nötig": "Home Assistant restart required",
     "Neu laden": "Reload",
+    "G-Code herunterladen": "Download G-code",
+    "Download fehlgeschlagen": "Download failed",
+    "Benachrichtigungen": "Notifications",
+    "Fortschritt aufs Handy": "Progress on the phone",
+    "Fortschrittsbalken und Countdown in der Benachrichtigungsleiste. Heute {n} von {b} Updates.": "Progress bar and countdown in the notification shade. Today {n} of {b} updates.",
+    "Kein Android-Handy unter den Benachrichtigungszielen der Integration.": "No Android phone among the integration's notification targets.",
     "Druck abbrechen": "Cancel print",
     "Weiterdrucken": "Keep printing",
     "Anzeigen, mit Rückfrage": "Show, with confirmation",
@@ -1889,6 +1895,7 @@
             ${d.stepX !== null ? this._row(tr("Stepper X"), `<span data-su1="stepx">${num(d.stepX, 1, "°C")}</span>`) : ""}
             ${d.stepY !== null ? this._row(tr("Stepper Y"), `<span data-su1="stepy">${num(d.stepY, 1, "°C")}</span>`) : ""}
             ${this._printerSettingsHtml()}
+            ${this._liveNotifyHtml()}
             <div class="selftest-wrap">
               <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
               <div class="selftest" data-selftest>${this._selfTestHtml()}</div>
@@ -1915,6 +1922,19 @@
       const sen = p.entangle_detect && p.entangle_sensitivity ? `<div class="row"><span class="k">${tr("Empfindlichkeit")}</span>
         <span class="v chip-row">${[["low", tr("Niedrig")], ["medium", tr("Mittel")], ["high", tr("Hoch")]].map(([v, l]) => `<button type="button" class="chip ${p.entangle_sensitivity === v ? "sel" : ""}" data-prefsen="${v}"${off ? " disabled" : ""}>${l}</button>`).join("")}</span></div>` : "";
       return `<div class="t-label" style="padding-top:8px">${tr("Druckereinstellungen")}</div>${rows}${sen}`;
+    }
+    /** Switch for the ongoing progress notification (integration, Android phones). */
+    _liveNotifyHtml() {
+      const st = this._st(this._ents && this._ents.liveNotify);
+      if (!st) return "";
+      const on = st.state === "on";
+      const a = st.attributes || {};
+      const targets = (a.targets || []).length;
+      const hint = targets ? tr("Fortschrittsbalken und Countdown in der Benachrichtigungsleiste. Heute {n} von {b} Updates.", { n: a.sent_today || 0, b: a.budget || 0 }) : tr("Kein Android-Handy unter den Benachrichtigungszielen der Integration.");
+      return `<div class="t-label" style="padding-top:8px">${tr("Benachrichtigungen")}</div>
+      <div class="row" title="${esc(hint)}">
+        <span class="k">${tr("Fortschritt aufs Handy")}<small class="t-label" style="display:block">${esc(hint)}</small></span>
+        <span class="v"><button type="button" class="chip" data-livenotify aria-pressed="${on}"${targets ? "" : " disabled"}>${on ? tr("An") : tr("Aus")}</button></span></div>`;
     }
     _fwText() {
       const st = this._st(this._ents && this._ents.firmware);
@@ -3608,7 +3628,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.timelapses && d.timelapses.archive ? `${d.timelapses.archive.count}${d.timelapses.archive.busy}${d.timelapses.archive.cleanup}${d.timelapses.archive.last_backup}` : "noa",
         this._up ? `up${!!this._up.error}${this._up.done}` : "",
         JSON.stringify(this._prefs()),
-        this._st(this._ents.files)?.attributes.version || ""
+        this._st(this._ents.files)?.attributes.version || "",
+        (() => {
+          const l = this._st(this._ents.liveNotify);
+          return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : "";
+        })()
       ].join("~");
       if (key === this._renderKey && this._root()) {
         this._patch();
@@ -3727,6 +3751,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         "set_preference",
         { preference: b.dataset.prefset, value: b.getAttribute("aria-pressed") !== "true" }
       )));
+      const ln = r.querySelector("[data-livenotify]");
+      if (ln) ln.addEventListener("click", () => this._hass.callService("switch", "toggle", { entity_id: this._ents.liveNotify }));
       r.querySelectorAll("[data-prefsen]").forEach((b) => b.addEventListener("click", () => this._call(
         "set_preference",
         { preference: "entangle_sensitivity", value: b.dataset.prefsen }
@@ -4106,6 +4132,25 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (!dest || dest.trim() === f.path) return;
       if (await this._call("move_file", { source: f.path, dest: dest.trim() })) this._closeDialog();
     }
+    /** Download the G-code through Home Assistant (signed URL, works remotely). */
+    async _downloadFile() {
+      const f = this._dlg && this._dlg.file;
+      const entry = this._entryData().config_entry_id;
+      if (!f || !entry) return;
+      try {
+        const path = `/api/${DOMAIN}/gcode/${entry}/${f.path.split("/").map(encodeURIComponent).join("/")}`;
+        const url = await this._signed(path);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = f.path.split("/").pop();
+        a.rel = "noopener";
+        this.shadowRoot.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (e) {
+        this._toast(tr("Download fehlgeschlagen"));
+      }
+    }
     async _deleteFile() {
       const f = this._dlg && this._dlg.file;
       if (!f || !confirm(tr("„{n}“ vom Drucker löschen?", { n: f.name || f.path }))) return;
@@ -4264,6 +4309,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
             <div class="t-label">${meta.map(esc).join(" · ") || "&nbsp;"}</div>
             <div class="dlg-file-actions">
               <button type="button" class="icon ghost" data-dlg="rename" title="${tr("Umbenennen / verschieben")}" ${g.busy ? "disabled" : ""}><ha-icon icon="mdi:rename-outline"></ha-icon></button>
+              <button type="button" class="icon ghost" data-dlg="download" title="${tr("G-Code herunterladen")}"><ha-icon icon="mdi:download"></ha-icon></button>
               <button type="button" class="icon ghost" data-dlg="delete" title="${tr("Datei löschen")}" ${g.busy ? "disabled" : ""}><ha-icon icon="mdi:delete-outline"></ha-icon></button>
             </div>
             ${costParts.length ? `<div class="t-label" data-cost>${tr("Geschätzt")}: ${costParts.map(esc).join(" · ")}</div>` : ""}
@@ -4320,6 +4366,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       el.querySelector('[data-dlg="print"]').addEventListener("click", () => this._submitPrint());
       const ren = el.querySelector('[data-dlg="rename"]');
       if (ren) ren.addEventListener("click", () => this._renameFile());
+      const dl = el.querySelector('[data-dlg="download"]');
+      if (dl) dl.addEventListener("click", () => this._downloadFile());
       const del = el.querySelector('[data-dlg="delete"]');
       if (del) del.addEventListener("click", () => this._deleteFile());
       const qb = el.querySelector('[data-dlg="queue"]');
@@ -5025,7 +5073,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         live: ownKey("live"),
         remaining: ownKey("remaining"),
         finish: ownKey("finish"),
-        firmware: ownKey("firmware")
+        firmware: ownKey("firmware"),
+        liveNotify: ownKey("live_notify")
       };
     }
     connectedCallback() {

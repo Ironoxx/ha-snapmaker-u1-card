@@ -128,7 +128,9 @@ async def test_remaining_sensors_and_runout(hass: HomeAssistant, mock_client, no
     rem = next(s for s in hass.states.async_all("sensor") if s.entity_id.endswith("_time_remaining"))
     fin = next(s for s in hass.states.async_all("sensor") if s.entity_id.endswith("_finish_time"))
     assert float(rem.state) > 0 and fin.state not in ("unknown", "unavailable")
-    assert coord.data.remaining == pytest.approx(estimate_remaining(coord.layer_view["meta"], pos, 300, 600), rel=0.01)
+    begin = coord._print_state["active"].get("begin_s")
+    assert coord.data.remaining == pytest.approx(
+        estimate_remaining(coord.layer_view["meta"], pos, 300, 600, begin_duration=begin), rel=0.01)
 
     # spool on head 1 (T0) has too little: META 4 g PETG (T0) -> 2 g left lasts until halfway
     coord._print_state["active"]["filaments"] = [{"index": 0, "type": "PETG", "weight": 4.0},

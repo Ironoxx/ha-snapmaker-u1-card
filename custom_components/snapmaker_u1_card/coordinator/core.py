@@ -74,6 +74,7 @@ from .monitor import PrintMonitorMixin
 from .notify import NotifyMixin
 from .power import PowerMixin
 from .printer import PrinterSettingsMixin
+from .progress import ProgressNotifyMixin
 from .spools import SpoolMixin
 from .upkeep import UpkeepMixin
 
@@ -82,7 +83,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, MediaMixin, NotifyMixin, PowerMixin, PrinterSettingsMixin, DataUpdateCoordinator[U1Data]):
+class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, MediaMixin, NotifyMixin, PowerMixin, PrinterSettingsMixin, DataUpdateCoordinator[U1Data]):
     """Central data hub: polls the printer, tracks prints, power, files and media.
 
     Polling runs every 10 s (30 s while the live subscription is up), the file
@@ -168,6 +169,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         self._unsub_wake: Any = None  # camera wake-up timer (printer.py)
         self._wake_busy = False
         self._wake_last = 0.0  # monotonic time of the last card-requested wake
+        self._live_init(None)
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
 
     # ── Options ─────────────────────────────────────────────────────────────
@@ -226,6 +228,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
         if self.spools.enabled:
             await self.spools.async_refresh()
         extra = stored if isinstance(stored, dict) else {}
+        self._live_init(extra)
         self.queue = JobQueue(extra.get("queue"))
         self.maintenance = Maintenance(extra.get("maintenance"))
         self._print_hours = extra.get("print_hours")
@@ -285,6 +288,7 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
             "print_hours": self._print_hours,
             "backup": self._backup,
             "firmware_latest": self.firmware.get("latest"),
+            "live_notify": self._live_stored(),
             **({"archive": self.archive.as_stored()} if self.archive else {}),
         }
 
@@ -464,6 +468,8 @@ class U1Coordinator(SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, M
                 data.eta = time.time() + data.remaining
             if print_state == "printing":
                 data.runout = self._check_runout(vsd, data.remaining, ptc)
+        self._live_tick(print_state, self._print_state.get("active"), data.progress, data.remaining,
+                        data.layer, data.total_layers)
         self._check_bed_cool((status.get("heater_bed") or {}).get("temperature"), print_state)
 
         now = time.monotonic()

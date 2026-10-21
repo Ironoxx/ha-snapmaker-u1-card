@@ -61,14 +61,16 @@
               "camera": "Kamera für das Bild",
               "almost_done_minutes": "Vorwarnung „Gleich fertig“",
               "bed_cool_temp": "„Teil entnehmbar“ ab",
-              "camera_wake": "Kamera wach halten"
+              "camera_wake": "Kamera wach halten",
+              "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag"
             },
             "data_description": {
               "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
               "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
               "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
               "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
-              "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht."
+              "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht.",
+              "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht."
             }
           },
           "filament": {
@@ -194,14 +196,16 @@
               "camera": "Kamera für das Bild",
               "almost_done_minutes": "Vorwarnung „Gleich fertig“",
               "bed_cool_temp": "„Teil entnehmbar“ ab",
-              "camera_wake": "Kamera wach halten"
+              "camera_wake": "Kamera wach halten",
+              "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag"
             },
             "data_description": {
               "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
               "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
               "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
               "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
-              "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht."
+              "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht.",
+              "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht."
             }
           },
           "filament": {
@@ -348,6 +352,9 @@
       },
       "end_led_off": {
         "name": "Licht aus nach dem Druck"
+      },
+      "live_notify": {
+        "name": "Fortschritts-Benachrichtigung (Android)"
       }
     },
     "binary_sensor": {

@@ -61,14 +61,16 @@
               "camera": "Camera for the picture",
               "almost_done_minutes": "“Almost done” warning",
               "bed_cool_temp": "“Part ready” at",
-              "camera_wake": "Keep camera awake"
+              "camera_wake": "Keep camera awake",
+              "live_notify_budget": "Progress notification: updates per day"
             },
             "data_description": {
               "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
               "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
               "almost_done_minutes": "Minutes before the estimated end.",
               "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
-              "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it."
+              "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it.",
+              "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here."
             }
           },
           "filament": {
@@ -194,14 +196,16 @@
               "camera": "Camera for the picture",
               "almost_done_minutes": "“Almost done” warning",
               "bed_cool_temp": "“Part ready” at",
-              "camera_wake": "Keep camera awake"
+              "camera_wake": "Keep camera awake",
+              "live_notify_budget": "Progress notification: updates per day"
             },
             "data_description": {
               "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
               "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
               "almost_done_minutes": "Minutes before the estimated end.",
               "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
-              "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it."
+              "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it.",
+              "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here."
             }
           },
           "filament": {
@@ -348,6 +352,9 @@
       },
       "end_led_off": {
         "name": "Light off after print"
+      },
+      "live_notify": {
+        "name": "Progress notification (Android)"
       }
     },
     "binary_sensor": {

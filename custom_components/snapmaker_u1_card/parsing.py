@@ -384,7 +384,7 @@ def _delta(start: float | None, end: float | None) -> float | None:
 
 # Fields of the running print that move into the record when it finishes.
 _CARRY = ("name", "thumb", "filaments", "filament_total", "filament_used", "print_duration",
-          "map_table", "spool_ids", "source", "mapping", "options", "pause_layers")
+          "map_table", "spool_ids", "source", "mapping", "options", "pause_layers", "begin_s", "slicer_print_s")
 
 
 def _close(active: dict[str, Any], counters: dict[str, float | None],

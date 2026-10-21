@@ -37,6 +37,10 @@ SAMPLE = 30000  # point sample for the viewport
 TIMELINE_ROWS = 400  # samples in the time profile
 _DWELL = re.compile(r"([PS])(\d*\.?\d+)")
 _FEED = re.compile(r"F(\d*\.?\d+)")
+_M73_R = re.compile(r"\bR(\d+(?:\.\d+)?)", re.IGNORECASE)
+# Weight of the history/default speed factor, in seconds of slicer time: after
+# about this much printed slicer time the measured speed counts as much.
+PRIOR_WEIGHT_S = 600.0
 
 
 def view_box(sample: list[tuple[float, float]], objects: list[list[float]]) -> list[float] | None:
@@ -111,6 +115,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
     seen = 0
     rng = random.Random(1)  # reproducible
     objects: list[list[float]] = []
+    slicer: list[list[int]] = []  # [file offset, slicer remaining s] from M73 R (Orca/Prusa)
 
     def take(pt: tuple[float, float]) -> None:
         """Reservoir sample for the viewport."""
@@ -206,6 +211,13 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                 if "E" in vals:
                     e = float(vals["E"])
                 continue
+            if cmd == "M73":
+                rm = _M73_R.search(line, 3)
+                if rm:
+                    left = round(float(rm.group(1)) * 60)
+                    if not slicer or slicer[-1][1] != left:
+                        slicer.append([line_offset, left])
+                continue
             if cmd == "G4":
                 dw = dict(_DWELL.findall(line.upper()[2:]))
                 if "P" in dw:
@@ -281,6 +293,12 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
         "size": offset,
         "timeline": timeline,
         "last_extrude": last_extrude,
+        # start of the first layer: everything before is the start sequence
+        # (homing, leveling, calibration, purge line)
+        # (SET_PRINT_STATS_INFO ... CURRENT_LAYER=0 marks the start sequence as layer 0)
+        "begin": next((row[1] for row in index if row[0] >= 1), index[0][1] if index else None),
+        "slicer": slicer if len(slicer) >= 2 else [],
+        "objects": [[round(v, 1) for v in o] for o in objects],
     }
 
 
@@ -339,25 +357,77 @@ def timeline_at(meta: dict[str, Any] | None, position: int | None) -> dict[str, 
     return {"t": cur[0], "t_total": last[1], "e": cur[1:], "e_total": list(last[2:])}
 
 
-def estimate_remaining(
-    meta: dict[str, Any] | None, position: int | None, duration: float | None, slicer_total: float | None
-) -> float | None:
-    """Remaining time in seconds from the time profile, elapsed time and slicer estimate.
+def slicer_left(meta: dict[str, Any] | None, position: int | None) -> float | None:
+    """Slicer remaining time (M73 R) at a file position, linear between the marks."""
+    pts = (meta or {}).get("slicer") or []
+    if len(pts) < 2 or position is None:
+        return None
+    if position <= pts[0][0]:
+        return float(pts[0][1])
+    if position >= pts[-1][0]:
+        return float(pts[-1][1])
+    lo, hi = 0, len(pts) - 1
+    while hi - lo > 1:
+        mid = (lo + hi) // 2
+        if pts[mid][0] <= position:
+            lo = mid
+        else:
+            hi = mid
+    (o0, v0), (o1, v1) = pts[lo], pts[hi]
+    return v0 + (v1 - v0) * (position - o0) / (o1 - o0) if o1 > o0 else float(v0)
 
-    k = share of the move time up to the current position. Two estimates:
-    slicer (total time distributed along the profile) and actual (elapsed
-    time x remaining/done). Weighted by k: early on the slicer counts, towards
-    the end the measured speed.
+
+def estimate_remaining(
+    meta: dict[str, Any] | None, position: int | None, duration: float | None, slicer_total: float | None,
+    *, begin_duration: float | None = None, factor: float | None = None, prep_s: float | None = None,
+) -> float | None:
+    """Remaining time in seconds.
+
+    With slicer marks (M73 R): the slicer's own remaining time at the file
+    position, scaled by the measured speed. The speed is measured from the
+    start of the first layer (``begin_duration`` = print duration there), so
+    the start sequence (leveling, calibration) does not distort it. Before
+    enough is printed, ``factor`` (from earlier prints) carries the estimate;
+    the measured speed takes over smoothly (PRIOR_WEIGHT_S). Still in the start
+    sequence: expected remaining start time (``prep_s`` from earlier prints) +
+    slicer time of the print.
+
+    Without marks: move-time profile, weighted between slicer total and
+    measured speed (also measured from the first layer when known).
     """
+    f0 = factor if factor and 0.3 < factor < 3 else 1.0
+    s_now = slicer_left(meta, position)
+    begin = (meta or {}).get("begin")
+    if s_now is not None:
+        s_begin = slicer_left(meta, begin) if begin is not None else None
+        if s_begin is None or position is None or begin is None or position < begin:
+            prep_left = max(0.0, (prep_s or 0.0) - (duration or 0.0)) if prep_s else 0.0
+            return max(0.0, prep_left + (s_begin if s_begin is not None else s_now) * f0)
+        done = max(0.0, s_begin - s_now)
+        if begin_duration is not None and duration is not None and duration >= begin_duration:
+            actual = duration - begin_duration
+            f = (f0 * PRIOR_WEIGHT_S + actual) / (PRIOR_WEIGHT_S + done)
+        else:
+            f = f0  # joined mid-print (e.g. HA restart): no reference point
+        return max(0.0, s_now * f)
+
     at = timeline_at(meta, position)
     if at is None or not at["t_total"]:
         return None
     k = max(0.0, min(1.0, at["t"] / at["t_total"]))
+    dur = duration
+    kb = 0.0
+    if begin_duration is not None and duration is not None and begin is not None:
+        b = timeline_at(meta, begin)
+        if b and at["t_total"]:
+            kb = max(0.0, min(0.99, b["t"] / at["t_total"]))
+            dur = duration - begin_duration
     estimates = []
     if slicer_total and slicer_total > 0:
-        estimates.append((1 - k, slicer_total * (1 - k)))
-    if duration and duration > 0 and k >= 0.02:
-        estimates.append((k, duration * (1 - k) / k))
+        estimates.append((1 - k, slicer_total * f0 * (1 - k)))
+    kk = (k - kb) / (1 - kb) if kb else k
+    if dur and dur > 0 and kk >= 0.02:
+        estimates.append((k, dur * (1 - kk) / kk))
     weight = sum(w for w, _ in estimates)
     if not weight:
         return None

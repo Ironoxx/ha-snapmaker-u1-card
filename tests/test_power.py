@@ -524,3 +524,39 @@ async def test_running_print_is_saved_periodically(hass: HomeAssistant, mock_cli
         await _refresh(hass, entry)
         assert save.call_count == 1
         assert save.call_args.args[1] == 1
+
+
+async def test_gcode_download(hass: HomeAssistant, hass_client, mock_client) -> None:
+    """Listed print files download as an attachment through HA; anything else is 404."""
+    entry = await _setup(hass)
+
+    class Upstream:
+        status = 200
+        headers = {"Content-Length": "7"}
+
+        def __init__(self):
+            self.released = False
+
+            async def chunks(size):
+                yield b"G28\nM73"
+            self.content = type("C", (), {"iter_chunked": staticmethod(chunks)})()
+
+        def release(self):
+            self.released = True
+
+    up = Upstream()
+    client = await hass_client()
+    base = f"/api/{DOMAIN}/gcode/{entry.entry_id}"
+    with patch(f"{API}.open_file", AsyncMock(return_value=up)) as op:
+        resp = await client.get(f"{base}/sub/new.gcode")
+        assert resp.status == 200
+        assert "attachment" in resp.headers["Content-Disposition"]
+        assert "new.gcode" in resp.headers["Content-Disposition"]
+        assert await resp.read() == b"G28\nM73"
+        assert op.await_args.args == ("gcodes", "sub/new.gcode", {})
+        assert up.released
+        op.reset_mock()
+        for path in ("notes.txt", "../config/printer.cfg", "missing.gcode"):
+            resp = await client.get(f"{base}/{path}")
+            assert resp.status == 404, path
+        op.assert_not_awaited()

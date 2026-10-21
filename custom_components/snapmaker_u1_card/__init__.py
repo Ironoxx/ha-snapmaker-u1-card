@@ -61,7 +61,7 @@ from .layer_view import LayerView, TempsView
 from .parsing import ENTANGLE_SENSITIVITIES, PRINTER_PREFERENCES
 from .stats import MAINTENANCE_ITEMS
 from .upload import UploadView
-from .video import TimelapseView
+from .video import GcodeView, TimelapseView
 from .voice import async_setup_voice
 
 _LOGGER = logging.getLogger(__name__)
@@ -153,6 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ]
     )
     hass.http.register_view(TimelapseView())
+    hass.http.register_view(GcodeView())
     hass.http.register_view(UploadView())
     hass.http.register_view(LayerView())
     hass.http.register_view(TempsView())

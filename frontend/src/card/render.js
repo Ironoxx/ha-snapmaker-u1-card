@@ -40,6 +40,7 @@ export const RenderMixin = (Base) => class extends Base {
       this._up ? `up${!!this._up.error}${this._up.done}` : "",
       JSON.stringify(this._prefs()),
       this._st(this._ents.files)?.attributes.version || "",
+      (() => { const l = this._st(this._ents.liveNotify); return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : ""; })(),
     ].join("~");
 
     if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
@@ -149,6 +150,8 @@ export const RenderMixin = (Base) => class extends Base {
     r.querySelectorAll("[data-prefset]").forEach((b) =>
       b.addEventListener("click", () => this._call("set_preference",
         { preference: b.dataset.prefset, value: b.getAttribute("aria-pressed") !== "true" })));
+    const ln = r.querySelector("[data-livenotify]");
+    if (ln) ln.addEventListener("click", () => this._hass.callService("switch", "toggle", { entity_id: this._ents.liveNotify }));
     r.querySelectorAll("[data-prefsen]").forEach((b) =>
       b.addEventListener("click", () => this._call("set_preference",
         { preference: "entangle_sensitivity", value: b.dataset.prefsen })));

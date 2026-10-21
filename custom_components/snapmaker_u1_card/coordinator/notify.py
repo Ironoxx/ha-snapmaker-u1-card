@@ -40,6 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 from .helpers import (
     AUTO_OFF_RESULTS,
     EARLY_PHOTO_DELAY_S,
+    PHOTO_BED_DROP_MM,
+    PHOTO_MARGIN_MM,
+    PHOTO_WAIT_S,
     RESULT_TEXT,
     RESULT_TEXT_EN,
     _position,
@@ -64,6 +67,17 @@ class NotifyMixin:
         if record.get("result") == "error" and self._errors:
             record = {**record, "error": error_text(self._errors[0], self.hass.config.language)}
         summary = summarize_print(record, self.filament_prices)
+        # Learn for the next remaining-time estimate: start duration and
+        # actual / slicer time of the print itself (from the first layer on)
+        begin, slicer_s = record.get("begin_s"), record.get("slicer_print_s")
+        total = record.get("print_duration")
+        if (record.get("result") == "complete" and isinstance(begin, (int, float))
+                and isinstance(slicer_s, (int, float)) and slicer_s > 0
+                and isinstance(total, (int, float)) and total > begin):
+            factor = (total - begin) / slicer_s
+            if 0.3 < factor < 3:
+                summary["speed_factor"] = round(factor, 3)
+                summary["prep_s"] = round(begin)
         booked = self.spools.book(record)
         if booked:
             summary["spools"] = booked
@@ -234,9 +248,52 @@ class NotifyMixin:
         url, target = self._photo_target()
         self._early_photo = {"started": started, "url": url}
         _LOGGER.debug("Result photo after the last extrusion: %s", target.name)
-        # Klipper reads the file ~1-2 s ahead of the motion: wait briefly
-        self.hass.async_create_background_task(self._save_photo(camera, target, EARLY_PHOTO_DELAY_S),
+        box = None
+        if meta:
+            objs = meta.get("objects") or []
+            box = ([min(o[0] for o in objs), min(o[1] for o in objs), max(o[2] for o in objs), max(o[3] for o in objs)]
+                   if objs else meta.get("bbox"))
+        self.hass.async_create_background_task(self._photo_when_clear(camera, target, box),
                                                f"{DOMAIN} result photo")
+
+    async def _photo_when_clear(self, camera: str, target: Path, box: list[float] | None) -> None:
+        """Take the result photo once the head has left the part, before the bed goes down.
+
+        The end sequence (PRINT_END) parks the head and lowers the bed within
+        ~10-15 s. The head position is polled (motion_report) for at most
+        PHOTO_WAIT_S: the photo is taken as soon as the head is PHOTO_MARGIN_MM
+        outside the parts' outline, or the bed has already dropped noticeably.
+        Without an outline or position: after EARLY_PHOTO_DELAY_S as before.
+        The chamber light is switched on for the photo and back off afterwards.
+        """
+        light = self._light_entity()
+        light_was_off = bool(light and (st := self.hass.states.get(light)) and st.state == "off")
+        if light_was_off:
+            await self.hass.services.async_call("light", "turn_on", {ATTR_ENTITY_ID: light}, blocking=False)
+        await asyncio.sleep(EARLY_PHOTO_DELAY_S)
+        if box:
+            deadline = time.monotonic() + PHOTO_WAIT_S
+            z0 = None
+            misses = 0
+            while time.monotonic() < deadline and misses < 2:
+                try:
+                    st = await self.client.query_objects("motion_report", fields={"motion_report": ("live_position",)})
+                    pos = (st.get("motion_report") or {}).get("live_position") or []
+                except MoonrakerError:
+                    pos = []
+                if len(pos) < 3:
+                    misses += 1  # no motion_report: do not wait for nothing
+                else:
+                    x, y, z = float(pos[0]), float(pos[1]), float(pos[2])
+                    z0 = z if z0 is None else z0
+                    outside = (x < box[0] - PHOTO_MARGIN_MM or x > box[2] + PHOTO_MARGIN_MM
+                               or y < box[1] - PHOTO_MARGIN_MM or y > box[3] + PHOTO_MARGIN_MM)
+                    if outside or z - z0 > PHOTO_BED_DROP_MM:
+                        break
+                await asyncio.sleep(0.5)
+        await self._save_photo(camera, target)
+        if light_was_off:
+            await self.hass.services.async_call("light", "turn_off", {ATTR_ENTITY_ID: light}, blocking=False)
 
     def _photo_target(self) -> tuple[str, Path]:
         stamp = dt_util.now().strftime("%Y%m%d_%H%M%S")

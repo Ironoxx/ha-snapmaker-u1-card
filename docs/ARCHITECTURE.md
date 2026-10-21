@@ -64,6 +64,7 @@ poll loop. Feature logic lives in mixins that only add methods:
 | `NotifyMixin` (`notify.py`) | Print end, notifications with actions, result photo |
 | `PowerMixin` (`power.py`) | Power switch, clean shutdown, auto-off, idle-off |
 | `PrinterSettingsMixin` (`printer.py`) | Firmware preferences, setting a slot's filament, camera wake-up |
+| `ProgressNotifyMixin` (`progress.py`) | Ongoing Android progress notification with push budget |
 
 `data.py` holds the `U1Data` snapshot handed to entities; `helpers.py` holds
 constants and pure helper functions.

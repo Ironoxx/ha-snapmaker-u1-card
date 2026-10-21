@@ -40,6 +40,26 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (await this._call("move_file", { source: f.path, dest: dest.trim() })) this._closeDialog();
   }
 
+  /** Download the G-code through Home Assistant (signed URL, works remotely). */
+  async _downloadFile() {
+    const f = this._dlg && this._dlg.file;
+    const entry = this._entryData().config_entry_id;
+    if (!f || !entry) return;
+    try {
+      const path = `/api/${DOMAIN}/gcode/${entry}/${f.path.split("/").map(encodeURIComponent).join("/")}`;
+      const url = await this._signed(path);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = f.path.split("/").pop();
+      a.rel = "noopener";
+      this.shadowRoot.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (e) {
+      this._toast(tr("Download fehlgeschlagen"));
+    }
+  }
+
   async _deleteFile() {
     const f = this._dlg && this._dlg.file;
     if (!f || !confirm(tr("„{n}“ vom Drucker löschen?", { n: f.name || f.path }))) return;
@@ -199,6 +219,7 @@ export const PrintDialogMixin = (Base) => class extends Base {
             <div class="t-label">${meta.map(esc).join(" · ") || "&nbsp;"}</div>
             <div class="dlg-file-actions">
               <button type="button" class="icon ghost" data-dlg="rename" title="${tr("Umbenennen / verschieben")}" ${g.busy ? "disabled" : ""}><ha-icon icon="mdi:rename-outline"></ha-icon></button>
+              <button type="button" class="icon ghost" data-dlg="download" title="${tr("G-Code herunterladen")}"><ha-icon icon="mdi:download"></ha-icon></button>
               <button type="button" class="icon ghost" data-dlg="delete" title="${tr("Datei löschen")}" ${g.busy ? "disabled" : ""}><ha-icon icon="mdi:delete-outline"></ha-icon></button>
             </div>
             ${costParts.length ? `<div class="t-label" data-cost>${tr("Geschätzt")}: ${costParts.map(esc).join(" · ")}</div>` : ""}
@@ -255,6 +276,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
     el.querySelector('[data-dlg="print"]').addEventListener("click", () => this._submitPrint());
     const ren = el.querySelector('[data-dlg="rename"]');
     if (ren) ren.addEventListener("click", () => this._renameFile());
+    const dl = el.querySelector('[data-dlg="download"]');
+    if (dl) dl.addEventListener("click", () => this._downloadFile());
     const del = el.querySelector('[data-dlg="delete"]');
     if (del) del.addEventListener("click", () => this._deleteFile());
     const qb = el.querySelector('[data-dlg="queue"]');

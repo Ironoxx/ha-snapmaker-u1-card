@@ -35,6 +35,7 @@ export const SystemMixin = (Base) => class extends Base {
             ${d.stepX !== null ? this._row(tr("Stepper X"), `<span data-su1="stepx">${num(d.stepX, 1, "°C")}</span>`) : ""}
             ${d.stepY !== null ? this._row(tr("Stepper Y"), `<span data-su1="stepy">${num(d.stepY, 1, "°C")}</span>`) : ""}
             ${this._printerSettingsHtml()}
+            ${this._liveNotifyHtml()}
             <div class="selftest-wrap">
               <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
               <div class="selftest" data-selftest>${this._selfTestHtml()}</div>
@@ -63,6 +64,22 @@ export const SystemMixin = (Base) => class extends Base {
         <span class="v chip-row">${[["low", tr("Niedrig")], ["medium", tr("Mittel")], ["high", tr("Hoch")]].map(([v, l]) =>
           `<button type="button" class="chip ${p.entangle_sensitivity === v ? "sel" : ""}" data-prefsen="${v}"${off ? " disabled" : ""}>${l}</button>`).join("")}</span></div>` : "";
     return `<div class="t-label" style="padding-top:8px">${tr("Druckereinstellungen")}</div>${rows}${sen}`;
+  }
+
+  /** Switch for the ongoing progress notification (integration, Android phones). */
+  _liveNotifyHtml() {
+    const st = this._st(this._ents && this._ents.liveNotify);
+    if (!st) return "";
+    const on = st.state === "on";
+    const a = st.attributes || {};
+    const targets = (a.targets || []).length;
+    const hint = targets
+      ? tr("Fortschrittsbalken und Countdown in der Benachrichtigungsleiste. Heute {n} von {b} Updates.", { n: a.sent_today || 0, b: a.budget || 0 })
+      : tr("Kein Android-Handy unter den Benachrichtigungszielen der Integration.");
+    return `<div class="t-label" style="padding-top:8px">${tr("Benachrichtigungen")}</div>
+      <div class="row" title="${esc(hint)}">
+        <span class="k">${tr("Fortschritt aufs Handy")}<small class="t-label" style="display:block">${esc(hint)}</small></span>
+        <span class="v"><button type="button" class="chip" data-livenotify aria-pressed="${on}"${targets ? "" : " disabled"}>${on ? tr("An") : tr("Aus")}</button></span></div>`;
   }
 
   _fwText() {

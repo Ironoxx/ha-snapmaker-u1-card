@@ -48,6 +48,7 @@ async def async_setup_entry(
     entities: list[SwitchEntity] = [PreferenceSwitch(coordinator, key) for key in PRINTER_PREFERENCES]
     if entry.options.get(CONF_POWER_SWITCH):
         entities.append(PowerSwitch(coordinator))
+    entities.append(LiveNotifySwitch(coordinator))
     async_add_entities(entities)
 
 
@@ -74,6 +75,35 @@ class PreferenceSwitch(U1Entity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         await self.coordinator.async_set_preference(self._key, False)
+
+
+class LiveNotifySwitch(U1Entity, SwitchEntity):
+    """Ongoing progress notification on Android phones (coordinator/progress.py)."""
+
+    _attr_translation_key = "live_notify"
+    _attr_icon = "mdi:progress-clock"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "live_notify")
+
+    @property
+    def available(self) -> bool:
+        return True  # a setting: also while the printer is off
+
+    @property
+    def is_on(self) -> bool:
+        return self.coordinator.live_notify_on
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        return self.coordinator.live_status()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_live_notify(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_live_notify(False)
 
 
 class PowerSwitch(U1Entity, SwitchEntity):

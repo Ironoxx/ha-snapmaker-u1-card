@@ -239,6 +239,7 @@ export class SnapmakerU1Card extends U1Base {
       remaining: ownKey("remaining"),
       finish: ownKey("finish"),
       firmware: ownKey("firmware"),
+      liveNotify: ownKey("live_notify"),
     };
   }
 
