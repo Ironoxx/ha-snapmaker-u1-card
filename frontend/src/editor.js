@@ -21,6 +21,10 @@ export const FORM_LABELS = {
   controls_lock: "Sperre für Regler",
   emergency_stop: "Not-Halt",
   layer_view: "Schichtansicht",
+  bed_image: "Eigenes Hintergrundbild",
+  bed_image_area: "Bildbereich in mm (x0, y0, x1, y1)",
+  bed_image_opacity: "Deckkraft",
+  bed_grid: "Raster über dem Bild",
   camera_wake: "Kamera bei stehendem Bild wecken",
   camera_direct: "Direktstream vom Drucker",
   camera_direct_url: "Adresse des Direktstreams",
@@ -31,6 +35,8 @@ export const FORM_HELPERS = {
   network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
   layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+  bed_image: "z. B. /local/u1_oben.png (Datei unter config/www). Ersetzt Platte und Köpfe in der Draufsicht.",
+  bed_image_area: "Welche Druckerkoordinaten das Bild abdeckt. Leer = genau die Platte 0, 0, 270, 270. Für ein Foto des ganzen Druckers z. B. -40, -30, 310, 360.",
   layer_view: "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.",
   emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
   camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
@@ -77,6 +83,17 @@ export function configForm(mini) {
       ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },
     { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
       ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },
+    {
+      type: "expandable", name: "bed_group", flatten: true, title: tr("Draufsicht"), icon: "mdi:grid",
+      schema: [
+        { name: "bed_image", selector: { text: {} } },
+        { name: "bed_image_area", selector: { text: {} } },
+        { type: "grid", name: "", schema: [
+          { name: "bed_image_opacity", selector: { number: { min: 0.1, max: 1, step: 0.05, mode: "box" } } },
+          { name: "bed_grid", selector: { boolean: {} } },
+        ] },
+      ],
+    },
     {
       type: "expandable", name: "camera_group", flatten: true, title: tr("Kamera"), icon: "mdi:cctv",
       schema: [

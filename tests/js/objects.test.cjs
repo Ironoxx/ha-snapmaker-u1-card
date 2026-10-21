@@ -83,7 +83,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const b = R().querySelector(`.obj-chip[data-obj="${B}"]`);
   assert.ok(b.classList.contains("off") && b.disabled);
   // the last remaining object cannot be excluded
-  assert.ok(R().querySelector(`.obj-chip[data-obj="${A}"]`).disabled, "last object locked, bed view");
+  assert.ok(R().querySelector(`.obj-chip[data-obj="${A}"]`).disabled, "last object locked, bed view, animation, own image");
 
   // one object only: no list, no clickable outline
   exclude = { objects: [exclude.objects[0]], excluded: [], current: A };
@@ -100,8 +100,30 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(R().querySelector("[data-lv]").dataset.mode, "bed");
   assert.strictEqual(w.localStorage.getItem("snapmaker-u1-card.layerview"), "bed");
   assert.match(R().querySelector("svg").getAttribute("viewBox"), /^-10\.00 /);
+  // nozzle animates along the paths to the new position
+  states[`sensor.${P}_current_print_state`].state = "printing";
+  card.hass = hass();
+  card._paintLayer(true);
+  const noz = () => R().querySelector(".lv-nozzle");
+  assert.ok(noz() && R().querySelector(".lv-gantry"), "nozzle and gantry drawn");
+  card._nozAt = Date.now();
+  card._animateNozzle(card._lv.data, 40, 60);
+  await new Promise((r) => setTimeout(r, 1000));
+  assert.strictEqual(noz().getAttribute("transform"), "translate(60.00,-60.00)", "ends at the new position");
+  assert.strictEqual(R().querySelector(".lv-gantry").getAttribute("transform"), "translate(0,-60.00)");
   R().querySelector("[data-lvmode]").click();
   await tick();
   assert.ok(!R().querySelector(".lv-plate"), "back to the part");
-  console.log("OBJECTS OK – outlines, chips, confirmation, exclude call, last object locked, bed view");
+  // own background image with area
+  const c2 = w.document.createElement("snapmaker-u1-card");
+  c2.setConfig({ type: "custom:snapmaker-u1-card", layer_view: "bed", bed_image: "/local/u1.png", bed_image_area: "-40, -30, 310, 360" });
+  w.document.body.appendChild(c2);
+  c2.hass = hass();
+  c2._lvView = "bed";
+  c2._lv = card._lv;
+  const svg = c2._layerSvg();
+  assert.match(svg, /<image href="\/local\/u1\.png" x="-40" y="-360" width="350" height="390"/);
+  assert.match(svg, /viewBox="-40\.00 -360\.00 350\.00 390\.00"/);
+  assert.ok(!/lv-dock/.test(svg), "own image replaces plate and heads");
+  console.log("OBJECTS OK – outlines, chips, confirmation, exclude call, last object locked, bed view, animation, own image");
 })().catch((e) => { console.error(e); process.exit(1); });

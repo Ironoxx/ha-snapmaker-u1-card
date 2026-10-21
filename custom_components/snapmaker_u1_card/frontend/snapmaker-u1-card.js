@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.4.2";
+  var CARD_VERSION = "1.4.3";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -389,6 +389,13 @@
     "Teil vergrößert": "Zoomed to the part",
     "Schichtansicht": "Layer view",
     "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.": "Empty = zoomed to the part. You can also switch directly in the layer view.",
+    "Draufsicht": "Top view",
+    "Eigenes Hintergrundbild": "Own background image",
+    "Bildbereich in mm (x0, y0, x1, y1)": "Image area in mm (x0, y0, x1, y1)",
+    "Deckkraft": "Opacity",
+    "Raster über dem Bild": "Grid over the image",
+    "z. B. /local/u1_oben.png (Datei unter config/www). Ersetzt Platte und Köpfe in der Draufsicht.": "e.g. /local/u1_top.png (file in config/www). Replaces plate and heads in the top view.",
+    "Welche Druckerkoordinaten das Bild abdeckt. Leer = genau die Platte 0, 0, 270, 270. Für ein Foto des ganzen Druckers z. B. -40, -30, 310, 360.": "Printer coordinates the image covers. Empty = exactly the plate 0, 0, 270, 270. For a photo of the whole printer e.g. -40, -30, 310, 360.",
     "Teil vergrößern": "Zoom to the part",
     "Ganzes Druckbett": "Whole build plate",
     "Druck abbrechen": "Cancel print",
@@ -507,6 +514,10 @@
     controls_lock: "Sperre für Regler",
     emergency_stop: "Not-Halt",
     layer_view: "Schichtansicht",
+    bed_image: "Eigenes Hintergrundbild",
+    bed_image_area: "Bildbereich in mm (x0, y0, x1, y1)",
+    bed_image_opacity: "Deckkraft",
+    bed_grid: "Raster über dem Bild",
     camera_wake: "Kamera bei stehendem Bild wecken",
     camera_direct: "Direktstream vom Drucker",
     camera_direct_url: "Adresse des Direktstreams"
@@ -517,6 +528,8 @@
     network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
     layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+    bed_image: "z. B. /local/u1_oben.png (Datei unter config/www). Ersetzt Platte und Köpfe in der Draufsicht.",
+    bed_image_area: "Welche Druckerkoordinaten das Bild abdeckt. Leer = genau die Platte 0, 0, 270, 270. Für ein Foto des ganzen Druckers z. B. -40, -30, 310, 360.",
     layer_view: "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.",
     emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
     camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
@@ -581,6 +594,21 @@
         ["300", "5 min"],
         ["manual", "Bis zum erneuten Sperren"]
       ]) } } },
+      {
+        type: "expandable",
+        name: "bed_group",
+        flatten: true,
+        title: tr("Draufsicht"),
+        icon: "mdi:grid",
+        schema: [
+          { name: "bed_image", selector: { text: {} } },
+          { name: "bed_image_area", selector: { text: {} } },
+          { type: "grid", name: "", schema: [
+            { name: "bed_image_opacity", selector: { number: { min: 0.1, max: 1, step: 0.05, mode: "box" } } },
+            { name: "bed_grid", selector: { boolean: {} } }
+          ] }
+        ]
+      },
       {
         type: "expandable",
         name: "camera_group",
@@ -2432,9 +2460,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (v.status === "error") return `<div class="t-label lv-msg">${esc(tr("Schichtansicht nicht verfügbar: {e}", { e: v.error || "" }))}</div>`;
       if (v.status !== "ready" || !v.bbox) return `<div class="t-label lv-msg">${tr("Schichtansicht wird vorbereitet …")}</div>`;
       const bed = this._lvMode() === "bed";
-      const [x0, y0, x1, y1] = bed ? [0, 0, BED_W, BED_D] : v.bbox;
-      const pad = bed ? 10 : Math.max(3, (x1 - x0 + y1 - y0) * 0.03);
-      const top = bed ? y1 + DOCK_DEPTH : y1;
+      const img = bed ? this._bedImage() : null;
+      let [x0, y0, x1, y1] = bed ? [0, 0, BED_W, BED_D] : v.bbox;
+      const pad = bed ? img ? 0 : 10 : Math.max(3, (x1 - x0 + y1 - y0) * 0.03);
+      let top = bed && !img ? y1 + DOCK_DEPTH : y1;
+      if (img) {
+        [x0, y0, x1, top] = img.area;
+      }
       const vb = [x0 - pad, -(top + pad), x1 - x0 + 2 * pad, top - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
       const pos = lv.position;
       const ex = this._exclude();
@@ -2453,7 +2485,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         return `<polygon points="${pts}" class="lv-obj ${st}${pick && !st.includes("excl") ? " pick" : ""}" data-obj="${esc(o.name)}" vector-effect="non-scaling-stroke"><title>${esc(o.label || o.name)}</title></polygon>`;
       }).join("");
       const w = bed ? 0.7 : Math.max(0.45, Math.min(0.9, (x1 - x0) / 250));
-      const ground = bed ? this._bedSvg() : `<rect x="${(x0 - pad).toFixed(2)}" y="${(-(y1 + pad)).toFixed(2)}" width="${(x1 - x0 + 2 * pad).toFixed(2)}" height="${(y1 - y0 + 2 * pad).toFixed(2)}" class="lv-bed"/>`;
+      const ground = bed ? this._bedSvg(img) : `<rect x="${(x0 - pad).toFixed(2)}" y="${(-(y1 + pad)).toFixed(2)}" width="${(x1 - x0 + 2 * pad).toFixed(2)}" height="${(y1 - y0 + 2 * pad).toFixed(2)}" class="lv-bed"/>`;
       return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${tr("Schichtansicht")}">
         ${ground}
         <g class="lv-paths" stroke-width="${w.toFixed(2)}">${lines}</g>
@@ -2503,12 +2535,27 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._paintLayer(true);
     }
     /** Stylised build plate from above: plate with grid, the four parked heads behind it. */
-    _bedSvg() {
-      const grid = [];
-      for (let g = 10; g < BED_W; g += 10) {
-        const major = g % 50 === 0 ? " major" : "";
-        grid.push(`<line x1="${g}" y1="0" x2="${g}" y2="${-BED_D}" class="lv-grid${major}"/>`);
-        grid.push(`<line x1="0" y1="${-g}" x2="${BED_W}" y2="${-g}" class="lv-grid${major}"/>`);
+    /** Own background image for the bed view (bed_image + bed_image_area in printer mm). */
+    _bedImage() {
+      const url = typeof this._cfg.bed_image === "string" ? this._cfg.bed_image.trim() : "";
+      if (!url) return null;
+      let area = this._cfg.bed_image_area;
+      if (typeof area === "string") area = area.split(/[\s,;]+/).map(Number);
+      if (!Array.isArray(area) || area.length !== 4 || area.some((n) => !Number.isFinite(Number(n)))) area = [0, 0, BED_W, BED_D];
+      area = area.map(Number);
+      if (area[2] <= area[0] || area[3] <= area[1]) area = [0, 0, BED_W, BED_D];
+      const op = Number(this._cfg.bed_image_opacity);
+      return { url, area, opacity: Number.isFinite(op) && op > 0 && op <= 1 ? op : 1 };
+    }
+    _bedSvg(img) {
+      if (img) {
+        const [ax0, ay0, ax1, ay1] = img.area;
+        const grid = this._cfg.bed_grid ? this._gridSvg() : "";
+        return `<g class="lv-printer">
+          <image href="${esc(img.url)}" x="${ax0}" y="${-ay1}" width="${ax1 - ax0}" height="${ay1 - ay0}"
+            preserveAspectRatio="none" opacity="${img.opacity}"/>
+          ${grid}
+        </g>`;
       }
       const heads = this._d && this._d.heads || [];
       const printing = this._d && this._d.printing;
@@ -2528,26 +2575,91 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       return `<g class="lv-printer">
         <rect x="-6" y="${-(BED_D + DOCK_DEPTH + 4)}" width="${BED_W + 12}" height="${BED_D + DOCK_DEPTH + 10}" rx="10" class="lv-frame"/>
         <rect x="0" y="${-BED_D}" width="${BED_W}" height="${BED_D}" rx="5" class="lv-plate"/>
-        <g>${grid.join("")}</g>
+        ${this._gridSvg()}
         <circle cx="4" cy="-4" r="1.6" class="lv-origin"/>
         <g class="lv-dock">${dock}</g>
       </g>`;
     }
+    _gridSvg() {
+      const g = [];
+      for (let i = 10; i < BED_W; i += 10) {
+        const major = i % 50 === 0 ? " major" : "";
+        g.push(`<line x1="${i}" y1="0" x2="${i}" y2="${-BED_D}" class="lv-grid${major}"/>`);
+        g.push(`<line x1="0" y1="${-i}" x2="${BED_W}" y2="${-i}" class="lv-grid${major}"/>`);
+      }
+      return `<g>${g.join("")}</g>`;
+    }
     /** Nozzle marker: end of the last printed path before the file position. */
-    _nozzleSvg(v, pos) {
-      if (pos === null || pos === void 0 || !this._d || !this._d.printing) return "";
+    _nozzleAt(v, pos) {
       let best = null;
       for (const seg of v.segs || []) {
         if (seg[2] <= pos && (!best || seg[2] >= best[2])) best = seg;
       }
-      if (!best || best[1].length < 2) return "";
+      if (!best || best[1].length < 2) return null;
       const n = best[1].length;
-      const x = best[1][n - 2], y = best[1][n - 1];
-      return `<g class="lv-nozzle" transform="translate(${x},${-y})">
+      return [best[1][n - 2], best[1][n - 1]];
+    }
+    _nozzleSvg(v, pos) {
+      if (pos === null || pos === void 0 || !this._d || !this._d.printing) return "";
+      const at = this._noz && this._noz.layer === v.layer && this._noz.xy || this._nozzleAt(v, pos);
+      if (!at) return "";
+      this._noz = { layer: v.layer, pos, xy: at };
+      const [x, y] = at;
+      return `<g class="lv-gantry" transform="translate(0,${-y})"><rect x="-8" y="-3.5" width="${BED_W + 16}" height="7" rx="3.5"/></g>
+      <g class="lv-nozzle" transform="translate(${x},${-y})">
+        <rect x="-13" y="-9" width="26" height="18" rx="4" class="carriage"/>
         <circle r="7" class="ring"/><circle r="2.2" class="dot"/>
-        <line x1="-11" y1="0" x2="-8" y2="0"/><line x1="8" y1="0" x2="11" y2="0"/>
-        <line x1="0" y1="-11" x2="0" y2="-8"/><line x1="0" y1="8" x2="0" y2="11"/>
       </g>`;
+    }
+    /**
+     * Move the nozzle along the paths printed between the last and the new file
+     * position, spread over about the poll interval: the printer reports its
+     * position every few seconds, the card plays the way in between.
+     */
+    _animateNozzle(v, from, to) {
+      const r = this.shadowRoot.getElementById("u1card");
+      const noz = r && r.querySelector(".lv-nozzle");
+      const gantry = r && r.querySelector(".lv-gantry");
+      if (!noz || to === null || to === void 0) return;
+      const end = this._nozzleAt(v, to);
+      if (!end) return;
+      const start = this._noz && this._noz.layer === v.layer && this._noz.xy || end;
+      const pts = [start];
+      if (from !== null && from !== void 0 && to > from) {
+        for (const seg of [...v.segs || []].sort((a, b) => a[2] - b[2])) {
+          if (seg[2] > from && seg[2] <= to) for (let i = 0; i < seg[1].length; i += 2) pts.push([seg[1][i], seg[1][i + 1]]);
+        }
+      }
+      pts.push(end);
+      this._noz = { layer: v.layer, pos: to, xy: end };
+      const cum = [0];
+      for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+      const total = cum[cum.length - 1];
+      const place = (x, y) => {
+        noz.setAttribute("transform", `translate(${x.toFixed(2)},${(-y).toFixed(2)})`);
+        if (gantry) gantry.setAttribute("transform", `translate(0,${(-y).toFixed(2)})`);
+      };
+      if (this._nozRaf) cancelAnimationFrame(this._nozRaf);
+      const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!total || reduced || typeof requestAnimationFrame !== "function") {
+        place(end[0], end[1]);
+        return;
+      }
+      const now = Date.now();
+      const dur = Math.max(800, Math.min(6e3, now - (this._nozAt || now - 4500)));
+      this._nozAt = now;
+      const t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / dur);
+        const d = total * k;
+        let i = 1;
+        while (i < cum.length - 1 && cum[i] < d) i++;
+        const seg = cum[i] - cum[i - 1] || 1;
+        const f = Math.max(0, Math.min(1, (d - cum[i - 1]) / seg));
+        place(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f);
+        if (k < 1 && noz.isConnected) this._nozRaf = requestAnimationFrame(step);
+      };
+      this._nozRaf = requestAnimationFrame(step);
     }
     /** Exclude-object state from the last position poll. */
     _exclude() {
@@ -2635,6 +2747,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         }
         if (lv.data && lv.data.status === "ready") {
           const p = await this._fetchLayer("position=1");
+          lv.prevPos = lv.position;
           lv.position = typeof p.position === "number" ? p.position : null;
           if (p.exclude) {
             const key = JSON.stringify([p.exclude.excluded, p.exclude.current, (p.exclude.objects || []).length]);
@@ -2665,10 +2778,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const r = this.shadowRoot.getElementById("u1card");
       const box = r && r.querySelector("[data-lv]");
       if (!box) return;
-      if (full || !box.querySelector("svg") || this._lvMode() === "bed") box.innerHTML = this._layerSvg();
-      else {
+      const bedNoNozzle = this._lvMode() === "bed" && this._d && this._d.printing && !box.querySelector(".lv-nozzle");
+      if (full || !box.querySelector("svg") || bedNoNozzle) {
+        if (full && this._nozRaf) cancelAnimationFrame(this._nozRaf);
+        box.innerHTML = this._layerSvg();
+      } else {
         const pos = this._lv.position;
         box.querySelectorAll("polyline").forEach((pl) => pl.classList.toggle("todo", pos !== null && pos !== void 0 && Number(pl.dataset.o) >= pos));
+        if (this._lvMode() === "bed" && this._lv.data) this._animateNozzle(this._lv.data, this._lv.prevPos, pos);
       }
       const v = this._lv.data;
       const head = r.querySelector('[data-su1="lvhead"]');
@@ -3679,9 +3796,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .lv-head.away rect:first-child { fill: transparent; stroke-dasharray: 3 2; }
   .lv-head.away .lv-band { opacity: .35; }
   .lv-head-n { fill: var(--u1-on-variant); font-size: 8px; text-anchor: middle; font-family: var(--u1-font); }
-  .lv-nozzle .ring { fill: color-mix(in srgb, var(--u1-primary) 18%, transparent); stroke: var(--u1-primary); stroke-width: .9; }
+  .lv-gantry rect { fill: color-mix(in srgb, var(--u1-on) 14%, transparent); stroke: color-mix(in srgb, var(--u1-on) 28%, transparent); stroke-width: .5; }
+  .lv-nozzle .carriage { fill: color-mix(in srgb, var(--u1-on) 18%, var(--u1-panel-high)); stroke: color-mix(in srgb, var(--u1-on) 40%, transparent); stroke-width: .6; }
+  .lv-nozzle .ring { fill: color-mix(in srgb, var(--u1-primary) 22%, transparent); stroke: var(--u1-primary); stroke-width: .9; }
   .lv-nozzle .dot { fill: var(--u1-primary); }
-  .lv-nozzle line { stroke: var(--u1-primary); stroke-width: .9; stroke-linecap: round; }
   .lv-objs polygon { fill: transparent; stroke: var(--u1-on-variant); stroke-width: 1px; stroke-dasharray: 4 3; opacity: .6; }
   .lv-objs polygon.pick { cursor: pointer; pointer-events: all; }
   .lv-objs polygon.pick:hover { fill: color-mix(in srgb, var(--u1-error) 12%, transparent); stroke: var(--u1-error); opacity: 1; }

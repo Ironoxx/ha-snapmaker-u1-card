@@ -154,6 +154,9 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 |---|---|---|
 | `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander, `tablet` = Kamera und Druckauftrag immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander) |
 | `layer_view` | `part` | Schichtansicht: `part` = auf das Teil vergrößert, `bed` = Draufsicht auf die ganze Platte mit geparkten Köpfen und Düsen-Marker. Auch direkt in der Schichtansicht umschaltbar (Raster-Knopf, merkt sich der Browser) |
+| `bed_image` | – | eigenes Hintergrundbild für die Draufsicht, z. B. `/local/u1_oben.png` (Datei in `config/www`); ersetzt die gezeichnete Platte und die Köpfe |
+| `bed_image_area` | `0, 0, 270, 270` | welche Druckerkoordinaten in mm das Bild abdeckt (x0, y0, x1, y1). Foto des ganzen Druckers: zwei Punkte ausmessen, z. B. `-40, -30, 310, 360` |
+| `bed_image_opacity` / `bed_grid` | `1` / `false` | Deckkraft des Bildes, 10/50-mm-Raster darüber |
 | `emergency_stop` | `show` | `show` = Button mit Rückfrage, `hold` = 1 s gedrückt halten (ohne Dialog), `hide` = kein Button in der Karte (die HA-Button-Entität bleibt) |
 | `camera_direct` | `auto` | `auto` = Stream direkt vom Drucker (`camera_direct_url`, Standard `http://<Drucker>/webcam/?action=stream`): weniger Verzögerung, keine Last auf HA. Nicht auf https-Seiten (der Browser blockiert dort http-Streams); kommt binnen 4 s kein Bild (z. B. unterwegs), nimmt die Karte 10 min den HA-Proxy. `off` = immer über HA |
 | `camera_direct_url` | – | eigene Adresse für den Direktstream |

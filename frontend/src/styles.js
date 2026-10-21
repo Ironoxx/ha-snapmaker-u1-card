@@ -798,9 +798,10 @@ export const STYLES = `
   .lv-head.away rect:first-child { fill: transparent; stroke-dasharray: 3 2; }
   .lv-head.away .lv-band { opacity: .35; }
   .lv-head-n { fill: var(--u1-on-variant); font-size: 8px; text-anchor: middle; font-family: var(--u1-font); }
-  .lv-nozzle .ring { fill: color-mix(in srgb, var(--u1-primary) 18%, transparent); stroke: var(--u1-primary); stroke-width: .9; }
+  .lv-gantry rect { fill: color-mix(in srgb, var(--u1-on) 14%, transparent); stroke: color-mix(in srgb, var(--u1-on) 28%, transparent); stroke-width: .5; }
+  .lv-nozzle .carriage { fill: color-mix(in srgb, var(--u1-on) 18%, var(--u1-panel-high)); stroke: color-mix(in srgb, var(--u1-on) 40%, transparent); stroke-width: .6; }
+  .lv-nozzle .ring { fill: color-mix(in srgb, var(--u1-primary) 22%, transparent); stroke: var(--u1-primary); stroke-width: .9; }
   .lv-nozzle .dot { fill: var(--u1-primary); }
-  .lv-nozzle line { stroke: var(--u1-primary); stroke-width: .9; stroke-linecap: round; }
   .lv-objs polygon { fill: transparent; stroke: var(--u1-on-variant); stroke-width: 1px; stroke-dasharray: 4 3; opacity: .6; }
   .lv-objs polygon.pick { cursor: pointer; pointer-events: all; }
   .lv-objs polygon.pick:hover { fill: color-mix(in srgb, var(--u1-error) 12%, transparent); stroke: var(--u1-error); opacity: 1; }

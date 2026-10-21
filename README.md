@@ -156,6 +156,9 @@ All options are optional; except head names and presets they can also be set in 
 |---|---|---|
 | `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked, `tablet` = camera and job always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px) |
 | `layer_view` | `part` | layer view: `part` = zoomed to the part, `bed` = top view of the whole plate with the parked heads and a nozzle marker. Also switchable in the layer view (grid button, remembered per browser) |
+| `bed_image` | – | own background image for the top view, e.g. `/local/u1_top.png` (file in `config/www`); replaces the drawn plate and heads |
+| `bed_image_area` | `0, 0, 270, 270` | printer coordinates in mm the image covers (x0, y0, x1, y1). Photo of the whole printer: measure two points, e.g. `-40, -30, 310, 360` |
+| `bed_image_opacity` / `bed_grid` | `1` / `false` | opacity of the image, 10/50 mm grid over it |
 | `emergency_stop` | `show` | `show` = button with confirmation, `hold` = hold for 1 s (no dialog), `hide` = no button in the card (the HA button entity stays) |
 | `camera_direct` | `auto` | `auto` = stream straight from the printer (`camera_direct_url`, default `http://<printer>/webcam/?action=stream`): less delay, no load on HA. Not used on https pages (the browser blocks http streams there); if no frame arrives within 4 s (e.g. away from home) the card uses the HA proxy for 10 min. `off` = always through HA |
 | `camera_direct_url` | – | own URL for the direct stream |
