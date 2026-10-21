@@ -22,10 +22,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          for V in $(grep -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -n 5); do
+          for V in $(grep -oP '^## \K[0-9]+\.[0-9]+\.[0-9]+(?:(?:a|b|rc)[0-9]+)?' CHANGELOG.md | head -n 5); do
             gh release view "v$V" >/dev/null 2>&1 || continue
             awk -v v="## $V" '$0 == v {f=1; next} /^## / && f {exit} f' CHANGELOG.md > notes.md
-            prev=$(git ls-remote --tags origin | grep -oP 'refs/tags/\Kv[0-9.]+$' | sort -V | grep -B1 -x "v$V" | head -n 1)
+            prev=$(git ls-remote --tags origin | grep -oP 'refs/tags/\Kv[0-9.]+(?:(?:a|b|rc)[0-9]+)?$' | sort -V | grep -B1 -x "v$V" | head -n 1)
             if [ -n "$prev" ] && [ "$prev" != "v$V" ]; then
               printf '\n**Full Changelog**: https://github.com/%s/compare/%s...v%s\n' "$GITHUB_REPOSITORY" "$prev" "$V" >> notes.md
             fi

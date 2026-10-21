@@ -67,6 +67,10 @@ npm test                       # card tests in jsdom against the bundle
    HACS shows in the update dialog; the release fails without it.
 3. `npm run build`, run all checks, push to `main`.
 4. The release workflow creates the tag, the GitHub release and the HACS zip.
+   **From 1.5 on, new features go out as a beta first:** version `1.5.0b1`,
+   `1.5.0b2` ... (changelog section `## 1.5.0b1`) become GitHub pre-releases that
+   HACS only offers with "show beta versions" enabled. After testing on a real
+   printer, the same state is released as `1.5.0`.
    Later edits to `CHANGELOG.md` update the text of existing releases
    (`release-notes.yml`).
 
