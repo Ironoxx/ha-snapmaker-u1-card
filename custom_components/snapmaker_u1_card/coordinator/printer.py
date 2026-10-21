@@ -14,7 +14,12 @@ from homeassistant.helpers.event import async_track_time_interval
 from ..api import MoonrakerError
 from ..const import CAMERA_WAKE_S, CONF_CAMERA_WAKE, DEFAULT_CAMERA_WAKE
 from ..i18n import tr
-from ..parsing import ACTIVE_PRINT_STATES, filament_gcode, preference_gcode
+from ..parsing import (
+    ACTIVE_PRINT_STATES,
+    exclude_state,
+    filament_gcode,
+    preference_gcode,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +55,36 @@ class PrinterSettingsMixin:
         except ValueError as err:
             raise HomeAssistantError(str(err)) from err
         await self._run_gcode(script)
+
+    async def async_exclude_object(self, name: str) -> None:
+        """Stop printing one object of the running print (Klipper EXCLUDE_OBJECT).
+
+        Only names the printer lists for this print; the last object that is
+        still printed cannot be excluded (that would be a cancel).
+        """
+        if self.current_print_state() not in ACTIVE_PRINT_STATES:
+            raise HomeAssistantError(tr(self.hass, "Es läuft kein Druck.", "No print is running."))
+        if not name or any(c.isspace() for c in name):
+            raise HomeAssistantError(tr(self.hass, "Ungültiger Objektname.", "Invalid object name."))
+        try:
+            status = await self.client.query_objects(
+                fields={"exclude_object": ("objects", "excluded_objects")})
+        except MoonrakerError as err:
+            raise HomeAssistantError(str(err)) from err
+        state = exclude_state(status.get("exclude_object"))
+        names = [o["name"] for o in state["objects"]]
+        if name not in names:
+            raise HomeAssistantError(tr(
+                self.hass, f"Objekt „{name}“ gibt es in diesem Druck nicht.",
+                f"Object '{name}' is not part of this print."))
+        if name in state["excluded"]:
+            return
+        if not [n for n in names if n != name and n not in state["excluded"]]:
+            raise HomeAssistantError(tr(
+                self.hass, "Das ist das letzte Objekt – dafür den Druck abbrechen.",
+                "This is the last object - cancel the print instead."))
+        await self._run_gcode(f"EXCLUDE_OBJECT NAME={name}")
+        _LOGGER.info("Object excluded: %s", name)
 
     async def _run_gcode(self, script: str) -> None:
         if self.power_is_off():

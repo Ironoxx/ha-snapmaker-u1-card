@@ -722,6 +722,20 @@
           "description": "Only needed with several printers."
         }
       }
+    },
+    "exclude_object": {
+      "name": "Exclude object",
+      "description": "Stops printing one object of the running print (Klipper EXCLUDE_OBJECT). Cannot be undone. The last remaining object cannot be excluded.",
+      "fields": {
+        "name": {
+          "name": "Object",
+          "description": "Name as defined in the file (EXCLUDE_OBJECT_DEFINE)."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {

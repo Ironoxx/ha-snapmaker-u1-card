@@ -101,6 +101,7 @@ MAINTENANCE_SCHEMA = vol.Schema({
 })
 REFRESH_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY): cv.string})
 SELF_TEST_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTRY): cv.string, vol.Optional("language"): cv.string})
+EXCLUDE_SCHEMA = vol.Schema({vol.Required("name"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
 PATH_SCHEMA = vol.Schema({vol.Required("path"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
 MOVE_SCHEMA = vol.Schema({vol.Required("source"): cv.string, vol.Required("dest"): cv.string,
                           vol.Optional(ATTR_ENTRY): cv.string})
@@ -292,6 +293,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "self_test", self_test, schema=SELF_TEST_SCHEMA,
                                  supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, SERVICE_BACKUP_TIMELAPSES, backup_timelapses, schema=REFRESH_SCHEMA)
+
+    async def exclude_object(call: ServiceCall) -> None:
+        await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_exclude_object(call.data["name"])
+
+    hass.services.async_register(DOMAIN, "exclude_object", exclude_object, schema=EXCLUDE_SCHEMA)
 
     async def camera_wake(call: ServiceCall) -> None:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_camera_wake_once()

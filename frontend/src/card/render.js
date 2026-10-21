@@ -119,6 +119,7 @@ export const RenderMixin = (Base) => class extends Base {
       })
     );
     this._wireEstop(r);
+    this._wireObjects(r.querySelector(".lv-panel"));
     const rl = r.querySelector("[data-reload]");
     // Reload bypassing the cache for the card resource (the URL carries ?v=)
     if (rl) rl.addEventListener("click", () => window.location.reload());

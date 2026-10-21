@@ -194,3 +194,46 @@ async def test_photo_waits_for_head(hass: HomeAssistant, mock_client, notificati
         await coord._photo_when_clear("camera.cam", Path("/tmp/x.jpg"), [98, 94, 180, 176])
     assert len(calls) == 3
     saved.assert_awaited_once()
+
+
+# ── Exclude object ──────────────────────────────────────────────────────────
+def test_exclude_state_labels() -> None:
+    from custom_components.snapmaker_u1_card.parsing import exclude_state
+    st = exclude_state({"objects": [{"name": "Teil_id_0_copy_0", "polygon": [[0, 0]]},
+                                    {"name": "Teil_id_0_copy_1"}, {"name": "Clip"}],
+                        "excluded_objects": ["Clip"], "current_object": "Teil_id_0_copy_1"})
+    assert [o["label"] for o in st["objects"]] == ["Teil (1)", "Teil (2)", "Clip"]
+    assert st["excluded"] == ["Clip"] and st["current"] == "Teil_id_0_copy_1"
+    assert exclude_state(None) == {"objects": [], "excluded": [], "current": None}
+
+
+def test_segments_carry_object(tmp_path) -> None:
+    src = tmp_path / "o.gcode"
+    src.write_text("\n".join([
+        ";LAYER_CHANGE", "M83", "G1 X0 Y0 F3000",
+        "EXCLUDE_OBJECT_START NAME=A", "G1 X10 Y0 E1", "EXCLUDE_OBJECT_END NAME=A",
+        "EXCLUDE_OBJECT_START NAME=B", "G1 X10 Y10 E1", "EXCLUDE_OBJECT_END NAME=B",
+    ]) + "\n")
+    from custom_components.snapmaker_u1_card.layers import layer_payload
+    meta = parse_layers(src, tmp_path / "o.jsonl")
+    segs = layer_payload(meta, tmp_path / "o.jsonl", 1)["segs"]
+    assert [s[3] for s in segs] == ["A", "B"]
+
+
+async def test_exclude_object_service(hass: HomeAssistant, mock_client, notifications) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+    entry = await _setup(hass)
+    _status(mock_client, "printing", "a.gcode")
+    await _refresh(hass, entry)
+    eo = {"exclude_object": {"objects": [{"name": "A"}, {"name": "B"}], "excluded_objects": []}}
+    with patch(f"{API}.query_objects", AsyncMock(return_value=eo)), patch(f"{API}.gcode", AsyncMock()) as gc:
+        await hass.services.async_call("snapmaker_u1_card", "exclude_object", {"name": "B"}, blocking=True)
+        gc.assert_awaited_once_with("EXCLUDE_OBJECT NAME=B")
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call("snapmaker_u1_card", "exclude_object", {"name": "C"}, blocking=True)
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call("snapmaker_u1_card", "exclude_object", {"name": "A B"}, blocking=True)
+        eo["exclude_object"]["excluded_objects"] = ["B"]
+        with pytest.raises(HomeAssistantError):  # last remaining object
+            await hass.services.async_call("snapmaker_u1_card", "exclude_object", {"name": "A"}, blocking=True)
+        assert gc.await_count == 1

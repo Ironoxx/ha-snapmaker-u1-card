@@ -882,3 +882,32 @@ def grams_per_slot(record: dict[str, Any]) -> dict[int, float]:
             continue
         out[slot] = round(out.get(slot, 0.0) + fil["weight"] * scale, 2)
     return out
+
+
+_OBJ_SUFFIX = re.compile(r"_id_(\d+)_copy_(\d+)$")
+
+
+def object_label(name: str, names: list[str]) -> str:
+    """Readable object name: Orca's ``Teil_id_0_copy_1`` -> ``Teil (2)`` when there are copies."""
+    m = _OBJ_SUFFIX.search(name)
+    if not m:
+        return name
+    base = name[: m.start()]
+    same = [n for n in names if n.startswith(base) and _OBJ_SUFFIX.search(n)]
+    return f"{base} ({int(m.group(2)) + 1})" if len(same) > 1 else base
+
+
+def exclude_state(eo: dict[str, Any] | None) -> dict[str, Any]:
+    """Klipper's exclude_object status reduced for the card."""
+    eo = eo if isinstance(eo, dict) else {}
+    objects = [o for o in eo.get("objects") or [] if isinstance(o, dict) and o.get("name")]
+    names = [str(o["name"]) for o in objects]
+    return {
+        "objects": [
+            {"name": str(o["name"]), "label": object_label(str(o["name"]), names),
+             "center": o.get("center"), "polygon": o.get("polygon")}
+            for o in objects
+        ],
+        "excluded": [str(n) for n in eo.get("excluded_objects") or []],
+        "current": eo.get("current_object"),
+    }

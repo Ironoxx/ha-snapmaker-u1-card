@@ -37,6 +37,7 @@ SAMPLE = 30000  # point sample for the viewport
 TIMELINE_ROWS = 400  # samples in the time profile
 _DWELL = re.compile(r"([PS])(\d*\.?\d+)")
 _FEED = re.compile(r"F(\d*\.?\d+)")
+_OBJ_NAME = re.compile(r"\bNAME=(\S+)", re.IGNORECASE)
 _M73_R = re.compile(r"\bR(\d+(?:\.\d+)?)", re.IGNORECASE)
 # Weight of the history/default speed factor, in seconds of slicer time: after
 # about this much printed slicer time the measured speed counts as much.
@@ -138,7 +139,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
             poly += [tail[0], tail[1]]
         tail = None
         if cur is not None and poly is not None and len(poly) >= 4:
-            cur["segs"].append([poly_tool, poly, poly_start])
+            cur["segs"].append([poly_tool, poly, poly_start, poly_obj] if poly_obj else [poly_tool, poly, poly_start])
             tools_seen.add(poly_tool)
         poly = None
 
@@ -150,6 +151,8 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
         sink.write(blob + b"\n")
 
     poly_start = 0
+    poly_obj: str | None = None
+    cur_obj: str | None = None  # EXCLUDE_OBJECT_START ... END
     with path.open("rb") as fh:
         for raw in fh:
             line_offset = offset
@@ -176,6 +179,15 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
             if line[0] == ";":
                 continue
             line = line.split(";", 1)[0].strip()
+            if line[:20].upper() == "EXCLUDE_OBJECT_START":
+                close()
+                nm = _OBJ_NAME.search(line)
+                cur_obj = nm.group(1) if nm else None
+                continue
+            if line[:18].upper() == "EXCLUDE_OBJECT_END":
+                close()
+                cur_obj = None
+                continue
             if line[:21].upper() == "EXCLUDE_OBJECT_DEFINE":
                 om = _OBJECT.match(line)
                 if om:
@@ -270,6 +282,7 @@ def parse_layers(path: Path, out: Path) -> dict[str, Any]:
                     poly = [round(x, 2), round(y, 2)]
                     poly_tool = tool
                     poly_start = line_offset
+                    poly_obj = cur_obj
                 for px, py in arc or [(nx, ny)]:
                     lx, ly = poly[-2], poly[-1]
                     if (px - lx) ** 2 + (py - ly) ** 2 >= MIN_STEP * MIN_STEP and points < MAX_POINTS_PER_LAYER:

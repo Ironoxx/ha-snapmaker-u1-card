@@ -411,6 +411,8 @@ Die Stock-Firmware legt Zeitraffer im Moonraker-Ordner `camera` ab (`Name_JJJJMM
 
 ## Schichtansicht
 
+**Objekte ausschließen.** Sind in der Datei Objekte definiert (`EXCLUDE_OBJECT_DEFINE`, Orca: „Objekte beschriften“ an), zeichnet die Schichtansicht ihre Umrisse und listet sie darunter. Antippen fragt nach und ruft dann `snapmaker_u1_card.exclude_object` auf (Klipper `EXCLUDE_OBJECT NAME=…`): Der Drucker lässt das Objekt ab sofort aus. Das gerade gedruckte Objekt ist hervorgehoben, ausgeschlossene sind blass. Das letzte verbleibende Objekt lässt sich nicht ausschließen (dafür den Druck abbrechen).
+
 Sobald die Karte die Schichtansicht während eines Drucks zum ersten Mal anfragt, lädt die Integration die Datei einmal vom Drucker und zerlegt sie in Schichten (`;LAYER_CHANGE` bzw. `SET_PRINT_STATS_INFO`). Die Karte holt nur die aktuelle Schicht (`/api/snapmaker_u1_card/layers/…`, angemeldet) und alle 5 s die Dateiposition (`virtual_sdcard.file_position`, aus dem Live-Abo, ohne Anfrage beim Drucker): was davor liegt, ist gedruckt. Farbe je Filament: Kopf laut Zuordnung → Farbe der dort geladenen Spule, sonst die Farbe aus der Datei. Bögen (G2/G3) werden in kurze Stücke zerlegt, Punkte näher als 0,35 mm zusammengefasst. Bei großen Dateien dauert die Vorbereitung einige Sekunden.
 
 ## Druckermeldungen

@@ -784,6 +784,19 @@ export const STYLES = `
   .lv-legend i.lv-done { background: var(--u1-on); border-radius: 2px; }
   .lv-legend i.lv-todo { background: var(--u1-on); opacity: .2; border-radius: 2px; margin-left: 6px; }
   .lv-hint { margin-left: auto; }
+  .lv-paths polyline.excl { opacity: .08; }
+  .lv-objs polygon { fill: transparent; stroke: var(--u1-on-variant); stroke-width: 1px; stroke-dasharray: 4 3; opacity: .6; }
+  .lv-objs polygon.pick { cursor: pointer; pointer-events: all; }
+  .lv-objs polygon.pick:hover { fill: color-mix(in srgb, var(--u1-error) 12%, transparent); stroke: var(--u1-error); opacity: 1; }
+  .lv-objs polygon.cur { stroke: var(--u1-primary); stroke-dasharray: none; opacity: 1; }
+  .lv-objs polygon.excl { fill: color-mix(in srgb, var(--u1-error) 14%, transparent); stroke: var(--u1-error); opacity: .8; }
+  .lv-objects { display: flex; flex-direction: column; gap: 6px; }
+  .lv-objects:empty { display: none; }
+  .lv-objects .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+  .obj-chip { cursor: pointer; }
+  .obj-chip ha-icon { --mdc-icon-size: 16px; }
+  .obj-chip.cur { border-color: var(--u1-primary); color: var(--u1-primary); }
+  .obj-chip.off { text-decoration: line-through; opacity: .6; }
 
   /* ── Mini card ────────────────────────────────────────────────────────── */
   .mini-wrap { display: flex; flex-direction: column; gap: 12px; cursor: pointer; }

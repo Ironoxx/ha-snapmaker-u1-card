@@ -416,6 +416,8 @@ The stock firmware stores timelapses in the Moonraker folder `camera` (`Name_YYY
 
 ## Layer view
 
+**Exclude objects.** With objects defined in the file (`EXCLUDE_OBJECT_DEFINE`, Orca: "Label objects" on), the layer view draws their outlines and lists them below. Tapping one asks for confirmation and then calls `snapmaker_u1_card.exclude_object` (Klipper `EXCLUDE_OBJECT NAME=…`): the printer skips the object from now on. The object being printed is highlighted, excluded ones are faded. The last remaining object cannot be excluded (cancel the print instead).
+
 As soon as the card requests the layer view during a print for the first time, the integration downloads the file once and splits it into layers (`;LAYER_CHANGE` or `SET_PRINT_STATS_INFO`). The card only fetches the current layer (`/api/snapmaker_u1_card/layers/…`, authenticated) and every 5 s the file position (`virtual_sdcard.file_position`, from the live subscription, without asking the printer): everything before it is printed. Colour per filament: head from the mapping → colour of the spool loaded there, otherwise the colour from the file. Arcs (G2/G3) are split into short segments, points closer than 0.35 mm are merged. For large files the preparation takes a few seconds.
 
 ## Printer messages

@@ -23,6 +23,7 @@ from ..errors import error_text
 from ..layers import estimate_remaining, parse_layers, slicer_left, timeline_at
 from ..parsing import (
     ACTIVE_PRINT_STATES,
+    exclude_state,
     grams_per_slot,
     parse_slots,
 )
@@ -336,4 +337,5 @@ class PrintMonitorMixin:
             "position": (st.get("virtual_sdcard") or {}).get("file_position"),
             "layer": info.get("current_layer") if isinstance(info, dict) else None,
             "active_head": head_index((st.get("toolhead") or {}).get("extruder")),
+            "exclude": exclude_state(st.get("exclude_object")),
         }

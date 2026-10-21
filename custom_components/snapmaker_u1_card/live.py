@@ -31,6 +31,9 @@ SUBSCRIBE: dict[str, list[str]] = {
     "toolhead": ["extruder"],
     "virtual_sdcard": ["file_position", "progress"],
     "exception_manager": ["exceptions"],
+    # exclude object: object list (static per print), excluded names and the
+    # object being printed (changes per object, small)
+    "exclude_object": ["objects", "excluded_objects", "current_object"],
 }
 BACKOFF = (5, 10, 30, 60)
 

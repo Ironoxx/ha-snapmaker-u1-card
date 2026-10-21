@@ -19,6 +19,7 @@ from .api import MoonrakerError
 from .const import DOMAIN
 from .coordinator import head_index
 from .layers import layer_payload
+from .parsing import exclude_state
 
 LAYER_URL = f"/api/{DOMAIN}/layers"
 
@@ -47,7 +48,8 @@ class LayerView(HomeAssistantView):
             try:
                 status = await coordinator.client.query_objects(
                     fields={"virtual_sdcard": ("file_position", "progress"), "print_stats": ("info",),
-                            "toolhead": ("extruder",)}
+                            "toolhead": ("extruder",),
+                            "exclude_object": ("objects", "excluded_objects", "current_object")}
                 )
             except MoonrakerError:
                 return self.json({**base, "position": None})
@@ -57,6 +59,7 @@ class LayerView(HomeAssistantView):
                 "position": (status.get("virtual_sdcard") or {}).get("file_position"),
                 "layer": info.get("current_layer"),
                 "active_head": head_index((status.get("toolhead") or {}).get("extruder")),
+                "exclude": exclude_state(status.get("exclude_object")),
             })
 
         if view.get("status") != "ready":

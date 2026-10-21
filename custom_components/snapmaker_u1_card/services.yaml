@@ -185,6 +185,17 @@ backup_config:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+exclude_object:
+  fields:
+    name:
+      required: true
+      example: Teil_id_0_copy_1
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
 camera_wake:
   fields:
     config_entry_id:

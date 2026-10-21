@@ -21,6 +21,7 @@ export const LayerViewMixin = (Base) => class extends Base {
         </div>
         <div class="lv" data-lv>${this._layerSvg()}</div>
         <div class="lv-legend" data-su1="lvlegend">${this._layerLegend()}</div>
+        <div class="lv-objects" data-su1="lvobjects">${this._objectsHtml()}</div>
       </section>`;
   }
 
@@ -44,17 +45,28 @@ export const LayerViewMixin = (Base) => class extends Base {
     const pad = Math.max(3, (x1 - x0 + y1 - y0) * 0.03);
     const vb = [x0 - pad, -(y1 + pad), x1 - x0 + 2 * pad, y1 - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
     const pos = lv.position;
-    const lines = (v.segs || []).map(([tool, pts, off]) => {
+    const ex = this._exclude();
+    const excluded = new Set(ex.excluded);
+    const lines = (v.segs || []).map(([tool, pts, off, obj]) => {
       const p = [];
       for (let i = 0; i < pts.length; i += 2) p.push(`${pts[i]},${-pts[i + 1]}`);
       const todo = pos !== null && pos !== undefined && off >= pos;
-      return `<polyline points="${p.join(" ")}" stroke="${esc(this._toolColor(tool))}" data-o="${off}"${todo ? ' class="todo"' : ""}/>`;
+      const cls = [todo ? "todo" : "", obj && excluded.has(obj) ? "excl" : ""].filter(Boolean).join(" ");
+      return `<polyline points="${p.join(" ")}" stroke="${esc(this._toolColor(tool))}" data-o="${off}"${cls ? ` class="${cls}"` : ""}/>`;
+    }).join("");
+    // Object outlines (EXCLUDE_OBJECT_DEFINE): tap = exclude, only with 2+ objects
+    const pick = ex.objects.length > 1;
+    const outlines = ex.objects.filter((o) => Array.isArray(o.polygon) && o.polygon.length > 2).map((o) => {
+      const st = excluded.has(o.name) ? "excl" : o.name === ex.current ? "cur" : "";
+      const pts = o.polygon.map(([px, py]) => `${px},${-py}`).join(" ");
+      return `<polygon points="${pts}" class="lv-obj ${st}${pick && !st.includes("excl") ? " pick" : ""}" data-obj="${esc(o.name)}" vector-effect="non-scaling-stroke"><title>${esc(o.label || o.name)}</title></polygon>`;
     }).join("");
     // Stroke width like a real extrusion (0.45 mm), a little bolder for very large parts
     const w = Math.max(0.45, Math.min(0.9, (x1 - x0) / 250));
     return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${tr("Schichtansicht")}">
         <rect x="${(x0 - pad).toFixed(2)}" y="${(-(y1 + pad)).toFixed(2)}" width="${(x1 - x0 + 2 * pad).toFixed(2)}" height="${(y1 - y0 + 2 * pad).toFixed(2)}" class="lv-bed"/>
         <g class="lv-paths" stroke-width="${w.toFixed(2)}">${lines}</g>
+        ${outlines ? `<g class="lv-objs">${outlines}</g>` : ""}
         ${v.missing || !(v.segs || []).length ? `<text x="${((x0 + x1) / 2).toFixed(1)}" y="${(-(y0 + y1) / 2).toFixed(1)}" class="lv-empty">${tr("keine Bahnen")}</text>` : ""}
       </svg>`;
   }
@@ -71,6 +83,57 @@ export const LayerViewMixin = (Base) => class extends Base {
       return `<span><i style="background:${esc(this._toolColor(t))}"></i>${tr("Filament {n}", { n: t + 1 })}${h ? ` → ${esc(h.name)}` : ""}</span>`;
     }).join("") + (this._lv.position !== null && this._lv.position !== undefined
       ? `<span class="lv-hint"><i class="lv-done"></i>${tr("gedruckt")}<i class="lv-todo"></i>${tr("folgt")}</span>` : "");
+  }
+
+  /** Exclude-object state from the last position poll. */
+  _exclude() {
+    const e = this._lv && this._lv.exclude;
+    return { objects: (e && e.objects) || [], excluded: (e && e.excluded) || [], current: e ? e.current : null };
+  }
+
+  _objectsHtml() {
+    const ex = this._exclude();
+    if (ex.objects.length < 2) return "";
+    const excluded = new Set(ex.excluded);
+    const left = ex.objects.filter((o) => !excluded.has(o.name)).length;
+    return `<div class="t-label">${tr("Objekte – antippen zum Ausschließen")}</div><div class="chip-row">${ex.objects.map((o) => {
+      const off = excluded.has(o.name);
+      const cur = !off && o.name === ex.current;
+      const last = !off && left <= 1;
+      return `<button type="button" class="chip obj-chip${off ? " off" : ""}${cur ? " cur" : ""}" data-obj="${esc(o.name)}"
+        ${off || last ? "disabled" : ""} title="${esc(off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen"))}">
+        <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon>${esc(o.label || o.name)}</button>`;
+    }).join("")}</div>`;
+  }
+
+  async _excludeObject(name) {
+    const ex = this._exclude();
+    const o = ex.objects.find((x) => x.name === name);
+    if (!o || ex.excluded.includes(name)) return;
+    const left = ex.objects.filter((x) => !ex.excluded.includes(x.name)).length;
+    if (left <= 1) return;
+    const yes = await this._confirmAction({
+      icon: "mdi:select-remove", tone: "error",
+      title: tr("„{n}“ ausschließen?", { n: o.label || name }),
+      text: tr("Das Objekt wird ab sofort nicht mehr gedruckt, der Rest läuft weiter. Das lässt sich nicht rückgängig machen."),
+      ok: tr("Ausschließen"),
+    });
+    if (!yes) return;
+    if (await this._call("exclude_object", { name })) {
+      // show it right away; the next position poll confirms it
+      this._lv.exclude = { ...this._lv.exclude, excluded: [...ex.excluded, name] };
+      this._paintLayer(true);
+    }
+  }
+
+  _wireObjects(root) {
+    if (!root || root._objWired) return;
+    root._objWired = true;
+    root.addEventListener("click", (e) => {
+      const el = e.target && e.target.closest ? e.target.closest("[data-obj]") : null;
+      if (!el || el.hasAttribute("disabled") || el.classList.contains("excl")) return;
+      this._excludeObject(el.getAttribute("data-obj"));
+    });
   }
 
   async _fetchLayer(query) {
@@ -98,6 +161,7 @@ export const LayerViewMixin = (Base) => class extends Base {
     if (fromHass && !needLayer) return; // position only on the tick
     if (needLayer && lv.data && lv.data.status !== "ready" && Date.now() - (lv.at || 0) < 5000) return;
     this._lvBusy = true;
+    let exChanged = false;
     try {
       if (needLayer) {
         const data = await this._fetchLayer(`layer=${want}`);
@@ -108,6 +172,10 @@ export const LayerViewMixin = (Base) => class extends Base {
       if (lv.data && lv.data.status === "ready") {
         const p = await this._fetchLayer("position=1");
         lv.position = typeof p.position === "number" ? p.position : null;
+        if (p.exclude) {
+          const key = JSON.stringify([p.exclude.excluded, p.exclude.current, (p.exclude.objects || []).length]);
+          if (key !== lv.exKey) { lv.exKey = key; lv.exclude = p.exclude; exChanged = true; }
+        }
         if (Number.isInteger(p.active_head)) {
           const changed = !this._liveHead || this._liveHead.idx !== p.active_head;
           this._liveHead = { idx: p.active_head, at: Date.now() };
@@ -120,7 +188,7 @@ export const LayerViewMixin = (Base) => class extends Base {
     } finally {
       this._lvBusy = false;
     }
-    this._paintLayer(needLayer);
+    this._paintLayer(needLayer || exChanged);
   }
 
   _paintLayer(full) {
@@ -139,6 +207,9 @@ export const LayerViewMixin = (Base) => class extends Base {
       ? `${tr("Schicht {n} / {t}", { n: v.layer, t: (this._d && this._d.totalLayers) || v.total })}${v.z !== null && v.z !== undefined ? ` · Z ${fixed(v.z, 2)} mm` : ""}` : "";
     const leg = r.querySelector('[data-su1="lvlegend"]');
     if (leg) leg.innerHTML = this._layerLegend();
+    const objs = r.querySelector('[data-su1="lvobjects"]');
+    if (objs) objs.innerHTML = this._objectsHtml();
+    this._wireObjects(box.closest(".lv-panel"));
   }
 
   /** Load average with context: "0,50 · 13 % von 4 Kernen". */

@@ -722,6 +722,20 @@
           "description": "Nur bei mehreren Druckern nötig."
         }
       }
+    },
+    "exclude_object": {
+      "name": "Objekt ausschließen",
+      "description": "Druckt ein Objekt des laufenden Drucks nicht weiter (Klipper EXCLUDE_OBJECT). Nicht rückgängig zu machen. Das letzte verbleibende Objekt lässt sich nicht ausschließen.",
+      "fields": {
+        "name": {
+          "name": "Objekt",
+          "description": "Name wie in der Datei definiert (EXCLUDE_OBJECT_DEFINE)."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {
