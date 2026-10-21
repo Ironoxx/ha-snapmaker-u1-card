@@ -31,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 MODES = ("live", "still", "wake", "none")
 STREAM_RETRY_S = 300  # live stream failed: still images, try the stream again after this
+FIRST_FRAME_S = 8  # a stream may need a few seconds for its first frame (camera starting, busy WiFi)
+STREAM_TRIES = 2
 NONE_RETRY_S = 300  # nothing found: look again after this
 WAKE_GAP_S = 10  # at most one camera.start_monitor per this many seconds
 WAKE_SETTLE_S = 3  # stock: time for the camera service to write a new monitor.jpg
@@ -63,6 +65,7 @@ class Webcam:
         self._fails = 0
         self._lock = asyncio.Lock()
         self._detecting = False
+        self.stream_error: str | None = None  # why the last stream check failed (diagnostics)
 
     # ── Detection ──────────────────────────────────────────────────────────
     def reset(self) -> None:
@@ -95,7 +98,17 @@ class Webcam:
         now = time.monotonic()
         # Live and still keep their mode until images fail; wake/none are re-checked
         # now and then (firmware changes, camera service restarted).
-        self.next_check = now + (NONE_RETRY_S if mode in ("none", "unknown", "wake") else 24 * 3600)
+        # live keeps its mode until images fail. still with a stream address: try
+        # the stream again regularly (one slow first frame must not mean stills
+        # for a day); wake/none: re-check now and then (firmware changes).
+        if mode == "live":
+            self.next_check = now + 24 * 3600
+        elif mode == "still" and stream:
+            self.next_check = now + STREAM_RETRY_S
+        elif mode == "still":
+            self.next_check = now + 24 * 3600
+        else:
+            self.next_check = now + NONE_RETRY_S
         return mode
 
     async def _probe(self) -> tuple[str, str | None, str | None]:
@@ -109,9 +122,13 @@ class Webcam:
             candidates.append(default)
         still: tuple[str | None, str | None] | None = None
         stream_ok = time.monotonic() >= self._stream_retry_at
+        self.stream_error = None
         for stream, snap in candidates:
-            if stream and stream_ok and await self.client.first_mjpeg_frame(stream):
-                return "live", stream, snap
+            if stream and stream_ok:
+                for _ in range(STREAM_TRIES):
+                    if await self.client.first_mjpeg_frame(stream, timeout=FIRST_FRAME_S):
+                        return "live", stream, snap
+                self.stream_error = f"no MJPEG frame within {FIRST_FRAME_S} s ({STREAM_TRIES} tries)"
             if still is None and snap and await self.client.fetch_image(snap):
                 still = (stream, snap)
         if still:
@@ -178,7 +195,8 @@ class Webcam:
                 blob = await self.client.fetch_image(self.snapshot_url)
                 if blob:
                     return blob
-            return await self.client.first_mjpeg_frame(self.stream_url) if self.stream_url else None
+            return (await self.client.first_mjpeg_frame(self.stream_url, timeout=FIRST_FRAME_S)
+                    if self.stream_url else None)
         if self.mode == "still" and self.snapshot_url:
             return await self.client.fetch_image(self.snapshot_url)
         if self.mode == "wake":
@@ -196,4 +214,4 @@ class Webcam:
 
     def as_dict(self) -> dict[str, Any]:
         return {"mode": self.mode, "stream_url": self.stream_url, "snapshot_url": self.snapshot_url,
-                "checked_at": self.checked_at}
+                "checked_at": self.checked_at, "stream_error": self.stream_error}

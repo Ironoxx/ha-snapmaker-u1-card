@@ -156,3 +156,22 @@ async def test_live_stream_falls_back(hass: HomeAssistant, mock_client, notifica
         assert await cam.handle_async_mjpeg_stream(object()) == "still-stream"
     assert coord.webcam.mode == "still"
     still.assert_awaited_once()
+
+
+async def test_slow_stream_rechecked_soon(no_sleep) -> None:
+    """A stream that fails the first check is retried, and still mode re-checks it after 5 min."""
+    c = _client()
+    cam = wc.Webcam(c)
+    frames = AsyncMock(side_effect=[None, JPEG_A])
+    with patch.object(c, "webcams", AsyncMock(return_value=[])), \
+         patch.object(c, "first_mjpeg_frame", frames):
+        assert await cam.detect() == "live"  # second try within the same detection
+    assert frames.await_args.kwargs["timeout"] == wc.FIRST_FRAME_S
+    cam = wc.Webcam(c)
+    with patch.object(c, "webcams", AsyncMock(return_value=[])), \
+         patch.object(c, "first_mjpeg_frame", AsyncMock(return_value=None)), \
+         patch.object(c, "fetch_image", AsyncMock(return_value=JPEG_A)):
+        assert await cam.detect() == "still"
+    assert "no MJPEG frame" in cam.stream_error
+    remaining = cam.next_check - wc.time.monotonic()
+    assert 0 < remaining <= wc.STREAM_RETRY_S + 1, remaining

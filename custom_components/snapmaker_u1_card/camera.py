@@ -64,7 +64,10 @@ class U1Camera(U1Entity, Camera):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         cam = self.coordinator.webcam
-        return {"mode": cam.mode, "live_stream": cam.mode == "live"}
+        attrs = {"mode": cam.mode, "live_stream": cam.mode == "live"}
+        if cam.mode != "live" and cam.stream_error:
+            attrs["stream_error"] = cam.stream_error
+        return attrs
 
     async def async_camera_image(self, width: int | None = None, height: int | None = None) -> bytes | None:
         return await self.coordinator.webcam.image()

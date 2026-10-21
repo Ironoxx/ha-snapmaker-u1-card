@@ -143,8 +143,9 @@ class UpkeepMixin:
             "wake": t("Standbilder, Stock-Firmware (wird geweckt)", "still images, stock firmware (woken up)"),
             "none": t("keine Kamera gefunden", "no camera found"),
         }.get(mode, t("noch nicht erkannt", "not detected yet"))
+        why = f" – Stream: {self.webcam.stream_error}" if mode != "live" and self.webcam.stream_error else ""
         add("camera_detect", mode in ("live", "still", "wake") or (None if mode == "unknown" else False),
-            t(f"Kamera erkannt: {mode_text}", f"Camera detected: {mode_text}"))
+            t(f"Kamera erkannt: {mode_text}{why}", f"Camera detected: {mode_text}{why}"))
         camera = self.camera_entity()
         if not camera:
             add("camera", None, t("Keine Kamera (Bild in Push und Ergebnisfoto fehlen)",
