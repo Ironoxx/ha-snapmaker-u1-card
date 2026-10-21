@@ -20,6 +20,7 @@ export const FORM_LABELS = {
   unlock_controls: "Regler nicht sperren",
   controls_lock: "Sperre für Regler",
   emergency_stop: "Not-Halt",
+  layer_view: "Schichtansicht",
   camera_wake: "Kamera bei stehendem Bild wecken",
   camera_direct: "Direktstream vom Drucker",
   camera_direct_url: "Adresse des Direktstreams",
@@ -30,6 +31,7 @@ export const FORM_HELPERS = {
   network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
   layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+  layer_view: "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.",
   emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
   camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
   camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
@@ -70,6 +72,7 @@ export function configForm(mini) {
     { name: "hide", selector: { select: { multiple: true, mode: "list",
       options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
     { name: "state_accent", selector: { boolean: {} } },
+    { name: "layer_view", selector: { select: { mode: "dropdown", options: opts([["part", "Teil vergrößert"], ["bed", "Ganzes Druckbett"]]) } } },
     { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
       ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },
     { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([

@@ -28,6 +28,7 @@
  *   printer_name / printer_brand
  *   layout            tabs | scroll | tablet                 (tabs)
  *   emergency_stop    show | hold | hide                     (show)
+ *   layer_view        part | bed: layer view zoomed or whole plate (part)
  *   camera_wake       wake the camera when the image stops   (true)
  *   camera_direct     auto | off: stream straight from the printer (auto)
  *   camera_direct_url own URL for the direct stream          (http://<printer>/webcam/?action=stream)

@@ -785,6 +785,22 @@ export const STYLES = `
   .lv-legend i.lv-todo { background: var(--u1-on); opacity: .2; border-radius: 2px; margin-left: 6px; }
   .lv-hint { margin-left: auto; }
   .lv-paths polyline.excl { opacity: .08; }
+  .lv-mode { margin-left: 4px; }
+  .lv-mode[aria-pressed="true"] { color: var(--u1-primary); }
+  .lv[data-mode="bed"] { max-height: 420px; aspect-ratio: 290 / 338; margin: 0 auto; background: transparent; }
+  .lv-frame { fill: color-mix(in srgb, var(--u1-on) 6%, var(--u1-panel-highest)); stroke: color-mix(in srgb, var(--u1-on) 18%, transparent); stroke-width: .8; }
+  .lv-plate { fill: #26272c; stroke: color-mix(in srgb, var(--u1-on) 30%, transparent); stroke-width: .8; }
+  .lv-grid { stroke: rgba(255,255,255,.05); stroke-width: .3; }
+  .lv-grid.major { stroke: rgba(255,255,255,.12); stroke-width: .45; }
+  .lv-origin { fill: var(--u1-primary); opacity: .7; }
+  .lv-head rect:first-child { fill: color-mix(in srgb, var(--u1-on) 10%, var(--u1-panel-high)); stroke: color-mix(in srgb, var(--u1-on) 22%, transparent); stroke-width: .6; }
+  .lv-head.act rect:first-child { stroke: var(--u1-primary); stroke-width: 1.2; }
+  .lv-head.away rect:first-child { fill: transparent; stroke-dasharray: 3 2; }
+  .lv-head.away .lv-band { opacity: .35; }
+  .lv-head-n { fill: var(--u1-on-variant); font-size: 8px; text-anchor: middle; font-family: var(--u1-font); }
+  .lv-nozzle .ring { fill: color-mix(in srgb, var(--u1-primary) 18%, transparent); stroke: var(--u1-primary); stroke-width: .9; }
+  .lv-nozzle .dot { fill: var(--u1-primary); }
+  .lv-nozzle line { stroke: var(--u1-primary); stroke-width: .9; stroke-linecap: round; }
   .lv-objs polygon { fill: transparent; stroke: var(--u1-on-variant); stroke-width: 1px; stroke-dasharray: 4 3; opacity: .6; }
   .lv-objs polygon.pick { cursor: pointer; pointer-events: all; }
   .lv-objs polygon.pick:hover { fill: color-mix(in srgb, var(--u1-error) 12%, transparent); stroke: var(--u1-error); opacity: 1; }

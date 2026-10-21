@@ -83,7 +83,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const b = R().querySelector(`.obj-chip[data-obj="${B}"]`);
   assert.ok(b.classList.contains("off") && b.disabled);
   // the last remaining object cannot be excluded
-  assert.ok(R().querySelector(`.obj-chip[data-obj="${A}"]`).disabled, "last object locked");
+  assert.ok(R().querySelector(`.obj-chip[data-obj="${A}"]`).disabled, "last object locked, bed view");
 
   // one object only: no list, no clickable outline
   exclude = { objects: [exclude.objects[0]], excluded: [], current: A };
@@ -91,5 +91,17 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   await card._tickLayer(); await tick();
   assert.strictEqual(R().querySelector("[data-su1=\"lvobjects\"]").innerHTML, "");
   assert.ok(!R().querySelector(".lv-objs polygon.pick"));
-  console.log("OBJECTS OK – outlines, chips, confirmation, exclude call, last object locked");
+  // bed view: plate, dock with four heads, toggle back and forth (remembered)
+  assert.ok(!R().querySelector(".lv-plate"), "part view by default");
+  R().querySelector("[data-lvmode]").click();
+  await tick();
+  assert.ok(R().querySelector(".lv-plate"), "plate drawn");
+  assert.strictEqual(R().querySelectorAll(".lv-dock .lv-head").length, 4);
+  assert.strictEqual(R().querySelector("[data-lv]").dataset.mode, "bed");
+  assert.strictEqual(w.localStorage.getItem("snapmaker-u1-card.layerview"), "bed");
+  assert.match(R().querySelector("svg").getAttribute("viewBox"), /^-10\.00 /);
+  R().querySelector("[data-lvmode]").click();
+  await tick();
+  assert.ok(!R().querySelector(".lv-plate"), "back to the part");
+  console.log("OBJECTS OK – outlines, chips, confirmation, exclude call, last object locked, bed view");
 })().catch((e) => { console.error(e); process.exit(1); });

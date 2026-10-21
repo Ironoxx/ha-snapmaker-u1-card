@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.4.1";
+  var CARD_VERSION = "1.4.2";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -155,7 +155,6 @@
     "Regler nicht sperren": "Don't lock controls",
     "Kopf {n}": "Head {n}",
     "Dauer": "Duration",
-    "Schichtansicht": "Layer view",
     "Schicht {n} / {t}": "Layer {n} / {t}",
     "Schichtansicht wird vorbereitet …": "Preparing layer view …",
     "Schichtansicht nicht verfügbar: {e}": "Layer view unavailable: {e}",
@@ -387,6 +386,11 @@
     "Ausschließen": "Exclude",
     "„{n}“ ausschließen?": "Exclude “{n}”?",
     "Das Objekt wird ab sofort nicht mehr gedruckt, der Rest läuft weiter. Das lässt sich nicht rückgängig machen.": "The object will no longer be printed, the rest continues. This cannot be undone.",
+    "Teil vergrößert": "Zoomed to the part",
+    "Schichtansicht": "Layer view",
+    "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.": "Empty = zoomed to the part. You can also switch directly in the layer view.",
+    "Teil vergrößern": "Zoom to the part",
+    "Ganzes Druckbett": "Whole build plate",
     "Druck abbrechen": "Cancel print",
     "Weiterdrucken": "Keep printing",
     "Anzeigen, mit Rückfrage": "Show, with confirmation",
@@ -502,6 +506,7 @@
     unlock_controls: "Regler nicht sperren",
     controls_lock: "Sperre für Regler",
     emergency_stop: "Not-Halt",
+    layer_view: "Schichtansicht",
     camera_wake: "Kamera bei stehendem Bild wecken",
     camera_direct: "Direktstream vom Drucker",
     camera_direct_url: "Adresse des Direktstreams"
@@ -512,6 +517,7 @@
     network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
     layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+    layer_view: "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.",
     emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
     camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
     camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
@@ -561,6 +567,7 @@
         options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) }))
       } } },
       { name: "state_accent", selector: { boolean: {} } },
+      { name: "layer_view", selector: { select: { mode: "dropdown", options: opts([["part", "Teil vergrößert"], ["bed", "Ganzes Druckbett"]]) } } },
       { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
         ["show", "Anzeigen, mit Rückfrage"],
         ["hold", "Gesichert: 1 s gedrückt halten"],
@@ -2384,6 +2391,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   };
 
   // frontend/src/card/layer.js
+  var BED_W = 270;
+  var BED_D = 270;
+  var DOCK_DEPTH = 48;
+  var LV_STORE = "snapmaker-u1-card.layerview";
   var LayerViewMixin = (Base) => class extends Base {
     _sectionLayer() {
       const d = this._d;
@@ -2396,8 +2407,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <ha-icon icon="mdi:layers-outline"></ha-icon>
           <span class="panel-title">${tr("Schichtansicht")}</span>
           <span class="t-label" style="margin-left:auto" data-su1="lvhead">${esc(head)}</span>
+          <button type="button" class="icon ghost lv-mode" data-lvmode aria-pressed="${this._lvMode() === "bed"}"
+            title="${this._lvMode() === "bed" ? tr("Teil vergrößern") : tr("Ganzes Druckbett")}">
+            <ha-icon icon="${this._lvMode() === "bed" ? "mdi:magnify-plus-outline" : "mdi:grid"}"></ha-icon></button>
         </div>
-        <div class="lv" data-lv>${this._layerSvg()}</div>
+        <div class="lv" data-lv data-mode="${this._lvMode()}">${this._layerSvg()}</div>
         <div class="lv-legend" data-su1="lvlegend">${this._layerLegend()}</div>
         <div class="lv-objects" data-su1="lvobjects">${this._objectsHtml()}</div>
       </section>`;
@@ -2417,9 +2431,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const v = lv.data;
       if (v.status === "error") return `<div class="t-label lv-msg">${esc(tr("Schichtansicht nicht verfügbar: {e}", { e: v.error || "" }))}</div>`;
       if (v.status !== "ready" || !v.bbox) return `<div class="t-label lv-msg">${tr("Schichtansicht wird vorbereitet …")}</div>`;
-      const [x0, y0, x1, y1] = v.bbox;
-      const pad = Math.max(3, (x1 - x0 + y1 - y0) * 0.03);
-      const vb = [x0 - pad, -(y1 + pad), x1 - x0 + 2 * pad, y1 - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
+      const bed = this._lvMode() === "bed";
+      const [x0, y0, x1, y1] = bed ? [0, 0, BED_W, BED_D] : v.bbox;
+      const pad = bed ? 10 : Math.max(3, (x1 - x0 + y1 - y0) * 0.03);
+      const top = bed ? y1 + DOCK_DEPTH : y1;
+      const vb = [x0 - pad, -(top + pad), x1 - x0 + 2 * pad, top - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
       const pos = lv.position;
       const ex = this._exclude();
       const excluded = new Set(ex.excluded);
@@ -2436,10 +2452,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const pts = o.polygon.map(([px, py]) => `${px},${-py}`).join(" ");
         return `<polygon points="${pts}" class="lv-obj ${st}${pick && !st.includes("excl") ? " pick" : ""}" data-obj="${esc(o.name)}" vector-effect="non-scaling-stroke"><title>${esc(o.label || o.name)}</title></polygon>`;
       }).join("");
-      const w = Math.max(0.45, Math.min(0.9, (x1 - x0) / 250));
+      const w = bed ? 0.7 : Math.max(0.45, Math.min(0.9, (x1 - x0) / 250));
+      const ground = bed ? this._bedSvg() : `<rect x="${(x0 - pad).toFixed(2)}" y="${(-(y1 + pad)).toFixed(2)}" width="${(x1 - x0 + 2 * pad).toFixed(2)}" height="${(y1 - y0 + 2 * pad).toFixed(2)}" class="lv-bed"/>`;
       return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${tr("Schichtansicht")}">
-        <rect x="${(x0 - pad).toFixed(2)}" y="${(-(y1 + pad)).toFixed(2)}" width="${(x1 - x0 + 2 * pad).toFixed(2)}" height="${(y1 - y0 + 2 * pad).toFixed(2)}" class="lv-bed"/>
+        ${ground}
         <g class="lv-paths" stroke-width="${w.toFixed(2)}">${lines}</g>
+        ${bed ? this._nozzleSvg(v, pos) : ""}
         ${outlines ? `<g class="lv-objs">${outlines}</g>` : ""}
         ${v.missing || !(v.segs || []).length ? `<text x="${((x0 + x1) / 2).toFixed(1)}" y="${(-(y0 + y1) / 2).toFixed(1)}" class="lv-empty">${tr("keine Bahnen")}</text>` : ""}
       </svg>`;
@@ -2455,6 +2473,81 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const h = heads[head];
         return `<span><i style="background:${esc(this._toolColor(t))}"></i>${tr("Filament {n}", { n: t + 1 })}${h ? ` → ${esc(h.name)}` : ""}</span>`;
       }).join("") + (this._lv.position !== null && this._lv.position !== void 0 ? `<span class="lv-hint"><i class="lv-done"></i>${tr("gedruckt")}<i class="lv-todo"></i>${tr("folgt")}</span>` : "");
+    }
+    /** part = zoomed to the part (default), bed = whole build plate from above. */
+    _lvMode() {
+      if (this._lvView) return this._lvView;
+      let m = null;
+      try {
+        m = window.localStorage.getItem(LV_STORE);
+      } catch (e) {
+      }
+      return m === "bed" || m === "part" ? m : this._cfg.layer_view === "bed" ? "bed" : "part";
+    }
+    _toggleLvMode() {
+      this._lvView = this._lvMode() === "bed" ? "part" : "bed";
+      try {
+        window.localStorage.setItem(LV_STORE, this._lvView);
+      } catch (e) {
+      }
+      const r = this.shadowRoot.getElementById("u1card");
+      const btn = r && r.querySelector("[data-lvmode]");
+      if (btn) {
+        const bed = this._lvView === "bed";
+        btn.setAttribute("aria-pressed", String(bed));
+        btn.title = bed ? tr("Teil vergrößern") : tr("Ganzes Druckbett");
+        btn.innerHTML = `<ha-icon icon="${bed ? "mdi:magnify-plus-outline" : "mdi:grid"}"></ha-icon>`;
+      }
+      const box = r && r.querySelector("[data-lv]");
+      if (box) box.dataset.mode = this._lvView;
+      this._paintLayer(true);
+    }
+    /** Stylised build plate from above: plate with grid, the four parked heads behind it. */
+    _bedSvg() {
+      const grid = [];
+      for (let g = 10; g < BED_W; g += 10) {
+        const major = g % 50 === 0 ? " major" : "";
+        grid.push(`<line x1="${g}" y1="0" x2="${g}" y2="${-BED_D}" class="lv-grid${major}"/>`);
+        grid.push(`<line x1="0" y1="${-g}" x2="${BED_W}" y2="${-g}" class="lv-grid${major}"/>`);
+      }
+      const heads = this._d && this._d.heads || [];
+      const printing = this._d && this._d.printing;
+      const slotW = (BED_W - 30) / 4;
+      const dock = [0, 1, 2, 3].map((i) => {
+        const h = heads[i] || {};
+        const x = 15 + i * slotW + 4;
+        const y = -(BED_D + DOCK_DEPTH - 6);
+        const away = printing && h.active;
+        const color = h.loaded ? h.color || "var(--u1-outline)" : "var(--u1-outline)";
+        return `<g class="lv-head${away ? " away" : ""}${h.active ? " act" : ""}">
+          <rect x="${x.toFixed(1)}" y="${y}" width="${(slotW - 8).toFixed(1)}" height="${DOCK_DEPTH - 14}" rx="4"/>
+          <rect x="${(x + 4).toFixed(1)}" y="${y + DOCK_DEPTH - 22}" width="${(slotW - 16).toFixed(1)}" height="4" rx="2" style="fill:${esc(color)}" class="lv-band"/>
+          <text x="${(x + (slotW - 8) / 2).toFixed(1)}" y="${y + 11}" class="lv-head-n">${i + 1}</text>
+        </g>`;
+      }).join("");
+      return `<g class="lv-printer">
+        <rect x="-6" y="${-(BED_D + DOCK_DEPTH + 4)}" width="${BED_W + 12}" height="${BED_D + DOCK_DEPTH + 10}" rx="10" class="lv-frame"/>
+        <rect x="0" y="${-BED_D}" width="${BED_W}" height="${BED_D}" rx="5" class="lv-plate"/>
+        <g>${grid.join("")}</g>
+        <circle cx="4" cy="-4" r="1.6" class="lv-origin"/>
+        <g class="lv-dock">${dock}</g>
+      </g>`;
+    }
+    /** Nozzle marker: end of the last printed path before the file position. */
+    _nozzleSvg(v, pos) {
+      if (pos === null || pos === void 0 || !this._d || !this._d.printing) return "";
+      let best = null;
+      for (const seg of v.segs || []) {
+        if (seg[2] <= pos && (!best || seg[2] >= best[2])) best = seg;
+      }
+      if (!best || best[1].length < 2) return "";
+      const n = best[1].length;
+      const x = best[1][n - 2], y = best[1][n - 1];
+      return `<g class="lv-nozzle" transform="translate(${x},${-y})">
+        <circle r="7" class="ring"/><circle r="2.2" class="dot"/>
+        <line x1="-11" y1="0" x2="-8" y2="0"/><line x1="8" y1="0" x2="11" y2="0"/>
+        <line x1="0" y1="-11" x2="0" y2="-8"/><line x1="0" y1="8" x2="0" y2="11"/>
+      </g>`;
     }
     /** Exclude-object state from the last position poll. */
     _exclude() {
@@ -2498,6 +2591,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (!root || root._objWired) return;
       root._objWired = true;
       root.addEventListener("click", (e) => {
+        if (e.target && e.target.closest && e.target.closest("[data-lvmode]")) {
+          this._toggleLvMode();
+          return;
+        }
         const el = e.target && e.target.closest ? e.target.closest("[data-obj]") : null;
         if (!el || el.hasAttribute("disabled") || el.classList.contains("excl")) return;
         this._excludeObject(el.getAttribute("data-obj"));
@@ -2568,7 +2665,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const r = this.shadowRoot.getElementById("u1card");
       const box = r && r.querySelector("[data-lv]");
       if (!box) return;
-      if (full || !box.querySelector("svg")) box.innerHTML = this._layerSvg();
+      if (full || !box.querySelector("svg") || this._lvMode() === "bed") box.innerHTML = this._layerSvg();
       else {
         const pos = this._lv.position;
         box.querySelectorAll("polyline").forEach((pl) => pl.classList.toggle("todo", pos !== null && pos !== void 0 && Number(pl.dataset.o) >= pos));
@@ -3569,6 +3666,22 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .lv-legend i.lv-todo { background: var(--u1-on); opacity: .2; border-radius: 2px; margin-left: 6px; }
   .lv-hint { margin-left: auto; }
   .lv-paths polyline.excl { opacity: .08; }
+  .lv-mode { margin-left: 4px; }
+  .lv-mode[aria-pressed="true"] { color: var(--u1-primary); }
+  .lv[data-mode="bed"] { max-height: 420px; aspect-ratio: 290 / 338; margin: 0 auto; background: transparent; }
+  .lv-frame { fill: color-mix(in srgb, var(--u1-on) 6%, var(--u1-panel-highest)); stroke: color-mix(in srgb, var(--u1-on) 18%, transparent); stroke-width: .8; }
+  .lv-plate { fill: #26272c; stroke: color-mix(in srgb, var(--u1-on) 30%, transparent); stroke-width: .8; }
+  .lv-grid { stroke: rgba(255,255,255,.05); stroke-width: .3; }
+  .lv-grid.major { stroke: rgba(255,255,255,.12); stroke-width: .45; }
+  .lv-origin { fill: var(--u1-primary); opacity: .7; }
+  .lv-head rect:first-child { fill: color-mix(in srgb, var(--u1-on) 10%, var(--u1-panel-high)); stroke: color-mix(in srgb, var(--u1-on) 22%, transparent); stroke-width: .6; }
+  .lv-head.act rect:first-child { stroke: var(--u1-primary); stroke-width: 1.2; }
+  .lv-head.away rect:first-child { fill: transparent; stroke-dasharray: 3 2; }
+  .lv-head.away .lv-band { opacity: .35; }
+  .lv-head-n { fill: var(--u1-on-variant); font-size: 8px; text-anchor: middle; font-family: var(--u1-font); }
+  .lv-nozzle .ring { fill: color-mix(in srgb, var(--u1-primary) 18%, transparent); stroke: var(--u1-primary); stroke-width: .9; }
+  .lv-nozzle .dot { fill: var(--u1-primary); }
+  .lv-nozzle line { stroke: var(--u1-primary); stroke-width: .9; stroke-linecap: round; }
   .lv-objs polygon { fill: transparent; stroke: var(--u1-on-variant); stroke-width: 1px; stroke-dasharray: 4 3; opacity: .6; }
   .lv-objs polygon.pick { cursor: pointer; pointer-events: all; }
   .lv-objs polygon.pick:hover { fill: color-mix(in srgb, var(--u1-error) 12%, transparent); stroke: var(--u1-error); opacity: 1; }
