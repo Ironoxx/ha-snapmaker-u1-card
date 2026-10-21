@@ -117,6 +117,12 @@ export const CameraMixin = (Base) => class extends Base {
     const mode = this._cfg.camera_direct;
     if (mode === false || mode === "off" || this._preview) return null;
     if (Date.now() < (this._directFailUntil || 0)) return null;
+    // Own camera entity without a live stream (stock firmware, snapshots only):
+    // there is no printer stream to load directly.
+    if (this._ents && this._ents.ownCamera) {
+      const own = this._st(this._ents.ownCamera);
+      if (!own || own.attributes.mode !== "live") return null;
+    }
     const custom = typeof this._cfg.camera_direct_url === "string" ? this._cfg.camera_direct_url.trim() : "";
     const st = this._ents && this._ents.files && this._st(this._ents.files);
     const url = custom || (st && st.attributes && st.attributes.stream_url);

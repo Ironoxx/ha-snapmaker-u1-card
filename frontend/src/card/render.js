@@ -40,6 +40,7 @@ export const RenderMixin = (Base) => class extends Base {
       this._up ? `up${!!this._up.error}${this._up.done}` : "",
       JSON.stringify(this._prefs()),
       this._st(this._ents.files)?.attributes.version || "",
+      this._ents.ownCamera ? (this._st(this._ents.ownCamera)?.attributes.mode || "") : "",
       (() => { const l = this._st(this._ents.liveNotify); return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : ""; })(),
     ].join("~");
 

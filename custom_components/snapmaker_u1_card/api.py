@@ -109,6 +109,78 @@ class MoonrakerClient:
         except (aiohttp.ClientError, TimeoutError) as err:
             raise MoonrakerConnectionError(str(err)) from err
 
+    # ── Webcam ──────────────────────────────────────────────────────────────
+    def resolve_url(self, url: str | None) -> str | None:
+        """Absolute URL for a webcam path from Moonraker (relative or localhost)."""
+        if not url:
+            return None
+        url = str(url).strip()
+        if url.startswith("/"):
+            return f"http://{self.host}{url}"
+        m = re.match(r"^(https?://)(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(/.*)?$", url)
+        if m:
+            return f"{m.group(1)}{self.host}{m.group(3) or ''}{m.group(4) or '/'}"
+        if not url.startswith(("http://", "https://")):
+            return f"http://{self.host}/{url.lstrip('/')}"
+        return url
+
+    async def webcams(self) -> list[dict[str, Any]]:
+        """Configured webcams (``/server/webcams/list``); empty if Moonraker has none."""
+        try:
+            result = await self._get_json("/server/webcams/list")
+        except MoonrakerConnectionError:
+            raise
+        except MoonrakerError:
+            return []
+        cams = (result or {}).get("webcams") if isinstance(result, dict) else None
+        return [c for c in cams or [] if isinstance(c, dict) and c.get("enabled", True)]
+
+    async def fetch_image(self, url: str, timeout: float = 5) -> bytes | None:
+        """A JPEG/PNG from ``url`` or None (HTTP error, not an image, timeout)."""
+        try:
+            async with self._session.get(
+                url, headers=self._headers, timeout=aiohttp.ClientTimeout(total=timeout)
+            ) as resp:
+                if resp.status >= 400:
+                    return None
+                blob = await resp.read()
+        except (aiohttp.ClientError, TimeoutError):
+            return None
+        return blob if blob[:2] == b"\xff\xd8" or blob[:4] == b"\x89PNG" else None
+
+    async def first_mjpeg_frame(self, url: str, timeout: float = 3) -> bytes | None:
+        """First JPEG of an MJPEG stream, or None if it is no live stream."""
+        try:
+            async with self._session.get(
+                url, headers=self._headers,
+                timeout=aiohttp.ClientTimeout(total=timeout, sock_connect=timeout),
+            ) as resp:
+                ctype = resp.headers.get("Content-Type", "").lower()
+                if resp.status >= 400 or not ctype.startswith("multipart/x-mixed-replace"):
+                    return None
+                buf = b""
+                async for chunk in resp.content.iter_chunked(16 * 1024):
+                    buf += chunk
+                    start = buf.find(b"\xff\xd8")
+                    end = buf.find(b"\xff\xd9", start + 2) if start >= 0 else -1
+                    if end > 0:
+                        return buf[start:end + 2]
+                    if len(buf) > 4 * 1024 * 1024:
+                        return None
+        except (aiohttp.ClientError, TimeoutError):
+            return None
+        return None
+
+    async def open_stream(self, url: str) -> aiohttp.ClientResponse:
+        """Open an MJPEG stream (the caller closes it)."""
+        try:
+            return await self._session.get(
+                url, headers=self._headers,
+                timeout=aiohttp.ClientTimeout(total=None, sock_connect=5, sock_read=15),
+            )
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise MoonrakerConnectionError(str(err)) from err
+
     async def file_metadata(self, filename: str) -> dict[str, Any]:
         result = await self._get_json("/server/files/metadata", {"filename": filename})
         return result if isinstance(result, dict) else {}

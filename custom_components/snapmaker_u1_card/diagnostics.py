@@ -18,7 +18,8 @@ from .const import CONF_NOTIFY, CONF_SPOOLMAN_URL, VERSION
 
 # "url" covers the Spoolman address inside the spoolman block (diagnostics are
 # often posted publicly, e.g. on Reddit)
-TO_REDACT = {"api_key", CONF_SPOOLMAN_URL, CONF_NOTIFY, "host", "access_token", "token", "url"}
+TO_REDACT = {"api_key", CONF_SPOOLMAN_URL, CONF_NOTIFY, "host", "access_token", "token", "url",
+             "stream_url", "snapshot_url"}
 
 
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigEntry) -> dict[str, Any]:
@@ -41,6 +42,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "firmware": {"installed": coord.firmware.get("installed"),
                      "latest": (coord.firmware.get("latest") or {}).get("version")},
         "entry": {"data": dict(entry.data), "options": dict(entry.options)},
+        "camera": coord.webcam.as_dict(),
         "live": {"connected": coord.live.connected, "messages": coord.live.messages,
                  "interval_s": coord.update_interval.total_seconds() if coord.update_interval else None},
         "online": data.online,

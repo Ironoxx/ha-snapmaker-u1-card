@@ -19,7 +19,6 @@ from ..backup import backup_config, list_snapshots
 from ..const import (
     BACKUP_DIR,
     CONF_BACKUP,
-    CONF_CAMERA,
     CONF_ENERGY_SENSOR,
     CONF_MAINTENANCE,
     CONF_NOTIFY,
@@ -136,11 +135,20 @@ class UpkeepMixin:
             t(f"{len(mr)} Entitäten der Moonraker-Integration", f"{len(mr)} Moonraker integration entities") if mr
             else t("Moonraker-Integration fehlt: Temperaturen, Licht und Kamera fehlen in der Karte",
                    "Moonraker integration missing: no temperatures, light or camera in the card"))
-        # camera
-        camera = self.options.get(CONF_CAMERA)
+        # camera: detection of the own camera entity, then an image from the camera in use
+        mode = self.webcam.mode
+        mode_text = {
+            "live": t("Livestream", "live stream"),
+            "still": t("Standbilder (Snapshot)", "still images (snapshot)"),
+            "wake": t("Standbilder, Stock-Firmware (wird geweckt)", "still images, stock firmware (woken up)"),
+            "none": t("keine Kamera gefunden", "no camera found"),
+        }.get(mode, t("noch nicht erkannt", "not detected yet"))
+        add("camera_detect", mode in ("live", "still", "wake") or (None if mode == "unknown" else False),
+            t(f"Kamera erkannt: {mode_text}", f"Camera detected: {mode_text}"))
+        camera = self.camera_entity()
         if not camera:
-            add("camera", None, t("Keine Kamera gewählt (Bild in Push und Ergebnisfoto fehlen)",
-                                  "No camera selected (no image in push and no result photo)"))
+            add("camera", None, t("Keine Kamera (Bild in Push und Ergebnisfoto fehlen)",
+                                  "No camera (no image in push and no result photo)"))
         else:
             try:
                 from homeassistant.components.camera import async_get_image

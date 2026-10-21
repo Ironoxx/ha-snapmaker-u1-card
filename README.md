@@ -167,7 +167,8 @@ All options are optional; except head names and presets they can also be set in 
 | `state_accent` | `true` | frame in the theme colour of the state (printing, paused, error, done) |
 | `camera_height` | automatic | height of the camera image in px. Empty = image aspect ratio, at most `camera_max_height` |
 | `camera_max_height` | `520` | upper limit for the automatic height in px |
-| `camera_mode` | `stream` | `stream` = live image, `still` = still images (saves WiFi) |
+| `camera` | own camera | camera entity. Empty = the integration's own camera (see *Camera*), else the Moonraker integration's |
+| `camera_mode` | `auto` | `auto` = the camera entity decides (live stream or still images), `stream` = force the stream, `still` = still images (saves WiFi) |
 | `refresh` | `2` | seconds between still images (`still` and fallback) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
 | `show` | all | sections: `stage layer job queue files toolheads climate motion system maintenance charts stats history timelapse` |
@@ -345,6 +346,19 @@ The integration subscribes to `print_stats`, `toolhead.extruder`, `virtual_sdcar
 
 **Result photo. With a camera configured, the integration takes the image at the end of the print once the head has left the part: after the last extrusion it reads the head position (`motion_report`) for up to 15 s and shoots as soon as the head is 25 mm outside the parts' outline (`EXCLUDE_OBJECT_DEFINE`) or the bed has already dropped by 15 mm. The chamber light is switched on for the photo and back off afterwards if it was off. Without position or outline: 2 s after the last extrusion; without a time profile: in the last layer from 99.5 %. On cancel or error the image is taken at that moment. It is stored under `.storage/snapmaker_u1_card/thumbs/<entry>/results/` and appears in the history next to the thumbnail; tapping enlarges it in the card (tap or Esc closes). Photos are kept for the prints in the history.
 
+## Camera
+
+From 1.5 the integration has its own camera entity (*Camera*) and finds out by itself how to get an image (attribute `mode`, also shown in the self test and diagnostics):
+
+| `mode` | When | Image |
+|---|---|---|
+| `live` | Moonraker lists a webcam whose stream answers with MJPEG (modified firmware, e.g. paxx12 Extended) | live stream, passed through |
+| `still` | only a snapshot URL works | still image every second |
+| `wake` | stock firmware: no stream, only `camera/monitor.jpg`, which only changes after `camera.start_monitor`. The image is fetched twice around a wake call and must change | still image every 1–2 s; the camera is woken as needed (at most every 10 s) while someone watches |
+| `none` | nothing found | entity unavailable; the card shows a hint instead of a black area |
+
+Detection runs when the printer comes online, when images keep failing and every 5 minutes while nothing (or only the stock camera) was found. If the live stream fails, the camera switches to still images and tries the stream again after 5 minutes, so a firmware change needs no setting. The card uses this entity unless `camera` is set; notification images and the result photo use it unless a camera is set in the integration options.
+
 ## File management
 
 Above the file list: search (across **all** files on the printer, not only the newest), sorting (newest, name, print time) and folder chips. Older matches appear as a list; tapping loads metadata and thumbnail and opens the print dialog. In the print dialog: *Download* (the G-code through Home Assistant, also works remotely), *Rename / move* (subfolders with `/` are created) and *Delete*. Both are blocked while the file is printing or queued. Services: `file_details`, `move_file`, `delete_file`.
@@ -440,7 +454,7 @@ The U1 firmware reports errors in a structured way (module, head, code). The int
 - **Dashboard or card picker loads forever**: Home Assistant speaks HTTP/1.1, also over HTTPS and Nabu Casa (the TLS connection is only passed through). The browser then opens at most 6 simultaneous connections to Home Assistant, for all tabs and windows together. Every hanging request occupies one; once all are taken, the frontend cannot load code anymore. The card avoids this: live stream only while visible and never in edit mode; timelapse previews come from Home Assistant itself (no request to the printer); videos are not requested while the printer is off. Set other live cameras (e.g. Frigate) to `camera_view: auto`. To check: F12 → Network; requests with status "pending"/"stalled" show what hangs.
 - **"Print start refused"**: the text comes from the printer, e.g. "Printer is busy" or a nozzle conflict.
 - **No icon under Devices & services**: Home Assistant shows custom icons from 2026.3. In the HACS list every custom integration currently shows a grey placeholder; this is a known HACS issue ([hacs/integration#5171](https://github.com/hacs/integration/issues/5171)) and will resolve itself with a HACS update.
-- **Camera image stops after a while (stock firmware)**: turn on *Keep camera awake* in the integration options. It sends `camera.start_monitor` every 10 s, the same call the Snapmaker app makes.
+- **Camera image stops after a while (stock firmware)**: the integration's own camera wakes the stock camera itself while someone watches. For notification images outside of that, turn on *Keep camera awake* in the integration options (`camera.start_monitor` every 10 s, like the Snapmaker app).
 - **No notification**: check the service name (Developer tools → Actions → `notify.mobile_app_…`). Only the Companion app attaches the camera image.
 - **Diagnostics**: *Devices & services → Snapmaker U1 Card → ⋮ → Download diagnostics*. Contains options, state of the live subscription, raw printer status, errors and queue; address, API key, Spoolman address and notification targets are redacted.
 - **Voice command not recognised**: test the sentence under *Developer tools → Assist*. If a different intent shows up, it collides with a built-in sentence; add your own sentences to the file (delete the first line, see above).

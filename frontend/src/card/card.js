@@ -21,7 +21,7 @@
  *   camera_fit        contain | cover | fill                 (contain)
  *   camera_height     height of the image area in px         (auto: image aspect ratio)
  *   camera_max_height upper limit for the automatic height   (520)
- *   camera_mode       stream | still                         (stream)
+ *   camera_mode       auto | stream | still                  (auto: the camera entity decides)
  *   refresh           still image rate in seconds            (2)
  *   stream_check      stream check interval in seconds       (10)
  *   stale_after       "image outdated" after x seconds       (90)
@@ -139,7 +139,7 @@ export class SnapmakerU1Card extends U1Base {
 
   setConfig(config) {
     this._cfg = {
-      camera_mode: "stream",
+      camera_mode: "auto",
       refresh: 2,
       stream_check: 10,
       stale_after: 90,
@@ -214,7 +214,10 @@ export class SnapmakerU1Card extends U1Base {
     const own = list.filter((e) => e.platform === DOMAIN);
     const ownKey = (k) => (own.find((e) => e.translation_key === k) || {}).entity_id || null;
 
-    let camera = c.camera;
+    // Camera: option, else the integration's own camera (detects stream / still
+    // images / stock firmware itself), else the Moonraker integration's camera.
+    const ownCam = ownKey("camera");
+    let camera = c.camera || ownCam;
     if (!camera) {
       const cams = list.filter((e) => e.platform === "moonraker" && e.entity_id.startsWith("camera.")
         && !/thumbnail/.test(e.entity_id));
@@ -225,6 +228,7 @@ export class SnapmakerU1Card extends U1Base {
     this._ents = {
       prefix,
       camera,
+      ownCamera: camera === ownCam ? ownCam : null,
       thumbnail: c.thumbnail || `camera.${prefix}_thumbnail`,
       filaments: c.filaments_sensor || ownKey("filaments"),
       files: c.files_sensor || ownKey("files"),

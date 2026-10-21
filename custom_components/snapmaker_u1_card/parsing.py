@@ -714,6 +714,8 @@ def pick_timelapses(root: str, entries: list[dict[str, Any]], limit: int = 20) -
         path = str(e.get("path", ""))
         low = path.lower()
         if low.endswith(IMAGE_SUFFIXES):
+            if posixpath.basename(low) == "monitor.jpg":
+                continue  # stock firmware's live camera image, not a timelapse preview
             images[posixpath.splitext(low)[0]] = path
             by_dir.setdefault(posixpath.dirname(low), path)
     videos = []

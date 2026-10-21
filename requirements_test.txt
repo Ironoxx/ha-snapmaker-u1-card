@@ -1,3 +1,4 @@
 pytest-homeassistant-custom-component==0.13.316
 hassil==3.5.0
 ruff==0.17.0
+PyTurboJPEG==2.5.0

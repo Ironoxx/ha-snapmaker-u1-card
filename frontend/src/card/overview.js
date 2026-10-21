@@ -16,6 +16,10 @@ export const OverviewMixin = (Base) => class extends Base {
     const frameStyle = h ? `min-height:${h}px;height:${h}px`
       : `aspect-ratio:${this._camAspect || "16 / 9"};max-height:${parseInt(this._cfg.camera_max_height, 10) || 520}px`;
 
+    // Own camera found nothing: no black area, a short hint instead
+    const own = !still && this._ents.ownCamera && this._st(this._ents.ownCamera);
+    if (own && own.attributes.mode === "none") return this._noCamera();
+
     const img = still
       ? `<img src="${esc(still)}" style="object-fit:${fit}" alt="Snapmaker U1" />`
       : `<img data-live style="object-fit:${fit}" alt="${tr("Druckraum")}" />`;
@@ -74,6 +78,21 @@ export const OverviewMixin = (Base) => class extends Base {
           ${overlay}
           ${hud}
         </div>
+        <div class="stage-actions">${actions.join("")}</div>
+      </section>`;
+  }
+
+  _noCamera() {
+    const d = this._d;
+    const actions = [];
+    if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
+    if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
+    if (d.active) actions.push(`<button class="outline grow" data-act="cancel"><ha-icon icon="mdi:stop"></ha-icon>${tr("Abbrechen")}</button>`);
+    actions.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+    return `
+      <section class="panel stage span2 no-cam">
+        <div class="no-cam-msg"><ha-icon icon="mdi:camera-off"></ha-icon>
+          <span>${tr("Keine Kamera erkannt. Der Selbsttest im System-Reiter zeigt, was die Integration gefunden hat.")}</span></div>
         <div class="stage-actions">${actions.join("")}</div>
       </section>`;
   }

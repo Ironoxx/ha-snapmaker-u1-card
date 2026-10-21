@@ -17,7 +17,6 @@ from ..api import (
 )
 from ..const import (
     CONF_AUTO_OFF,
-    CONF_CAMERA,
     CONF_NOTIFY,
     CONF_NOTIFY_EVENTS,
     DEFAULT_NOTIFY_EVENTS,
@@ -139,7 +138,7 @@ class NotifyMixin:
         title = f"Snapmaker U1: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
         message = notify_message(info, de)
         data: dict[str, Any] = {"tag": f"{DOMAIN}_{self.config_entry.entry_id}", "group": DOMAIN}
-        camera = self.options.get(CONF_CAMERA)
+        camera = self.camera_entity()
         if camera:
             # The companion app loads the image with its own authentication.
             data["image"] = f"/api/camera_proxy/{camera}"
@@ -229,7 +228,7 @@ class NotifyMixin:
         extrusion (live subscription, 250 ms). Without a profile: in the last
         layer from 99.5 %.
         """
-        camera = self.options.get(CONF_CAMERA)
+        camera = self.camera_entity()
         started = active.get("started")
         if not camera or (self._early_photo or {}).get("started") == started:
             return
@@ -302,7 +301,7 @@ class NotifyMixin:
 
     def _result_photo_url(self, summary: dict[str, Any]) -> str | None:
         """Result photo: the one taken after the last extrusion, else now (cancel, error)."""
-        camera = self.options.get(CONF_CAMERA)
+        camera = self.camera_entity()
         early, self._early_photo = self._early_photo, None
         if early and early.get("started") == summary.get("started") and summary.get("result") == "complete":
             return early["url"]

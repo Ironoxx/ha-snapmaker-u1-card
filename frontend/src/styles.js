@@ -899,6 +899,9 @@ export const STYLES = `
     100% { box-shadow: 0 0 0 8px transparent; } }
   @media (prefers-reduced-motion: reduce) { .cam-state .dot { animation: none !important; } }
 
+  .no-cam-msg { display: flex; gap: 10px; align-items: center; color: var(--u1-on-variant); font-size: 13px; }
+  .no-cam-msg ha-icon { --mdc-icon-size: 22px; flex-shrink: 0; }
+
   .danger-zone {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     padding: 12px 14px; border-radius: var(--u1-r-l);

@@ -23,6 +23,7 @@ from ..api import (
 from ..archive import ARCHIVE_DIR, TimelapseArchive, list_archive, media_root
 from ..const import (
     CONF_ARCHIVE,
+    CONF_CAMERA,
     CONF_ENERGY_PRICE,
     CONF_ENERGY_PRICE_FIXED,
     CONF_ENERGY_SENSOR,
@@ -59,6 +60,7 @@ from ..parsing import (
 )
 from ..spools import SpoolManager
 from ..stats import Maintenance
+from ..webcam import Webcam
 
 _LOGGER = logging.getLogger(__name__)
 from ..parsing import energy_dashboard_price
@@ -170,6 +172,8 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
         self._wake_busy = False
         self._wake_last = 0.0  # monotonic time of the last card-requested wake
         self._live_init(None)
+        self.webcam = Webcam(client)
+        self._webcam_task: Any = None
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
 
     # ── Options ─────────────────────────────────────────────────────────────
@@ -260,6 +264,8 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
             self._power_task.cancel()
         if self._archive_task and not self._archive_task.done():
             self._archive_task.cancel()
+        if self._webcam_task and not self._webcam_task.done():
+            self._webcam_task.cancel()
         if self._layer_task and not self._layer_task.done():
             self._layer_task.cancel()
         if self._fw_task and not self._fw_task.done():
@@ -274,6 +280,30 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
             self._unsub_action()
             self._unsub_action = None
         await self._store.async_save(self._stored())
+
+    def _webcam_check(self) -> None:
+        """Detect the camera in the background (online again, images failing, nothing found yet)."""
+        if not self.webcam.due() or (self._webcam_task and not self._webcam_task.done()):
+            return
+
+        async def run() -> None:
+            before = self.webcam.mode
+            await self.webcam.detect()
+            if self.webcam.mode != before:
+                self.async_update_listeners()
+
+        self._webcam_task = self.hass.async_create_background_task(run(), "snapmaker_u1_card camera detection")
+
+    def camera_entity(self) -> str | None:
+        """Camera for notification images and the result photo: option, else the own entity."""
+        if self.options.get(CONF_CAMERA):
+            return self.options[CONF_CAMERA]
+        if self.webcam.mode == "none":
+            return None
+        from homeassistant.helpers import entity_registry as er
+
+        return er.async_get(self.hass).async_get_entity_id(
+            "camera", DOMAIN, f"{self.config_entry.entry_id}_camera")
 
     def _save(self, delay: float = 1) -> None:
         self._saved_at = time.monotonic()
@@ -373,6 +403,7 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
         # Switched off: do not even ask, otherwise every round hangs in a timeout.
         if self.power_is_off():
             self.auto_off_armed = None
+            self.webcam.reset()
             self._prev = self._offline()
             return self._prev
         try:
@@ -392,6 +423,7 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
             # Offline is not an integration error: the power switch must remain
             # usable while the printer is off.
             _LOGGER.debug("Printer not reachable: %s", err)
+            self.webcam.reset()
             self._prev = self._offline()
             return self._prev
 
@@ -470,6 +502,7 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
                 data.runout = self._check_runout(vsd, data.remaining, ptc)
         self._live_tick(print_state, self._print_state.get("active"), data.progress, data.remaining,
                         data.layer, data.total_layers)
+        self._webcam_check()
         self._check_bed_cool((status.get("heater_bed") or {}).get("temperature"), print_state)
 
         now = time.monotonic()

@@ -30,7 +30,7 @@ export const FORM_LABELS = {
   camera_direct_url: "Adresse des Direktstreams",
 };
 export const FORM_HELPERS = {
-  camera: "Leer = automatisch erkannt",
+  camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
   prefix: "Nur bei mehreren Druckern nötig",
   network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
@@ -42,7 +42,7 @@ export const FORM_HELPERS = {
   camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
   camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
-  camera_mode: "Leer = Livestream",
+  camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
   camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
   state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
@@ -99,7 +99,7 @@ export function configForm(mini) {
       schema: [
         { name: "camera", selector: { entity: { domain: "camera" } } },
         { type: "grid", name: "", schema: [
-          { name: "camera_mode", selector: { select: { mode: "dropdown", options: opts([["stream", "Livestream"], ["still", "Einzelbilder"]]) } } },
+          { name: "camera_mode", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["stream", "Livestream"], ["still", "Einzelbilder"]]) } } },
           { name: "camera_fit", selector: { select: { mode: "dropdown", options: opts([["contain", "Einpassen"], ["cover", "Füllen"], ["fill", "Strecken"]]) } } },
           { name: "camera_height", selector: { number: { min: 120, max: 900, step: 10, mode: "box" } } },
           { name: "refresh", selector: { number: { min: 1, max: 60, mode: "box" } } },

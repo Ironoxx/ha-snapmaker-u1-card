@@ -44,12 +44,22 @@ try:
 except ImportError:  # without HA
     _live = None
 else:
+    from custom_components.snapmaker_u1_card import webcam as _webcam
+
     @_pytest.fixture(autouse=True)
     def _no_live(request, monkeypatch):
         if "live" not in request.keywords:
             monkeypatch.setattr(_live.LiveListener, "start", lambda self, hass: None)
+        # Camera detection talks HTTP to the printer; tests opt in with @pytest.mark.webcam
+        if "webcam" not in request.keywords:
+            async def _no_detect(self):
+                self.mode = "none"
+                self.next_check = float("inf")
+                return "none"
+            monkeypatch.setattr(_webcam.Webcam, "detect", _no_detect)
         yield
 
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "live: keep the live subscription enabled")
+    config.addinivalue_line("markers", "webcam: keep the camera detection enabled")

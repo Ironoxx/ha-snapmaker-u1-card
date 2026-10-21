@@ -376,6 +376,22 @@
           "high": "Hoch"
         }
       }
+    },
+    "camera": {
+      "camera": {
+        "name": "Kamera",
+        "state_attributes": {
+          "mode": {
+            "name": "Modus",
+            "state": {
+              "live": "Livestream",
+              "still": "Standbilder",
+              "wake": "Standbilder (Stock, geweckt)",
+              "none": "Keine Kamera"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

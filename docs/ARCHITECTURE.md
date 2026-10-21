@@ -47,6 +47,8 @@ Nabu Casa.
 | `i18n.py` | German/English choice for messages created in Python |
 | `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `update.py` | Entities |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
+| `webcam.py` | Camera detection (`live` / `still` / `wake` / `none`), images, wake-up, stream fallback |
+| `camera.py` | Own camera entity: MJPEG pass-through (`live`) or still images (HA builds the stream) |
 | `config_flow.py`, `diagnostics.py` | Setup/options UI and the diagnostics download |
 
 ### The coordinator package

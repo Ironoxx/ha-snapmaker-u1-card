@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.4.4";
+  var CARD_VERSION = "1.5.0b1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -396,6 +396,9 @@
     "Raster über dem Bild": "Grid over the image",
     "z. B. /local/u1_oben.png (Datei unter config/www). Ersetzt Platte und Köpfe in der Draufsicht.": "e.g. /local/u1_top.png (file in config/www). Replaces plate and heads in the top view.",
     "Welche Druckerkoordinaten das Bild abdeckt. Leer = genau die Platte 0, 0, 270, 270. Für ein Foto des ganzen Druckers z. B. -40, -30, 310, 360.": "Printer coordinates the image covers. Empty = exactly the plate 0, 0, 270, 270. For a photo of the whole printer e.g. -40, -30, 310, 360.",
+    "Keine Kamera erkannt. Der Selbsttest im System-Reiter zeigt, was die Integration gefunden hat.": "No camera detected. The self test in the System tab shows what the integration found.",
+    "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)": "Empty = automatic (the integration's camera entity detects live stream or still images itself)",
+    "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration": "Empty = the integration's camera (detects stock and modified firmware), else the Moonraker integration's",
     "Teil vergrößern": "Zoom to the part",
     "Ganzes Druckbett": "Whole build plate",
     "Druck abbrechen": "Cancel print",
@@ -523,7 +526,7 @@
     camera_direct_url: "Adresse des Direktstreams"
   };
   var FORM_HELPERS = {
-    camera: "Leer = automatisch erkannt",
+    camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
     prefix: "Nur bei mehreren Druckern nötig",
     network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
@@ -535,7 +538,7 @@
     camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
     camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
-    camera_mode: "Leer = Livestream",
+    camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
     camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
     state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
@@ -618,7 +621,7 @@
         schema: [
           { name: "camera", selector: { entity: { domain: "camera" } } },
           { type: "grid", name: "", schema: [
-            { name: "camera_mode", selector: { select: { mode: "dropdown", options: opts([["stream", "Livestream"], ["still", "Einzelbilder"]]) } } },
+            { name: "camera_mode", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["stream", "Livestream"], ["still", "Einzelbilder"]]) } } },
             { name: "camera_fit", selector: { select: { mode: "dropdown", options: opts([["contain", "Einpassen"], ["cover", "Füllen"], ["fill", "Strecken"]]) } } },
             { name: "camera_height", selector: { number: { min: 120, max: 900, step: 10, mode: "box" } } },
             { name: "refresh", selector: { number: { min: 1, max: 60, mode: "box" } } },
@@ -1213,6 +1216,8 @@
       const h = parseInt(this._cfg.camera_height, 10) || 0;
       const still = this._cfg.printer_image;
       const frameStyle = h ? `min-height:${h}px;height:${h}px` : `aspect-ratio:${this._camAspect || "16 / 9"};max-height:${parseInt(this._cfg.camera_max_height, 10) || 520}px`;
+      const own = !still && this._ents.ownCamera && this._st(this._ents.ownCamera);
+      if (own && own.attributes.mode === "none") return this._noCamera();
       const img = still ? `<img src="${esc(still)}" style="object-fit:${fit}" alt="Snapmaker U1" />` : `<img data-live style="object-fit:${fit}" alt="${tr("Druckraum")}" />`;
       const thumbEnt = this._st(this._ents.thumbnail);
       const hud = this._cfg.camera_overlay !== false && d.active && !d.paused && d.state !== "error" ? this._hud() : "";
@@ -1261,6 +1266,20 @@
           ${overlay}
           ${hud}
         </div>
+        <div class="stage-actions">${actions.join("")}</div>
+      </section>`;
+    }
+    _noCamera() {
+      const d = this._d;
+      const actions = [];
+      if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
+      if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
+      if (d.active) actions.push(`<button class="outline grow" data-act="cancel"><ha-icon icon="mdi:stop"></ha-icon>${tr("Abbrechen")}</button>`);
+      actions.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+      return `
+      <section class="panel stage span2 no-cam">
+        <div class="no-cam-msg"><ha-icon icon="mdi:camera-off"></ha-icon>
+          <span>${tr("Keine Kamera erkannt. Der Selbsttest im System-Reiter zeigt, was die Integration gefunden hat.")}</span></div>
         <div class="stage-actions">${actions.join("")}</div>
       </section>`;
     }
@@ -3908,6 +3927,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     100% { box-shadow: 0 0 0 8px transparent; } }
   @media (prefers-reduced-motion: reduce) { .cam-state .dot { animation: none !important; } }
 
+  .no-cam-msg { display: flex; gap: 10px; align-items: center; color: var(--u1-on-variant); font-size: 13px; }
+  .no-cam-msg ha-icon { --mdc-icon-size: 22px; flex-shrink: 0; }
+
   .danger-zone {
     display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
     padding: 12px 14px; border-radius: var(--u1-r-l);
@@ -3960,6 +3982,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         this._up ? `up${!!this._up.error}${this._up.done}` : "",
         JSON.stringify(this._prefs()),
         this._st(this._ents.files)?.attributes.version || "",
+        this._ents.ownCamera ? this._st(this._ents.ownCamera)?.attributes.mode || "" : "",
         (() => {
           const l = this._st(this._ents.liveNotify);
           return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : "";
@@ -4871,6 +4894,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const mode = this._cfg.camera_direct;
       if (mode === false || mode === "off" || this._preview) return null;
       if (Date.now() < (this._directFailUntil || 0)) return null;
+      if (this._ents && this._ents.ownCamera) {
+        const own = this._st(this._ents.ownCamera);
+        if (!own || own.attributes.mode !== "live") return null;
+      }
       const custom = typeof this._cfg.camera_direct_url === "string" ? this._cfg.camera_direct_url.trim() : "";
       const st = this._ents && this._ents.files && this._st(this._ents.files);
       const url = custom || st && st.attributes && st.attributes.stream_url;
@@ -5308,7 +5335,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     setConfig(config) {
       this._cfg = {
-        camera_mode: "stream",
+        camera_mode: "auto",
         refresh: 2,
         stream_check: 10,
         stale_after: 90,
@@ -5379,7 +5406,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       const own = list.filter((e) => e.platform === DOMAIN);
       const ownKey = (k) => (own.find((e) => e.translation_key === k) || {}).entity_id || null;
-      let camera = c.camera;
+      const ownCam = ownKey("camera");
+      let camera = c.camera || ownCam;
       if (!camera) {
         const cams = list.filter((e) => e.platform === "moonraker" && e.entity_id.startsWith("camera.") && !/thumbnail/.test(e.entity_id));
         const mine = cams.find((e) => e.entity_id.startsWith(`camera.${prefix}`)) || cams[0];
@@ -5388,6 +5416,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._ents = {
         prefix,
         camera,
+        ownCamera: camera === ownCam ? ownCam : null,
         thumbnail: c.thumbnail || `camera.${prefix}_thumbnail`,
         filaments: c.filaments_sensor || ownKey("filaments"),
         files: c.files_sensor || ownKey("files"),

@@ -165,7 +165,8 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `state_accent` | `true` | Rahmen in der Theme-Farbe des Zustands (druckt, pausiert, Fehler, fertig) |
 | `camera_height` | automatisch | Höhe des Kamerabilds in px. Leer = Seitenverhältnis des Bildes, höchstens `camera_max_height` |
 | `camera_max_height` | `520` | Obergrenze bei automatischer Höhe in px |
-| `camera_mode` | `stream` | `stream` = Livebild, `still` = Einzelbilder (spart WLAN) |
+| `camera` | eigene Kamera | Kamera-Entität. Leer = eigene Kamera der Integration (siehe *Kamera*), sonst die der Moonraker-Integration |
+| `camera_mode` | `auto` | `auto` = die Kamera-Entität entscheidet (Livestream oder Standbilder), `stream` = Stream erzwingen, `still` = Einzelbilder (spart WLAN) |
 | `refresh` | `2` | Sekunden zwischen Einzelbildern (`still` und Rückfall) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
 | `show` | alle | Bereiche: `stage layer job queue files toolheads climate motion system maintenance charts stats history timelapse` |
@@ -340,6 +341,19 @@ Die Integration abonniert bei Moonraker `print_stats`, `toolhead.extruder`, `vir
 
 **Ergebnisfoto. Mit eingestellter Kamera entsteht das Bild am Druckende, sobald der Kopf das Teil freigibt: Nach der letzten Extrusion liest die Integration bis zu 15 s die Kopfposition (`motion_report`) und löst aus, sobald der Kopf 25 mm außerhalb der Teile-Umrisse (`EXCLUDE_OBJECT_DEFINE`) ist oder das Bett schon 15 mm abgesenkt wurde. Das Innenraumlicht wird fürs Foto eingeschaltet und danach wieder aus, falls es aus war. Ohne Position oder Umriss: 2 s nach der letzten Extrusion; ohne Zeitprofil: in der letzten Schicht ab 99,5 %. Bei Abbruch oder Fehler entsteht das Bild in dem Moment. Es liegt unter `.storage/snapmaker_u1_card/thumbs/<Eintrag>/results/` und erscheint in der Historie neben dem Vorschaubild; Antippen vergrößert es in der Karte (Antippen oder Esc schließt). Gespeichert bleiben die Fotos der Drucke in der Historie.
 
+## Kamera
+
+Ab 1.5 hat die Integration eine eigene Kamera-Entität (*Kamera*) und findet selbst heraus, wie sie an ein Bild kommt (Attribut `mode`, auch im Selbsttest und in der Diagnose):
+
+| `mode` | Wann | Bild |
+|---|---|---|
+| `live` | Moonraker meldet eine Webcam, deren Stream mit MJPEG antwortet (angepasste Firmware, z. B. paxx12 Extended) | Livestream, durchgereicht |
+| `still` | nur eine Snapshot-Adresse funktioniert | Standbild jede Sekunde |
+| `wake` | Stock-Firmware: kein Stream, nur `camera/monitor.jpg`, das sich erst nach `camera.start_monitor` ändert. Das Bild wird vor und nach einem Weckaufruf geholt und muss sich ändern | Standbild alle 1–2 s; die Kamera wird bei Bedarf geweckt (höchstens alle 10 s), solange jemand zuschaut |
+| `none` | nichts gefunden | Entität nicht verfügbar; die Karte zeigt einen Hinweis statt einer schwarzen Fläche |
+
+Die Erkennung läuft, wenn der Drucker online kommt, wenn Bilder wiederholt ausbleiben, und alle 5 Minuten, solange nichts (oder nur die Stock-Kamera) gefunden wurde. Fällt der Livestream aus, wechselt die Kamera auf Standbilder und versucht den Stream nach 5 Minuten erneut – ein Firmwarewechsel braucht also keine Einstellung. Die Karte nutzt diese Entität, solange `camera` nicht gesetzt ist; Benachrichtigungsbild und Ergebnisfoto nutzen sie, solange in den Integrationsoptionen keine Kamera gewählt ist.
+
 ## Dateiverwaltung
 
 Über der Dateiliste: Suche (über **alle** Dateien auf dem Drucker, nicht nur die neuesten), Sortierung (neueste, Name, Druckzeit) und Ordner-Chips. Ältere Treffer erscheinen als Liste; Antippen lädt Metadaten und Vorschau nach und öffnet den Druckdialog. Im Druckdialog: *Herunterladen* (der G-Code über Home Assistant, klappt auch unterwegs), *Umbenennen / verschieben* (Unterordner mit `/`, werden angelegt) und *Löschen*. Beides ist gesperrt, solange die Datei gedruckt wird oder in der Warteschlange steht. Dienste: `file_details`, `move_file`, `delete_file`.
@@ -435,7 +449,7 @@ Die U1-Firmware meldet Fehler strukturiert (Modul, Kopf, Code). Die Integration 
 - **Dashboard oder Karten-Auswahl lädt endlos**: Home Assistant spricht HTTP/1.1, auch über HTTPS und Nabu Casa (dort wird die TLS-Verbindung nur durchgereicht). Der Browser öffnet dann höchstens 6 gleichzeitige Verbindungen zu Home Assistant, für alle Tabs und Fenster zusammen. Jede hängende Anfrage belegt eine davon; sind alle belegt, kann das Frontend keinen Code mehr nachladen. Die Karte vermeidet das: Livestream nur, solange sie sichtbar ist und nie im Bearbeitungsmodus; Zeitraffer-Vorschaubilder kommen aus Home Assistant selbst (keine Anfrage an den Drucker); Videos werden bei ausgeschaltetem Drucker gar nicht erst angefragt. Andere Live-Kameras (z. B. Frigate) auf `camera_view: auto` stellen. Prüfen: F12 → Netzwerk; Anfragen mit Status „pending“/„stalled“ zeigen, was hängt.
 - **„Druckstart abgelehnt“**: Den Text liefert der Drucker, z. B. „Printer is busy“ oder einen Düsenkonflikt.
 - **Kein Icon unter Geräte & Dienste**: Eigene Icons zeigt Home Assistant ab 2026.3. In der HACS-Liste zeigen derzeit alle eigenen Integrationen einen grauen Platzhalter; das ist ein bekannter HACS-Fehler ([hacs/integration#5171](https://github.com/hacs/integration/issues/5171)) und erledigt sich mit einem HACS-Update.
-- **Kamerabild bleibt nach einer Weile stehen (Stock-Firmware)**: In den Optionen der Integration *Kamera wach halten* einschalten. Sie schickt alle 10 s `camera.start_monitor`, wie die Snapmaker-App.
+- **Kamerabild bleibt nach einer Weile stehen (Stock-Firmware)**: Die eigene Kamera der Integration weckt die Stock-Kamera selbst, solange jemand zuschaut. Für Benachrichtigungsbilder außerhalb davon in den Optionen *Kamera wach halten* einschalten (`camera.start_monitor` alle 10 s, wie die Snapmaker-App).
 - **Keine Benachrichtigung**: Dienstname prüfen (Entwicklerwerkzeuge → Aktionen → `notify.mobile_app_…`). Das Kamerabild hängt nur die Companion-App an.
 - **Diagnose**: *Geräte & Dienste → Snapmaker U1 Card → ⋮ → Diagnose herunterladen*. Enthält Optionen, Zustand des Live-Abos, Rohstatus des Druckers, Fehler und Warteschlange; Adresse, API-Schlüssel, Spoolman-Adresse und Benachrichtigungsziele sind geschwärzt.
 - **Sprachbefehl wird nicht erkannt**: Unter *Entwicklerwerkzeuge → Assist* den Satz testen. Steht dort eine andere Absicht, kollidiert er mit einem eingebauten Satz; dann eigene Sätze in der Datei ergänzen (erste Zeile löschen, siehe oben).
