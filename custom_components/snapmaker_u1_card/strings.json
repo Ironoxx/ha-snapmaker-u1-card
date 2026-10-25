@@ -343,6 +343,19 @@
       },
       "finish": {
         "name": "Finish time"
+      },
+      "bed_mesh": {
+        "name": "Bed mesh spread"
+      },
+      "top_cover": {
+        "name": "Top cover",
+        "state": {
+          "idle": "Idle",
+          "cool": "Cooling chamber",
+          "preheat": "Preheating chamber",
+          "hot": "Hot chamber",
+          "unknown": "Unknown"
+        }
       }
     },
     "switch": {
@@ -399,6 +412,17 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "flow_factor": {
+        "name": "Flow"
+      },
+      "top_cover_exhaust": {
+        "name": "Top cover exhaust fan"
+      },
+      "top_cover_inner": {
+        "name": "Top cover circulation fan"
       }
     }
   },
@@ -760,6 +784,38 @@
           "description": "Only needed with several printers."
         }
       }
+    },
+    "send_gcode": {
+      "name": "Send G-code",
+      "description": "Runs G-code on the printer and returns its responses. During a print only tuning commands are allowed (temperatures, fans, speed, flow, Z offset, light, top cover, queries).",
+      "fields": {
+        "script": {
+          "name": "G-code",
+          "description": "One command per line, at most 20 lines."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "tool_change": {
+      "name": "Pick or park head",
+      "description": "Takes a head onto the carriage or puts the current one back into its dock. Homes X/Y first if needed. Locked during a print.",
+      "fields": {
+        "head": {
+          "name": "Head",
+          "description": "1-4; ignored for park."
+        },
+        "action": {
+          "name": "Action",
+          "description": "pick = take this head, park = put the current head back."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {
@@ -791,6 +847,12 @@
         "off": "Off",
         "printing": "During a print",
         "always": "Always while the printer is on"
+      }
+    },
+    "tool_change_action": {
+      "options": {
+        "pick": "Pick",
+        "park": "Park"
       }
     }
   }

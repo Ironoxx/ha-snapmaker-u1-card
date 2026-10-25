@@ -42,6 +42,10 @@ export const RenderMixin = (Base) => class extends Base {
       this._st(this._ents.files)?.attributes.version || "",
       this._ents.ownCamera ? (this._st(this._ents.ownCamera)?.attributes.mode || "") : "",
       (() => { const l = this._st(this._ents.liveNotify); return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : ""; })(),
+      d.mesh ? `m${d.mesh.profile}${d.mesh.range}${d.mesh.mean}${d.mesh.cols}x${d.mesh.rows}` : "nomesh",
+      d.cover ? "cover" : "nocover",
+      `f${this._ents.flow && d.flow !== null}`,
+      d.headStates.join(","),
     ].join("~");
 
     if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
@@ -120,6 +124,7 @@ export const RenderMixin = (Base) => class extends Base {
       })
     );
     this._wireEstop(r);
+    this._wireMachine(r);
     this._wireObjects(r.querySelector(".lv-panel"));
     const rl = r.querySelector("[data-reload]");
     // Reload bypassing the cache for the card resource (the URL carries ?v=)
@@ -296,6 +301,12 @@ export const RenderMixin = (Base) => class extends Base {
     set("mem", num(d.memory, 1, "%"));
     set("sys", this._loadText());
     set("stepx", num(d.stepX, 1, "°C"));
+    if (d.cover) {
+      set("cvmode", esc(this._coverMode(d.cover.mode)));
+      set("cvtarget", num(d.cover.desired_temp, 0, "°C"));
+      set("cvrpm", num(d.cover.inner_rpm, 0));
+      set("cvfilter", num(d.cover.filter_hours, 1, "h"));
+    }
     set("stepy", num(d.stepY, 1, "°C"));
 
     set("tjobs", num(d.totalsJobs, 0));
@@ -332,6 +343,9 @@ export const RenderMixin = (Base) => class extends Base {
       [`number.${this._p("fan_speed")}`, d.partFan, 0, "%"],
       [`number.${this._p("cavity_fan_speed")}`, d.cavityFanSet, 0, "%"],
       [`number.${this._p("speed_factor")}`, d.speedFactor, 0, "%"],
+      ...(this._ents.flow ? [[this._ents.flow, d.flow, 0, "%"]] : []),
+      ...(d.cover && this._ents.coverExhaust ? [[this._ents.coverExhaust, d.cover.exhaust, 0, "%"]] : []),
+      ...(d.cover && this._ents.coverInner ? [[this._ents.coverInner, d.cover.inner, 0, "%"]] : []),
       ...d.heads.map((h) => [h.targetEntity, h.target, 0, "°C"]),
     ];
     const now = Date.now();

@@ -138,7 +138,9 @@ export const LayoutMixin = (Base) => class extends Base {
       case "files": return this._sectionFiles();
       case "toolheads": return this._sectionHeads();
       case "climate": return this._sectionClimate();
+      case "mesh": return this._sectionMesh();
       case "motion": return this._sectionMotion();
+      case "console": return this._sectionConsole();
       case "system": return this._sectionSystem();
       case "stats": return this._sectionStats();
       case "history": return this._sectionHistory();

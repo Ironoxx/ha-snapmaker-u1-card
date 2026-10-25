@@ -5,7 +5,7 @@ import { setLang, tr } from "./i18n.js";
 
 export const SECTION_LABELS = {
   stage: "Kamera", job: "Druckauftrag", files: "Dateien", toolheads: "Druckköpfe",
-  climate: "Bett & Innenraum", motion: "Bewegung", system: "System & Diagnose",
+  climate: "Bett & Innenraum", mesh: "Bettnivellierung", motion: "Bewegung", console: "G-Code-Konsole", system: "System & Diagnose",
   stats: "Statistik", history: "Druckhistorie", timelapse: "Zeitraffer",
   queue: "Warteschlange", charts: "Diagramme", maintenance: "Wartung", layer: "Schichtansicht",
 };

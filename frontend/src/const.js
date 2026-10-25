@@ -1,12 +1,12 @@
 /** Constants shared by the card modules. */
 
 export const DOMAIN = "snapmaker_u1_card";
-export const CARD_VERSION = "1.5.2";
+export const CARD_VERSION = "1.6.0";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 export const SUFFIX = ["", "1", "2", "3"];
-export const SECTIONS = ["stage", "layer", "job", "queue", "files", "toolheads", "climate", "motion", "system",
+export const SECTIONS = ["stage", "layer", "job", "queue", "files", "toolheads", "climate", "mesh", "motion", "console", "system",
   "maintenance", "charts", "stats", "history", "timelapse"];
 // Useful while the printer is off (data comes from the integration, not the printer)
 export const OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance"];
@@ -14,7 +14,7 @@ export const OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelap
 // sections is listed in show.
 export const TABS = [
   { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "toolheads"] },
-  { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "motion"] },
+  { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "mesh", "motion", "console"] },
   { id: "files", icon: "mdi:file-document-multiple-outline", label: "Dateien", sections: ["queue", "files"] },
   { id: "history", icon: "mdi:history", label: "Verlauf", sections: ["charts", "history", "stats"] },
   { id: "timelapse", icon: "mdi:filmstrip", label: "Zeitraffer", sections: ["timelapse"] },

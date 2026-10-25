@@ -42,10 +42,11 @@ Nabu Casa.
 | `archive.py` | Timelapse backup to the HA media folder |
 | `backup.py` | Daily backup of the printer configuration |
 | `errors.py` | Firmware exception codes to plain language (German/English) |
+| `machine.py` | Machine controls without HA: flow, bed mesh, top cover (purifier), head pick/park, G-code console rules |
 | `voice.py` | Assist intents and the sentence files they need |
 | `resource.py` | Registers the card as a dashboard resource (second loading path) |
 | `i18n.py` | German/English choice for messages created in Python |
-| `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `update.py` | Entities |
+| `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `number.py`, `update.py` | Entities (top cover entities are added once a cover is detected) |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
 | `webcam.py` | Camera detection (`live` / `still` / `wake` / `none`), images, wake-up, stream fallback |
 | `camera.py` | Own camera entity: MJPEG pass-through (`live`) or still images (HA builds the stream) |
@@ -67,6 +68,7 @@ poll loop. Feature logic lives in mixins that only add methods:
 | `PowerMixin` (`power.py`) | Power switch, clean shutdown, auto-off, idle-off |
 | `PrinterSettingsMixin` (`printer.py`) | Firmware preferences, setting a slot's filament, camera wake-up |
 | `ProgressNotifyMixin` (`progress.py`) | Ongoing Android progress notification with push budget |
+| `MachineMixin` (`machine.py`) | Flow, top cover fans, picking/parking heads, G-code console |
 
 `data.py` holds the `U1Data` snapshot handed to entities; `helpers.py` holds
 constants and pure helper functions.
@@ -100,7 +102,7 @@ bundled by esbuild into the single file the integration ships:
 | `index.js` | Entry point: registers both cards and the card picker entries |
 | `const.js`, `i18n.js`, `format.js`, `color.js`, `styles.js`, `editor.js` | Shared constants, translations, formatting, colour helpers, CSS, visual editor |
 | `card/card.js` | `SnapmakerU1Card`: lifecycle (config, hass, timers), composed from mixins |
-| `card/*.js` | One mixin per topic: state, controls, tabs (overview, files, control, system, history, timelapse), layer view, layout, rendering, zoom, print dialog, camera |
+| `card/*.js` | One mixin per topic: state, controls, tabs (overview, files, control, system, history, timelapse), layer view, layout, rendering, zoom, print dialog, camera, machine controls (bed mesh, top cover, console, head change) |
 | `card/mini.js` | `SnapmakerU1MiniCard`, a subclass without camera |
 
 Rendering rules that matter:
@@ -127,5 +129,13 @@ Facts taken from Snapmaker's published firmware sources (u1-klipper, u1-moonrake
 - Firmware preferences are changed with `SET_PRINT_PREFERENCES`, a slot's filament with
   `SET_PRINT_FILAMENT_CONFIG` (refused for official spools without `FORCE=1`); both in
   u1-klipper `print_task_config.py`. RFID tag data comes from `filament_detect.info`.
+- Flow is `gcode_move.extrude_factor` (`M221`). The bed mesh is `bed_mesh.probed_matrix`
+  (rows along Y, first row = `mesh_min` Y).
+- The top cover is the `[purifier]` object (always configured); `power_detected` says whether
+  one is plugged in. `SET_PURIFIER FAN=exhaust|inner SPEED=0..1`; modes 0 idle, 1 cool,
+  2 preheat, 3 hot (u1-klipper `purifier.py`).
+- Each head reports `state` (`PARKED` / `ACTIVATE`) from its park detector. `T<n> A=0` switches to
+  physical head n (without `A=0` the filament mapping applies first), `PARK_<extruder>` parks the
+  head on the carriage (u1-klipper `kinematics/extruder.py`).
 - The stock camera stops after a while; `camera.start_monitor` (WebSocket, proxied by
   u1-moonraker `repeater.py` to the closed camera service) keeps it running.

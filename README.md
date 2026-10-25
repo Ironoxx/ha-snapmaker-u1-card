@@ -42,6 +42,11 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **Printer settings** as switches and in the card: auto-replenish filament, replenish ignoring colour, filament entangle detection (with sensitivity), light off after print. Stored on the printer, changeable during a print.
 - **Keep the camera awake** (optional): for stock firmware whose camera image stops after a while.
 - **State accent**: a thin frame in the colour of the state (printing, paused, error, done).
+- **Flow** (M221) next to the speed, changeable during a print.
+- **Bed mesh** as a heatmap of the probed points with spread, lowest and highest point.
+- **G-code console** in the control tab with the printer's answers; during a print only tuning commands.
+- **Pick and park heads** from the head details (not during a print).
+- **Top cover** (optional accessory): chamber mode, exhaust and circulation fan, filter runtime – only shown when a cover is plugged in.
 - Temperatures, targets, fans, light, axes, diagnostics and statistics.
 
 Everything runs through the Home Assistant connection. It works the same locally, over VPN and through Nabu Casa, without CORS or mixed-content problems.
@@ -171,7 +176,7 @@ All options are optional; except head names and presets they can also be set in 
 | `camera_mode` | `auto` | `auto` = the camera entity decides (live stream or still images), `stream` = force the stream, `still` = still images (saves WiFi) |
 | `refresh` | `2` | seconds between still images (`still` and fallback) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | all | sections: `stage layer job queue files toolheads climate motion system maintenance charts stats history timelapse` |
+| `show` | all | sections: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse` |
 | `hide` | – | sections to hide (counterpart of `show`, used by the editor) |
 | `controls_lock` | `60` | lock for temperature and fan sliders, presets, heater switches and homing: `off`, seconds (`30`, `60`, `120`, `300`) until it locks again after the last interaction, or `manual` (open until locked again). During a print the card asks before changing a target temperature. Legacy: `unlock_controls: true` = `off` |
 | `timelapse_limit` | `8` | timelapses shown |
@@ -220,6 +225,11 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 | `update.…_firmware` | installed and latest firmware |
 | `switch.…_auto_replenish_filament`, `…_replenish_ignoring_colour`, `…_filament_entangle_detection`, `…_light_off_after_print` | firmware preferences (stored on the printer) |
 | `select.…_entangle_detection_sensitivity` | `low`, `medium`, `high` |
+| `number.…_flow` | flow in % (M221, 50–150), also during a print |
+| `sensor.…_bed_mesh_spread` | highest minus lowest probed point of the loaded bed mesh in mm; attributes `matrix`, `min`, `max`, `mean`, `profile`, `mesh_min`, `mesh_max` |
+| `sensor.…_top_cover`, `number.…_top_cover_exhaust_fan`, `number.…_top_cover_circulation_fan` | only once a top cover is detected: chamber mode (`idle`, `cool`, `preheat`, `hot`), attributes `exhaust`, `inner`, `inner_rpm`, `filter_hours`, `desired_temp`; fans in % |
+
+The attribute `head_states` of `sensor.…_filaments` says per head whether it is `parked` or `active` (on the carriage).
 
 The event `snapmaker_u1_card_print_finished` fires at every print end with `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost`, for your own automations.
 
@@ -277,6 +287,26 @@ data:
 ```
 
 Both go to the firmware (`SET_PRINT_FILAMENT_CONFIG`, `SET_PRINT_PREFERENCES` from u1-klipper `print_task_config.py`). The printer stores the values itself, the display shows them too.
+
+### `snapmaker_u1_card.send_gcode` / `tool_change`
+
+```yaml
+action: snapmaker_u1_card.send_gcode     # returns the printer's answers
+data:
+  script: |
+    M105
+    SET_GCODE_OFFSET Z_ADJUST=-0.02
+response_variable: answer                # {script, ok, error, responses}
+
+action: snapmaker_u1_card.tool_change    # not during a print
+data:
+  head: 3          # 1–4
+  action: pick     # pick = take this head, park = put the head on the carriage back
+```
+
+`send_gcode` takes at most 20 lines. While a print runs only tuning is allowed: temperatures (`M104`, `M140`, `SET_HEATER_TEMPERATURE`), fans (`M106`, `M107`, `SET_FAN_SPEED`), speed and flow (`M220`, `M221`), `SET_GCODE_OFFSET`, `SET_PRESSURE_ADVANCE`, `SET_VELOCITY_LIMIT`, `SET_RETRACTION`, `SET_LED`, `SET_PURIFIER`, messages, `PAUSE`/`RESUME`/`CANCEL_PRINT`, `EXCLUDE_OBJECT`, `M112` and read-only `GET_…`/`QUERY_…` commands. Everything that moves, homes, probes or changes heads is refused until the print is over. A refusal by the firmware comes back as `ok: false` with the message. The answers are read from Moonraker's gcode store.
+
+`tool_change` uses the firmware's own commands (`T<n> A=0` takes physical head n without filament mapping, `PARK_EXTRUDER…` parks the head on the carriage). The printer homes X/Y first if needed.
 
 ### `snapmaker_u1_card.refresh`
 
@@ -347,6 +377,14 @@ The integration subscribes to `print_stats`, `toolhead.extruder`, `virtual_sdcar
 **Tap and image.** Option *Open when tapped* (`notify_click_url`): tapping any notification of the integration opens this path or URL (e.g. `/dashboard-printer/0`). The "print finished" notification shows the result photo; the progress notification shows the camera image when expanded (option, on by default).
 
 **Result photo.** With a camera configured, the integration takes the image at the end of the print once the head has left the part: after the last extrusion it reads the head position (`motion_report`) for up to 15 s and shoots as soon as the head is 25 mm outside the parts' outline (`EXCLUDE_OBJECT_DEFINE`) or the bed has already dropped by 15 mm. The chamber light is switched on for the photo and back off afterwards if it was off. Without position or outline: 2 s after the last extrusion; without a time profile: in the last layer from 99.5 %. On cancel or error the image is taken at that moment. It is stored under `.storage/snapmaker_u1_card/thumbs/<entry>/results/` and appears in the history next to the thumbnail; tapping enlarges it in the card (tap or Esc closes). Photos are kept for the prints in the history.
+
+## Bed mesh, flow and top cover
+
+**Bed mesh.** The card shows the probed points of the mesh Klipper has loaded (`bed_mesh.probed_matrix`) as a heatmap: red above, blue below zero, the front of the printer at the bottom. The mesh is created when a print starts with bed leveling; without one the card says so.
+
+**Flow** is Klipper's extrusion factor (`M221`), 100 % = as sliced. Klipper keeps the value until it is changed or Klipper restarts, so set it back to 100 % after a test.
+
+**Top cover.** The optional cover is the firmware's `purifier`. Whether one is plugged in is reported by the printer (`power_detected`); only then do the entities and the panel appear. The firmware sets the chamber mode from the material at print start and keeps adjusting the fans during the print; the sliders set exhaust and circulation fan by hand (`SET_PURIFIER`). Filter runtime counts the hours of the circulation fan. *Not yet tested on a printer with a cover – feedback welcome (diagnostics file).*
 
 ## Camera
 

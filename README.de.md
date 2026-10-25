@@ -42,6 +42,11 @@ Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapm
 - **Druckereinstellungen** als Schalter und in der Karte: Filament automatisch nachfüllen, Nachfüllen ohne Farbprüfung, Verhedderungs-Erkennung (mit Empfindlichkeit), Licht aus nach dem Druck. Am Drucker gespeichert, auch während eines Drucks änderbar.
 - **Kamera wach halten** (optional): für Stock-Firmware, deren Kamerabild nach einer Weile stehen bleibt.
 - **Zustandsfarbe**: ein dünner Rahmen in der Farbe des Zustands (druckt, pausiert, Fehler, fertig).
+- **Flussrate** (M221) neben der Geschwindigkeit, auch während des Drucks änderbar.
+- **Bed Mesh** als Heatmap der Messpunkte mit Spanne, tiefstem und höchstem Punkt.
+- **G-Code-Konsole** im Tab Steuerung mit den Antworten des Druckers; während eines Drucks nur Feineinstellungen.
+- **Köpfe aufnehmen und ablegen** in den Kopfdetails (nicht während eines Drucks).
+- **Top Cover** (optionales Zubehör): Kammermodus, Abluft- und Umluftlüfter, Filter-Laufzeit – nur sichtbar, wenn eine Abdeckung angeschlossen ist.
 - Temperaturen, Sollwerte, Lüfter, Licht, Achsen, Diagnose und Statistik.
 
 Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über VPN und über Nabu Casa gleich, ohne CORS- oder Mixed-Content-Probleme.
@@ -169,7 +174,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `camera_mode` | `auto` | `auto` = die Kamera-Entität entscheidet (Livestream oder Standbilder), `stream` = Stream erzwingen, `still` = Einzelbilder (spart WLAN) |
 | `refresh` | `2` | Sekunden zwischen Einzelbildern (`still` und Rückfall) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | alle | Bereiche: `stage layer job queue files toolheads climate motion system maintenance charts stats history timelapse` |
+| `show` | alle | Bereiche: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse` |
 | `hide` | – | Bereiche ausblenden (Gegenstück zu `show`, nutzt der Editor) |
 | `controls_lock` | `60` | Sperre für Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt: `off`, Sekunden (`30`, `60`, `120`, `300`) bis zur automatischen Sperre nach der letzten Bedienung, oder `manual` (offen, bis man wieder sperrt). Im Druck fragt die Karte vor jeder Änderung einer Solltemperatur nach. Alt: `unlock_controls: true` = `off` |
 | `timelapse_limit` | `8` | angezeigte Zeitraffer |
@@ -213,6 +218,11 @@ navigation_path: /dashboard-drucker/0   # optional: beim Antippen dorthin, sonst
 | `sensor.…_druckermeldungen` | Anzahl offener Firmware-Meldungen, Attribut `errors` mit Text (de/en), Hinweis und Rohcode |
 | `switch.…_filament_automatisch_nachfullen`, `…_nachfullen_ohne_farbprufung`, `…_verhedderungs_erkennung`, `…_licht_aus_nach_dem_druck` | Firmware-Einstellungen (am Drucker gespeichert) |
 | `select.…_empfindlichkeit_verhedderungs_erkennung` | `low`, `medium`, `high` |
+| `number.…_flussrate` | Flussrate in % (M221, 50–150), auch während des Drucks |
+| `sensor.…_bettnivellierung_spanne` | höchster minus tiefster Messpunkt des geladenen Bed Mesh in mm; Attribute `matrix`, `min`, `max`, `mean`, `profile`, `mesh_min`, `mesh_max` |
+| `sensor.…_top_cover`, `number.…_top_cover_abluftlufter`, `number.…_top_cover_umluftlufter` | erst wenn eine Top Cover erkannt wird: Kammermodus (`idle`, `cool`, `preheat`, `hot`), Attribute `exhaust`, `inner`, `inner_rpm`, `filter_hours`, `desired_temp`; Lüfter in % |
+
+Das Attribut `head_states` von `sensor.…_filamente` sagt pro Kopf, ob er `parked` (im Dock) oder `active` (auf dem Schlitten) ist.
 
 Die Slot-Sensoren tragen zusätzlich das Attribut `rfid` mit den Daten des Spulen-Chips.
 
@@ -272,6 +282,26 @@ data:
 ```
 
 Beides geht an die Firmware (`SET_PRINT_FILAMENT_CONFIG`, `SET_PRINT_PREFERENCES` aus u1-klipper `print_task_config.py`). Der Drucker speichert die Werte selbst, das Display zeigt sie ebenfalls.
+
+### `snapmaker_u1_card.send_gcode` / `tool_change`
+
+```yaml
+action: snapmaker_u1_card.send_gcode     # gibt die Antworten des Druckers zurück
+data:
+  script: |
+    M105
+    SET_GCODE_OFFSET Z_ADJUST=-0.02
+response_variable: antwort               # {script, ok, error, responses}
+
+action: snapmaker_u1_card.tool_change    # nicht während eines Drucks
+data:
+  head: 3          # 1–4
+  action: pick     # pick = diesen Kopf aufnehmen, park = Kopf vom Schlitten ablegen
+```
+
+`send_gcode` nimmt höchstens 20 Zeilen. Während eines Drucks sind nur Feineinstellungen erlaubt: Temperaturen (`M104`, `M140`, `SET_HEATER_TEMPERATURE`), Lüfter (`M106`, `M107`, `SET_FAN_SPEED`), Geschwindigkeit und Flussrate (`M220`, `M221`), `SET_GCODE_OFFSET`, `SET_PRESSURE_ADVANCE`, `SET_VELOCITY_LIMIT`, `SET_RETRACTION`, `SET_LED`, `SET_PURIFIER`, Meldungen, `PAUSE`/`RESUME`/`CANCEL_PRINT`, `EXCLUDE_OBJECT`, `M112` und lesende `GET_…`/`QUERY_…`-Befehle. Alles, was fährt, referenziert, misst oder Köpfe wechselt, wird bis zum Druckende abgelehnt. Lehnt die Firmware einen Befehl ab, kommt das als `ok: false` mit der Meldung zurück. Die Antworten stammen aus dem G-Code-Speicher von Moonraker.
+
+`tool_change` nutzt die Befehle der Firmware (`T<n> A=0` nimmt den physischen Kopf n ohne Filamentzuordnung, `PARK_EXTRUDER…` legt den Kopf vom Schlitten ab). Bei Bedarf fährt der Drucker vorher X/Y an.
 
 ### `snapmaker_u1_card.refresh`
 
@@ -342,6 +372,14 @@ Die Integration abonniert bei Moonraker `print_stats`, `toolhead.extruder`, `vir
 **Antippen und Bild.** Option *Beim Antippen öffnen* (`notify_click_url`): Ein Tipp auf eine Benachrichtigung der Integration öffnet diesen Pfad oder diese URL (z. B. `/dashboard-drucker/0`). Die „Druck fertig“-Meldung zeigt das Ergebnisfoto, die Fortschritts-Benachrichtigung aufgeklappt das Kamerabild (Option, standardmäßig an).
 
 **Ergebnisfoto.** Mit eingestellter Kamera entsteht das Bild am Druckende, sobald der Kopf das Teil freigibt: Nach der letzten Extrusion liest die Integration bis zu 15 s die Kopfposition (`motion_report`) und löst aus, sobald der Kopf 25 mm außerhalb der Teile-Umrisse (`EXCLUDE_OBJECT_DEFINE`) ist oder das Bett schon 15 mm abgesenkt wurde. Das Innenraumlicht wird fürs Foto eingeschaltet und danach wieder aus, falls es aus war. Ohne Position oder Umriss: 2 s nach der letzten Extrusion; ohne Zeitprofil: in der letzten Schicht ab 99,5 %. Bei Abbruch oder Fehler entsteht das Bild in dem Moment. Es liegt unter `.storage/snapmaker_u1_card/thumbs/<Eintrag>/results/` und erscheint in der Historie neben dem Vorschaubild; Antippen vergrößert es in der Karte (Antippen oder Esc schließt). Gespeichert bleiben die Fotos der Drucke in der Historie.
+
+## Bed Mesh, Flussrate und Top Cover
+
+**Bed Mesh.** Die Karte zeigt die Messpunkte des in Klipper geladenen Höhenprofils (`bed_mesh.probed_matrix`) als Heatmap: rot über, blau unter null, die Druckervorderseite unten. Das Profil entsteht bei einem Druckstart mit Bettnivellierung; ohne Profil sagt die Karte das.
+
+**Flussrate** ist Klippers Extrusionsfaktor (`M221`), 100 % = wie gesliced. Klipper behält den Wert, bis er geändert wird oder Klipper neu startet – nach einem Test also wieder auf 100 % stellen.
+
+**Top Cover.** Die optionale Abdeckung ist in der Firmware der `purifier`. Ob eine angeschlossen ist, meldet der Drucker (`power_detected`); erst dann erscheinen Entitäten und Bereich. Den Kammermodus setzt die Firmware beim Druckstart nach Material und regelt die Lüfter während des Drucks nach; die Regler stellen Abluft- und Umluftlüfter von Hand (`SET_PURIFIER`). Die Filter-Laufzeit zählt die Betriebsstunden des Umluftlüfters. *Noch nicht an einem Drucker mit Abdeckung getestet – Rückmeldung willkommen (Diagnosedatei).*
 
 ## Kamera
 

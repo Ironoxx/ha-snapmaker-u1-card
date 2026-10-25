@@ -29,6 +29,10 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
     try:
         raw = await coord.client.query_objects(
             "print_task_config", "print_stats", "toolhead", "virtual_sdcard", "exception_manager", "webhooks",
+            # machine controls: shapes to check against new firmware versions
+            "purifier", "gcode_move",
+            fields={"bed_mesh": ("profile_name", "mesh_min", "mesh_max", "probed_matrix"),
+                    **{n: ("state",) for n in ("extruder", "extruder1", "extruder2", "extruder3")}},
         )
     except MoonrakerError as err:
         raw = {"error": str(err)}
@@ -62,5 +66,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "layer_view": view,
         "spoolman": data.spoolman,
         "cpu_count": data.cpu_count,
+        "machine": {"flow": data.flow, "head_states": data.head_states, "purifier": data.purifier,
+                    "bed_mesh": {k: v for k, v in (data.bed_mesh or {}).items() if k != "matrix"} or None},
         "printer": raw,
     }, TO_REDACT)

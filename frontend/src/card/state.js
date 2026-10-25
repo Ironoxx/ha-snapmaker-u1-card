@@ -50,6 +50,21 @@ export const StateMixin = (Base) => class extends Base {
     return Array.isArray(s) && s.length ? s : null;
   }
 
+  /** Loaded bed mesh from the integration's sensor; null without one. */
+  _meshData() {
+    const st = this._ents && this._ents.bedMesh && this._st(this._ents.bedMesh);
+    const a = st && st.attributes;
+    if (!a || !Array.isArray(a.matrix) || !a.matrix.length || ["unknown", "unavailable"].includes(st.state)) return null;
+    return { ...a, range: parseFloat(st.state) };
+  }
+
+  /** Top cover state; null if none is plugged in (entity missing or unavailable). */
+  _coverData() {
+    const st = this._ents && this._ents.topCover && this._st(this._ents.topCover);
+    if (!st || ["unknown", "unavailable"].includes(st.state)) return null;
+    return { mode: st.state, ...st.attributes };
+  }
+
   _collect() {
     if (!this._hass) return;
     const P = (n) => this._p(n);
@@ -136,6 +151,11 @@ export const StateMixin = (Base) => class extends Base {
       totalLayers: this._n(`sensor.${P("total_layer")}`, 0),
       objectHeight: this._n(`sensor.${P("object_height")}`),
       printSpeed: this._n(`sensor.${P("print_speed")}`, 0),
+      // Machine controls of the integration (flow, bed mesh, top cover, head park states)
+      flow: this._ents.flow ? this._n(this._ents.flow) : null,
+      mesh: this._meshData(),
+      cover: this._coverData(),
+      headStates: (fst && fst.attributes && Array.isArray(fst.attributes.head_states)) ? fst.attributes.head_states : [],
 
       hot,
       heads,

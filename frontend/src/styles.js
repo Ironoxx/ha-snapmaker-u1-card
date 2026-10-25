@@ -441,6 +441,32 @@ export const STYLES = `
   .tsvg .tax { font-size: 8px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
   .tlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--u1-on-variant); margin-top: 4px; }
   .tlegend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .mesh { display: flex; flex-direction: column; align-items: center; }
+  .mesh-svg { width: 100%; max-width: 420px; height: auto; display: block; }
+  .mesh-svg .tax { font-size: 9px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
+  .mesh-cell { fill: var(--u1-panel-high); }
+  .mesh-val { font-size: 9px; fill: var(--u1-on); font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
+  .mesh .tlegend i { height: 10px; width: 10px; opacity: .7; }
+  .con-log {
+    max-height: 220px; min-height: 64px; overflow-y: auto; padding: 8px 10px; border-radius: var(--u1-r-s);
+    background: var(--u1-panel-high); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere;
+  }
+  .con-entry + .con-entry { margin-top: 6px; }
+  .con-cmd { color: var(--u1-primary); }
+  .con-line { color: var(--u1-on-variant); white-space: pre-wrap; }
+  .con-err { color: var(--u1-error); }
+  .con-form { display: flex; gap: 8px; }
+  .con-form input {
+    flex: 1 1 auto; min-width: 0; height: 40px; padding: 0 10px; border-radius: var(--u1-r-s);
+    border: 1px solid var(--u1-outline); background: var(--u1-panel-high); color: var(--u1-on);
+    font-family: var(--u1-mono); font-size: 14px;
+  }
+  .con-form input:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 1px; }
+  .con-form.locked input, .con-form.locked button { opacity: .5; }
+  .head-change { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .head-change .t-label { display: inline-flex; align-items: center; gap: 6px; }
+  .head-change .t-label ha-icon { --mdc-icon-size: 18px; }
+  button.busy { opacity: .6; cursor: progress; }
   .ftools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .ftools input[type=search], .ftools select {
     flex: 1 1 140px; min-width: 0; height: 36px; padding: 0 10px; border-radius: var(--u1-r-s);

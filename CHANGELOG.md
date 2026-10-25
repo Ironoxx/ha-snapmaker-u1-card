@@ -4,6 +4,29 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0
+
+**New**
+- **Flow** (M221) as a slider next to the speed in the control tab and as entity `number.…_flow`, changeable during a print.
+- **Bed mesh**: heatmap of the probed points in the control tab (red above, blue below zero, front at the bottom) with spread, lowest and highest point; sensor *Bed mesh spread* with the points as attributes.
+- **G-code console** in the control tab, showing the printer's answers (arrow keys recall earlier commands). New service `send_gcode` with response. During a print only tuning commands are accepted (temperatures, fans, speed, flow, Z offset, pressure advance, light, top cover, queries); anything that moves or changes heads is refused until the print is over.
+- **Pick and park heads** from the head details, and service `tool_change`. Uses the firmware's own commands, locked during a print. The attribute `head_states` shows which head is on the carriage.
+- **Top cover** (optional accessory): chamber mode, exhaust and circulation fan, circulation fan speed and filter runtime. The entities and the panel only appear once the printer reports a plugged-in cover. Not yet tested on a printer with a cover – a diagnostics file from an owner would help.
+- Diagnostics include flow, bed mesh, head states and the raw top cover status.
+
+Card sections `mesh` and `console` are new; if you list sections with `show:`, add them there.
+
+---
+**Deutsch**
+- Neu: **Flussrate** (M221) als Regler neben der Geschwindigkeit im Tab Steuerung und als Entität `number.…_flussrate`, auch während des Drucks änderbar.
+- Neu: **Bed Mesh** als Heatmap der Messpunkte im Tab Steuerung (rot über, blau unter null, vorne unten) mit Spanne, tiefstem und höchstem Punkt; Sensor *Bettnivellierung Spanne* mit den Punkten als Attribute.
+- Neu: **G-Code-Konsole** im Tab Steuerung mit den Antworten des Druckers (Pfeiltasten holen frühere Befehle zurück). Neuer Dienst `send_gcode` mit Antwort. Während eines Drucks nur Feineinstellungen (Temperaturen, Lüfter, Geschwindigkeit, Flussrate, Z-Versatz, Pressure Advance, Licht, Top Cover, Abfragen); alles, was fährt oder Köpfe wechselt, wird bis Druckende abgelehnt.
+- Neu: **Köpfe aufnehmen und ablegen** in den Kopfdetails und per Dienst `tool_change`. Nutzt die Befehle der Firmware, während eines Drucks gesperrt. Das Attribut `head_states` zeigt, welcher Kopf auf dem Schlitten ist.
+- Neu: **Top Cover** (optionales Zubehör): Kammermodus, Abluft- und Umluftlüfter, Drehzahl und Filter-Laufzeit. Entitäten und Bereich erscheinen erst, wenn der Drucker eine angeschlossene Abdeckung meldet. Noch nicht an einem Drucker mit Abdeckung getestet – eine Diagnosedatei von Besitzern hilft.
+- Diagnose enthält Flussrate, Bed Mesh, Kopfzustände und den Rohstatus der Top Cover.
+
+Die Kartenbereiche `mesh` und `console` sind neu; wer Bereiche per `show:` aufzählt, ergänzt sie dort.
+
 ## 1.5.2
 
 **New**

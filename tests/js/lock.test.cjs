@@ -38,7 +38,8 @@ const range = () => R().querySelector(`input[data-num="number.${P}_bed_target"]`
 assert.ok(bedPreset().disabled && range().disabled, "Regler gesperrt");
 assert.ok(range().closest(".ctl").classList.contains("locked"));
 assert.ok(R().querySelector("[data-act=home_all]").disabled, "Referenzfahrt gesperrt");
-assert.strictEqual(R().querySelectorAll("[data-su1-lock]").length, 3, "Schloss an Koepfen, Bett, Bewegung");
+assert.strictEqual(R().querySelectorAll("[data-su1-lock]").length, 4, "Schloss an Koepfen, Bett, Bewegung, Konsole");
+assert.ok(R().querySelector("[data-conin]").disabled, "Konsole gesperrt");
 bedPreset().click();
 assert.strictEqual(calls.length, 0, "gesperrt -> kein Aufruf");
 

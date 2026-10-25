@@ -66,7 +66,7 @@ from .voice import async_setup_voice
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type U1ConfigEntry = ConfigEntry[U1Coordinator]
@@ -133,6 +133,12 @@ SET_FILAMENT_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ENTRY): cv.string,
     }
 )
+SEND_GCODE_SCHEMA = vol.Schema({vol.Required("script"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
+TOOL_CHANGE_SCHEMA = vol.Schema({
+    vol.Required("head"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Optional("action", default="pick"): vol.In(["pick", "park"]),
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
 POWER_OFF_SCHEMA = vol.Schema(
     {vol.Optional("force", default=False): cv.boolean, vol.Optional(ATTR_ENTRY): cv.string}
 )
@@ -298,6 +304,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_exclude_object(call.data["name"])
 
     hass.services.async_register(DOMAIN, "exclude_object", exclude_object, schema=EXCLUDE_SCHEMA)
+
+    async def send_gcode(call: ServiceCall) -> ServiceResponse:
+        return await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_console(call.data["script"])
+
+    async def tool_change(call: ServiceCall) -> None:
+        await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_tool_change(
+            call.data["head"] - 1, call.data["action"])
+
+    hass.services.async_register(DOMAIN, "send_gcode", send_gcode, schema=SEND_GCODE_SCHEMA,
+                                 supports_response=SupportsResponse.OPTIONAL)
+    hass.services.async_register(DOMAIN, "tool_change", tool_change, schema=TOOL_CHANGE_SCHEMA)
 
     async def camera_wake(call: ServiceCall) -> None:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_camera_wake_once()

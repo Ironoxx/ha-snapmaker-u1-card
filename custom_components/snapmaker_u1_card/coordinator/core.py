@@ -45,6 +45,7 @@ from ..jobs import (
     JobQueue,
 )
 from ..live import LiveListener
+from ..machine import parse_bed_mesh, parse_flow, parse_head_states, parse_purifier
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     EXTRUDER_OBJECTS,
@@ -71,6 +72,7 @@ from .helpers import (
     head_index,
 )
 from .jobs import PrintJobMixin
+from .machine import MachineMixin
 from .media import MediaMixin
 from .monitor import PrintMonitorMixin
 from .notify import NotifyMixin
@@ -85,7 +87,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, MediaMixin, NotifyMixin, PowerMixin, PrinterSettingsMixin, DataUpdateCoordinator[U1Data]):
+class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJobMixin, UpkeepMixin, MediaMixin, NotifyMixin, PowerMixin, PrinterSettingsMixin, DataUpdateCoordinator[U1Data]):
     """Central data hub: polls the printer, tracks prints, power, files and media.
 
     Polling runs every 10 s (30 s while the live subscription is up), the file
@@ -409,7 +411,7 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
             return self._prev
         try:
             status = await self.client.query_objects(
-                "print_task_config",
+                "print_task_config", "purifier",
                 fields={
                     "filament_detect": ("info",),
                     "print_stats": ("state", "filename", "print_duration", "filament_used", "exception", "info"),
@@ -417,7 +419,9 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
                     "toolhead": ("extruder",),
                     "virtual_sdcard": ("progress", "file_position"),
                     "heater_bed": ("temperature", "target"),
-                    **{name: (*SWITCH_FIELDS, "temperature", "target") for name in EXTRUDER_OBJECTS},
+                    "gcode_move": ("extrude_factor",),
+                    "bed_mesh": ("profile_name", "mesh_min", "mesh_max", "probed_matrix"),
+                    **{name: (*SWITCH_FIELDS, "temperature", "target", "state") for name in EXTRUDER_OBJECTS},
                 },
             )
         except MoonrakerError as err:
@@ -494,6 +498,10 @@ class U1Coordinator(ProgressNotifyMixin, SpoolMixin, PrintMonitorMixin, PrintJob
             print_duration=stats.get("print_duration"),
             layer=(stats.get("info") or {}).get("current_layer") if isinstance(stats.get("info"), dict) else None,
             total_layers=(stats.get("info") or {}).get("total_layer") if isinstance(stats.get("info"), dict) else None,
+            flow=parse_flow(status.get("gcode_move")),
+            bed_mesh=parse_bed_mesh(status.get("bed_mesh")),
+            purifier=parse_purifier(status.get("purifier")),
+            head_states=parse_head_states(status),
         )
         if print_state in ACTIVE_PRINT_STATES:
             data.remaining = self._remaining(stats, vsd)

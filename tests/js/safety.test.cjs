@@ -25,7 +25,7 @@ add(`sensor.${P}_printer_state`, "ready");
 add(`sensor.${P}_current_print_state`, "printing");
 add(`sensor.${P}_filename`, "teil.gcode");
 add(`camera.${P}_webcam`, "idle", { entity_picture: "/api/camera_proxy/cam?token=A", access_token: "A" });
-add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.5.2" }, "snapmaker_u1_card", "files");
+add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.6.0" }, "snapmaker_u1_card", "files");
 
 add("switch.snapmaker_u1_card_fortschritt", "off", { targets: ["notify.mobile_app_handy"], sent_today: 4, budget: 150 },
   "snapmaker_u1_card", "live_notify");
@@ -146,7 +146,7 @@ const pressed = (name) => calls.some((c) => c[0] === "button" && c[2].entity_id 
   assert.ok(!R.querySelector("[data-reload]"));
 
   // 7. Direct stream: printer URL on an http page, HA proxy after an error
-  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.5.2";
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.6.0";
   states["sensor.snapmaker_u1_card_druckdateien"].attributes.stream_url = "http://192.168.0.25/webcam/?action=stream";
   card = make();
   card._onScreen = true;

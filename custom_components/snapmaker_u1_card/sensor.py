@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -10,8 +11,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import CONF_HOST, UnitOfEnergy, UnitOfTime
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_HOST,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfLength,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -26,6 +33,7 @@ from .const import (
     VIDEO_URL,
 )
 from .coordinator import U1Coordinator
+from .machine import PURIFIER_MODES
 from .parsing import average_kw, estimate_cost
 
 
@@ -39,12 +47,41 @@ async def async_setup_entry(
     entities += [ToolChangesSensor(coordinator), PrintToolChangesSensor(coordinator)]
     entities += [HistorySensor(coordinator), TimelapsesSensor(coordinator)]
     entities += [QueueSensor(coordinator), StatisticsSensor(coordinator), MaintenanceSensor(coordinator),
-                 ErrorsSensor(coordinator), RemainingSensor(coordinator), FinishSensor(coordinator)]
+                 ErrorsSensor(coordinator), RemainingSensor(coordinator), FinishSensor(coordinator),
+                 BedMeshSensor(coordinator)]
     if entry.options.get(CONF_ENERGY_SENSOR):
         entities.append(PrintEnergySensor(coordinator))
     if entry.options.get(CONF_ENERGY_PRICE) or entry.options.get(CONF_FILAMENT_PRICES):
         entities.append(PrintCostSensor(coordinator))
     async_add_entities(entities)
+    add_when_top_cover(entry, lambda: async_add_entities([TopCoverSensor(coordinator)]))
+
+
+def add_when_top_cover(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
+    """Call ``add`` once the firmware reports a plugged-in top cover (now or later).
+
+    Printers without a cover get no entities that would only ever be unavailable.
+    Once added, the entities stay (unavailable while the cover is unplugged).
+    """
+    coordinator = entry.runtime_data
+    done = False
+
+    def present() -> bool:
+        data = coordinator.data
+        return bool(data and data.purifier and data.purifier.get("present"))
+
+    @callback
+    def check() -> None:
+        nonlocal done
+        if done or not present():
+            return
+        done = True
+        add()
+
+    if present():
+        check()
+        return
+    entry.async_on_unload(coordinator.async_add_listener(check))
 
 
 class U1Entity(CoordinatorEntity[U1Coordinator]):
@@ -112,7 +149,7 @@ class FilamentsSensor(U1Entity, SensorEntity):
     _attr_translation_key = "filaments"
     _attr_icon = "mdi:printer-3d-nozzle"
     _unrecorded_attributes = frozenset({"slots", "map_table", "preferences", "entry_id", "live", "spoolman",
-                                        "active_head", "cpu_count", "runout"})
+                                        "active_head", "cpu_count", "runout", "head_states"})
 
     def __init__(self, coordinator: U1Coordinator) -> None:
         super().__init__(coordinator, "filaments")
@@ -141,6 +178,8 @@ class FilamentsSensor(U1Entity, SensorEntity):
             "cpu_count": d.cpu_count,
             # spool runs out during the print: {head: {minutes, takeover}}
             "runout": {str(k): v for k, v in d.runout.items()},
+            # per head: parked | active | unknown (park detector); [] = not reported
+            "head_states": d.head_states,
             # only with Spoolman configured: spool per head + spool list
             **({"spoolman": d.spoolman} if d.spoolman is not None else {}),
             "entry_id": self.coordinator.config_entry.entry_id,
@@ -522,3 +561,56 @@ class FinishSensor(U1Entity, SensorEntity):
             return None
         # rounded to the minute: otherwise a new state on every poll
         return datetime.fromtimestamp(round(d.eta / 60) * 60, UTC)
+
+
+class BedMeshSensor(U1Entity, SensorEntity):
+    """Spread of the loaded bed mesh (max - min); the probed points are in the attributes."""
+
+    _attr_translation_key = "bed_mesh"
+    _attr_icon = "mdi:grid"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_device_class = SensorDeviceClass.DISTANCE
+    _attr_native_unit_of_measurement = UnitOfLength.MILLIMETERS
+    _attr_suggested_display_precision = 3
+    _unrecorded_attributes = frozenset({"matrix", "mesh_min", "mesh_max", "rows", "cols"})
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "bed_mesh")
+
+    @property
+    def native_value(self) -> float | None:
+        mesh = self.coordinator.data.bed_mesh
+        return mesh["range"] if mesh else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        mesh = self.coordinator.data.bed_mesh
+        if not mesh:
+            return {}
+        return {k: v for k, v in mesh.items() if k != "range"}
+
+
+class TopCoverSensor(U1Entity, SensorEntity):
+    """Top cover (purifier): chamber mode; fans, filter hours and target in the attributes."""
+
+    _attr_translation_key = "top_cover"
+    _attr_icon = "mdi:air-filter"
+    _attr_device_class = SensorDeviceClass.ENUM
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "top_cover")
+        self._attr_options = [*PURIFIER_MODES.values(), "unknown"]
+
+    @property
+    def available(self) -> bool:
+        p = self.coordinator.data.purifier if self.coordinator.data else None
+        return super().available and bool(p and p.get("present"))
+
+    @property
+    def native_value(self) -> str | None:
+        return (self.coordinator.data.purifier or {}).get("mode")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        p = self.coordinator.data.purifier or {}
+        return {k: p.get(k) for k in ("exhaust", "inner", "inner_rpm", "filter_hours", "desired_temp")}
+

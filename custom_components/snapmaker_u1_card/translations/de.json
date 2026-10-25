@@ -343,6 +343,19 @@
       },
       "finish": {
         "name": "Fertig um"
+      },
+      "bed_mesh": {
+        "name": "Bettnivellierung Spanne"
+      },
+      "top_cover": {
+        "name": "Top Cover",
+        "state": {
+          "idle": "Leerlauf",
+          "cool": "Kammer kühlen",
+          "preheat": "Kammer vorheizen",
+          "hot": "Heiße Kammer",
+          "unknown": "Unbekannt"
+        }
       }
     },
     "switch": {
@@ -399,6 +412,17 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "flow_factor": {
+        "name": "Flussrate"
+      },
+      "top_cover_exhaust": {
+        "name": "Top Cover Abluftlüfter"
+      },
+      "top_cover_inner": {
+        "name": "Top Cover Umluftlüfter"
       }
     }
   },
@@ -760,6 +784,38 @@
           "description": "Nur bei mehreren Druckern nötig."
         }
       }
+    },
+    "send_gcode": {
+      "name": "G-Code senden",
+      "description": "Führt G-Code auf dem Drucker aus und gibt seine Antworten zurück. Während eines Drucks nur Feineinstellungen (Temperaturen, Lüfter, Geschwindigkeit, Flussrate, Z-Versatz, Licht, Top Cover, Abfragen).",
+      "fields": {
+        "script": {
+          "name": "G-Code",
+          "description": "Ein Befehl pro Zeile, höchstens 20 Zeilen."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "tool_change": {
+      "name": "Kopf aufnehmen oder ablegen",
+      "description": "Nimmt einen Kopf auf den Schlitten oder legt den aktuellen in sein Dock zurück. Fährt bei Bedarf vorher X/Y an. Während eines Drucks gesperrt.",
+      "fields": {
+        "head": {
+          "name": "Kopf",
+          "description": "1-4; beim Ablegen ohne Bedeutung."
+        },
+        "action": {
+          "name": "Aktion",
+          "description": "pick = diesen Kopf aufnehmen, park = aktuellen Kopf ablegen."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {
@@ -791,6 +847,12 @@
         "off": "Aus",
         "printing": "Während eines Drucks",
         "always": "Immer, solange der Drucker an ist"
+      }
+    },
+    "tool_change_action": {
+      "options": {
+        "pick": "Aufnehmen",
+        "park": "Ablegen"
       }
     }
   }

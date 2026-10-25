@@ -38,7 +38,7 @@
  *   camera_overlay    progress on the camera image           (true)
  *   state_accent      frame in the state colour              (true)
  *   hide / show       sections: stage layer job queue files toolheads climate
- *                     motion system maintenance charts stats history timelapse
+ *                     mesh motion console system maintenance charts stats history timelapse
  *   controls_lock     off | 30 | 60 | 120 | 300 | manual     (60)
  *   nozzle_presets    [0, 210, 240, 260]
  *   bed_presets       [0, 55, 65, 85]
@@ -68,13 +68,14 @@ import { PrintDialogMixin } from "./dialog.js";
 import { CameraMixin } from "./camera.js";
 import { HeadDialogMixin } from "./head-dialog.js";
 import { SafetyMixin } from "./safety.js";
+import { MachineMixin } from "./machine.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin, SafetyMixin,
+  HeadDialogMixin, SafetyMixin, MachineMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -248,6 +249,11 @@ export class SnapmakerU1Card extends U1Base {
       finish: ownKey("finish"),
       firmware: ownKey("firmware"),
       liveNotify: ownKey("live_notify"),
+      flow: ownKey("flow_factor"),
+      bedMesh: ownKey("bed_mesh"),
+      topCover: ownKey("top_cover"),
+      coverExhaust: ownKey("top_cover_exhaust"),
+      coverInner: ownKey("top_cover_inner"),
     };
   }
 

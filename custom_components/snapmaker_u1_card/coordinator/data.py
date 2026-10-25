@@ -48,3 +48,8 @@ class U1Data:
     print_duration: float | None = None
     layer: int | None = None
     total_layers: int | None = None
+    # Machine controls (machine.py): flow in %, loaded bed mesh, top cover, head park states
+    flow: float | None = None
+    bed_mesh: dict[str, Any] | None = None
+    purifier: dict[str, Any] | None = None
+    head_states: list[str | None] = field(default_factory=list)

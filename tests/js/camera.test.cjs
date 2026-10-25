@@ -20,7 +20,7 @@ const add = (id, state, attrs = {}, platform = "moonraker", tk) => {
 add(`sensor.${P}_printer_state`, "ready");
 add(`sensor.${P}_current_print_state`, "standby");
 add(`camera.${P}_webcam`, "idle", { entity_picture: "/api/camera_proxy/mr?token=A", access_token: "A" });
-add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.5.2",
+add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.6.0",
   stream_url: "http://192.168.0.25/webcam/?action=stream" }, "snapmaker_u1_card", "files");
 const OWN = "camera.snapmaker_u1_card_kamera";
 add(OWN, "idle", { entity_picture: "/api/camera_proxy/own?token=B", access_token: "B", mode: "wake" }, "snapmaker_u1_card", "camera");

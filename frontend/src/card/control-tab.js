@@ -1,4 +1,4 @@
-/** Control tab: bed/chamber, temperature chart and motion. */
+/** Control tab: bed/chamber (with the top cover), temperature chart and motion (speed, flow). */
 
 import { DOMAIN } from "../const.js";
 import { esc, num } from "../format.js";
@@ -33,6 +33,7 @@ export const ControlTabMixin = (Base) => class extends Base {
           value: d.cavityFanSet, unit: "%", presets: [0, 50, 100],
         })}
       </section>
+      ${this._coverPanel()}
       <section class="panel tpanel">
         <div class="panel-head">
           <ha-icon icon="mdi:chart-line"></ha-icon>
@@ -135,6 +136,9 @@ export const ControlTabMixin = (Base) => class extends Base {
           entity: `number.${this._p("speed_factor")}`, label: tr("Geschwindigkeit"),
           value: d.speedFactor, unit: "%", presets: [50, 100, 150],
         })}
+        ${this._ents.flow && d.flow !== null ? this._slider({
+          entity: this._ents.flow, label: tr("Flussrate"), value: d.flow, unit: "%", presets: [95, 100, 105],
+        }) : ""}
         ${homing}
       </section>`;
   }

@@ -62,6 +62,7 @@ export const HeadDialogMixin = (Base) => class extends Base {
             <ha-icon icon="mdi:database-outline"></ha-icon>
             <span>${spool ? esc(`#${spool.id} ${spool.name}${spool.remaining_weight != null ? ` · ${Math.round(spool.remaining_weight)} g` : ""}`) : tr("Spule wählen")}</span>
           </button>` : ""}
+        ${this._headChangeBlock(idx, locked)}
         <div class="t-label head-sub">${tr("Filament von Hand setzen")}</div>
         ${locked ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${printing ? tr("Während eines Drucks nicht möglich.") : tr("Der Drucker ist ausgeschaltet.")}</div>` : ""}
         <form class="head-form" data-headform>
@@ -79,6 +80,10 @@ export const HeadDialogMixin = (Base) => class extends Base {
     dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
     const sp = dlg.querySelector("[data-headspool]");
     if (sp) sp.addEventListener("click", () => { dlg.close(); this._openSpoolPicker(idx); });
+    const hc = dlg.querySelector("[data-headchange]");
+    if (hc) hc.addEventListener("click", async () => {
+      if (await this._headChange(idx, hc.dataset.headchange, hc)) dlg.close();
+    });
     const form = dlg.querySelector("[data-headform]");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();

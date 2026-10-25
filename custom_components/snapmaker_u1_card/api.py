@@ -342,9 +342,15 @@ class MoonrakerClient:
         """pause | resume | cancel via JSON-RPC (Moonraker: printer.print.<action>)."""
         await self.rpc(f"printer.print.{action}", response_timeout=30)
 
-    async def gcode(self, script: str) -> None:
+    async def gcode(self, script: str, timeout: float = 30) -> None:
         """Run a G-code script (JSON-RPC printer.gcode.script); firmware errors raise."""
-        await self.rpc("printer.gcode.script", {"script": script}, response_timeout=30)
+        await self.rpc("printer.gcode.script", {"script": script}, response_timeout=timeout)
+
+    async def gcode_store(self, count: int = 100) -> list[dict[str, Any]]:
+        """Last commands and printer responses Moonraker keeps (console history)."""
+        result = await self._get_json("/server/gcode_store", {"count": count})
+        store = (result or {}).get("gcode_store") if isinstance(result, dict) else None
+        return store if isinstance(store, list) else []
 
     async def camera_wake(self) -> None:
         """Ask Snapmaker's camera service to (keep) stream(ing) in LAN mode.

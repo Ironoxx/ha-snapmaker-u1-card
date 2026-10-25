@@ -86,11 +86,12 @@ class PrinterSettingsMixin:
         await self._run_gcode(f"EXCLUDE_OBJECT NAME={name}")
         _LOGGER.info("Object excluded: %s", name)
 
-    async def _run_gcode(self, script: str) -> None:
+    async def _run_gcode(self, script: str, timeout: float | None = None) -> None:
         if self.power_is_off():
             raise HomeAssistantError(tr(self.hass, "Der Drucker ist ausgeschaltet.", "The printer is switched off."))
         try:
-            await self.client.gcode(script)
+            # Default timeout unless a long command (head change) needs more.
+            await self.client.gcode(script, **({"timeout": timeout} if timeout else {}))
         except MoonrakerError as err:
             raise HomeAssistantError(tr(self.hass, f"Drucker lehnt ab: {err}", f"Printer refused: {err}")) from err
         await self.async_request_refresh()
