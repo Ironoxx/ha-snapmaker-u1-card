@@ -4,7 +4,9 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
-## 1.6.0
+## 1.6.0b1
+
+**Beta** – only offered by HACS with "show beta versions" enabled for this repository. Feedback welcome, especially from top cover owners (diagnostics file).
 
 **New**
 - **Flow** (M221) as a slider next to the speed in the control tab and as entity `number.…_flow`, changeable during a print.
