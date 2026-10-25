@@ -782,6 +782,36 @@ def compact_spool(spool: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# Sub types the firmware/Snapmaker Orca know, found in a Spoolman filament name or material.
+SPOOL_SUBTYPES = ("Matte", "Silk", "HF", "Basic", "Glow", "Marble", "Wood", "Sparkle", "Galaxy", "Metal",
+                  "Translucent", "Tough", "Rapid")
+_FW_FORBIDDEN = "\"'#*;\n\r"
+
+
+def spool_filament(spool: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Firmware filament (type, sub type, vendor, colour) for a Spoolman spool; None without material.
+
+    Spoolman keeps the material free-form ("PLA", "PLA Matte", "petg"); the
+    firmware wants type and sub type separately. Characters Klipper would cut
+    a command at are dropped.
+    """
+    if not spool:
+        return None
+    def clean(text: Any) -> str:
+        return "".join(c for c in str(text or "") if c not in _FW_FORBIDDEN).strip()
+    material = clean(spool.get("material"))
+    if not material:
+        return None
+    parts = material.split()
+    ftype = parts[0].upper()
+    words = " ".join([*parts[1:], clean(spool.get("name"))]).lower().split()
+    sub = next((s for s in SPOOL_SUBTYPES if s.lower() in words), "")
+    if not sub and len(parts) > 1:
+        sub = parts[1].capitalize()
+    return {"type": ftype, "sub_type": sub, "vendor": clean(spool.get("vendor")) or "Generic",
+            "color": normalize_color(spool.get("color"))}
+
+
 def _round(value: Any) -> float | None:
     return round(float(value), 1) if isinstance(value, (int, float)) else None
 

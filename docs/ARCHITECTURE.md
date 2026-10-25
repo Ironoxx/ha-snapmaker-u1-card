@@ -134,8 +134,9 @@ Facts taken from Snapmaker's published firmware sources (u1-klipper, u1-moonrake
 - The top cover is the `[purifier]` object (always configured); `power_detected` says whether
   one is plugged in. `SET_PURIFIER FAN=exhaust|inner SPEED=0..1`; modes 0 idle, 1 cool,
   2 preheat, 3 hot (u1-klipper `purifier.py`).
-- Each head reports `state` (`PARKED` / `ACTIVATE`) from its park detector. `T<n> A=0` switches to
-  physical head n (without `A=0` the filament mapping applies first), `PARK_<extruder>` parks the
+- Each head reports `state` (`PARKED` / `ACTIVATE`) from its park detector. `T<n> A0` switches to
+  physical head n (without `A0` the filament mapping applies first; classic G-code command, so
+  `A0`, not `A=0`), `PARK_<extruder>` parks the
   head on the carriage (u1-klipper `kinematics/extruder.py`).
 - The stock camera stops after a while; `camera.start_monitor` (WebSocket, proxied by
   u1-moonraker `repeater.py` to the closed camera service) keeps it running.

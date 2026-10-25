@@ -243,3 +243,54 @@ async def test_options_validate_spoolman_url(hass: HomeAssistant, mock_client) -
     assert entry.options["spoolman_url"] == "192.168.0.10:7912/"
     assert entry.options["spoolman_low"] == 150
     assert entry.runtime_data.spools.client.url == "http://192.168.0.10:7912"
+
+
+# ── Choosing a spool loads its filament into the printer (1.6.0b2) ──────────
+def test_spool_filament_mapping():
+    to_fw = p.spool_filament
+    assert to_fw(p.compact_spool(_spool(1, "PLA Matte Black", "PLA", "1C1C1C", vendor="GEEETECH"))) == {
+        "type": "PLA", "sub_type": "Matte", "vendor": "GEEETECH", "color": "#1C1C1C"}
+    assert to_fw(p.compact_spool(_spool(2, "CR-PETG Black", "petg", "000000", vendor="Creality")))["sub_type"] == ""
+    assert to_fw(p.compact_spool(_spool(3, "Seide", "PLA Silk", "FEE5A5")))["sub_type"] == "Silk"
+    # characters Klipper would cut the command at are dropped
+    assert to_fw(p.compact_spool(_spool(4, "x", "PLA", "FFFFFF", vendor='Bad"Vendor;#')))["vendor"] == "BadVendor"
+    assert to_fw(p.compact_spool(_spool(5, "no material", "", "FFFFFF"))) is None
+    assert to_fw(None) is None
+
+
+async def test_choosing_spool_writes_filament(hass: HomeAssistant, mock_client, spoolman) -> None:
+    _real_slots(mock_client)
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_official"] = [False] * 4  # spools without RFID tag, like Thomas' heads
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        # Head 1 shows the stock "PLA Generic black", the spool is red PETG from Snapmaker
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 1, "spool_id": 6}, blocking=True)
+        gcode.assert_awaited_with('SET_PRINT_FILAMENT_CONFIG CONFIG_EXTRUDER=0 VENDOR="Snapmaker" '
+                                  'FILAMENT_TYPE="PETG" FILAMENT_SUBTYPE="NONE" FILAMENT_COLOR_RGBA=D32F2FFF')
+        # The printer reports the new filament: the manual choice must survive the changed fingerprint
+        ptc["filament_vendor"][0], ptc["filament_type"][0], ptc["filament_color_rgba"][0] = "Snapmaker", "PETG", "D32F2FFF"
+        await _refresh(hass, entry)
+        await _refresh(hass, entry)
+        sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+        assert sm["slots"]["0"]["id"] == 6 and sm["slots"]["0"]["manual"] is True
+        assert hass.states.get("sensor.snapmaker_u1_card_slot_1").state.startswith("PETG")
+
+        # Same filament already loaded: nothing written
+        calls = gcode.await_count
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 1, "spool_id": 6}, blocking=True)
+        assert gcode.await_count == calls
+
+        # Official RFID spool: the tag wins, only the assignment changes
+        entry.runtime_data.data.slots[1]["official"] = True
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 1}, blocking=True)
+        assert gcode.await_count == calls
+
+        # During a print: assignment yes, filament no (the firmware refuses)
+        _status(mock_client, "printing", "a.gcode")
+        await _refresh(hass, entry)
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 3, "spool_id": 2}, blocking=True)
+        assert gcode.await_count == calls
+        sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+        assert sm["slots"]["2"]["id"] == 2

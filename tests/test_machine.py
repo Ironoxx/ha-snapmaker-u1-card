@@ -69,7 +69,7 @@ def test_heads() -> None:
     status = {"extruder": {"state": "PARKED"}, "extruder1": {"state": "ACTIVATE"},
               "extruder2": {"state": "UNKNOWN"}, "extruder3": {}}
     assert parse_head_states(status) == ["parked", "active", "unknown", None]
-    assert pick_gcode(2) == "T2 A=0"  # A=0: physical head, no filament mapping
+    assert pick_gcode(2) == "T2 A0"  # A0: physical head, no filament mapping; classic command, no "="
     assert park_gcode(0) == "PARK_EXTRUDER" and park_gcode(3) == "PARK_EXTRUDER3"
     with pytest.raises(ValueError):
         pick_gcode(4)
@@ -86,7 +86,7 @@ def test_console_rules() -> None:
     # During a print: tuning and queries yes, motion/homing/heads no
     ok = ["M104 T0 S215", "M221 S98", "SET_GCODE_OFFSET Z_ADJUST=-0.02", "GET_POSITION", "QUERY_PARK_STA NAME=e0"]
     assert blocked_while_printing(ok) == []
-    assert blocked_while_printing(["G28", "G1 X10", "T1 A=0", "PARK_EXTRUDER", "G28"]) == [
+    assert blocked_while_printing(["G28", "G1 X10", "T1 A0", "PARK_EXTRUDER", "G28"]) == [
         "G28", "G1", "T1", "PARK_EXTRUDER"]
 
 
@@ -173,7 +173,7 @@ async def test_tool_change(hass: HomeAssistant, mock_client, notifications) -> N
     entry = await _setup(hass)
     with patch(f"{API}.gcode", AsyncMock()) as gcode:
         await hass.services.async_call(DOMAIN, "tool_change", {"head": 3}, blocking=True)
-        assert gcode.await_args.args[0] == "T2 A=0"
+        assert gcode.await_args.args[0] == "T2 A0"
         assert gcode.await_args.kwargs["timeout"] >= 120
         await hass.services.async_call(DOMAIN, "tool_change", {"head": 1, "action": "park"}, blocking=True)
         assert gcode.await_args.args[0] == "PARK_EXTRUDER"  # head 1 is on the carriage

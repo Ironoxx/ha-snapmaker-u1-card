@@ -21,6 +21,7 @@ export function tr(text, vars) {
 
 // English. Key = German text (see tr()).
 export const EN = {
+  "Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.": "Material, vendor and colour of the chosen spool are loaded into the head.",
   "Profil {p}": "Profile {p}",
   "Höchster minus tiefster Messpunkt": "Highest minus lowest probed point",
   "Spanne (mm)": "Spread (mm)",

@@ -306,7 +306,7 @@ data:
 
 `send_gcode` takes at most 20 lines. While a print runs only tuning is allowed: temperatures (`M104`, `M140`, `SET_HEATER_TEMPERATURE`), fans (`M106`, `M107`, `SET_FAN_SPEED`), speed and flow (`M220`, `M221`), `SET_GCODE_OFFSET`, `SET_PRESSURE_ADVANCE`, `SET_VELOCITY_LIMIT`, `SET_RETRACTION`, `SET_LED`, `SET_PURIFIER`, messages, `PAUSE`/`RESUME`/`CANCEL_PRINT`, `EXCLUDE_OBJECT`, `M112` and read-only `GET_…`/`QUERY_…` commands. Everything that moves, homes, probes or changes heads is refused until the print is over. A refusal by the firmware comes back as `ok: false` with the message. The answers are read from Moonraker's gcode store.
 
-`tool_change` uses the firmware's own commands (`T<n> A=0` takes physical head n without filament mapping, `PARK_EXTRUDER…` parks the head on the carriage). The printer homes X/Y first if needed.
+`tool_change` uses the firmware's own commands (`T<n> A0` takes physical head n without filament mapping, `PARK_EXTRUDER…` parks the head on the carriage). The printer homes X/Y first if needed.
 
 ### `snapmaker_u1_card.refresh`
 
@@ -445,7 +445,7 @@ Optional. Without a Spoolman address none of this appears in the card or the int
 3. sub type in the name (e.g. "Silk"), same vendor,
 4. opened, most recently used spool before a new one.
 
-Each spool is assigned to at most one head. In the card, tap the spool row of a head and choose "Automatic", "No spool" or a specific spool. A manual choice stays until a different filament is detected in that head (material, colour or vendor change) or the spool is archived in Spoolman.
+Each spool is assigned to at most one head. In the card, tap the spool row of a head and choose "Automatic", "No spool" or a specific spool. Choosing a specific spool also loads its filament into the printer: material (sub type such as Matte or Silk from the material or the spool name), vendor and colour are written to the head's slot (`SET_PRINT_FILAMENT_CONFIG`), so the display, the card and the filament mapping show the right filament. Not for official spools with RFID tag (the tag wins) and not during a print. A manual choice stays until a different filament is detected in that head (material, colour or vendor change) or the spool is archived in Spoolman.
 
 **Booking usage.** After every print the integration books usage per head: weight per filament from the slicer, distributed to the heads via the print's map table (`print_task_config.extruder_map_table`); for cancelled prints pro rata by the actually extruded length. If Spoolman is unreachable, the booking is stored and retried later, even across Home Assistant restarts. The history shows `#spool −g` per print (⏳ = not booked yet).
 

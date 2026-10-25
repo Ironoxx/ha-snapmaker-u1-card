@@ -301,7 +301,7 @@ data:
 
 `send_gcode` nimmt höchstens 20 Zeilen. Während eines Drucks sind nur Feineinstellungen erlaubt: Temperaturen (`M104`, `M140`, `SET_HEATER_TEMPERATURE`), Lüfter (`M106`, `M107`, `SET_FAN_SPEED`), Geschwindigkeit und Flussrate (`M220`, `M221`), `SET_GCODE_OFFSET`, `SET_PRESSURE_ADVANCE`, `SET_VELOCITY_LIMIT`, `SET_RETRACTION`, `SET_LED`, `SET_PURIFIER`, Meldungen, `PAUSE`/`RESUME`/`CANCEL_PRINT`, `EXCLUDE_OBJECT`, `M112` und lesende `GET_…`/`QUERY_…`-Befehle. Alles, was fährt, referenziert, misst oder Köpfe wechselt, wird bis zum Druckende abgelehnt. Lehnt die Firmware einen Befehl ab, kommt das als `ok: false` mit der Meldung zurück. Die Antworten stammen aus dem G-Code-Speicher von Moonraker.
 
-`tool_change` nutzt die Befehle der Firmware (`T<n> A=0` nimmt den physischen Kopf n ohne Filamentzuordnung, `PARK_EXTRUDER…` legt den Kopf vom Schlitten ab). Bei Bedarf fährt der Drucker vorher X/Y an.
+`tool_change` nutzt die Befehle der Firmware (`T<n> A0` nimmt den physischen Kopf n ohne Filamentzuordnung, `PARK_EXTRUDER…` legt den Kopf vom Schlitten ab). Bei Bedarf fährt der Drucker vorher X/Y an.
 
 ### `snapmaker_u1_card.refresh`
 
@@ -440,7 +440,7 @@ Optional. Ohne Spoolman-Adresse erscheint in Karte und Integration nichts davon.
 3. Unterart im Namen (z. B. „Silk“), gleicher Hersteller,
 4. angebrochene, zuletzt benutzte Spule vor neuer.
 
-Jede Spule wird höchstens einem Kopf zugeordnet. In der Karte tippst du auf die Spulenzeile eines Kopfes und wählst „Automatisch“, „Keine Spule“ oder eine bestimmte Spule. Eine manuelle Wahl bleibt bestehen, bis in dem Kopf ein anderes Filament erkannt wird (Material, Farbe oder Hersteller ändern sich) oder die Spule in Spoolman archiviert wird.
+Jede Spule wird höchstens einem Kopf zugeordnet. In der Karte tippst du auf die Spulenzeile eines Kopfes und wählst „Automatisch“, „Keine Spule“ oder eine bestimmte Spule. Die Wahl einer bestimmten Spule lädt auch ihr Filament in den Drucker: Material (Unterart wie Matte oder Silk aus Material oder Spulenname), Hersteller und Farbe werden in den Slot des Kopfes geschrieben (`SET_PRINT_FILAMENT_CONFIG`), damit Display, Karte und Filamentzuordnung das richtige Filament zeigen. Nicht bei offiziellen Spulen mit RFID-Tag (der Tag gilt) und nicht während eines Drucks. Eine manuelle Wahl bleibt bestehen, bis in dem Kopf ein anderes Filament erkannt wird (Material, Farbe oder Hersteller ändern sich) oder die Spule in Spoolman archiviert wird.
 
 **Abbuchen.** Nach jedem Druck bucht die Integration je Kopf ab: Gewicht laut Slicer je Filament, über die Zuordnungstabelle des Drucks (`print_task_config.extruder_map_table`) auf die Köpfe verteilt; bei Abbruch anteilig nach tatsächlich geförderter Länge. Ist Spoolman gerade nicht erreichbar, wird die Buchung gespeichert und nachgeholt, auch über einen Neustart von Home Assistant hinweg. Die Historie zeigt je Druck `#Spule −g` (⏳ = noch nicht gebucht).
 

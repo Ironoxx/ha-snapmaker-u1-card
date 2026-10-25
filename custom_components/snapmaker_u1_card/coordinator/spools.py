@@ -23,6 +23,7 @@ from ..parsing import (
     ACTIVE_PRINT_STATES,
     describe_file,
     parse_file_filaments,
+    spool_filament,
 )
 from .data import U1Data
 
@@ -111,6 +112,31 @@ class SpoolMixin:
         if self.data is not None:
             self.data.spoolman = self._spoolman_data(slots)
             self.async_update_listeners()
+        if spool_id and not automatic:
+            await self._load_spool_filament(slot, self.spools.spool(spool_id))
+
+    async def _load_spool_filament(self, slot: dict[str, Any], spool: dict[str, Any] | None) -> None:
+        """Write material, vendor and colour of a chosen Spoolman spool into the printer's slot.
+
+        Without this the head keeps showing what the firmware has (stock: PLA for
+        every slot without RFID tag). Skipped for official RFID spools (the tag is
+        the truth), during a print (the firmware refuses) and when nothing changes.
+        """
+        fil = spool_filament(spool)
+        if fil is None or slot.get("official"):
+            return
+        if self.current_print_state() in ACTIVE_PRINT_STATES:
+            _LOGGER.info("Spool chosen during a print: filament of head %s left as is", slot["index"] + 1)
+            return
+        same = ((slot.get("type") or "").upper() == fil["type"]
+                and (slot.get("sub_type") or "").upper() == fil["sub_type"].upper()
+                and (slot.get("vendor") or "").upper() == fil["vendor"].upper()
+                and (not fil["color"] or (slot.get("color") or "").upper() == fil["color"].upper()))
+        if same:
+            return
+        self.spools.expect_filament_change(slot["index"])
+        self._save()
+        await self.async_set_filament(slot["index"], fil["type"], fil["sub_type"], fil["vendor"], fil["color"])
 
     async def _enrich_active(self, active: dict[str, Any]) -> None:
         """Remember the slicer data of the running file (filaments, weight, image)."""

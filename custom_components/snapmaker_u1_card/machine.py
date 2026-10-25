@@ -12,8 +12,9 @@ Facts from Snapmaker's firmware sources (u1-klipper):
   ``SET_PURIFIER FAN=exhaust|inner SPEED=0..1``; the firmware refuses a speed
   while no cover is detected. paxx12's firmware keeps the same status shape.
 - Each head reports ``state`` from its park detector: ``PARKED`` or ``ACTIVATE``
-  (anything else = unknown). ``T<n> A=0`` switches to physical head n (without
-  ``A=0`` the firmware maps the logical tool first); ``PARK_<extruder name>``
+  (anything else = unknown). ``T<n> A0`` switches to physical head n (without
+  ``A0`` the firmware maps the logical tool first; ``T<n>`` is a classic
+  G-code command, so Klipper only parses ``A0``, not ``A=0``); ``PARK_<extruder name>``
   parks the head on the carriage. Both home X/Y first if needed.
 - Moonraker's gcode store records a script as one ``command`` entry per line,
   each carrying the whole script, followed by the ``response`` lines.
@@ -168,7 +169,7 @@ def pick_gcode(head: int) -> str:
     """Take physical head 0-3 (parks the current one first)."""
     if not isinstance(head, int) or not 0 <= head < len(EXTRUDER_NAMES):
         raise ValueError(f"Invalid head {head!r}")
-    return f"T{head} A=0"
+    return f"T{head} A0"
 
 
 def park_gcode(head: int) -> str:

@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.6.0b1";
+  var CARD_VERSION = "1.6.0b2";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -70,6 +70,7 @@
     return out;
   }
   var EN = {
+    "Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.": "Material, vendor and colour of the chosen spool are loaded into the head.",
     "Profil {p}": "Profile {p}",
     "Höchster minus tiefster Messpunkt": "Highest minus lowest probed point",
     "Spanne (mm)": "Spread (mm)",
@@ -1560,6 +1561,7 @@
           <div class="t-label">${esc([slot.type, slot.sub_type, slot.vendor].filter(Boolean).join(" ") || tr("kein Filament erkannt"))}</div></div>
           <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
         </header>
+        ${slot.official ? "" : `<div class="t-label">${tr("Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.")}</div>`}
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
         <div class="spool-list">
           <button type="button" class="spool-opt" data-pick="auto" aria-pressed="${!!(cur && !cur.manual)}">

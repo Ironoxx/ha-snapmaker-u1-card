@@ -4,6 +4,19 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b2
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b1 below.
+
+**Fixed**
+- Spoolman: choosing a spool for a head only assigned it for usage booking; the head kept showing what the printer had (stock firmware: "PLA Generic" for every head without RFID tag). Choosing a specific spool now also loads its filament into the printer: material, sub type (Matte, Silk, … from the material or the spool name), vendor and colour. Not for official RFID spools and not during a print. Spools you already assigned: pick them once more.
+- Picking a head failed with "unable to parse =0": the command is now sent as `T<n> A0` (Klipper's classic G-code syntax).
+
+---
+**Deutsch**
+- Behoben: Spoolman – die Wahl einer Spule ordnete sie nur fürs Abbuchen zu; der Kopf zeigte weiter, was im Drucker stand (Stock-Firmware: „PLA Generic“ bei jedem Kopf ohne RFID-Tag). Die Wahl einer bestimmten Spule lädt jetzt auch ihr Filament in den Drucker: Material, Unterart (Matte, Silk … aus Material oder Spulenname), Hersteller und Farbe. Nicht bei offiziellen RFID-Spulen und nicht während eines Drucks. Bereits zugeordnete Spulen einmal neu wählen.
+- Behoben: Kopf aufnehmen scheiterte mit „unable to parse =0“; der Befehl geht jetzt als `T<n> A0` raus (klassische G-Code-Schreibweise von Klipper).
+
 ## 1.6.0b1
 
 **Beta** – only offered by HACS with "show beta versions" enabled for this repository. Feedback welcome, especially from top cover owners (diagnostics file).

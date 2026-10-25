@@ -89,6 +89,12 @@ class SpoolManager:
                 continue
             # Different filament loaded or spool archived/deleted:
             # determine the assignment again, even a manual one.
+            if entry.get("fp") != fp and entry.get("manual") and entry.get("sync_until", 0) > time.time():
+                # We just wrote the spool's filament to the printer: the new
+                # fingerprint belongs to this assignment.
+                entry["fp"] = fp
+                entry.pop("sync_until", None)
+                changed = True
             if entry.get("fp") != fp or (entry.get("spool_id") and entry["spool_id"] not in known):
                 del self.mapping[key]
                 changed = True
@@ -122,6 +128,12 @@ class SpoolManager:
             self.mapping.pop(key, None)
             return
         self.mapping[key] = {"spool_id": spool_id, "manual": True, "fp": slot_fingerprint(slot)}
+
+    def expect_filament_change(self, index: int, seconds: float = 180) -> None:
+        """The printer is about to report other filament for this head because we set it."""
+        entry = self.mapping.get(str(index))
+        if entry is not None:
+            entry["sync_until"] = time.time() + seconds
 
     def assigned(self) -> dict[int, int | None]:
         return {int(k): v.get("spool_id") for k, v in self.mapping.items()}

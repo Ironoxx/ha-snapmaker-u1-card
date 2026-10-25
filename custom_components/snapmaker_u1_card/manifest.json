@@ -20,5 +20,5 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/Ironoxx/ha-snapmaker-u1-card/issues",
   "requirements": [],
-  "version": "1.6.0b1"
+  "version": "1.6.0b2"
 }
