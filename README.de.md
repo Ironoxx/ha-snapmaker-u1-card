@@ -387,7 +387,7 @@ Ab 1.5 hat die Integration eine eigene Kamera-Entität (*Kamera*) und findet sel
 
 | `mode` | Wann | Bild |
 |---|---|---|
-| `live` | Moonraker meldet eine Webcam, deren Stream mit MJPEG antwortet (angepasste Firmware, z. B. paxx12 Extended) | Livestream, durchgereicht |
+| `live` | Moonraker meldet eine Webcam, deren Stream mit MJPEG antwortet (angepasste Firmware, z. B. paxx12 Extended). Meldet Moonraker eine WebRTC- oder Player-Seite (paxx12 2.x: `/webcam/webrtc`), wird der MJPEG-Stream daneben genutzt (`/webcam/stream.mjpg`) | Livestream, durchgereicht |
 | `still` | nur eine Snapshot-Adresse funktioniert | Standbild jede Sekunde |
 | `wake` | Stock-Firmware: kein Stream, nur `camera/monitor.jpg`, das sich erst nach `camera.start_monitor` ändert. Das Bild wird vor und nach einem Weckaufruf geholt und muss sich ändern | Standbild alle 1–2 s; die Kamera wird bei Bedarf geweckt (höchstens alle 10 s), solange jemand zuschaut |
 | `none` | nichts gefunden | Entität nicht verfügbar; die Karte zeigt einen Hinweis statt einer schwarzen Fläche |

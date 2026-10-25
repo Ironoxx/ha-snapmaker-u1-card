@@ -392,7 +392,7 @@ From 1.5 the integration has its own camera entity (*Camera*) and finds out by i
 
 | `mode` | When | Image |
 |---|---|---|
-| `live` | Moonraker lists a webcam whose stream answers with MJPEG (modified firmware, e.g. paxx12 Extended) | live stream, passed through |
+| `live` | Moonraker lists a webcam whose stream answers with MJPEG (modified firmware, e.g. paxx12 Extended). If Moonraker announces a WebRTC or player page (paxx12 2.x: `/webcam/webrtc`), the MJPEG stream next to it (`/webcam/stream.mjpg`) is used | live stream, passed through |
 | `still` | only a snapshot URL works | still image every second |
 | `wake` | stock firmware: no stream, only `camera/monitor.jpg`, which only changes after `camera.start_monitor`. The image is fetched twice around a wake call and must change | still image every 1–2 s; the camera is woken as needed (at most every 10 s) while someone watches |
 | `none` | nothing found | entity unavailable; the card shows a hint instead of a black area |

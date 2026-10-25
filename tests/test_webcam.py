@@ -47,6 +47,41 @@ async def test_detect_live(no_sleep) -> None:
     assert cam.stream_url == "http://192.168.0.25/webcam/?action=stream"
 
 
+def test_mjpeg_candidates() -> None:
+    # paxx12 2.x default: Moonraker announces the WebRTC page, MJPEG sits next to it
+    assert wc.mjpeg_candidates({"service": "webrtc-camerastreamer", "stream_url": "/webcam/webrtc",
+                                "snapshot_url": "/webcam/snapshot.jpg"}) == ["/webcam/stream.mjpg"]
+    assert wc.mjpeg_candidates({"service": "iframe", "stream_url": "/webcam2/player",
+                                "snapshot_url": "/webcam2/snapshot.jpg"}) == ["/webcam2/stream.mjpg"]
+    # mjpegstreamer-adaptive: only a snapshot URL
+    assert wc.mjpeg_candidates({"service": "mjpegstreamer-adaptive", "snapshot_url": "/webcam/snapshot.jpg"}) == [
+        "/webcam/stream.mjpg"]
+    # classic ustreamer: the stream URL itself
+    assert wc.mjpeg_candidates({"service": "mjpegstreamer", "stream_url": "/webcam/?action=stream",
+                                "snapshot_url": "/webcam/?action=snapshot"}) == ["/webcam/?action=stream"]
+    assert wc.mjpeg_candidates({}) == []
+
+
+async def test_detect_paxx12_webrtc(no_sleep) -> None:
+    """paxx12 2.x: the WebRTC page is never fetched as MJPEG, /webcam/stream.mjpg is."""
+    c = _client()
+    cam = wc.Webcam(c)
+    tried: list[str] = []
+
+    async def frame(url, timeout=3):
+        tried.append(url)
+        return JPEG_A if url.endswith("/webcam/stream.mjpg") else None
+
+    with patch.object(c, "webcams", AsyncMock(return_value=[{
+            "name": "case", "service": "webrtc-camerastreamer", "stream_url": "/webcam/webrtc",
+            "snapshot_url": "/webcam/snapshot.jpg"}])), \
+         patch.object(c, "first_mjpeg_frame", AsyncMock(side_effect=frame)):
+        assert await cam.detect() == "live"
+    assert cam.stream_url == "http://192.168.0.25/webcam/stream.mjpg"
+    assert cam.snapshot_url == "http://192.168.0.25/webcam/snapshot.jpg"
+    assert not any(u.endswith("/webrtc") for u in tried)
+
+
 async def test_detect_still_then_stream_retry(no_sleep) -> None:
     c = _client()
     cam = wc.Webcam(c)

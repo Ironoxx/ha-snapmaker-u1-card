@@ -4,6 +4,17 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b3
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b2 and 1.6.0b1 below.
+
+**Fixed**
+- Camera with paxx12 Extended Firmware 2.x: Moonraker announces the WebRTC page (`/webcam/webrtc`) as stream, which is not MJPEG, so the integration fell back to still images. It now uses the MJPEG stream the camera service serves next to it (`/webcam/stream.mjpg`, also for `/webcam2/` and the player page). The self test names the stream addresses that failed.
+
+---
+**Deutsch**
+- Behoben: Kamera mit paxx12 Extended Firmware 2.x – Moonraker meldet die WebRTC-Seite (`/webcam/webrtc`) als Stream, das ist kein MJPEG, daher fiel die Integration auf Standbilder zurück. Jetzt nutzt sie den MJPEG-Stream, den der Kameradienst daneben anbietet (`/webcam/stream.mjpg`, ebenso für `/webcam2/` und die Player-Seite). Der Selbsttest nennt die Stream-Adressen, die nicht funktioniert haben.
+
 ## 1.6.0b2
 
 **Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b1 below.

@@ -4,7 +4,11 @@ Detection order (``detect``):
 
 1. ``/server/webcams/list`` (plus the usual default paths): a stream URL that
    answers with ``multipart/x-mixed-replace`` and a first JPEG -> ``live``
-   (modified firmware, e.g. paxx12 Extended).
+   (modified firmware, e.g. paxx12 Extended). Moonraker may announce a WebRTC
+   or player page instead (paxx12 2.x: ``service: webrtc-camerastreamer``,
+   ``stream_url: /webcam/webrtc``); its camera service (v4l2-mpp
+   ``stream-http.py``) serves MJPEG next to it at ``<base>/stream.mjpg``,
+   which is tried instead of the page.
 2. A snapshot URL that returns a JPEG -> ``still``.
 3. Stock firmware: no stream, only ``camera/monitor.jpg``, which the camera
    service only refreshes after ``camera.start_monitor``. The image is fetched
@@ -39,9 +43,38 @@ WAKE_SETTLE_S = 3  # stock: time for the camera service to write a new monitor.j
 CACHE_S = 1.0  # image cache for several viewers / the HA MJPEG loop
 FAIL_LIMIT = 3  # images in a row without result -> detect again
 MONITOR = "monitor.jpg"
-# Moonraker integration's defaults (crowsnest / ustreamer on the printer)
-DEFAULT_STREAM = "/webcam/?action=stream"
-DEFAULT_SNAPSHOT = "/webcam/?action=snapshot"
+# Moonraker integration's defaults (crowsnest / ustreamer on the printer) and
+# paxx12 2.x (v4l2-mpp stream-http.py: /stream.mjpg, /snapshot.jpg)
+DEFAULTS = (
+    ("/webcam/?action=stream", "/webcam/?action=snapshot"),
+    ("/webcam/stream.mjpg", "/webcam/snapshot.jpg"),
+)
+# Moonraker webcam services whose stream_url is a web page, not MJPEG
+PAGE_SERVICES = ("webrtc-camerastreamer", "webrtc-go2rtc", "webrtc-mediamtx", "webrtc-janus", "iframe", "hlsstream")
+PAGE_ENDINGS = ("/webrtc", "/player", "/webrtc/", "/player/", ".html")
+
+
+def mjpeg_candidates(cam: dict[str, Any]) -> list[str]:
+    """Stream paths worth trying for one Moonraker webcam entry, best first.
+
+    A WebRTC/iframe page is never MJPEG: try ``stream.mjpg`` in the same folder
+    instead (paxx12 2.x). Same for a ``snapshot.jpg`` without stream URL
+    (``mjpegstreamer-adaptive``).
+    """
+    stream = str(cam.get("stream_url") or "").strip()
+    snap = str(cam.get("snapshot_url") or "").strip()
+    service = str(cam.get("service") or "").lower()
+    out: list[str] = []
+    page = bool(stream) and (service in PAGE_SERVICES or stream.split("?")[0].endswith(PAGE_ENDINGS))
+    if stream and not page:
+        out.append(stream)
+    if page:
+        out.append(stream.split("?")[0].rstrip("/").rsplit("/", 1)[0] + "/stream.mjpg")
+    if snap.split("?")[0].endswith("/snapshot.jpg"):
+        derived = snap.split("?")[0][: -len("snapshot.jpg")] + "stream.mjpg"
+        if derived not in out:
+            out.append(derived)
+    return out
 
 
 def _digest(blob: bytes | None) -> str | None:
@@ -113,22 +146,27 @@ class Webcam:
 
     async def _probe(self) -> tuple[str, str | None, str | None]:
         cams = await self.client.webcams()
-        candidates: list[tuple[str | None, str | None]] = [
-            (self.client.resolve_url(c.get("stream_url")), self.client.resolve_url(c.get("snapshot_url")))
-            for c in cams
-        ]
-        default = (self.client.resolve_url(DEFAULT_STREAM), self.client.resolve_url(DEFAULT_SNAPSHOT))
-        if default not in candidates:
-            candidates.append(default)
+        candidates: list[tuple[str | None, str | None]] = []
+        for c in cams:
+            snap = self.client.resolve_url(c.get("snapshot_url"))
+            streams = [self.client.resolve_url(u) for u in mjpeg_candidates(c)] or [None]
+            candidates += [(u, snap) for u in streams]
+        for stream_path, snap_path in DEFAULTS:
+            default = (self.client.resolve_url(stream_path), self.client.resolve_url(snap_path))
+            if default[0] not in {s for s, _ in candidates}:
+                candidates.append(default)
         still: tuple[str | None, str | None] | None = None
         stream_ok = time.monotonic() >= self._stream_retry_at
         self.stream_error = None
+        failed: list[str] = []
         for stream, snap in candidates:
             if stream and stream_ok:
                 for _ in range(STREAM_TRIES):
                     if await self.client.first_mjpeg_frame(stream, timeout=FIRST_FRAME_S):
                         return "live", stream, snap
-                self.stream_error = f"no MJPEG frame within {FIRST_FRAME_S} s ({STREAM_TRIES} tries)"
+                failed.append(stream)
+                self.stream_error = (f"no MJPEG frame within {FIRST_FRAME_S} s ({STREAM_TRIES} tries): "
+                                     + ", ".join(failed))
             if still is None and snap and await self.client.fetch_image(snap):
                 still = (stream, snap)
         if still:
