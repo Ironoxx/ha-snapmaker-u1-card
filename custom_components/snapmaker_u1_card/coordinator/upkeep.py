@@ -235,7 +235,12 @@ class UpkeepMixin:
                 if okay else t(f"Spoolman nicht erreichbar ({self.spools.client.url}): {self.spools.error or '?'}",
                                f"Spoolman unreachable ({self.spools.client.url}): {self.spools.error or '?'}"))
             mgr = self.spools
-            if mgr.external_booking:
+            if mgr.external_booking and not mgr.spoollink:
+                detail = t("Moonraker hat Spoolman, aber ohne SpoolLink: Moonraker bucht nur seine eine aktive Spule ab, "
+                           "die Integration bucht nicht doppelt. Für vier Köpfe SpoolLink in /firmware-config/ einschalten",
+                           "Moonraker has Spoolman but no SpoolLink: it only books its one active spool, the integration "
+                           "does not book twice. For four heads enable SpoolLink in /firmware-config/")
+            elif mgr.external_booking:
                 detail = t("Verbrauch bucht Moonraker (Spoolman im Drucker aktiv), die Integration bucht nicht doppelt",
                            "Moonraker books usage (Spoolman on the printer), the integration does not book twice")
             elif mgr.deduct:

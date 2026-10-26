@@ -4,6 +4,23 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b5
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b4 … b1 below.
+
+**Fixed**
+- Spoolman with paxx12 SpoolLink: spools chosen in the card before 1.6.0b4 were dropped, because the printer did not know them yet; the heads showed "Choose spool". Spools chosen in the card are now handed to the printer once (`SET_SPOOL_ID`) when SpoolLink is found. Spools already lost with b4: choose them once more.
+- A spool chosen with SpoolLink is shown right away instead of only after the printer has taken it over.
+- SpoolLink is only assumed when Moonraker's `spoollink` component is loaded; paxx12's RFID patch adds `filament_spool_id` also with Spoolman switched off.
+- Self test: hint when Moonraker has Spoolman without SpoolLink (it only books its one active spool). Diagnostics include the SpoolLink state.
+
+---
+**Deutsch**
+- Behoben: Spoolman mit paxx12 SpoolLink – vor 1.6.0b4 in der Karte gewählte Spulen gingen verloren, weil der Drucker sie noch nicht kannte; die Köpfe zeigten „Spule wählen“. In der Karte gewählte Spulen werden jetzt einmal an den Drucker übergeben (`SET_SPOOL_ID`), sobald SpoolLink erkannt ist. Mit b4 bereits verlorene Spulen einmal neu wählen.
+- Behoben: Eine mit SpoolLink gewählte Spule erscheint sofort, nicht erst wenn der Drucker sie übernommen hat.
+- SpoolLink gilt nur, wenn Moonrakers Komponente `spoollink` geladen ist; paxx12s RFID-Patch legt `filament_spool_id` auch bei ausgeschaltetem Spoolman an.
+- Selbsttest: Hinweis, wenn Moonraker Spoolman ohne SpoolLink hat (bucht dann nur seine eine aktive Spule). Diagnose enthält den SpoolLink-Zustand.
+
 ## 1.6.0b4
 
 **Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b3, b2 and b1 below.

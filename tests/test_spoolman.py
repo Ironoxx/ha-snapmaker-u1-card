@@ -372,3 +372,56 @@ async def test_weigh_spool(hass: HomeAssistant, mock_client, spoolman) -> None:
     with pytest.raises(HomeAssistantError, match="empty spool"):
         await hass.services.async_call(DOMAIN, "weigh_spool", {"spool_id": 2, "weight": 900},
                                        blocking=True, return_response=True)
+
+
+async def test_spool_id_field_without_spoollink(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """paxx12's RFID patch adds filament_spool_id even with Spoolman off: own assignment then."""
+    _real_slots(mock_client)
+    mock_client["query"].return_value["print_task_config"]["filament_spool_id"] = [0, 0, 0, 0]
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+    assert sm["spoollink"] is False and sm["books"] is True
+    assert sm["slots"]["0"]["id"] == 1, "automatic assignment as before"
+
+
+async def test_spoollink_takes_over_earlier_choice(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """A spool chosen in the card before SpoolLink was on is handed to the printer once."""
+    _real_slots(mock_client)
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    with patch(f"{API}.gcode", AsyncMock()):
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 2}, blocking=True)
+    # SpoolLink switched on in the firmware: printer knows no spool yet
+    mock_client["components"].return_value = ["file_manager", "spoolman", "spoollink"]
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_spool_id"] = [0, 0, 0, 0]
+    coord = entry.runtime_data
+    coord._cpu_tried = False  # components are read again after reconnecting
+    coord._cpu_count = None
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await _refresh(hass, entry)
+        await _refresh(hass, entry)
+        gcode.assert_any_await("SET_SPOOL_ID CHANNEL=1 SPOOL_ID=2")
+        assert gcode.await_count == 1, "only the manual choice, only once"
+        sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+        assert sm["slots"]["1"]["id"] == 2, "shown while the printer takes it over"
+        # printer confirms
+        ptc["filament_spool_id"] = [0, 2, 0, 0]
+        await _refresh(hass, entry)
+        assert gcode.await_count == 1
+        assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["slots"]["1"]["id"] == 2
+
+
+async def test_spoollink_choice_shown_right_away(hass: HomeAssistant, mock_client, spoolman) -> None:
+    _real_slots(mock_client)
+    mock_client["components"].return_value = ["spoolman", "spoollink"]
+    mock_client["query"].return_value["print_task_config"]["filament_spool_id"] = [0, 0, 0, 0]
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    with patch(f"{API}.gcode", AsyncMock()):
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 3, "spool_id": 1}, blocking=True)
+        sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+        assert sm["slots"]["2"]["id"] == 1
+        await _refresh(hass, entry)  # printer still reports 0 a moment later: keep showing it
+        assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["slots"]["2"]["id"] == 1

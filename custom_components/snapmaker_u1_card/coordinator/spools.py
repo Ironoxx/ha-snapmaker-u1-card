@@ -52,6 +52,8 @@ class SpoolMixin:
                     self._save()
             if mgr.assign(data.slots):
                 self._save()
+            if mgr.to_push and data.print_state not in ACTIVE_PRINT_STATES:
+                await self._push_spoollink()
         # What the running print needs to book usage per head later:
         # map table logical->head and the spool per head.
         active = self._print_state.get("active")
@@ -160,6 +162,23 @@ class SpoolMixin:
         if spool_id and not automatic:
             await self._load_spool_filament(slot, self.spools.spool(spool_id))
 
+    async def _push_spoollink(self) -> None:
+        """Hand spools chosen before SpoolLink was enabled to the printer, once each."""
+        mgr = self.spools
+        for idx, sid in sorted(mgr.to_push.items()):
+            try:
+                await self.client.gcode(f"SET_SPOOL_ID CHANNEL={int(idx)} SPOOL_ID={int(sid)}")
+                _LOGGER.info("SpoolLink: spool %s handed to head %s", sid, idx + 1)
+                # show it right away; the printer confirms with filament_spool_id
+                mgr.mapping[str(idx)] = {**(mgr.mapping.get(str(idx)) or {}), "spool_id": sid, "manual": True,
+                                         "source": "printer"}
+                mgr.hold(idx)
+            except MoonrakerError as err:
+                _LOGGER.warning("SpoolLink: spool %s for head %s refused: %s", sid, idx + 1, err)
+                mgr.mapping[str(idx)] = {"spool_id": None, "manual": True, "source": "printer"}
+        mgr.to_push.clear()
+        self._save()
+
     async def _set_spool_spoollink(self, slot_index: int, spool_id: int | None, automatic: bool) -> None:
         """paxx12 SpoolLink: the printer keeps the spool per head and applies its filament itself."""
         if automatic:
@@ -171,6 +190,13 @@ class SpoolMixin:
                 self.hass, "Spule kann während eines Drucks nicht gewechselt werden.",
                 "The spool cannot be changed during a print."))
         await self._run_gcode(f"SET_SPOOL_ID CHANNEL={int(slot_index)} SPOOL_ID={int(spool_id or 0)}")
+        # Show the choice right away; SpoolLink confirms it with filament_spool_id a moment later
+        self.spools.mapping[str(slot_index)] = {**(self.spools.mapping.get(str(slot_index)) or {}),
+                                                "spool_id": spool_id or None, "manual": True, "source": "printer"}
+        self.spools.hold(slot_index)
+        if self.data is not None:
+            self.data.spoolman = self._spoolman_data(self.data.slots)
+            self.async_update_listeners()
 
     async def async_weigh_spool(self, slot_index: int | None, spool_id: int | None,
                                 weight: float, gross: bool = True) -> dict[str, Any]:

@@ -42,6 +42,13 @@ class SpoolManager:
         self.printer_ids: list[int] | None = None
         # Moonraker's own [spoolman] component books usage while printing (SpoolLink or by hand)
         self.external_booking = False
+        # Moonraker components (``spoollink`` = paxx12 SpoolLink is enabled); None = not read yet
+        self.components: set[str] | None = None
+        # Spools chosen in the card before SpoolLink was on: handed to the printer once
+        self.to_push: dict[int, int] = {}
+        # head -> time until which a just sent SET_SPOOL_ID is shown although the printer
+        # still reports the old spool (SpoolLink resolves it asynchronously)
+        self._held: dict[int, float] = {}
 
     @property
     def enabled(self) -> bool:
@@ -80,8 +87,12 @@ class SpoolManager:
 
     @property
     def spoollink(self) -> bool:
-        """The printer keeps the spool per head itself (paxx12 SpoolLink)."""
-        return self.printer_ids is not None
+        """The printer keeps the spool per head itself (paxx12 SpoolLink).
+
+        paxx12's RFID patch adds ``filament_spool_id`` even with Spoolman switched
+        off, so the Moonraker component ``spoollink`` must be loaded as well.
+        """
+        return self.printer_ids is not None and self.components is not None and "spoollink" in self.components
 
     @property
     def books(self) -> bool:
@@ -92,14 +103,25 @@ class SpoolManager:
         """Update the assignment per head. True = changed (save)."""
         if not self.enabled or not self.online:
             return False
-        if self.printer_ids is not None:
+        if self.spoollink and self.printer_ids is not None:
             # SpoolLink: the printer is the source of truth, no own guessing
+            known = {s["id"] for s in self.spools}
             changed = False
             for slot in slots:
                 idx = slot["index"]
                 sid = self.printer_ids[idx] if idx < len(self.printer_ids) else 0
+                old = self.mapping.get(str(idx)) or {}
+                if self._held.get(idx, 0) > time.monotonic() and sid != old.get("spool_id"):
+                    continue  # printer has not taken over our SET_SPOOL_ID yet
+                self._held.pop(idx, None)
+                if (not sid and old.get("manual") and old.get("source") != "printer"
+                        and old.get("spool_id") in known and slot.get("loaded")):
+                    # chosen in the card before SpoolLink was on: give it to the printer
+                    # (otherwise nobody books this head's usage)
+                    self.to_push[idx] = old["spool_id"]
+                    continue
                 entry = {"spool_id": sid or None, "manual": True, "fp": slot_fingerprint(slot), "source": "printer"}
-                if self.mapping.get(str(idx)) != entry:
+                if old != entry:
                     self.mapping[str(idx)] = entry
                     changed = True
             return changed
@@ -159,6 +181,9 @@ class SpoolManager:
         entry = self.mapping.get(str(index))
         if entry is not None:
             entry["sync_until"] = time.time() + seconds
+
+    def hold(self, index: int, seconds: float = 20) -> None:
+        self._held[index] = time.monotonic() + seconds
 
     def assigned(self) -> dict[int, int | None]:
         return {int(k): v.get("spool_id") for k, v in self.mapping.items()}

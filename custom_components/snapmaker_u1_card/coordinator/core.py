@@ -593,7 +593,9 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                 pass
             try:
                 # Moonraker's own [spoolman] (paxx12 SpoolLink or by hand) books usage itself
-                self.spools.external_booking = "spoolman" in await self.client.components()
+                comps = set(await self.client.components())
+                self.spools.components = comps
+                self.spools.external_booking = "spoolman" in comps
             except MoonrakerError:
                 pass
             try:
