@@ -147,6 +147,25 @@ class MoonrakerClient:
         cams = (result or {}).get("webcams") if isinstance(result, dict) else None
         return [c for c in cams or [] if isinstance(c, dict) and c.get("enabled", True)]
 
+    async def webrtc_signal(self, url: str, body: dict[str, Any]) -> Any:
+        """One signalling step of camera-streamer's WebRTC protocol (paxx12 v4l2-mpp).
+
+        The printer sends no CORS headers, so the card cannot talk to it from
+        the browser; Home Assistant relays the few small JSON messages. The
+        video itself then flows directly between the browser and the printer.
+        """
+        try:
+            async with self._session.post(url, json=body, headers=self._headers,
+                                          timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                text = await resp.text()
+                if resp.status >= 400:
+                    raise MoonrakerError(f"HTTP {resp.status}: {text[:200]}")
+                return json.loads(text) if text.strip() else {}
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise MoonrakerConnectionError(f"{self.host} not reachable: {err}") from err
+        except ValueError as err:
+            raise MoonrakerError("Invalid WebRTC answer") from err
+
     async def fetch_image(self, url: str, timeout: float = 5) -> bytes | None:
         """A JPEG/PNG from ``url`` or None (HTTP error, not an image, timeout)."""
         try:
@@ -196,6 +215,28 @@ class MoonrakerClient:
     async def file_metadata(self, filename: str) -> dict[str, Any]:
         result = await self._get_json("/server/files/metadata", {"filename": filename})
         return result if isinstance(result, dict) else {}
+
+    async def read_tail(self, relative: str, size: int, root: str = "gcodes") -> bytes:
+        """The last ``size`` bytes of a file (HTTP Range; without Range support the
+        whole file is streamed and only its end is kept)."""
+        url = f"{self.base_url}/server/files/{quote(root)}/{quote(relative)}"
+        try:
+            async with self._session.get(
+                url, headers={**self._headers, "Range": f"bytes=-{int(size)}"},
+                timeout=aiohttp.ClientTimeout(total=120, sock_connect=10, sock_read=30),
+            ) as resp:
+                if resp.status >= 400:
+                    raise MoonrakerError(f"HTTP {resp.status} for {root}/{relative}")
+                if resp.status == 206:
+                    return (await resp.read())[-size:]
+                tail = bytearray()
+                async for chunk in resp.content.iter_chunked(256 * 1024):
+                    tail += chunk
+                    if len(tail) > 2 * size:
+                        del tail[:-size]
+                return bytes(tail[-size:])
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise MoonrakerConnectionError(str(err)) from err
 
     async def download(self, relative: str, root: str = "gcodes") -> bytes:
         """Download a small file completely into memory."""

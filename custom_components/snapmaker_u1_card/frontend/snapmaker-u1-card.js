@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.6.0b7";
+  var CARD_VERSION = "1.6.0b8";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -493,6 +493,60 @@
     "Pause": "Pause",
     "Pausiert": "Paused",
     "Pausiere …": "Pausing …",
+    "3D-Waben": "3D honeycomb",
+    "Adaptiv kubisch": "Adaptive cubic",
+    "Außenwand {v}": "Outer wall {v}",
+    "Baum (automatisch)": "Tree (auto)",
+    "Baum (manuell)": "Tree (manual)",
+    "Blitz": "Lightning",
+    "Bügeln": "Ironing",
+    "Die Datei enthält keine Slicer-Einstellungen.": "The file contains no slicer settings.",
+    "Dreiecke": "Triangles",
+    "Druckplatte": "Build plate",
+    "Düse {n} · Bett {b}": "Nozzle {n} · bed {b}",
+    "Einstellungen werden gelesen …": "Reading settings …",
+    "Geradlinig": "Rectilinear",
+    "Gitter": "Grid",
+    "In Klammern: erste Schicht.": "In brackets: first layer.",
+    "Infill": "Infill",
+    "Infill {v}": "Infill {v}",
+    "Kubisch": "Cubic",
+    "Linien": "Line",
+    "Mausohren": "Mouse ears",
+    "Naht": "Seam",
+    "Normal (automatisch)": "Normal (auto)",
+    "Normal (manuell)": "Normal (manual)",
+    "Profil": "Profile",
+    "Rand (Brim)": "Brim",
+    "Reinigungsturm": "Prime tower",
+    "Schichthöhe": "Layer height",
+    "Slicer-Einstellungen": "Slicer settings",
+    "Stützen": "Supports",
+    "Temperaturen": "Temperatures",
+    "Waben": "Honeycomb",
+    "Wände": "Walls",
+    "alle festen Schichten": "all solid layers",
+    "an": "on",
+    "ausgerichtet": "aligned",
+    "automatisch": "automatic",
+    "außen": "outer",
+    "außen und innen": "outer and inner",
+    "erste {v}": "first {v}",
+    "hinten": "back",
+    "innen": "inner",
+    "nur vom Bett": "from the bed only",
+    "nächste": "nearest",
+    "oben {n}": "top {n}",
+    "obere Flächen": "top surfaces",
+    "oberste Fläche": "topmost surface",
+    "unten {n}": "bottom {n}",
+    "zufällig": "random",
+    "{n} Wände": "{n} walls",
+    "Akzentfarbe": "Accent colour",
+    "WebRTC (paxx12-Firmware)": "WebRTC (paxx12 firmware)",
+    "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Empty = automatic: WebRTC when the printer offers it (less delay and data). If no direct connection works (away without VPN), MJPEG stays.",
+    "Aus (MJPEG)": "Off (MJPEG)",
+    "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Empty = your Home Assistant theme's primary colour. Colours the card's buttons, sliders and highlights.",
     "Wieder #{id} {name}?": "Use #{id} {name} again?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "This spool was in this head before unloading",
     "Andere Spule wählen": "Choose another spool",
@@ -557,6 +611,43 @@
     "{n} neueste": "{n} newest"
   };
 
+  // frontend/src/accent.js
+  function parseColor(value) {
+    if (Array.isArray(value) && value.length === 3 && value.every((v) => Number.isFinite(Number(v)))) {
+      return value.map((v) => Math.max(0, Math.min(255, Math.round(Number(v)))));
+    }
+    const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(value || "").trim());
+    if (!m) return null;
+    const hex = m[1].length === 3 ? m[1].replace(/./g, (c) => c + c) : m[1];
+    return [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  }
+  var lum = ([r, g, b]) => {
+    const ch = (c) => {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
+  };
+  function accentVars(value) {
+    const rgb = parseColor(value);
+    if (!rgb) return {};
+    const col = `rgb(${rgb.join(", ")})`;
+    const dark = lum(rgb) > 0.4;
+    return {
+      "--u1-primary": col,
+      "--u1-on-primary": dark ? "#111318" : "#ffffff",
+      "--u1-primary-container": `color-mix(in srgb, ${col} 32%, var(--u1-surface))`,
+      "--u1-on-primary-container": "var(--u1-on)"
+    };
+  }
+  function applyAccent(el, value) {
+    const vars = accentVars(value);
+    for (const k of ["--u1-primary", "--u1-on-primary", "--u1-primary-container", "--u1-on-primary-container"]) {
+      if (vars[k]) el.style.setProperty(k, vars[k]);
+      else el.style.removeProperty(k);
+    }
+  }
+
   // frontend/src/editor.js
   var SECTION_LABELS = {
     stage: "Kamera",
@@ -585,6 +676,7 @@
     camera_mode: "Kameramodus",
     hide_overlay: "Fortschritt auf dem Kamerabild ausblenden",
     state_accent: "Rahmen in der Farbe des Zustands",
+    accent_color: "Akzentfarbe",
     camera_fit: "Skalierung",
     camera_height: "Bildhöhe (px)",
     refresh: "Bildrate (s)",
@@ -605,7 +697,8 @@
     bed_grid: "Raster über dem Bild",
     camera_wake: "Kamera bei stehendem Bild wecken",
     camera_direct: "Direktstream vom Drucker",
-    camera_direct_url: "Adresse des Direktstreams"
+    camera_direct_url: "Adresse des Direktstreams",
+    camera_webrtc: "WebRTC (paxx12-Firmware)"
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -619,11 +712,13 @@
     emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
     camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
     camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
+    camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
     camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
     state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
+    accent_color: "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.",
     navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog"
   };
   function configForm(mini) {
@@ -653,6 +748,7 @@
     };
     const schema = mini ? [
       { name: "printer_name", selector: { text: {} } },
+      { name: "accent_color", selector: { color_rgb: {} } },
       { name: "hide_filaments", selector: { boolean: {} } },
       { name: "navigation_path", selector: { text: {} } },
       advanced
@@ -665,6 +761,7 @@
         options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) }))
       } } },
       { name: "state_accent", selector: { boolean: {} } },
+      { name: "accent_color", selector: { color_rgb: {} } },
       { name: "layer_view", selector: { select: { mode: "dropdown", options: opts([["part", "Teil vergrößert"], ["bed", "Ganzes Druckbett"]]) } } },
       { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
         ["show", "Anzeigen, mit Rückfrage"],
@@ -713,6 +810,7 @@
           { name: "camera_wake", selector: { boolean: {} } },
           { name: "camera_direct", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (immer über Home Assistant)"]]) } } },
           { name: "camera_direct_url", selector: { text: {} } },
+          { name: "camera_webrtc", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
           { name: "printer_image", selector: { text: {} } }
         ]
       },
@@ -749,8 +847,8 @@
         n++;
       }
       if (n && opaque < px.length / 4 * 0.97) {
-        const lum = sum / n;
-        tone = lum < 0.3 ? "dark" : lum > 0.8 ? "light" : "";
+        const lum2 = sum / n;
+        tone = lum2 < 0.3 ? "dark" : lum2 > 0.8 ? "light" : "";
       }
     } catch (e) {
       tone = "";
@@ -1437,8 +1535,8 @@
   function onColor(c) {
     const x = hexRgb(c);
     if (!x) return "#fff";
-    const lum = (0.299 * x[0] + 0.587 * x[1] + 0.114 * x[2]) / 255;
-    return lum > 0.6 ? "#1b1b1f" : "#fff";
+    const lum2 = (0.299 * x[0] + 0.587 * x[1] + 0.114 * x[2]) / 255;
+    return lum2 > 0.6 ? "#1b1b1f" : "#fff";
   }
   function suggestMapping(filaments, slots) {
     const loaded = slots.filter((s) => s.loaded);
@@ -1694,12 +1792,11 @@
         const busy = this._isPending(`r:${h.idx}`);
         return `<div class="spool-restore">
           <button type="button" class="spool-line" data-spoolrestore="${h.idx}" data-spool="${back.id}" ${busy ? 'disabled aria-busy="true"' : ""}
-            title="${esc(tr("Diese Spule steckte vor dem Entladen in diesem Kopf"))}">
+            title="${esc(`${tr("Diese Spule steckte vor dem Entladen in diesem Kopf")}: #${back.id} ${[back.vendor, back.name].filter(Boolean).join(" ")}`)}">
             ${busy ? this._spin() : `<span class="spool-dot" style="--fil:${esc(back.color || "var(--u1-outline)")}"></span>`}
-            <span>${esc(tr("Wieder #{id} {name}?", { id: back.id, name: [back.vendor, back.name].filter(Boolean).join(" ") }))}</span>
+            <span>${esc(tr("Wieder #{id} {name}?", { id: back.id, name: back.name || "" }))}</span>
           </button>
-          <button type="button" class="icon outline sm" data-spoolpick="${h.idx}" aria-label="${tr("Andere Spule wählen")}" title="${tr("Andere Spule wählen")}">
-            <ha-icon icon="mdi:database-search-outline"></ha-icon></button>
+          <button type="button" class="spool-other" data-spoolpick="${h.idx}">${tr("Andere Spule wählen")}</button>
         </div>`;
       }
       if (!sp) {
@@ -3527,6 +3624,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .stage .frame.zoomed:active { cursor: grabbing; }
   .stage .frame img { -webkit-user-drag: none; user-select: none; }
   .frame img { will-change: transform; }
+  /* WebRTC video over the MJPEG image; visible once it plays */
+  .frame video[data-rtc] {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+    background: transparent; opacity: 0; transition: opacity var(--u1-motion); will-change: transform;
+  }
+  .frame.rtc-on video[data-rtc] { opacity: 1; }
   .zoom-ctl { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 3;
     display: flex; flex-direction: column; gap: 6px; opacity: .55; transition: opacity var(--u1-motion); }
   .frame:hover .zoom-ctl, .frame.zoomed .zoom-ctl { opacity: 1; }
@@ -4042,11 +4145,30 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   a.btn ha-icon { --mdc-icon-size: 18px; }
   @keyframes u1spin { to { transform: rotate(360deg); } }
-  .spool-restore { display: flex; gap: 6px; align-items: stretch; }
-  .spool-restore .spool-line { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
-    border-style: dashed; color: var(--u1-primary); }
-  .spool-restore .spool-line span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Print dialog: slicer settings */
+  .dlg-settings { border: 1px solid var(--u1-outline); border-radius: var(--u1-r-m); padding: 0 12px; }
+  .dlg-settings > summary { display: flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer;
+    font-weight: 500; list-style: none; flex-wrap: wrap; }
+  .dlg-settings > summary::-webkit-details-marker { display: none; }
+  .dlg-settings > summary ha-icon { --mdc-icon-size: 18px; color: var(--u1-primary); }
+  .dlg-settings > summary .t-label { font-weight: 400; }
+  .dlg-settings[open] { padding-bottom: 10px; }
+  .set-grid { display: grid; gap: 6px; }
+  .set-row { display: grid; grid-template-columns: minmax(96px, auto) 1fr; gap: 12px; font-size: 13px; }
+  .set-row .k { color: var(--u1-on-variant); }
+  .set-row .v { min-width: 0; overflow-wrap: anywhere; }
+  .set-temps { display: flex; flex-direction: column; gap: 4px; }
+  .set-temp { display: inline-flex; align-items: center; gap: 6px; }
+  .set-temp .spool-dot { width: 12px; height: 12px; }
+  .spool-restore { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+  .spool-restore .spool-line { flex-direction: row; align-items: center; gap: 6px;
+    border: 1px dashed var(--u1-primary); color: var(--u1-primary); font-weight: 500; line-height: 1.3; }
+  .spool-restore .spool-line > span:last-child { min-width: 0; overflow-wrap: break-word; }
   .spool-restore .spool-dot { width: 12px; height: 12px; flex: none; }
+  .spool-restore .spool-line .su1-spin { width: 12px; height: 12px; }
+  .spool-other { all: unset; cursor: pointer; align-self: flex-start; padding: 2px 8px; font-size: 11px;
+    color: var(--u1-on-variant); text-decoration: underline; text-underline-offset: 2px; }
+  .spool-other:focus-visible { outline: 2px solid var(--u1-primary); border-radius: 6px; }
   /* Command sent, printer has not confirmed yet */
   .su1-spin {
     width: 16px; height: 16px; flex: none; border-radius: 50%;
@@ -4691,11 +4813,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         z.s = clamp(z.s, 1, 6);
         z.x = clamp(z.x, w * (1 - z.s), 0);
         z.y = clamp(z.y, h * (1 - z.s), 0);
-        const el = img();
-        if (el) {
+        [img(), frame.querySelector("video[data-rtc]")].forEach((el) => {
+          if (!el) return;
           el.style.transformOrigin = "0 0";
           el.style.transform = z.s > 1 ? `translate(${z.x}px, ${z.y}px) scale(${z.s})` : "";
-        }
+        });
         frame.classList.toggle("zoomed", z.s > 1);
         const badge = frame.querySelector(".zoom-badge");
         if (badge) {
@@ -4910,9 +5032,114 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         confirmed: false,
         busy: false,
         error: null,
-        slotsKey: JSON.stringify(slots)
+        slotsKey: JSON.stringify(slots),
+        settings: void 0
+        // slicer settings: undefined = loading, null = none
       };
       this._renderDialog();
+      this._loadSettings(this._dlg);
+    }
+    /** Slicer settings of the file (integration reads the G-code's config block once per version). */
+    async _loadSettings(g) {
+      const key = `${g.file.path}|${g.file.modified || ""}`;
+      const cache = this._settingsCache || (this._settingsCache = /* @__PURE__ */ new Map());
+      if (cache.has(key) || !/\.gcode$/i.test(g.file.path)) {
+        g.settings = cache.has(key) ? cache.get(key) : null;
+        this._renderDialog();
+        return;
+      }
+      let res = null;
+      try {
+        const r = await this._hass.callService(
+          DOMAIN,
+          "file_settings",
+          { path: g.file.path, ...this._entryData() },
+          void 0,
+          false,
+          true
+        );
+        res = r && r.response && r.response.settings || null;
+        cache.set(key, res);
+      } catch (e) {
+        res = null;
+      }
+      if (this._dlg !== g) return;
+      g.settings = res;
+      this._renderDialog();
+    }
+    _settingsHtml(g) {
+      const s = g.settings;
+      if (s === void 0) return `<div class="t-label">${tr("Einstellungen werden gelesen …")}</div>`;
+      if (!s) return `<div class="t-label">${tr("Die Datei enthält keine Slicer-Einstellungen.")}</div>`;
+      const mm = (v) => v == null ? null : `${fixed(v, 2)} mm`;
+      const human = (v) => {
+        const k = String(v || "").toLowerCase();
+        const map = {
+          "tree(auto)": tr("Baum (automatisch)"),
+          "normal(auto)": tr("Normal (automatisch)"),
+          "tree(manual)": tr("Baum (manuell)"),
+          "normal(manual)": tr("Normal (manuell)"),
+          auto_brim: tr("automatisch"),
+          outer_only: tr("außen"),
+          inner_only: tr("innen"),
+          outer_and_inner: tr("außen und innen"),
+          brim_ears: tr("Mausohren"),
+          gyroid: "Gyroid",
+          grid: tr("Gitter"),
+          crosshatch: "Crosshatch",
+          cubic: tr("Kubisch"),
+          honeycomb: tr("Waben"),
+          "3dhoneycomb": tr("3D-Waben"),
+          adaptivecubic: tr("Adaptiv kubisch"),
+          lightning: tr("Blitz"),
+          line: tr("Linien"),
+          rectilinear: tr("Geradlinig"),
+          triangles: tr("Dreiecke"),
+          aligned: tr("ausgerichtet"),
+          nearest: tr("nächste"),
+          back: tr("hinten"),
+          random: tr("zufällig"),
+          "top surfaces": tr("obere Flächen"),
+          "topmost surface": tr("oberste Fläche"),
+          "all solid layer": tr("alle festen Schichten")
+        };
+        return map[k] || String(v || "").replace(/_/g, " ");
+      };
+      const rows = [];
+      const row = (k, v) => {
+        if (v != null && v !== "") rows.push(`<div class="set-row"><span class="k">${esc(k)}</span><span class="v">${v}</span></div>`);
+      };
+      row(tr("Profil"), s.profile ? esc(s.profile) : null);
+      row(tr("Schichthöhe"), s.layer_height != null ? esc(`${mm(s.layer_height)}${s.first_layer_height != null && s.first_layer_height !== s.layer_height ? ` · ${tr("erste {v}", { v: mm(s.first_layer_height) })}` : ""}`) : null);
+      const shells = [
+        s.walls != null ? tr("{n} Wände", { n: s.walls }) : null,
+        s.top_layers != null ? tr("oben {n}", { n: s.top_layers }) : null,
+        s.bottom_layers != null ? tr("unten {n}", { n: s.bottom_layers }) : null
+      ].filter(Boolean);
+      row(tr("Wände"), shells.length ? esc(shells.join(" · ")) : null);
+      row(tr("Infill"), s.infill != null ? esc(`${fixed(s.infill, 0)} %${s.infill_pattern ? ` · ${human(s.infill_pattern)}` : ""}`) : null);
+      row(tr("Stützen"), s.support === null || s.support === void 0 ? null : esc(s.support ? [tr("an"), s.support_type ? human(s.support_type) : "", s.support_build_plate_only ? tr("nur vom Bett") : ""].filter(Boolean).join(" · ") : tr("aus")));
+      row(tr("Rand (Brim)"), s.brim ? esc([human(s.brim), s.brim_width ? mm(s.brim_width) : ""].filter(Boolean).join(" · ")) : null);
+      row(tr("Reinigungsturm"), s.prime_tower === null || s.prime_tower === void 0 ? null : esc(s.prime_tower ? tr("an") : tr("aus")));
+      row(tr("Bügeln"), s.ironing ? esc(human(s.ironing)) : null);
+      row(tr("Naht"), s.seam ? esc(human(s.seam)) : null);
+      row(tr("Druckplatte"), s.plate ? esc(s.plate) : null);
+      const speeds = [
+        s.speed_outer_wall != null ? tr("Außenwand {v}", { v: `${fixed(s.speed_outer_wall, 0)} mm/s` }) : null,
+        s.speed_infill != null ? tr("Infill {v}", { v: `${fixed(s.speed_infill, 0)} mm/s` }) : null
+      ].filter(Boolean);
+      row(tr("Geschwindigkeit"), speeds.length ? esc(speeds.join(" · ")) : null);
+      const temps = g.used.map((f, i) => {
+        const n = (s.nozzle_temp || [])[i], b = (s.bed_temp || [])[i];
+        const n1 = (s.nozzle_temp_first || [])[i], b1 = (s.bed_temp_first || [])[i];
+        if (n == null && b == null) return "";
+        const nz = n != null ? `${fixed(n, 0)}${n1 != null && n1 !== n ? ` (${fixed(n1, 0)})` : ""} °C` : "–";
+        const bd = b != null ? `${fixed(b, 0)}${b1 != null && b1 !== b ? ` (${fixed(b1, 0)})` : ""} °C` : "–";
+        return `<span class="set-temp"><span class="spool-dot" style="--fil:${esc(f.color || "var(--u1-outline)")}"></span>${esc(tr("Düse {n} · Bett {b}", { n: nz, b: bd }))}</span>`;
+      }).filter(Boolean);
+      if (temps.length) rows.push(`<div class="set-row"><span class="k">${esc(tr("Temperaturen"))}</span><span class="v set-temps">${temps.join("")}</span></div>`);
+      if (!rows.length) return `<div class="t-label">${tr("Die Datei enthält keine Slicer-Einstellungen.")}</div>`;
+      return `<div class="set-grid">${rows.join("")}</div>${temps.length ? `<div class="t-label">${tr("In Klammern: erste Schicht.")}</div>` : ""}`;
     }
     /** New slot data (e.g. spool changed) without losing the user's choices. */
     _refreshDialog() {
@@ -5048,6 +5275,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         </header>
         ${off ? `<div class="dlg-note" data-tone="${p.autoOn ? "" : "error"}"><ha-icon icon="mdi:power-plug-off"></ha-icon>
           ${p.autoOn ? tr("Der Drucker ist aus. Er wird eingeschaltet und startet den Druck, sobald er bereit ist (ca. 1–2 min).") : tr("Der Drucker ist aus. Bitte erst einschalten.")}</div>` : ""}
+        <details class="dlg-settings" data-settings ${g.settingsOpen ? "open" : ""}>
+          <summary><ha-icon icon="mdi:tune-variant"></ha-icon>${tr("Slicer-Einstellungen")}${g.settings && g.settings.layer_height != null ? ` <span class="t-label">${esc([
+        `${fixed(g.settings.layer_height, 2)} mm`,
+        g.settings.infill != null ? `${fixed(g.settings.infill, 0)} %` : "",
+        g.settings.support ? tr("Stützen") : ""
+      ].filter(Boolean).join(" · "))}</span>` : ""}</summary>
+          ${this._settingsHtml(g)}
+        </details>
         <div class="dlg-sec">${tr("Filamentzuordnung")}${stale ? ` <span class="t-label">${tr("(Stand vor dem Ausschalten)")}</span>` : ""}</div>
         <div class="map">${rows}</div>
         <div class="dlg-sec">${tr("Optionen")}</div>
@@ -5103,6 +5338,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (del) del.addEventListener("click", () => this._deleteFile());
       const qb = el.querySelector('[data-dlg="queue"]');
       if (qb) qb.addEventListener("click", () => this._submitPrint(true));
+      const det = el.querySelector("[data-settings]");
+      if (det) det.addEventListener("toggle", () => {
+        g.settingsOpen = det.open;
+      });
       const pin = el.querySelector("[data-pause]");
       if (pin) pin.addEventListener("change", () => {
         g.pause = pin.value;
@@ -5220,8 +5459,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const pane = img.closest("[data-pane]");
       if (document.hidden || !this._onScreen || pane && pane.hidden) {
         if (this._streamImg) this._stopStream();
+        this._stopRtc();
         return;
       }
+      const frame = img.closest(".frame");
+      if (frame && this._tickRtc(frame, img)) return;
       const wantStream = this._cfg.camera_mode !== "still" && !this._preview && Date.now() >= this._streamFailUntil;
       if (wantStream) {
         this._tickStream(img, cam);
@@ -5959,6 +6201,146 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/card/webrtc.js
+  var RTC_CONNECT_MS = 8e3;
+  var RTC_RETRY_MS = 10 * 60 * 1e3;
+  var WebrtcMixin = (Base) => class extends Base {
+    _rtcWanted() {
+      const v = this._cfg.camera_webrtc;
+      if (v === false || v === "off" || this._preview) return false;
+      if (this._cfg.camera_mode === "still" || this._cfg.printer_image) return false;
+      if (typeof window.RTCPeerConnection !== "function") return false;
+      if (this._ents && this._ents.camAlt) return false;
+      if (Date.now() < (this._rtcFailUntil || 0)) return false;
+      const st = this._ents && this._ents.files && this._st(this._ents.files);
+      return !!(st && st.attributes && st.attributes.webrtc && st.attributes.entry_id);
+    }
+    /** Called from the camera tick. true = WebRTC is showing the picture. */
+    _tickRtc(frame, img) {
+      if (!this._rtcWanted()) {
+        this._stopRtc();
+        return false;
+      }
+      const rtc = this._rtc;
+      if (!rtc) {
+        this._startRtc(frame, img);
+        return false;
+      }
+      if (rtc.video.parentNode !== frame) {
+        frame.insertBefore(rtc.video, img.nextSibling);
+        if (rtc.playing) frame.classList.add("rtc-on");
+        const p = rtc.video.play && rtc.video.play();
+        if (p && p.catch) p.catch(() => {
+        });
+      }
+      rtc.video.style.objectFit = img.style.objectFit;
+      if (!rtc.playing) {
+        if (Date.now() - rtc.started > RTC_CONNECT_MS) this._rtcFailed("timeout");
+        return false;
+      }
+      const t = rtc.video.currentTime;
+      if (t !== rtc.lastTime) {
+        rtc.lastTime = t;
+        this._lastChange = Date.now();
+      }
+      frame.dataset.stale = (Date.now() - this._lastChange) / 1e3 > (this._cfg.stale_after || 90) ? "1" : "0";
+      if (Date.now() - this._lastChange > 15e3) {
+        this._rtcFailed("frozen");
+        return false;
+      }
+      return true;
+    }
+    async _rtcSignal(body) {
+      const st = this._st(this._ents.files);
+      return this._hass.callApi("POST", `${DOMAIN}/webrtc/${st.attributes.entry_id}`, body);
+    }
+    _startRtc(frame, img) {
+      const video = document.createElement("video");
+      video.dataset.rtc = "";
+      video.muted = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.setAttribute("playsinline", "");
+      video.setAttribute("aria-label", img.getAttribute("alt") || "");
+      video.style.objectFit = img.style.objectFit;
+      const rtc = this._rtc = { video, pc: null, playing: false, started: Date.now(), lastTime: -1, id: null };
+      frame.insertBefore(video, img.nextSibling);
+      video.addEventListener("playing", () => {
+        if (this._rtc !== rtc) return;
+        rtc.playing = true;
+        this._lastChange = Date.now();
+        frame.classList.add("rtc-on");
+        if (video.videoWidth && video.videoHeight && !parseInt(this._cfg.camera_height, 10)) {
+          const ratio = `${video.videoWidth} / ${video.videoHeight}`;
+          if (ratio !== this._camAspect) {
+            this._camAspect = ratio;
+            frame.style.aspectRatio = ratio;
+          }
+        }
+        if (this._streamImg) this._stopStream();
+        if (this._applyZoom) this._applyZoom();
+      });
+      this._connectRtc(rtc).catch((err) => {
+        if (this._rtc === rtc) this._rtcFailed(err);
+      });
+    }
+    async _connectRtc(rtc) {
+      const offer = await this._rtcSignal({ type: "request", iceServers: [] });
+      if (this._rtc !== rtc) return;
+      if (!offer || !offer.sdp) throw new Error("no offer");
+      rtc.id = offer.id;
+      const pc = rtc.pc = new RTCPeerConnection({ iceServers: offer.iceServers || [] });
+      pc.addTransceiver("video", { direction: "recvonly" });
+      pc.ontrack = (e) => {
+        if (e.streams && e.streams[0]) rtc.video.srcObject = e.streams[0];
+      };
+      pc.ondatachannel = (e) => {
+        if (e.channel && e.channel.label === "keepalive") e.channel.onmessage = () => {
+          try {
+            e.channel.send("pong");
+          } catch (x) {
+          }
+        };
+      };
+      pc.onicecandidate = (e) => {
+        if (e.candidate && rtc.id != null && this._rtc === rtc) {
+          this._rtcSignal({ type: "remote_candidate", id: rtc.id, candidates: [e.candidate.toJSON ? e.candidate.toJSON() : e.candidate] }).catch(() => {
+          });
+        }
+      };
+      pc.onconnectionstatechange = () => {
+        if (this._rtc !== rtc) return;
+        if (pc.connectionState === "failed" || pc.connectionState === "closed") this._rtcFailed(pc.connectionState);
+      };
+      await pc.setRemoteDescription({ type: offer.type || "offer", sdp: offer.sdp });
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      if (this._rtc !== rtc) return;
+      await this._rtcSignal({ type: "answer", id: rtc.id, sdp: pc.localDescription.sdp });
+    }
+    _rtcFailed(why) {
+      if (this._cfg.debug_camera) console.info("snapmaker-u1-card: WebRTC off,", why);
+      this._rtcFailUntil = Date.now() + RTC_RETRY_MS;
+      this._stopRtc();
+    }
+    _stopRtc() {
+      const rtc = this._rtc;
+      if (!rtc) return;
+      this._rtc = null;
+      try {
+        if (rtc.pc) rtc.pc.close();
+      } catch (e) {
+      }
+      try {
+        rtc.video.srcObject = null;
+      } catch (e) {
+      }
+      const frame = rtc.video.closest(".frame");
+      if (frame) frame.classList.remove("rtc-on");
+      rtc.video.remove();
+    }
+  };
+
   // frontend/src/card/card.js
   var MIXINS = [
     StateMixin,
@@ -5977,7 +6359,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     CameraMixin,
     HeadDialogMixin,
     SafetyMixin,
-    MachineMixin
+    MachineMixin,
+    WebrtcMixin
   ];
   var U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
   var SnapmakerU1Card = class extends U1Base {
@@ -6007,8 +6390,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._entsSource = null;
       this._dlg = null;
       this._onVis = () => {
-        if (document.hidden) this._stopStream();
-        else this._tickCamera();
+        if (document.hidden) {
+          this._stopStream();
+          this._stopRtc();
+        } else this._tickCamera();
       };
       this._preview = false;
       this._onScreen = true;
@@ -6085,6 +6470,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._dlgEl = null;
       this._stopStream();
       if (this.shadowRoot) this.shadowRoot.innerHTML = "";
+      applyAccent(this, this._cfg.accent_color);
     }
     getCardSize() {
       return 20;

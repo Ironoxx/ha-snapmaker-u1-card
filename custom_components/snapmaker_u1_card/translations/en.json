@@ -692,6 +692,20 @@
         }
       }
     },
+    "file_settings": {
+      "name": "Slicer settings",
+      "description": "Layer height, walls, infill, supports, plate and temperatures from the G-code's settings block.",
+      "fields": {
+        "path": {
+          "name": "File",
+          "description": "Path relative to gcodes, e.g. parts/holder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
     "delete_file": {
       "name": "Delete file",
       "description": "Deletes a print file on the printer. Not while it is printing or queued.",
@@ -779,6 +793,10 @@
         "color": {
           "name": "Colour",
           "description": "Hex colour, e.g. #FF0000."
+        },
+        "colors": {
+          "name": "Colours (multi-colour)",
+          "description": "Up to 5 hex colours for a multi-colour spool (silk dual/tri, rainbow). Replaces Colour."
         },
         "force": {
           "name": "Overwrite official spool",

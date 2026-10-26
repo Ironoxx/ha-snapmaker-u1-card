@@ -216,6 +216,17 @@ file_details:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+file_settings:
+  fields:
+    path:
+      required: true
+      example: "benchy.gcode"
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
 delete_file:
   fields:
     path:
@@ -298,6 +309,11 @@ set_filament:
       example: "#FF0000"
       selector:
         text:
+    colors:
+      example: '["#C0C0C0", "#FFD700"]'
+      selector:
+        text:
+          multiple: true
     force:
       selector:
         boolean:

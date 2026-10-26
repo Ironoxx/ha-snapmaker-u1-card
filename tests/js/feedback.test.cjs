@@ -136,7 +136,7 @@ states["sensor.snapmaker_u1_card_filaments"].attributes.spoolman = {
 };
 card.hass = hass();
 const rb = R().querySelector("[data-spoolrestore='0']");
-assert.ok(rb && /Wieder #5 GEEETECH PLA Black\?/.test(rb.textContent), "Vorschlag sichtbar");
+assert.ok(rb && /Wieder #5 PLA Black\?/.test(rb.textContent), "Vorschlag sichtbar");
 assert.ok(R().querySelector(".spool-restore [data-spoolpick='0']"), "andere Spule waehlbar");
 rb.click();
 assert.ok(calls.some((c) => c[1] === "set_spool" && c[2].slot === 1 && c[2].spool_id === 5), "set_spool gesendet");

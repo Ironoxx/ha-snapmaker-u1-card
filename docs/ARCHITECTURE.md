@@ -15,7 +15,7 @@ meant for contributors; user documentation lives in the [README](../README.md).
  coordinator/  U1Coordinator  (one per config entry, polls + live updates)
    │  U1Data snapshot
    ├─► sensor.py / binary_sensor.py / switch.py / update.py   (entities)
-   ├─► layer_view.py, video.py, upload.py                      (HTTP views for the card)
+   ├─► layer_view.py, video.py, upload.py, webrtc_view.py      (HTTP views for the card)
    └─► services (__init__.py), voice.py (Assist intents)
                                               ▲
  frontend/src  ──esbuild──►  custom_components/.../frontend/snapmaker-u1-card.js
@@ -48,6 +48,8 @@ Nabu Casa.
 | `i18n.py` | German/English choice for messages created in Python |
 | `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `number.py`, `update.py` | Entities (top cover entities are added once a cover is detected) |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
+| `webrtc_view.py` | Relays the camera-streamer WebRTC signalling (request/answer/candidates) to the paxx12 camera; the video flows browser ↔ printer |
+| `blueprints.py`, `blueprints/` | Copies the shipped automation blueprints (status light) to `config/blueprints/automation/snapmaker_u1_card/` |
 | `webcam.py` | Camera detection (`live` / `still` / `wake` / `none`), images, wake-up, stream fallback |
 | `camera.py` | Own camera entity: MJPEG pass-through (`live`) or still images (HA builds the stream) |
 | `config_flow.py`, `diagnostics.py` | Setup/options UI and the diagnostics download |

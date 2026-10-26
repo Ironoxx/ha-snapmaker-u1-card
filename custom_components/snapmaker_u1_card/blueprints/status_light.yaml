@@ -1,0 +1,167 @@
+# Installed by the Snapmaker U1 Card integration (snapmaker_u1_card).
+# It is copied again when the integration ships a newer version, unless you
+# remove the "managed" line below. Version: 1
+# managed: snapmaker_u1_card
+blueprint:
+  name: Snapmaker U1 – status light
+  description: >-
+    Colours one or more lights (WLED, LED strips, any colour light) by the print
+    state of the Snapmaker U1: printing, paused, error, finished and idle.
+    Färbt Lampen nach dem Druckzustand: druckt, Pause, Fehler, fertig, bereit.
+  domain: automation
+  source_url: https://github.com/Ironoxx/ha-snapmaker-u1-card/blob/main/custom_components/snapmaker_u1_card/blueprints/status_light.yaml
+  input:
+    state_sensor:
+      name: Print state
+      description: >-
+        The Moonraker integration's "Current print state" sensor of the printer
+        (states printing, paused, complete, cancelled, error, standby).
+      selector:
+        entity:
+          filter:
+            - domain: sensor
+              integration: moonraker
+    lights:
+      name: Lights
+      selector:
+        target:
+          entity:
+            - domain: light
+    brightness:
+      name: Brightness
+      default: 80
+      selector:
+        number: { min: 1, max: 100, unit_of_measurement: "%", mode: slider }
+    color_printing:
+      name: Colour while printing
+      default: [0, 120, 255]
+      selector: { color_rgb: {} }
+    effect_printing:
+      name: Effect while printing (optional)
+      description: e.g. a WLED effect such as "Breathe". Leave empty for a steady colour; only for lights with effects.
+      default: ""
+      selector: { text: {} }
+    color_paused:
+      name: Colour when paused
+      default: [255, 170, 0]
+      selector: { color_rgb: {} }
+    color_error:
+      name: Colour on error / cancel
+      default: [255, 0, 0]
+      selector: { color_rgb: {} }
+    color_complete:
+      name: Colour when finished
+      default: [0, 200, 60]
+      selector: { color_rgb: {} }
+    complete_minutes:
+      name: Show "finished" for
+      description: Minutes, then the idle behaviour applies. 0 = until the next print.
+      default: 30
+      selector:
+        number: { min: 0, max: 720, unit_of_measurement: min, mode: box }
+    idle_action:
+      name: When idle
+      default: "off"
+      selector:
+        select:
+          options:
+            - { value: "off", label: Turn off }
+            - { value: color, label: Idle colour }
+            - { value: keep, label: Leave as is }
+    color_idle:
+      name: Idle colour
+      default: [255, 255, 255]
+      selector: { color_rgb: {} }
+
+mode: restart
+max_exceeded: silent
+
+trigger:
+  - platform: state
+    entity_id: !input state_sensor
+    not_to: [unavailable, unknown]
+
+variables:
+  brightness: !input brightness
+  effect_printing: !input effect_printing
+  complete_minutes: !input complete_minutes
+  idle_action: !input idle_action
+
+action:
+  - choose:
+      - conditions: "{{ trigger.to_state.state == 'printing' }}"
+        sequence:
+          - if: "{{ effect_printing | trim != '' }}"
+            then:
+              - service: light.turn_on
+                target: !input lights
+                data:
+                  rgb_color: !input color_printing
+                  brightness_pct: "{{ brightness }}"
+                  effect: "{{ effect_printing }}"
+            else:
+              - service: light.turn_on
+                target: !input lights
+                data:
+                  rgb_color: !input color_printing
+                  brightness_pct: "{{ brightness }}"
+      - conditions: "{{ trigger.to_state.state == 'paused' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input lights
+            data:
+              rgb_color: !input color_paused
+              brightness_pct: "{{ brightness }}"
+      - conditions: "{{ trigger.to_state.state in ['error', 'cancelled'] }}"
+        sequence:
+          - service: light.turn_on
+            target: !input lights
+            data:
+              rgb_color: !input color_error
+              brightness_pct: "{{ brightness }}"
+      - conditions: "{{ trigger.to_state.state == 'complete' }}"
+        sequence:
+          - service: light.turn_on
+            target: !input lights
+            data:
+              rgb_color: !input color_complete
+              brightness_pct: "{{ brightness }}"
+          - condition: template
+            value_template: "{{ complete_minutes | int(0) > 0 }}"
+          - delay:
+              minutes: "{{ complete_minutes | int(0) }}"
+          - choose:
+              - conditions: "{{ idle_action == 'off' }}"
+                sequence:
+                  - service: light.turn_off
+                    target: !input lights
+              - conditions: "{{ idle_action == 'color' }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input lights
+                    data:
+                      rgb_color: !input color_idle
+                      brightness_pct: "{{ brightness }}"
+      - conditions: "{{ trigger.to_state.state == 'standby' }}"
+        sequence:
+          # Right after a finished print: keep "finished" for the rest of its time
+          - if: "{{ trigger.from_state is not none and trigger.from_state.state == 'complete' }}"
+            then:
+              - condition: template
+                value_template: "{{ complete_minutes | int(0) > 0 }}"
+              - delay:
+                  seconds: >-
+                    {{ [0, complete_minutes | int(0) * 60
+                        - (now() - trigger.from_state.last_changed).total_seconds()] | max | int }}
+          - choose:
+              - conditions: "{{ idle_action == 'off' }}"
+                sequence:
+                  - service: light.turn_off
+                    target: !input lights
+              - conditions: "{{ idle_action == 'color' }}"
+                sequence:
+                  - service: light.turn_on
+                    target: !input lights
+                    data:
+                      rgb_color: !input color_idle
+                      brightness_pct: "{{ brightness }}"

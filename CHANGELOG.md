@@ -4,6 +4,29 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b8
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b7 … b1 below.
+
+**New**
+- **Camera over WebRTC in the card** (paxx12 Extended Firmware): less delay and far less data than MJPEG. Signalling goes through Home Assistant (the printer sends no CORS headers), the video directly between browser and printer – at home and over VPN. MJPEG stays as fallback. Card option `camera_webrtc` (`auto`/`off`).
+- **Slicer settings in the print dialog:** profile, layer height, walls, infill and pattern, supports, brim, prime tower, seam, plate type, speeds, nozzle and bed temperature per filament – read once per file from the settings block at the end of the G-code. Service `file_settings`.
+- **Status light blueprint:** installed with the integration; colours WLED or any colour light by the print state (printing with optional effect, paused, error, finished for a set time, idle).
+- **Accent colour** for the card and the mini card (`accent_color`, colour picker in the editor).
+- **Multi-colour spools:** a Spoolman spool with several colours (silk dual/tri, rainbow) is written to the printer with all colours (`COLOR_NUMS`/`COLORS`); `set_filament` takes `colors`. With SpoolLink the printer already does this itself.
+- The direct MJPEG stream uses the detected stream address (paxx12 2.x: `/webcam/stream.mjpg`).
+- The "use the last spool again" hint is laid out for narrow head columns.
+
+---
+**Deutsch**
+- Neu: **Kamera per WebRTC in der Karte** (paxx12 Extended Firmware) – weniger Verzögerung, viel weniger Daten als MJPEG. Die Signalisierung läuft über Home Assistant (der Drucker sendet keine CORS-Header), das Video direkt zwischen Browser und Drucker – zu Hause und per VPN. MJPEG bleibt als Rückfall. Kartenoption `camera_webrtc` (`auto`/`off`).
+- Neu: **Slicer-Einstellungen im Druckdialog** – Profil, Schichthöhe, Wände, Infill und Muster, Stützen, Brim, Reinigungsturm, Naht, Plattentyp, Geschwindigkeiten, Düsen- und Betttemperatur je Filament; einmal je Datei aus dem Einstellungsblock am Ende des G-Codes gelesen. Dienst `file_settings`.
+- Neu: **Blueprint Status-Licht** – wird mit der Integration installiert; färbt WLED oder jede Farblampe nach dem Druckzustand (druckt mit optionalem Effekt, Pause, Fehler, fertig für eine einstellbare Zeit, bereit).
+- Neu: **Akzentfarbe** für Karte und Mini-Karte (`accent_color`, Farbwähler im Editor).
+- Neu: **Mehrfarbige Spulen** – eine Spoolman-Spule mit mehreren Farben (Silk Dual/Tri, Regenbogen) wird mit allen Farben an den Drucker geschrieben (`COLOR_NUMS`/`COLORS`); `set_filament` nimmt `colors`. Mit SpoolLink macht das der Drucker schon selbst.
+- Der direkte MJPEG-Stream nutzt die erkannte Stream-Adresse (paxx12 2.x: `/webcam/stream.mjpg`).
+- Der Hinweis „Wieder Spule …?“ passt jetzt auch in schmale Kopf-Spalten.
+
 ## 1.6.0b7
 
 **Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b6 … b1 below.

@@ -378,3 +378,62 @@ def test_cost_gap_when_price_unknown():
     assert act["energy_prev"] == 1.0
     act = p._accumulate_cost(act, 2.0, 0.30)
     assert act["energy_prev"] == 2.0 and round(act["energy_cost"], 4) == 0.30
+
+
+ORCA_TAIL = """G1 X10 Y10
+; EXECUTABLE_BLOCK_END
+; CONFIG_BLOCK_START
+; layer_height = 0.2
+; initial_layer_print_height = 0.25
+; wall_loops = 3
+; top_shell_layers = 5
+; bottom_shell_layers = 3
+; sparse_infill_density = 15%
+; sparse_infill_pattern = gyroid
+; enable_support = 1
+; support_type = tree(auto)
+; support_on_build_plate_only = 1
+; brim_type = auto_brim
+; brim_width = 5
+; enable_prime_tower = 1
+; ironing_type = no ironing
+; seam_position = aligned
+; curr_bed_type = Textured PEI Plate
+; textured_plate_temp = 65,65,70,60
+; textured_plate_temp_initial_layer = 65,65,75,60
+; hot_plate_temp = 55,55,55,55
+; nozzle_temperature = 220,220,250,230
+; nozzle_temperature_initial_layer = 225,225,255,235
+; outer_wall_speed = 200
+; sparse_infill_speed = 270
+; print_settings_id = "0.20mm Standard @Snapmaker U1"
+; printer_settings_id = Snapmaker U1 0.4 nozzle
+; CONFIG_BLOCK_END
+"""
+
+
+def test_slicer_settings_orca():
+    raw = p.read_settings_block(ORCA_TAIL)
+    s = p.parse_slicer_settings(raw, [0, 2])
+    assert s["layer_height"] == 0.2 and s["first_layer_height"] == 0.25
+    assert (s["walls"], s["top_layers"], s["bottom_layers"]) == (3, 5, 3)
+    assert s["infill"] == 15 and s["infill_pattern"] == "gyroid"
+    assert s["support"] is True and s["support_type"] == "tree(auto)" and s["support_build_plate_only"] is True
+    assert s["brim"] == "auto_brim" and s["brim_width"] == 5
+    assert s["prime_tower"] is True and s["ironing"] is None and s["seam"] == "aligned"
+    assert s["plate"] == "Textured PEI Plate"
+    # the plate's bed temperature, only for the used filaments 1 and 3
+    assert s["bed_temp"] == [65, 70] and s["bed_temp_first"] == [65, 75]
+    assert s["nozzle_temp"] == [220, 250] and s["nozzle_temp_first"] == [225, 255]
+    assert s["speed_outer_wall"] == 200 and s["speed_infill"] == 270
+    assert s["profile"] == "0.20mm Standard @Snapmaker U1"
+
+
+def test_slicer_settings_prusa_and_empty():
+    raw = p.read_settings_block("; perimeters = 2\n; fill_density = 20%\n; support_material = 0\n"
+                                "; temperature = 215\n; bed_temperature = 60\n; first_layer_height = 0.3\n")
+    s = p.parse_slicer_settings(raw)
+    assert s["walls"] == 2 and s["infill"] == 20 and s["support"] is False and s["support_type"] is None
+    assert s["nozzle_temp"] == [215] and s["bed_temp"] == [60] and s["first_layer_height"] == 0.3
+    assert p.parse_slicer_settings({}) is None
+    assert p.parse_slicer_settings(p.read_settings_block("; just a comment\nG1 X1")) is None

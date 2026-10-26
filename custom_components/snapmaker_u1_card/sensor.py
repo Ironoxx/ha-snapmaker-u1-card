@@ -270,8 +270,12 @@ class FilesSensor(U1Entity, SensorEntity):
             "entry_id": self.coordinator.config_entry.entry_id,
             # the card compares it with its own version (outdated browser cache)
             "version": VERSION,
-            # direct MJPEG stream in the LAN (card option camera_direct)
-            "stream_url": f"http://{self.coordinator.config_entry.data[CONF_HOST]}/webcam/?action=stream",
+            # direct MJPEG stream in the LAN (card option camera_direct): the detected one
+            "stream_url": (self.coordinator.webcam.stream_url if self.coordinator.webcam.mode == "live"
+                           and self.coordinator.webcam.stream_url
+                           else f"http://{self.coordinator.config_entry.data[CONF_HOST]}/webcam/?action=stream"),
+            # paxx12 camera with WebRTC: the card connects through the relay view
+            "webrtc": bool(self.coordinator.webcam.webrtc_url),
         }
 
 

@@ -277,12 +277,14 @@ class SpoolMixin:
         same = ((slot.get("type") or "").upper() == fil["type"]
                 and (slot.get("sub_type") or "").upper() == fil["sub_type"].upper()
                 and (slot.get("vendor") or "").upper() == fil["vendor"].upper()
-                and (not fil["color"] or (slot.get("color") or "").upper() == fil["color"].upper()))
+                and (not fil["color"] or (slot.get("color") or "").upper() == fil["color"].upper())
+                and (not fil["colors"] or [c.upper() for c in slot.get("colors") or []] == [c.upper() for c in fil["colors"]]))
         if same:
             return
         self.spools.expect_filament_change(slot["index"])
         self._save()
-        await self.async_set_filament(slot["index"], fil["type"], fil["sub_type"], fil["vendor"], fil["color"])
+        await self.async_set_filament(slot["index"], fil["type"], fil["sub_type"], fil["vendor"], fil["color"],
+                                      colors=fil["colors"] or None)
 
     async def _enrich_active(self, active: dict[str, Any]) -> None:
         """Remember the slicer data of the running file (filaments, weight, image)."""

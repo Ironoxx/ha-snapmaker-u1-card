@@ -39,7 +39,8 @@ class PrinterSettingsMixin:
         await self._run_gcode(script)
 
     async def async_set_filament(self, slot: int, ftype: str, sub_type: str | None, vendor: str | None,
-                                 color: str | None = None, force: bool = False) -> None:
+                                 color: str | None = None, force: bool = False,
+                                 colors: list[str] | None = None) -> None:
         """Set material, vendor and colour of a slot (0-3) by hand, e.g. for spools without RFID."""
         if self.current_print_state() in ACTIVE_PRINT_STATES:
             raise HomeAssistantError(tr(
@@ -51,7 +52,7 @@ class PrinterSettingsMixin:
                 self.hass, "Offizielle Snapmaker-Spule (RFID): nur mit force überschreibbar.",
                 "Official Snapmaker spool (RFID): can only be overwritten with force."))
         try:
-            script = filament_gcode(slot, ftype, sub_type or "", vendor or "", color, force)
+            script = filament_gcode(slot, ftype, sub_type or "", vendor or "", color, force, colors)
         except ValueError as err:
             raise HomeAssistantError(str(err)) from err
         await self._run_gcode(script)

@@ -94,8 +94,83 @@ export const PrintDialogMixin = (Base) => class extends Base {
       busy: false,
       error: null,
       slotsKey: JSON.stringify(slots),
+      settings: undefined, // slicer settings: undefined = loading, null = none
     };
     this._renderDialog();
+    this._loadSettings(this._dlg);
+  }
+
+  /** Slicer settings of the file (integration reads the G-code's config block once per version). */
+  async _loadSettings(g) {
+    const key = `${g.file.path}|${g.file.modified || ""}`;
+    const cache = this._settingsCache || (this._settingsCache = new Map());
+    if (cache.has(key) || !/\.gcode$/i.test(g.file.path)) {
+      g.settings = cache.has(key) ? cache.get(key) : null;
+      this._renderDialog();
+      return;
+    }
+    let res = null;
+    try {
+      const r = await this._hass.callService(DOMAIN, "file_settings", { path: g.file.path, ...this._entryData() },
+        undefined, false, true);
+      res = (r && r.response && r.response.settings) || null;
+      cache.set(key, res);
+    } catch (e) { res = null; }
+    if (this._dlg !== g) return;
+    g.settings = res;
+    this._renderDialog();
+  }
+
+  _settingsHtml(g) {
+    const s = g.settings;
+    if (s === undefined) return `<div class="t-label">${tr("Einstellungen werden gelesen …")}</div>`;
+    if (!s) return `<div class="t-label">${tr("Die Datei enthält keine Slicer-Einstellungen.")}</div>`;
+    const mm = (v) => (v == null ? null : `${fixed(v, 2)} mm`);
+    const human = (v) => {
+      const k = String(v || "").toLowerCase();
+      const map = {
+        "tree(auto)": tr("Baum (automatisch)"), "normal(auto)": tr("Normal (automatisch)"), "tree(manual)": tr("Baum (manuell)"),
+        "normal(manual)": tr("Normal (manuell)"), auto_brim: tr("automatisch"), outer_only: tr("außen"), inner_only: tr("innen"),
+        outer_and_inner: tr("außen und innen"), brim_ears: tr("Mausohren"), gyroid: "Gyroid", grid: tr("Gitter"),
+        crosshatch: "Crosshatch", cubic: tr("Kubisch"), honeycomb: tr("Waben"), "3dhoneycomb": tr("3D-Waben"),
+        adaptivecubic: tr("Adaptiv kubisch"), lightning: tr("Blitz"), line: tr("Linien"), rectilinear: tr("Geradlinig"),
+        triangles: tr("Dreiecke"), aligned: tr("ausgerichtet"), nearest: tr("nächste"), back: tr("hinten"), random: tr("zufällig"),
+        "top surfaces": tr("obere Flächen"), "topmost surface": tr("oberste Fläche"), "all solid layer": tr("alle festen Schichten"),
+      };
+      return map[k] || String(v || "").replace(/_/g, " ");
+    };
+    const rows = [];
+    const row = (k, v) => { if (v != null && v !== "") rows.push(`<div class="set-row"><span class="k">${esc(k)}</span><span class="v">${v}</span></div>`); };
+    row(tr("Profil"), s.profile ? esc(s.profile) : null);
+    row(tr("Schichthöhe"), s.layer_height != null
+      ? esc(`${mm(s.layer_height)}${s.first_layer_height != null && s.first_layer_height !== s.layer_height ? ` · ${tr("erste {v}", { v: mm(s.first_layer_height) })}` : ""}`) : null);
+    const shells = [s.walls != null ? tr("{n} Wände", { n: s.walls }) : null,
+      s.top_layers != null ? tr("oben {n}", { n: s.top_layers }) : null,
+      s.bottom_layers != null ? tr("unten {n}", { n: s.bottom_layers }) : null].filter(Boolean);
+    row(tr("Wände"), shells.length ? esc(shells.join(" · ")) : null);
+    row(tr("Infill"), s.infill != null ? esc(`${fixed(s.infill, 0)} %${s.infill_pattern ? ` · ${human(s.infill_pattern)}` : ""}`) : null);
+    row(tr("Stützen"), s.support === null || s.support === undefined ? null
+      : esc(s.support ? [tr("an"), s.support_type ? human(s.support_type) : "", s.support_build_plate_only ? tr("nur vom Bett") : ""].filter(Boolean).join(" · ") : tr("aus")));
+    row(tr("Rand (Brim)"), s.brim ? esc([human(s.brim), s.brim_width ? mm(s.brim_width) : ""].filter(Boolean).join(" · ")) : null);
+    row(tr("Reinigungsturm"), s.prime_tower === null || s.prime_tower === undefined ? null : esc(s.prime_tower ? tr("an") : tr("aus")));
+    row(tr("Bügeln"), s.ironing ? esc(human(s.ironing)) : null);
+    row(tr("Naht"), s.seam ? esc(human(s.seam)) : null);
+    row(tr("Druckplatte"), s.plate ? esc(s.plate) : null);
+    const speeds = [s.speed_outer_wall != null ? tr("Außenwand {v}", { v: `${fixed(s.speed_outer_wall, 0)} mm/s` }) : null,
+      s.speed_infill != null ? tr("Infill {v}", { v: `${fixed(s.speed_infill, 0)} mm/s` }) : null].filter(Boolean);
+    row(tr("Geschwindigkeit"), speeds.length ? esc(speeds.join(" · ")) : null);
+    // Temperatures per used filament, in the order of the mapping list
+    const temps = g.used.map((f, i) => {
+      const n = (s.nozzle_temp || [])[i], b = (s.bed_temp || [])[i];
+      const n1 = (s.nozzle_temp_first || [])[i], b1 = (s.bed_temp_first || [])[i];
+      if (n == null && b == null) return "";
+      const nz = n != null ? `${fixed(n, 0)}${n1 != null && n1 !== n ? ` (${fixed(n1, 0)})` : ""} °C` : "–";
+      const bd = b != null ? `${fixed(b, 0)}${b1 != null && b1 !== b ? ` (${fixed(b1, 0)})` : ""} °C` : "–";
+      return `<span class="set-temp"><span class="spool-dot" style="--fil:${esc(f.color || "var(--u1-outline)")}"></span>${esc(tr("Düse {n} · Bett {b}", { n: nz, b: bd }))}</span>`;
+    }).filter(Boolean);
+    if (temps.length) rows.push(`<div class="set-row"><span class="k">${esc(tr("Temperaturen"))}</span><span class="v set-temps">${temps.join("")}</span></div>`);
+    if (!rows.length) return `<div class="t-label">${tr("Die Datei enthält keine Slicer-Einstellungen.")}</div>`;
+    return `<div class="set-grid">${rows.join("")}</div>${temps.length ? `<div class="t-label">${tr("In Klammern: erste Schicht.")}</div>` : ""}`;
   }
 
   /** New slot data (e.g. spool changed) without losing the user's choices. */
@@ -232,6 +307,12 @@ export const PrintDialogMixin = (Base) => class extends Base {
         ${off ? `<div class="dlg-note" data-tone="${p.autoOn ? "" : "error"}"><ha-icon icon="mdi:power-plug-off"></ha-icon>
           ${p.autoOn ? tr("Der Drucker ist aus. Er wird eingeschaltet und startet den Druck, sobald er bereit ist (ca. 1–2 min).")
             : tr("Der Drucker ist aus. Bitte erst einschalten.")}</div>` : ""}
+        <details class="dlg-settings" data-settings ${g.settingsOpen ? "open" : ""}>
+          <summary><ha-icon icon="mdi:tune-variant"></ha-icon>${tr("Slicer-Einstellungen")}${g.settings && g.settings.layer_height != null
+            ? ` <span class="t-label">${esc([`${fixed(g.settings.layer_height, 2)} mm`, g.settings.infill != null ? `${fixed(g.settings.infill, 0)} %` : "",
+              g.settings.support ? tr("Stützen") : ""].filter(Boolean).join(" · "))}</span>` : ""}</summary>
+          ${this._settingsHtml(g)}
+        </details>
         <div class="dlg-sec">${tr("Filamentzuordnung")}${stale ? ` <span class="t-label">${tr("(Stand vor dem Ausschalten)")}</span>` : ""}</div>
         <div class="map">${rows}</div>
         <div class="dlg-sec">${tr("Optionen")}</div>
@@ -286,6 +367,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (del) del.addEventListener("click", () => this._deleteFile());
     const qb = el.querySelector('[data-dlg="queue"]');
     if (qb) qb.addEventListener("click", () => this._submitPrint(true));
+    const det = el.querySelector("[data-settings]");
+    if (det) det.addEventListener("toggle", () => { g.settingsOpen = det.open; });
     const pin = el.querySelector("[data-pause]");
     if (pin) pin.addEventListener("change", () => { g.pause = pin.value; this._renderDialog(); });
 

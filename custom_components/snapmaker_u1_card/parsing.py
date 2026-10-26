@@ -155,8 +155,11 @@ def parse_rfid(info: Any) -> dict[str, Any] | None:
     }
 
 
+FILAMENT_COLORS_MAX = 5  # print_task_config.FILAMENT_COLOR_NUMS_MAX
+
+
 def filament_gcode(slot: int, ftype: str, sub_type: str, vendor: str,
-                   color: str | None = None, force: bool = False) -> str:
+                   color: str | None = None, force: bool = False, colors: list[str] | None = None) -> str:
     """SET_PRINT_FILAMENT_CONFIG for a slot (0-3), e.g. a spool without RFID tag.
 
     The firmware wants vendor, type and sub type together and refuses a slot
@@ -175,8 +178,15 @@ def filament_gcode(slot: int, ftype: str, sub_type: str, vendor: str,
         raise ValueError("Filament type missing")
     parts = ["SET_PRINT_FILAMENT_CONFIG", f"CONFIG_EXTRUDER={slot}", f"VENDOR={quote(vendor)}",
              f"FILAMENT_TYPE={quote(str(ftype).upper())}", f"FILAMENT_SUBTYPE={quote(sub_type)}"]
-    if color:
-        rgb = normalize_color(color)
+    multi = [normalize_color(c) for c in colors or []]
+    if any(c is None for c in multi):
+        raise ValueError(f"Invalid colour in {colors!r}")
+    if len(multi) > 1:
+        # Multi-colour spool (silk dual/tri, rainbow): the firmware takes up to 5
+        multi = multi[:FILAMENT_COLORS_MAX]
+        parts.append(f"COLOR_NUMS={len(multi)} COLORS={','.join(c.lstrip('#') for c in multi)} MULTI_MODE=0")
+    elif color or multi:
+        rgb = normalize_color(color or multi[0])
         if rgb is None:
             raise ValueError(f"Invalid colour {color!r}")
         parts.append(f"FILAMENT_COLOR_RGBA={rgb.lstrip('#')}FF")
@@ -344,6 +354,111 @@ def describe_file(path: str, entry: dict[str, Any], meta: dict[str, Any] | None)
         "filaments": parse_file_filaments(meta),
         "thumb": None,
     }
+
+
+# ── Slicer settings (file inspector) ─────────────────────────────────────────
+# Orca/Snapmaker Orca write all settings as "; key = value" into a config block
+# at the end of the G-code; PrusaSlicer does the same with other key names.
+# Only the tail of the file is read (SETTINGS_TAIL_BYTES).
+SETTINGS_TAIL_BYTES = 256 * 1024
+_SETTING_LINE = re.compile(r"^;\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$")
+# Orca curr_bed_type -> key of the bed temperature for that plate
+_PLATE_TEMP_KEYS = {
+    "cool plate": "cool_plate_temp", "engineering plate": "eng_plate_temp",
+    "high temp plate": "hot_plate_temp", "smooth pei plate": "hot_plate_temp",
+    "textured pei plate": "textured_plate_temp", "supertack plate": "supertack_plate_temp",
+    "textured cool plate": "textured_cool_plate_temp",
+}
+
+
+def read_settings_block(text: str) -> dict[str, str]:
+    """All "; key = value" comment lines (last one wins), e.g. Orca's CONFIG_BLOCK."""
+    out: dict[str, str] = {}
+    for line in text.splitlines():
+        m = _SETTING_LINE.match(line)
+        if m and len(m.group(2)) < 2000:
+            out[m.group(1)] = m.group(2)
+    return out
+
+
+def _num(value: Any) -> float | None:
+    try:
+        return float(str(value).strip().rstrip("%").strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _list(value: Any) -> list[str]:
+    return [v.strip() for v in re.split(r"[,;]", str(value or "")) if v.strip()] if value is not None else []
+
+
+def _flag(value: Any) -> bool | None:
+    v = str(value).strip().lower() if value is not None else ""
+    if v in ("1", "true", "yes"):
+        return True
+    if v in ("0", "false", "no"):
+        return False
+    return None
+
+
+def parse_slicer_settings(raw: dict[str, str], used: list[int] | None = None) -> dict[str, Any] | None:
+    """Readable slicer settings from a G-code config block; None if nothing is known.
+
+    ``used``: filament indices the print uses (temperatures only for those).
+    """
+    g = raw.get
+    if not raw:
+        return None
+    def per_filament(*keys: str) -> list[float | None]:
+        for key in keys:
+            vals = [_num(v) for v in _list(g(key))]
+            if vals:
+                idx = used if used else range(len(vals))
+                return [vals[i] if i < len(vals) else None for i in idx]
+        return []
+    plate = g("curr_bed_type")
+    plate_key = _PLATE_TEMP_KEYS.get(str(plate or "").strip().lower())
+    bed = per_filament(*(k for k in (plate_key, "bed_temperature") if k))
+    bed_first = per_filament(*(k for k in (f"{plate_key}_initial_layer" if plate_key else None,
+                                           "first_layer_bed_temperature") if k))
+    density = g("sparse_infill_density") or g("fill_density")
+    dens = _num(density)
+    if dens is not None and "%" not in str(density) and dens <= 1:
+        dens *= 100  # PrusaSlicer may write 0.15
+    support = _flag(g("enable_support") if g("enable_support") is not None else g("support_material"))
+    brim = g("brim_type")
+    brim_w = _num(g("brim_width"))
+    out = {
+        "slicer": g("slicer") or None,
+        "profile": (g("print_settings_id") or "").strip('"') or None,
+        "printer_profile": (g("printer_settings_id") or "").strip('"') or None,
+        "layer_height": _num(g("layer_height")),
+        "first_layer_height": _num(g("initial_layer_print_height") or g("first_layer_height")),
+        "walls": _num(g("wall_loops") or g("perimeters")),
+        "top_layers": _num(g("top_shell_layers") or g("top_solid_layers")),
+        "bottom_layers": _num(g("bottom_shell_layers") or g("bottom_solid_layers")),
+        "infill": dens,
+        "infill_pattern": g("sparse_infill_pattern") or g("fill_pattern") or None,
+        "support": support,
+        "support_type": (g("support_type") or g("support_material_style")) if support else None,
+        "support_build_plate_only": _flag(g("support_on_build_plate_only") or g("support_material_buildplate_only")) if support else None,
+        "brim": (brim if brim and brim != "no_brim" else None) or (f"{brim_w:g} mm" if brim is None and brim_w else None),
+        "brim_width": brim_w if brim and brim != "no_brim" else None,
+        "prime_tower": _flag(g("enable_prime_tower") or g("wipe_tower")),
+        "ironing": (g("ironing_type") if g("ironing_type") not in (None, "no ironing") else None),
+        "seam": g("seam_position") or None,
+        "plate": plate or None,
+        "nozzle_temp": per_filament("nozzle_temperature", "temperature"),
+        "nozzle_temp_first": per_filament("nozzle_temperature_initial_layer", "first_layer_temperature"),
+        "bed_temp": bed,
+        "bed_temp_first": bed_first,
+        "speed_outer_wall": _num(g("outer_wall_speed") or g("external_perimeter_speed")),
+        "speed_inner_wall": _num(g("inner_wall_speed") or g("perimeter_speed")),
+        "speed_infill": _num(g("sparse_infill_speed") or g("infill_speed")),
+    }
+    if all(v in (None, [], "") for v in out.values()):
+        return None
+    return out
 
 
 # ── Tool changes ────────────────────────────────────────────────────────────
@@ -826,8 +941,10 @@ def spool_filament(spool: dict[str, Any] | None) -> dict[str, Any] | None:
     sub = next((s for s in SPOOL_SUBTYPES if s.lower() in words), "")
     if not sub and len(parts) > 1:
         sub = parts[1].capitalize()
+    colors = [c for c in (normalize_color(x) for x in spool.get("colors") or []) if c]
     return {"type": ftype, "sub_type": sub, "vendor": clean(spool.get("vendor")) or "Generic",
-            "color": normalize_color(spool.get("color"))}
+            "color": normalize_color(spool.get("color")),
+            "colors": colors[:FILAMENT_COLORS_MAX] if len(colors) > 1 else []}
 
 
 def _round(value: Any) -> float | None:

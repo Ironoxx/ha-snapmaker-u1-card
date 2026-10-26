@@ -258,12 +258,11 @@ export const OverviewMixin = (Base) => class extends Base {
       const busy = this._isPending(`r:${h.idx}`);
       return `<div class="spool-restore">
           <button type="button" class="spool-line" data-spoolrestore="${h.idx}" data-spool="${back.id}" ${busy ? 'disabled aria-busy="true"' : ""}
-            title="${esc(tr("Diese Spule steckte vor dem Entladen in diesem Kopf"))}">
+            title="${esc(`${tr("Diese Spule steckte vor dem Entladen in diesem Kopf")}: #${back.id} ${[back.vendor, back.name].filter(Boolean).join(" ")}`)}">
             ${busy ? this._spin() : `<span class="spool-dot" style="--fil:${esc(back.color || "var(--u1-outline)")}"></span>`}
-            <span>${esc(tr("Wieder #{id} {name}?", { id: back.id, name: [back.vendor, back.name].filter(Boolean).join(" ") }))}</span>
+            <span>${esc(tr("Wieder #{id} {name}?", { id: back.id, name: back.name || "" }))}</span>
           </button>
-          <button type="button" class="icon outline sm" data-spoolpick="${h.idx}" aria-label="${tr("Andere Spule wählen")}" title="${tr("Andere Spule wählen")}">
-            <ha-icon icon="mdi:database-search-outline"></ha-icon></button>
+          <button type="button" class="spool-other" data-spoolpick="${h.idx}">${tr("Andere Spule wählen")}</button>
         </div>`;
     }
     if (!sp) {

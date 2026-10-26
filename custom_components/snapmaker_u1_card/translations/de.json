@@ -692,6 +692,20 @@
         }
       }
     },
+    "file_settings": {
+      "name": "Slicer-Einstellungen",
+      "description": "Schichthöhe, Wände, Infill, Stützen, Druckplatte und Temperaturen aus dem Einstellungsblock des G-Codes.",
+      "fields": {
+        "path": {
+          "name": "Datei",
+          "description": "Pfad relativ zu gcodes, z. B. teile/halter.gcode"
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
     "delete_file": {
       "name": "Datei löschen",
       "description": "Löscht eine Druckdatei auf dem Drucker. Nicht während sie gedruckt wird oder in der Warteschlange steht.",
@@ -779,6 +793,10 @@
         "color": {
           "name": "Farbe",
           "description": "Hex-Farbe, z. B. #FF0000."
+        },
+        "colors": {
+          "name": "Farben (mehrfarbig)",
+          "description": "Bis zu 5 Hex-Farben für eine mehrfarbige Spule (Silk Dual/Tri, Regenbogen). Ersetzt Farbe."
         },
         "force": {
           "name": "Offizielle Spule überschreiben",

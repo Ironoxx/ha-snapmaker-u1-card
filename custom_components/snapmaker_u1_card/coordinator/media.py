@@ -32,10 +32,13 @@ from ..jobs import (
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     PRINTABLE_SUFFIXES,
+    SETTINGS_TAIL_BYTES,
     TIMELAPSE_SKIP_ROOTS,
     describe_file,
+    parse_slicer_settings,
     pick_thumbnail,
     pick_timelapses,
+    read_settings_block,
     thumbnail_source,
 )
 
@@ -237,6 +240,34 @@ class MediaMixin:
         info = await self._file_info(entry, asyncio.Semaphore(1))
         self._pinned.add(path)
         return info
+
+    async def async_file_settings(self, path: str) -> dict[str, Any] | None:
+        """Slicer settings of a G-code file (layer height, infill, supports, temperatures ...).
+
+        Read once per file version from the config block at the end of the file.
+        """
+        entry = next((e for e in self._all_files if e["path"] == path), None)
+        if entry is None:
+            raise HomeAssistantError(tr(self.hass, f"Datei {path} gibt es auf dem Drucker nicht.", f"File {path} does not exist on the printer."))
+        key = (path, float(entry.get("modified") or 0))
+        cache = self.__dict__.setdefault("_settings_cache", {})
+        if key in cache:
+            return cache[key]
+        if not path.lower().endswith(".gcode"):
+            return None
+        info = await self._file_info(entry, asyncio.Semaphore(1))
+        used = [f["index"] for f in info.get("filaments") or [] if f.get("used")]
+        try:
+            tail = await self.client.read_tail(path, SETTINGS_TAIL_BYTES)
+        except MoonrakerError as err:
+            raise HomeAssistantError(str(err)) from err
+        raw = await self.hass.async_add_executor_job(
+            lambda: read_settings_block(tail.decode("utf-8", errors="replace")))
+        result = parse_slicer_settings(raw, used or None)
+        if len(cache) > 50:
+            cache.clear()
+        cache[key] = result
+        return result
 
     def _check_file_change(self, path: str) -> None:
         """Refuse to change a file that is printing or queued."""

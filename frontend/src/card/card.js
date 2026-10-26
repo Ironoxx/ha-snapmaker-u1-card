@@ -22,6 +22,8 @@
  *   camera_height     height of the image area in px         (auto: image aspect ratio)
  *   camera_max_height upper limit for the automatic height   (520)
  *   camera_mode       auto | stream | still                  (auto: the camera entity decides)
+ *   accent_color      [r, g, b] or "#rrggbb"                 (own accent colour; empty = theme)
+ *   camera_webrtc     auto | off                             (paxx12: WebRTC, falls back to MJPEG)
  *   refresh           still image rate in seconds            (2)
  *   stream_check      stream check interval in seconds       (10)
  *   stale_after       "image outdated" after x seconds       (90)
@@ -47,6 +49,7 @@
  *                     when the integration is missing)
  */
 
+import { applyAccent } from "../accent.js";
 import { DOMAIN, SECTIONS, TAB_STORE } from "../const.js";
 import { configForm } from "../editor.js";
 import { toneThumb } from "../format.js";
@@ -69,13 +72,14 @@ import { CameraMixin } from "./camera.js";
 import { HeadDialogMixin } from "./head-dialog.js";
 import { SafetyMixin } from "./safety.js";
 import { MachineMixin } from "./machine.js";
+import { WebrtcMixin } from "./webrtc.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin, SafetyMixin, MachineMixin,
+  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -107,7 +111,7 @@ export class SnapmakerU1Card extends U1Base {
     this._entsSource = null;  // hass.entities the IDs were resolved from
     this._dlg = null;         // open print dialog
     this._onVis = () => {
-      if (document.hidden) this._stopStream();
+      if (document.hidden) { this._stopStream(); this._stopRtc(); }
       else this._tickCamera();
     };
     this._preview = false;   // edit mode or preview in the editor
@@ -178,6 +182,7 @@ export class SnapmakerU1Card extends U1Base {
     this._dlgEl = null;
     this._stopStream();
     if (this.shadowRoot) this.shadowRoot.innerHTML = "";
+    applyAccent(this, this._cfg.accent_color);
   }
 
   getCardSize() { return 20; }

@@ -64,8 +64,12 @@ export const CameraMixin = (Base) => class extends Base {
     const pane = img.closest("[data-pane]");
     if (document.hidden || !this._onScreen || (pane && pane.hidden)) {
       if (this._streamImg) this._stopStream();
+      this._stopRtc();
       return;
     }
+    // paxx12: WebRTC first; while it connects, MJPEG keeps showing the picture
+    const frame = img.closest(".frame");
+    if (frame && this._tickRtc(frame, img)) return;
 
     const wantStream = this._cfg.camera_mode !== "still" && !this._preview
       && Date.now() >= this._streamFailUntil;

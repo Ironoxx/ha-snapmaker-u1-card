@@ -39,11 +39,15 @@ own("sensor.snapmaker_u1_card_bed_mesh_spread", "0.2", {
 
 let lang = "de";
 const calls = [];
+let settingsReply = { response: { settings: { layer_height: 0.2, first_layer_height: 0.25, walls: 3, top_layers: 5,
+  bottom_layers: 3, infill: 15, infill_pattern: "gyroid", support: true, support_type: "tree(auto)", support_build_plate_only: true,
+  brim: "auto_brim", brim_width: 5, plate: "Textured PEI Plate", nozzle_temp: [220, 250], nozzle_temp_first: [225, 250],
+  bed_temp: [65, 70], bed_temp_first: [65, 70], profile: "0.20mm Standard @Snapmaker U1" } } };
 let reply = { response: { script: "M105", ok: true, error: null, responses: ["ok T0:21.0 /0.0"] } };
 const hass = () => ({
   states: JSON.parse(JSON.stringify(states)), entities: { ...reg },
   locale: { language: lang }, language: lang,
-  callService: async (...a) => { calls.push(a); if (a[1] === "send_gcode" || a[1] === "weigh_spool") { if (reply instanceof Error) throw reply; return reply; } return {}; },
+  callService: async (...a) => { calls.push(a); if (a[1] === "file_settings") return settingsReply; if (a[1] === "send_gcode" || a[1] === "weigh_spool") { if (reply instanceof Error) throw reply; return reply; } return {}; },
 });
 const card = w.document.createElement("snapmaker-u1-card");
 card.setConfig({ type: "custom:snapmaker-u1-card", controls_lock: "off" });
@@ -158,6 +162,26 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   card._dlg.map = { 0: 0, 1: 1 };
   card._renderDialog();
   assert.ok(D().textContent.includes("Düse passt nicht: Datei 0.4 mm, Kopf 0.6 mm"), "Düsenwarnung");
+  // 5b'. Slicer settings of the file (inspector)
+  await flush(); await flush();
+  assert.ok(calls.some((c) => c[1] === "file_settings" && c[2].path === "teil.gcode" && c[5] === true), "file_settings mit Antwort");
+  const set = D().querySelector("[data-settings]");
+  assert.ok(set, "Einstellungsbereich");
+  const st = set.textContent.replace(/\s+/g, " ");
+  assert.ok(st.includes("Schichthöhe") && st.includes("0,20 mm · erste 0,25 mm"), st);
+  assert.ok(st.includes("3 Wände · oben 5 · unten 3") && st.includes("15 % · Gyroid"), st);
+  assert.ok(st.includes("an · Baum (automatisch) · nur vom Bett") && st.includes("Textured PEI Plate"), st);
+  assert.ok(st.includes("Düse 220 (225) °C · Bett 65 °C") && st.includes("Düse 250 °C · Bett 70 °C"), st);
+  assert.match(set.querySelector("summary").textContent, /0,20 mm · 15 % · Stützen/);
+  // stays open across a re-render, cached for the next opening
+  set.open = true; set.dispatchEvent(new w.Event("toggle"));
+  card._renderDialog();
+  assert.ok(D().querySelector("[data-settings]").open);
+  card._closeDialog();
+  const n = calls.filter((c) => c[1] === "file_settings").length;
+  card._openPrint("teil.gcode");
+  assert.strictEqual(calls.filter((c) => c[1] === "file_settings").length, n, "aus dem Cache");
+  assert.ok(D().querySelector("[data-settings]").textContent.includes("Gyroid"));
   card._closeDialog();
 
   // 5c. Spoolman: weigh form in the head dialog, before -> after in the history

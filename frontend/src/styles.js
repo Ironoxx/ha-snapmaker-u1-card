@@ -212,6 +212,12 @@ export const STYLES = `
   .stage .frame.zoomed:active { cursor: grabbing; }
   .stage .frame img { -webkit-user-drag: none; user-select: none; }
   .frame img { will-change: transform; }
+  /* WebRTC video over the MJPEG image; visible once it plays */
+  .frame video[data-rtc] {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+    background: transparent; opacity: 0; transition: opacity var(--u1-motion); will-change: transform;
+  }
+  .frame.rtc-on video[data-rtc] { opacity: 1; }
   .zoom-ctl { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 3;
     display: flex; flex-direction: column; gap: 6px; opacity: .55; transition: opacity var(--u1-motion); }
   .frame:hover .zoom-ctl, .frame.zoomed .zoom-ctl { opacity: 1; }
@@ -727,11 +733,30 @@ export const STYLES = `
   }
   a.btn ha-icon { --mdc-icon-size: 18px; }
   @keyframes u1spin { to { transform: rotate(360deg); } }
-  .spool-restore { display: flex; gap: 6px; align-items: stretch; }
-  .spool-restore .spool-line { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
-    border-style: dashed; color: var(--u1-primary); }
-  .spool-restore .spool-line span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* Print dialog: slicer settings */
+  .dlg-settings { border: 1px solid var(--u1-outline); border-radius: var(--u1-r-m); padding: 0 12px; }
+  .dlg-settings > summary { display: flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer;
+    font-weight: 500; list-style: none; flex-wrap: wrap; }
+  .dlg-settings > summary::-webkit-details-marker { display: none; }
+  .dlg-settings > summary ha-icon { --mdc-icon-size: 18px; color: var(--u1-primary); }
+  .dlg-settings > summary .t-label { font-weight: 400; }
+  .dlg-settings[open] { padding-bottom: 10px; }
+  .set-grid { display: grid; gap: 6px; }
+  .set-row { display: grid; grid-template-columns: minmax(96px, auto) 1fr; gap: 12px; font-size: 13px; }
+  .set-row .k { color: var(--u1-on-variant); }
+  .set-row .v { min-width: 0; overflow-wrap: anywhere; }
+  .set-temps { display: flex; flex-direction: column; gap: 4px; }
+  .set-temp { display: inline-flex; align-items: center; gap: 6px; }
+  .set-temp .spool-dot { width: 12px; height: 12px; }
+  .spool-restore { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+  .spool-restore .spool-line { flex-direction: row; align-items: center; gap: 6px;
+    border: 1px dashed var(--u1-primary); color: var(--u1-primary); font-weight: 500; line-height: 1.3; }
+  .spool-restore .spool-line > span:last-child { min-width: 0; overflow-wrap: break-word; }
   .spool-restore .spool-dot { width: 12px; height: 12px; flex: none; }
+  .spool-restore .spool-line .su1-spin { width: 12px; height: 12px; }
+  .spool-other { all: unset; cursor: pointer; align-self: flex-start; padding: 2px 8px; font-size: 11px;
+    color: var(--u1-on-variant); text-decoration: underline; text-underline-offset: 2px; }
+  .spool-other:focus-visible { outline: 2px solid var(--u1-primary); border-radius: 6px; }
   /* Command sent, printer has not confirmed yet */
   .su1-spin {
     width: 16px; height: 16px; flex: none; border-radius: 50%;

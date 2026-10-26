@@ -49,7 +49,10 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **Top cover** (optional accessory): chamber mode, exhaust and circulation fan, filter runtime – only shown when a cover is plugged in.
 - **Chamber heater** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): chamber temperature, target, heater power, filter – only shown when one is configured.
 - **Nozzle per head** (diameter, high flow) and a warning in the print dialog when the file was sliced for another nozzle.
-- **Second camera** (paxx12: USB camera) switchable in the card, **RTSP** detected automatically for Home Assistant's own H.264 stream.
+- **Second camera** (paxx12: USB camera) switchable in the card, **RTSP** detected automatically for Home Assistant's own H.264 stream, **WebRTC** in the card (paxx12) with less delay and data.
+- **Slicer settings** of a file in the print dialog: layer height, walls, infill, supports, brim, plate, temperatures per filament.
+- **Status light blueprint**: colours WLED or any colour light by the print state.
+- **Own accent colour** for the card; feedback right after tapping pause, resume, cancel and the light.
 - Temperatures, targets, fans, light, axes, diagnostics and statistics.
 
 Everything runs through the Home Assistant connection. It works the same locally, over VPN and through Nabu Casa, without CORS or mixed-content problems.
@@ -170,6 +173,8 @@ All options are optional; except head names and presets they can also be set in 
 | `emergency_stop` | `show` | `show` = button with confirmation, `hold` = hold for 1 s (no dialog), `hide` = no button in the card (the HA button entity stays) |
 | `camera_direct` | `auto` | `auto` = stream straight from the printer (`camera_direct_url`, default `http://<printer>/webcam/?action=stream`): less delay, no load on HA. Not used on https pages (the browser blocks http streams there); if no frame arrives within 4 s (e.g. away from home) the card uses the HA proxy for 10 min. `off` = always through HA |
 | `camera_direct_url` | – | own URL for the direct stream |
+| `camera_webrtc` | `auto` | paxx12 Extended Firmware: show the camera over WebRTC (less delay, far less data than MJPEG). The few signalling messages go through Home Assistant, the video directly between browser and printer – works at home and over VPN; if no direct connection comes up within 8 s, MJPEG stays for 10 min. `off` = MJPEG only |
+| `accent_color` | – | own accent colour for buttons, sliders and highlights (`[255, 152, 0]` or `"#ff9800"`); empty = your theme's primary colour. Also for the mini card |
 | `camera_wake` | `true` | while the card is visible and the image stops (no stream, frozen frame), it asks the integration to send `camera.start_monitor` once (at most every 10 s) |
 | `camera_overlay` | `true` | progress on the camera image; the printer state is always shown in the top-left corner (`hide_overlay: true` also turns it off) |
 | `state_accent` | `true` | frame in the theme colour of the state (printing, paused, error, done) |
@@ -283,6 +288,7 @@ data:
   sub_type: HF       # optional
   vendor: Generic    # optional
   color: "#1B5E20"   # optional
+  colors: ["#C0C0C0", "#FFD700"]   # optional: multi-colour spool (up to 5), replaces color
   force: false       # true = also overwrite an official Snapmaker spool
 
 action: snapmaker_u1_card.set_preference
@@ -406,7 +412,9 @@ From 1.5 the integration has its own camera entity (*Camera*) and finds out by i
 | `wake` | stock firmware: no stream, only `camera/monitor.jpg`, which only changes after `camera.start_monitor`. The image is fetched twice around a wake call and must change | still image every 1–2 s; the camera is woken as needed (at most every 10 s) while someone watches |
 | `none` | nothing found | entity unavailable; the card shows a hint instead of a black area |
 
-**RTSP.** If the printer answers on `rtsp://<printer>:8554/stream` (paxx12: *RTSP* in `/firmware-config/`, off by default), the camera entity also offers it as stream source (attribute `rtsp_url`, `supported_features` stream): Home Assistant then streams H.264 itself (more-info dialog, picture cards, go2rtc/WebRTC). The card keeps using MJPEG.
+**RTSP.** If the printer answers on `rtsp://<printer>:8554/stream` (paxx12: *RTSP* in `/firmware-config/`, off by default), the camera entity also offers it as stream source (attribute `rtsp_url`, `supported_features` stream): Home Assistant then streams H.264 itself (more-info dialog, picture cards, go2rtc/WebRTC). The card uses WebRTC itself (below).
+
+**WebRTC in the card.** With paxx12's camera (`webrtc-camerastreamer`, Moonraker lists `/webcam/webrtc`) the card shows the live image over WebRTC: less delay and far less data than MJPEG. The printer sends no CORS headers, so the card cannot talk to it from the browser; the integration relays the three small signalling messages (`POST /api/snapmaker_u1_card/webrtc/<entry>`, only to the camera Moonraker reports). The video then flows directly between browser and printer, at home and over VPN. Until the first frame (and if WebRTC does not come up within 8 s, e.g. away from home without VPN) the card shows MJPEG; after a failure it stays on MJPEG for 10 minutes. Card option `camera_webrtc: off` turns it off.
 
 **Second camera.** A second webcam (paxx12: USB camera at `/webcam2/`, RTSP port 8555) gets its own entity *Camera 2* once it is found; the card shows a switch button on the image.
 
@@ -415,6 +423,12 @@ Detection runs when the printer comes online, when images keep failing and every
 ## File management
 
 Above the file list: search (across **all** files on the printer, not only the newest), sorting (newest, name, print time) and folder chips. Older matches appear as a list; tapping loads metadata and thumbnail and opens the print dialog. In the print dialog: *Download* (the G-code through Home Assistant, also works remotely), *Rename / move* (subfolders with `/` are created) and *Delete*. Both are blocked while the file is printing or queued. Services: `file_details`, `move_file`, `delete_file`.
+
+**Slicer settings.** The print dialog shows what the file was sliced with: profile, layer height (first layer), walls/top/bottom layers, infill and pattern, supports, brim, prime tower, seam, plate type, speeds and nozzle/bed temperature per used filament (first layer in brackets). The integration reads the settings block at the end of the G-code once per file version (the last 256 KB, Orca/Snapmaker Orca and PrusaSlicer key names). Service `file_settings` (`path`). The printer does not report which plate is on the bed, so there is no plate warning.
+
+## Status light (blueprint)
+
+The integration installs the blueprint *Snapmaker U1 – status light* into `config/blueprints/automation/snapmaker_u1_card/`. In *Settings → Automations → Blueprints* create an automation from it: choose the Moonraker sensor *Current print state* and one or more lights (WLED, LED strips, any colour light). Colours for printing (optionally with a WLED effect such as *Breathe*), paused, error/cancelled, finished (for a set time) and idle (off, a colour or unchanged). A copy you edited stays untouched when you remove the line `managed: snapmaker_u1_card` from the file; otherwise updates replace it.
 
 ## Temperature chart
 

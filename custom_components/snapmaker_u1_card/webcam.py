@@ -106,6 +106,15 @@ def mjpeg_candidates(cam: dict[str, Any]) -> list[str]:
     return out
 
 
+def webrtc_url(cam: dict[str, Any]) -> str | None:
+    """Signalling URL of a camera-streamer WebRTC webcam (paxx12 2.x), else None."""
+    stream = str(cam.get("stream_url") or "").strip()
+    service = str(cam.get("service") or "").lower()
+    if service == "webrtc-camerastreamer" or stream.split("?")[0].rstrip("/").endswith("/webrtc"):
+        return stream.split("?")[0] if stream else None
+    return None
+
+
 def _digest(blob: bytes | None) -> str | None:
     return hashlib.sha1(blob).hexdigest() if blob else None
 
@@ -120,6 +129,8 @@ class Webcam:
         self.mode = "unknown"
         self.stream_url: str | None = None
         self.snapshot_url: str | None = None
+        # camera-streamer WebRTC signalling (paxx12 ``/webcam/webrtc``), None = not offered
+        self.webrtc_url: str | None = None
         self.checked_at: float | None = None  # time.time() of the last detection
         self.next_check = 0.0  # monotonic: earliest next detection
         self._stream_retry_at = 0.0
@@ -185,6 +196,7 @@ class Webcam:
         if self.second:
             # every webcam but the first one Moonraker lists (that is the main camera)
             cams = cams[1:]
+        self.webrtc_url = next((self.client.resolve_url(u) for u in (webrtc_url(c) for c in cams[:1]) if u), None)
         candidates: list[tuple[str | None, str | None]] = []
         for c in cams:
             snap = self.client.resolve_url(c.get("snapshot_url"))
@@ -293,4 +305,4 @@ class Webcam:
 
     def as_dict(self) -> dict[str, Any]:
         return {"mode": self.mode, "stream_url": self.stream_url, "snapshot_url": self.snapshot_url,
-                "rtsp_url": self.rtsp_url, "checked_at": self.checked_at, "stream_error": self.stream_error}
+                "rtsp_url": self.rtsp_url, "webrtc_url": self.webrtc_url, "checked_at": self.checked_at, "stream_error": self.stream_error}

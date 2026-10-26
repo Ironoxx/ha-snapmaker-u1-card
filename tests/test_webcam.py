@@ -150,6 +150,22 @@ async def test_detect_paxx12_webrtc(no_sleep) -> None:
     assert cam.stream_url == "http://192.168.0.25/webcam/stream.mjpg"
     assert cam.snapshot_url == "http://192.168.0.25/webcam/snapshot.jpg"
     assert not any(u.endswith("/webrtc") for u in tried)
+    # ...but remembered as the WebRTC signalling address for the card
+    assert cam.webrtc_url == "http://192.168.0.25/webcam/webrtc"
+    assert wc.webrtc_url({"service": "mjpegstreamer", "stream_url": "/webcam/?action=stream"}) is None
+
+
+def test_webrtc_messages_are_filtered() -> None:
+    from custom_components.snapmaker_u1_card.webrtc_view import clean_message
+    assert clean_message({"type": "request", "res": "1080p", "evil": 1}) == {
+        "type": "request", "keepAlive": True, "res": "1080p"}
+    assert clean_message({"type": "answer", "id": "a", "sdp": "v=0"}) == {"type": "answer", "id": "a", "sdp": "v=0"}
+    assert clean_message({"type": "answer", "id": "a"}) is None
+    assert clean_message({"type": "remote_candidate", "id": 3, "candidates": [{"candidate": "c"}]})["candidates"] == [
+        {"candidate": "c"}]
+    assert clean_message({"type": "control", "id": 1}) is None
+    assert clean_message(["request"]) is None
+
 
 
 async def test_detect_still_then_stream_retry(no_sleep) -> None:

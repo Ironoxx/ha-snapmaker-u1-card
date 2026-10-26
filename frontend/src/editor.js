@@ -13,6 +13,7 @@ export const FORM_LABELS = {
   printer_name: "Name", printer_brand: "Marke", layout: "Darstellung", hide: "Bereiche ausblenden",
   camera: "Kamera-Entität", camera_mode: "Kameramodus", hide_overlay: "Fortschritt auf dem Kamerabild ausblenden",
   state_accent: "Rahmen in der Farbe des Zustands",
+  accent_color: "Akzentfarbe",
   camera_fit: "Skalierung", camera_height: "Bildhöhe (px)", refresh: "Bildrate (s)",
   stale_after: "„Bild veraltet“ ab (s)", printer_image: "Statisches Bild statt Kamera",
   prefix: "Moonraker-Präfix", network_tracker: "WLAN-Tracker", files_limit: "Angezeigte Dateien",
@@ -28,6 +29,7 @@ export const FORM_LABELS = {
   camera_wake: "Kamera bei stehendem Bild wecken",
   camera_direct: "Direktstream vom Drucker",
   camera_direct_url: "Adresse des Direktstreams",
+  camera_webrtc: "WebRTC (paxx12-Firmware)",
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -41,11 +43,13 @@ export const FORM_HELPERS = {
   emergency_stop: "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.",
   camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
   camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
+  camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
   camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
   state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
+  accent_color: "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.",
   navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog",
 };
 
@@ -69,6 +73,7 @@ export function configForm(mini) {
   };
   const schema = mini ? [
     { name: "printer_name", selector: { text: {} } },
+    { name: "accent_color", selector: { color_rgb: {} } },
     { name: "hide_filaments", selector: { boolean: {} } },
     { name: "navigation_path", selector: { text: {} } },
     advanced,
@@ -78,6 +83,7 @@ export function configForm(mini) {
     { name: "hide", selector: { select: { multiple: true, mode: "list",
       options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
     { name: "state_accent", selector: { boolean: {} } },
+    { name: "accent_color", selector: { color_rgb: {} } },
     { name: "layer_view", selector: { select: { mode: "dropdown", options: opts([["part", "Teil vergrößert"], ["bed", "Ganzes Druckbett"]]) } } },
     { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
       ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },
@@ -109,6 +115,7 @@ export function configForm(mini) {
         { name: "camera_wake", selector: { boolean: {} } },
         { name: "camera_direct", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (immer über Home Assistant)"]]) } } },
         { name: "camera_direct_url", selector: { text: {} } },
+        { name: "camera_webrtc", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
         { name: "printer_image", selector: { text: {} } },
       ],
     },

@@ -263,13 +263,29 @@ async def test_options_validate_spoolman_url(hass: HomeAssistant, mock_client) -
 def test_spool_filament_mapping():
     to_fw = p.spool_filament
     assert to_fw(p.compact_spool(_spool(1, "PLA Matte Black", "PLA", "1C1C1C", vendor="GEEETECH"))) == {
-        "type": "PLA", "sub_type": "Matte", "vendor": "GEEETECH", "color": "#1C1C1C"}
+        "type": "PLA", "sub_type": "Matte", "vendor": "GEEETECH", "color": "#1C1C1C", "colors": []}
     assert to_fw(p.compact_spool(_spool(2, "CR-PETG Black", "petg", "000000", vendor="Creality")))["sub_type"] == ""
     assert to_fw(p.compact_spool(_spool(3, "Seide", "PLA Silk", "FEE5A5")))["sub_type"] == "Silk"
     # characters Klipper would cut the command at are dropped
     assert to_fw(p.compact_spool(_spool(4, "x", "PLA", "FFFFFF", vendor='Bad"Vendor;#')))["vendor"] == "BadVendor"
     assert to_fw(p.compact_spool(_spool(5, "no material", "", "FFFFFF"))) is None
     assert to_fw(None) is None
+    # multi-colour spool: colours go along (max 5)
+    multi = _spool(6, "Silk Dual", "PLA Silk", None)
+    multi["filament"]["multi_color_hexes"] = "C0C0C0,FFD700"
+    assert to_fw(p.compact_spool(multi))["colors"] == ["#C0C0C0", "#FFD700"]
+
+
+def test_filament_gcode_multi_colour():
+    assert p.filament_gcode(1, "PLA", "Silk", "Generic", None, colors=["#c0c0c0", "#FFD700"]) == (
+        'SET_PRINT_FILAMENT_CONFIG CONFIG_EXTRUDER=1 VENDOR="Generic" FILAMENT_TYPE="PLA" '
+        'FILAMENT_SUBTYPE="Silk" COLOR_NUMS=2 COLORS=C0C0C0,FFD700 MULTI_MODE=0')
+    six = ["#111111", "#222222", "#333333", "#444444", "#555555", "#666666"]
+    assert "COLOR_NUMS=5 COLORS=111111,222222,333333,444444,555555 " in p.filament_gcode(0, "PLA", "", "", colors=six)
+    # one colour: as before
+    assert p.filament_gcode(0, "PLA", "", "", colors=["#FF0000"]).endswith("FILAMENT_COLOR_RGBA=FF0000FF")
+    with pytest.raises(ValueError):
+        p.filament_gcode(0, "PLA", "", "", colors=["#FF0000", "kaputt"])
 
 
 async def test_choosing_spool_writes_filament(hass: HomeAssistant, mock_client, spoolman) -> None:
@@ -309,6 +325,23 @@ async def test_choosing_spool_writes_filament(hass: HomeAssistant, mock_client, 
         sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
         assert sm["slots"]["2"]["id"] == 2
 
+
+
+async def test_choosing_multi_colour_spool(hass: HomeAssistant, mock_client, spoolman) -> None:
+    _real_slots(mock_client)
+    mock_client["query"].return_value["print_task_config"]["filament_official"] = [False] * 4
+    multi = _spool(8, "Silk Dual", "PLA Silk", None, vendor="Eryone")
+    multi["filament"]["multi_color_hexes"] = "C0C0C0,FFD700"
+    spoolman["spools"].append(multi)
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 1, "spool_id": 8}, blocking=True)
+        assert "COLOR_NUMS=2 COLORS=C0C0C0,FFD700" in gcode.await_args.args[0]
+        # by hand through the service
+        await hass.services.async_call(DOMAIN, "set_filament", {"slot": 2, "type": "PLA", "colors": ["#FF0000", "#00FF00", "#0000FF"]},
+                                       blocking=True)
+        assert "COLOR_NUMS=3 COLORS=FF0000,00FF00,0000FF" in gcode.await_args.args[0]
 
 
 async def test_moonraker_books_itself(hass: HomeAssistant, mock_client, spoolman) -> None:

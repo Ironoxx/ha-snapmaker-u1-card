@@ -26,7 +26,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from . import resource
+from . import blueprints, resource
 from .api import MoonrakerClient
 from .const import (
     CARD_FILENAME,
@@ -63,6 +63,7 @@ from .stats import MAINTENANCE_ITEMS
 from .upload import UploadView
 from .video import GcodeView, TimelapseView
 from .voice import async_setup_voice
+from .webrtc_view import WebrtcView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,6 +129,8 @@ SET_FILAMENT_SCHEMA = vol.Schema(
         vol.Optional("sub_type", default=""): cv.string,
         vol.Optional("vendor", default="Generic"): cv.string,
         vol.Optional("color"): cv.string,
+        # Multi-colour spool: up to 5 hex colours
+        vol.Optional("colors"): vol.All(cv.ensure_list, [cv.string], vol.Length(max=5)),
         # Overwrite an official Snapmaker spool (RFID data)
         vol.Optional("force", default=False): cv.boolean,
         vol.Optional(ATTR_ENTRY): cv.string,
@@ -172,10 +175,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(UploadView())
     hass.http.register_view(LayerView())
     hass.http.register_view(TempsView())
+    hass.http.register_view(WebrtcView())
     # The version parameter forces browsers to reload the card after an update.
     add_extra_js_url(hass, f"{CARD_URL}/{CARD_FILENAME}?v={VERSION}")
     # Second loading path, independent of when the integration starts (see resource.py).
     await resource.async_install(hass)
+    await blueprints.async_install(hass)
     hass.data[DOMAIN] = {"thumb_dir": thumb_dir}
     await async_setup_voice(hass)
 
@@ -235,6 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_set_filament(
             call.data["slot"] - 1, call.data["type"], call.data.get("sub_type"),
             call.data.get("vendor"), call.data.get("color"), call.data["force"],
+            colors=call.data.get("colors"),
         )
 
     hass.services.async_register(DOMAIN, SERVICE_SET_PREFERENCE, set_preference, schema=SET_PREFERENCE_SCHEMA)
@@ -299,6 +305,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def file_details(call: ServiceCall) -> ServiceResponse:
         return {"file": await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_file_details(call.data["path"])}
 
+    async def file_settings(call: ServiceCall) -> ServiceResponse:
+        coord = _coordinator(hass, call.data.get(ATTR_ENTRY))
+        return {"settings": await coord.async_file_settings(call.data["path"])}
+
     async def delete_file(call: ServiceCall) -> None:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_delete_file(call.data["path"])
 
@@ -309,6 +319,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_self_test(call.data.get("language"))
 
     hass.services.async_register(DOMAIN, "file_details", file_details, schema=PATH_SCHEMA,
+                                 supports_response=SupportsResponse.ONLY)
+    hass.services.async_register(DOMAIN, "file_settings", file_settings, schema=PATH_SCHEMA,
                                  supports_response=SupportsResponse.ONLY)
     hass.services.async_register(DOMAIN, "delete_file", delete_file, schema=PATH_SCHEMA)
     hass.services.async_register(DOMAIN, "move_file", move_file, schema=MOVE_SCHEMA)
