@@ -106,12 +106,14 @@
             "data": {
               "spoolman_url": "Spoolman URL",
               "spoolman_deduct": "Deduct usage per head after each print",
-              "spoolman_low": "Warn below"
+              "spoolman_low": "Warn below",
+              "spool_restore": "Last spool after reloading a head"
             },
             "data_description": {
               "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
               "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
-              "spoolman_low": "Card shows a warning when a spool has less filament left."
+              "spoolman_low": "Card shows a warning when a spool has less filament left.",
+              "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again."
             }
           },
           "timelapse": {
@@ -245,12 +247,14 @@
             "data": {
               "spoolman_url": "Spoolman URL",
               "spoolman_deduct": "Deduct usage per head after each print",
-              "spoolman_low": "Warn below"
+              "spoolman_low": "Warn below",
+              "spool_restore": "Last spool after reloading a head"
             },
             "data_description": {
               "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
               "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
-              "spoolman_low": "Card shows a warning when a spool has less filament left."
+              "spoolman_low": "Card shows a warning when a spool has less filament left.",
+              "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again."
             }
           },
           "timelapse": {
@@ -870,6 +874,13 @@
     }
   },
   "selector": {
+    "spool_restore": {
+      "options": {
+        "ask": "Offer (one tap)",
+        "auto": "Set automatically",
+        "off": "Off"
+      }
+    },
     "notify_events": {
       "options": {
         "complete": "Print finished",

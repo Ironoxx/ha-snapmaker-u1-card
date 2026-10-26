@@ -20,6 +20,149 @@ export const ControlsMixin = (Base) => class extends Base {
     this._hass.callService("number", "set_value", { entity_id: entity, value: Number(value) });
   }
 
+  // ── Pending commands ──────────────────────────────────────────────────────
+  // Pause parks the head first and the Moonraker integration polls: without
+  // feedback a tap looks ignored. A pending command shows at once that it was
+  // sent ("Pausiere …", light already toggled) until the printer confirms it.
+  /** key: "pause" | "resume" | "cancel" | "light" | "t:<entity>"; done(d) = confirmed. */
+  _pend(key, done, ms = 30000, extra = {}) {
+    if (!this._pending) this._pending = new Map();
+    this._pending.set(key, { done, until: Date.now() + ms, ...extra });
+    this._pendTimer();
+    this._rerender();
+  }
+
+  /** One timer for the earliest expiry; none while nothing waits. */
+  _pendTimer() {
+    clearTimeout(this._pendT);
+    this._pendT = null;
+    if (!this._pending || !this._pending.size) return;
+    const next = Math.min(...[...this._pending.values()].map((p) => p.until));
+    this._pendT = setTimeout(() => {
+      this._pendT = null;
+      const before = this._lastPendKey;
+      if (this._settlePending()) {
+        if (this._pendingKey() !== before) this._rerender();
+        else { this._applyPending(); this._patch(); }
+      }
+      this._pendTimer();
+    }, Math.max(0, next - Date.now()) + 50);
+  }
+
+  _isPending(key) {
+    const p = this._pending && this._pending.get(key);
+    return !!p && p.until > Date.now();
+  }
+
+  /** Drop confirmed and expired commands; true = something changed. */
+  _settlePending() {
+    if (!this._pending || !this._pending.size || !this._d) return false;
+    const now = Date.now();
+    let changed = false;
+    for (const [key, p] of this._pending) {
+      let ok = false;
+      try { ok = p.done(this._d); } catch (e) { ok = true; }
+      if (ok || p.until <= now) {
+        this._pending.delete(key);
+        changed = true;
+        if (!ok && p.timeout) this._toast(p.timeout);
+      }
+    }
+    if (changed && !this._pending.size) this._pendTimer();
+    return changed;
+  }
+
+  /** Optimistic values while a command is on its way (light). */
+  _applyPending() {
+    const d = this._d;
+    if (!d) return;
+    const l = this._pending && this._pending.get("light");
+    d.light = l && l.until > Date.now() ? l.want : d.lightReal;
+  }
+
+  _rerender() {
+    this._renderKey = null;
+    if (this._d) this._render();
+  }
+
+  _pendingKey() {
+    this._lastPendKey = this._pending ? [...this._pending.keys()].filter((k) => k !== "light" && !k.startsWith("t:")).join(",") : "";
+    return this._lastPendKey;
+  }
+
+  _spin() {
+    return `<span class="su1-spin" aria-hidden="true"></span>`;
+  }
+
+  /** Pause / resume / cancel / light as buttons, with a waiting state. */
+  _stageActions() {
+    const d = this._d;
+    const busy = (key, cls, icon, label, wait) => this._isPending(key)
+      ? `<button class="${cls} grow" disabled aria-busy="true">${this._spin()}${wait}</button>`
+      : `<button class="${cls} grow" data-act="${key}"><ha-icon icon="${icon}"></ha-icon>${label}</button>`;
+    const out = [];
+    const cancelling = this._isPending("cancel");
+    if (d.printing && !cancelling) out.push(busy("pause", "filled", "mdi:pause", tr("Pause"), tr("Pausiere …")));
+    if (d.paused && !cancelling) out.push(busy("resume", "filled", "mdi:play", tr("Fortsetzen"), tr("Setze fort …")));
+    if (d.active) out.push(busy("cancel", "outline", "mdi:stop", tr("Abbrechen"), tr("Breche ab …")));
+    out.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+    return out.join("");
+  }
+
+  _pausePrint() {
+    this._press("pause_print");
+    this._pend("pause", (d) => d.paused || !d.active, 90000,
+      { timeout: tr("Der Drucker hat die Pause noch nicht bestätigt.") });
+  }
+
+  _resumePrint() {
+    this._press("resume_print");
+    this._pend("resume", (d) => d.printing || !d.active, 90000,
+      { timeout: tr("Der Drucker hat das Fortsetzen noch nicht bestätigt.") });
+  }
+
+  _cancelPrint() {
+    this._press("cancel_print");
+    this._pend("cancel", (d) => !d.active, 120000,
+      { timeout: tr("Der Drucker hat den Abbruch noch nicht bestätigt.") });
+  }
+
+  _toggleLight() {
+    const want = !this._d.light;
+    this._hass.callService("light", "toggle", { entity_id: `light.${this._p("led_cavity_led")}` });
+    // Patched in place: a rebuild would reconnect the camera stream
+    if (!this._pending) this._pending = new Map();
+    this._pending.set("light", { done: (d) => d.lightReal === want, until: Date.now() + 15000, want });
+    this._pendTimer();
+    this._applyPending();
+    this._patch();
+  }
+
+  /** Switch toggles (heater, filter): spinner until the entity has changed. */
+  _toggleEntity(id, btn) {
+    const before = this._s(id);
+    this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
+    if (!this._pending) this._pending = new Map();
+    this._pending.set(`t:${id}`, { done: () => this._s(id) !== before, until: Date.now() + 15000 });
+    this._pendTimer();
+    if (btn) btn.classList.add("pending");
+  }
+
+  /** Take the head's previous spool again (one tap, after reloading the filament). */
+  async _restoreSpool(idx, spoolId) {
+    this._pend(`r:${idx}`, () => {
+      const sm = this._spoolman();
+      return !sm || !(sm.restore || {})[String(idx)];
+    }, 20000);
+    try {
+      await this._hass.callService(DOMAIN, "set_spool", { slot: idx + 1, spool_id: spoolId, ...this._entryData() }, undefined, false);
+    } catch (err) {
+      if (this._pending) this._pending.delete(`r:${idx}`);
+      this._rerender();
+      alert((err && (err.message || err.error)) || String(err));
+    }
+  }
+
   // ── Control lock ────────────────────────────────────────────────────────
   // On a phone it is easy to brush a slider while scrolling. So sliders,
   // presets, heater switches and homing are locked until the padlock is
@@ -106,6 +249,9 @@ export const ControlsMixin = (Base) => class extends Base {
   _statusLabel() {
     const d = this._d;
     if (!d.online) return tr("Offline");
+    if (this._isPending("cancel")) return tr("Breche ab …");
+    if (this._isPending("pause")) return tr("Pausiere …");
+    if (this._isPending("resume")) return tr("Setze fort …");
     return {
       printing: tr("Druckt"), standby: tr("Bereit"), complete: tr("Fertig"),
       cancelled: tr("Abgebrochen"), paused: tr("Pausiert"), error: tr("Fehler"),

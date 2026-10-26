@@ -126,7 +126,10 @@ export const StateMixin = (Base) => class extends Base {
     heads.forEach((h, i) => { h.active = i === active; });
     const hot = active >= 0 ? heads[active] : heads[0];
 
-    const state = this._s(`sensor.${P("current_print_state")}`, "standby");
+    // The integration's live state (WebSocket) is seconds ahead of the
+    // Moonraker integration, which only shows a pause at its next poll.
+    const liveState = fst && fst.attributes && fst.attributes.live ? fst.attributes.print_state : null;
+    const state = liveState || this._s(`sensor.${P("current_print_state")}`, "standby");
 
     this._d = {
       online: klipper !== null,
@@ -197,6 +200,7 @@ export const StateMixin = (Base) => class extends Base {
       totalsFilament: this._n(`sensor.${P("totals_filament_used")}`, 0),
 
       light: this._s(`light.${this._p("led_cavity_led")}`) === "on",
+      lightReal: this._s(`light.${this._p("led_cavity_led")}`) === "on",
       lightBri: (this._st(`light.${this._p("led_cavity_led")}`) || {}).attributes?.brightness ?? 0,
       network: this._cfg.network_tracker ? this._s(this._cfg.network_tracker) : null,
       files: this._files(),

@@ -55,6 +55,7 @@ from .const import (
     CONF_POWER_SENSOR,
     CONF_POWER_SWITCH,
     CONF_SHUTDOWN_HOST,
+    CONF_SPOOL_RESTORE,
     CONF_SPOOLMAN_DEDUCT,
     CONF_SPOOLMAN_LOW,
     CONF_SPOOLMAN_URL,
@@ -77,11 +78,13 @@ from .const import (
     DEFAULT_NOTIFY_EVENTS,
     DEFAULT_PORT,
     DEFAULT_SHUTDOWN_HOST,
+    DEFAULT_SPOOL_RESTORE,
     DEFAULT_SPOOLMAN_DEDUCT,
     DEFAULT_SPOOLMAN_LOW,
     DOMAIN,
     LIVE_IMAGES,
     NOTIFY_EVENTS,
+    SPOOL_RESTORE_MODES,
 )
 from .parsing import FILAMENT_PRICE_KEYS
 from .stats import MAINTENANCE_ITEMS, MAINTENANCE_MONTHS
@@ -174,6 +177,9 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             vol.Optional(CONF_SPOOLMAN_URL): selector.TextSelector(),
             vol.Required(CONF_SPOOLMAN_DEDUCT, default=DEFAULT_SPOOLMAN_DEDUCT): selector.BooleanSelector(),
             vol.Required(CONF_SPOOLMAN_LOW, default=DEFAULT_SPOOLMAN_LOW): _box(0, 1000, 10, "g"),
+            vol.Required(CONF_SPOOL_RESTORE, default=DEFAULT_SPOOL_RESTORE): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(SPOOL_RESTORE_MODES), translation_key=CONF_SPOOL_RESTORE,
+                                              mode=selector.SelectSelectorMode.DROPDOWN)),
         }
     )
     files = vol.Schema(
@@ -265,7 +271,7 @@ def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
                     CONF_AUTO_OFF_DELAY, CONF_IDLE_OFF),
         SEC_NOTIFY: (CONF_NOTIFY, CONF_NOTIFY_EVENTS, CONF_ALMOST_DONE, CONF_LIVE_BUDGET, CONF_LIVE_IMAGE, CONF_NOTIFY_URL, CONF_BED_COOL, CONF_CAMERA, CONF_CAMERA_WAKE),
         SEC_FILAMENT: tuple(PRICE_FIELDS),
-        SEC_SPOOLMAN: (CONF_SPOOLMAN_URL, CONF_SPOOLMAN_DEDUCT, CONF_SPOOLMAN_LOW),
+        SEC_SPOOLMAN: (CONF_SPOOLMAN_URL, CONF_SPOOLMAN_DEDUCT, CONF_SPOOLMAN_LOW, CONF_SPOOL_RESTORE),
         SEC_FILES: (CONF_FILES_LIMIT, CONF_BACKUP),
         SEC_TIMELAPSE: (CONF_ARCHIVE, CONF_ARCHIVE_KEEP, CONF_ARCHIVE_MAX, CONF_ARCHIVE_DAYS),
         SEC_MAINT: tuple(f for k in MAINTENANCE_ITEMS for f in (f"maint_{k}", f"maint_m_{k}")),

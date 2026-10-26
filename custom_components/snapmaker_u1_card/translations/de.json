@@ -106,12 +106,14 @@
             "data": {
               "spoolman_url": "Spoolman-Adresse",
               "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
-              "spoolman_low": "Warnen unter"
+              "spoolman_low": "Warnen unter",
+              "spool_restore": "Letzte Spule nach dem Neu-Einlegen"
             },
             "data_description": {
               "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
               "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
-              "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist."
+              "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist.",
+              "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen."
             }
           },
           "timelapse": {
@@ -245,12 +247,14 @@
             "data": {
               "spoolman_url": "Spoolman-Adresse",
               "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
-              "spoolman_low": "Warnen unter"
+              "spoolman_low": "Warnen unter",
+              "spool_restore": "Letzte Spule nach dem Neu-Einlegen"
             },
             "data_description": {
               "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
               "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
-              "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist."
+              "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist.",
+              "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen."
             }
           },
           "timelapse": {
@@ -870,6 +874,13 @@
     }
   },
   "selector": {
+    "spool_restore": {
+      "options": {
+        "ask": "Vorschlagen (ein Tipp)",
+        "auto": "Automatisch setzen",
+        "off": "Aus"
+      }
+    },
     "notify_events": {
       "options": {
         "complete": "Druck fertig",

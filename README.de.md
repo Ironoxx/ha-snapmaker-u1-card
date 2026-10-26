@@ -465,6 +465,8 @@ Jede Spule wird höchstens einem Kopf zugeordnet. In der Karte tippst du auf die
 
 Dasselbe gilt für jeden anderen `[spoolman]`-Abschnitt in Moonrakers Konfiguration.
 
+**Entladen und neu einlegen.** Ohne RFID-Tag vergisst der Drucker beim Entladen die Spule (mit SpoolLink setzt er `filament_spool_id` zurück). Wird der Kopf wieder beladen, bietet er seine vorherige Spule an: „Wieder #5 …?“ – ein Tipp übernimmt sie (mit SpoolLink per `SET_SPOOL_ID`). Bis dahin wird nichts gebucht und für diesen Kopf keine andere Spule geraten. Option *Letzte Spule nach dem Neu-Einlegen* (Abschnitt Spoolman): vorschlagen (Standard), automatisch setzen (nicht im Druck; falsche Spule, wenn du eine andere einlegst und das Umstellen vergisst) oder aus.
+
 **Spule wiegen.** In den Kopfdetails (mit zugeordneter Spule) eintragen, was die Waage zeigt: mit Leerspule (deren Gewicht kommt aus Spoolman: Spule, Filament oder Hersteller *Leerspulengewicht*) oder nur das Filament. Die Integration setzt das Restgewicht in Spoolman. Dienst `weigh_spool` (`slot` oder `spool_id`, `weight`, `gross`). In Spoolman selbst bleibt damit nur das Anlegen neuer Spulen.
 
 Grenzen: Wechselt die Firmware mitten im Druck automatisch auf einen anderen Kopf (Auto-Nachfüllen bei leerer Spule), wird der gesamte Verbrauch dem zuletzt gemeldeten Kopf zugerechnet.

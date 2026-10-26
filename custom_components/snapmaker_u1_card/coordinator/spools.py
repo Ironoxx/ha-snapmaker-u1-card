@@ -11,7 +11,9 @@ from ..api import (
     MoonrakerError,
 )
 from ..const import (
+    CONF_SPOOL_RESTORE,
     CONF_SPOOLMAN_LOW,
+    DEFAULT_SPOOL_RESTORE,
     DEFAULT_SPOOLMAN_LOW,
     SPOOLMAN_INTERVAL_S,
 )
@@ -41,6 +43,7 @@ class SpoolMixin:
         mgr = self.spools
         ids = ptc.get("filament_spool_id")
         mgr.printer_ids = [int(x) if isinstance(x, (int, float)) else 0 for x in ids] if isinstance(ids, list) else None
+        mgr.keep_last = self._restore_mode() != "off"
         if mgr.enabled:
             if mgr.due(SPOOLMAN_INTERVAL_S):
                 changed = await mgr.async_refresh()
@@ -54,6 +57,8 @@ class SpoolMixin:
                 self._save()
             if mgr.to_push and data.print_state not in ACTIVE_PRINT_STATES:
                 await self._push_spoollink()
+            if mgr.online and self._restore_mode() == "auto" and data.print_state not in ACTIVE_PRINT_STATES:
+                await self._restore_spools(data.slots)
         # What the running print needs to book usage per head later:
         # map table logical->head and the spool per head.
         active = self._print_state.get("active")
@@ -67,6 +72,19 @@ class SpoolMixin:
                     if key not in start and sid:
                         start[key] = mgr.remaining(sid)
         data.spoolman = self._spoolman_data(data.slots)
+
+    def _restore_mode(self) -> str:
+        return str(self.options.get(CONF_SPOOL_RESTORE, DEFAULT_SPOOL_RESTORE))
+
+    async def _restore_spools(self, slots: list[dict[str, Any]]) -> None:
+        """Option "auto": a head loaded again gets its last spool without asking."""
+        for idx, spool in self.spools.restorable(slots).items():
+            try:
+                await self.async_set_spool(idx, spool["id"], False)
+                _LOGGER.info("Spool %s restored on head %s after reloading", spool["id"], idx + 1)
+            except HomeAssistantError as err:
+                _LOGGER.warning("Spool %s for head %s not restored: %s", spool["id"], idx + 1, err)
+                self.spools.forget_last(idx)
 
     def _mark_booked(self) -> None:
         """Mark booked amounts in the history as booked."""
@@ -128,6 +146,11 @@ class SpoolMixin:
             "spoollink": mgr.spoollink,
             "pending": [dict(q) for q in mgr.queue],
             "slots": {str(s["index"]): mgr.slot_info(s["index"]) for s in slots},
+            # head loaded again without a spool: offer the one it had before (option spool_restore)
+            "restore": {} if self._restore_mode() == "off" else {
+                str(k): {"id": v["id"], "name": v.get("name"), "vendor": v.get("vendor"), "material": v.get("material"),
+                         "color": v.get("color")}
+                for k, v in mgr.restorable(slots).items()},
             "spools": mgr.spools,
         }
 
@@ -137,6 +160,7 @@ class SpoolMixin:
             raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
         if self.spools.spoollink:
             await self._set_spool_spoollink(slot_index, spool_id, automatic)
+            self.spools.forget_last(slot_index)
             return
         slots = (self.data or self._prev).slots
         slot = next((s for s in slots if s["index"] == slot_index), None)

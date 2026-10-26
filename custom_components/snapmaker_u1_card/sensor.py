@@ -160,7 +160,8 @@ class FilamentsSensor(U1Entity, SensorEntity):
     _attr_translation_key = "filaments"
     _attr_icon = "mdi:printer-3d-nozzle"
     _unrecorded_attributes = frozenset({"slots", "map_table", "preferences", "entry_id", "live", "spoolman",
-                                        "active_head", "cpu_count", "runout", "head_states"})
+                                        "active_head", "cpu_count", "runout", "head_states",
+                                        "print_state"})
 
     def __init__(self, coordinator: U1Coordinator) -> None:
         super().__init__(coordinator, "filaments")
@@ -185,6 +186,9 @@ class FilamentsSensor(U1Entity, SensorEntity):
             "live": d.online,
             # active head according to the firmware (toolhead.extruder), 0-3
             "active_head": d.active_head,
+            # print state from the live subscription: changes at once, the
+            # Moonraker integration only shows it at its next poll
+            "print_state": d.print_state if d.online else None,
             # printer CPU cores: puts the system load (load average) into context
             "cpu_count": d.cpu_count,
             # spool runs out during the print: {head: {minutes, takeover}}

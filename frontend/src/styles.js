@@ -727,6 +727,24 @@ export const STYLES = `
   }
   a.btn ha-icon { --mdc-icon-size: 18px; }
   @keyframes u1spin { to { transform: rotate(360deg); } }
+  .spool-restore { display: flex; gap: 6px; align-items: stretch; }
+  .spool-restore .spool-line { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+    border-style: dashed; color: var(--u1-primary); }
+  .spool-restore .spool-line span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spool-restore .spool-dot { width: 12px; height: 12px; flex: none; }
+  /* Command sent, printer has not confirmed yet */
+  .su1-spin {
+    width: 16px; height: 16px; flex: none; border-radius: 50%;
+    border: 2px solid currentColor; border-right-color: transparent;
+    animation: u1spin .8s linear infinite;
+  }
+  button[aria-busy="true"] { cursor: progress; }
+  button[aria-busy="true"]:disabled { opacity: .85; }
+  button.pending { position: relative; cursor: progress; }
+  button.pending::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 2px var(--u1-primary); animation: pulse 1s ease-in-out infinite;
+  }
   @container u1 (max-width: 520px) {
     .map-row { grid-template-columns: 1fr; }
     .map-slots { justify-content: flex-start; }

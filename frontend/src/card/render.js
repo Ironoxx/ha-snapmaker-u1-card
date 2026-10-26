@@ -9,6 +9,8 @@ export const RenderMixin = (Base) => class extends Base {
   _render() {
     if (!this._d) return;
     const d = this._d;
+    this._settlePending();
+    this._applyPending();
 
     // Rebuild only when the structure changes. Numbers are patched; otherwise
     // the <img> would reload on every temperature change and the card would flicker.
@@ -25,7 +27,7 @@ export const RenderMixin = (Base) => class extends Base {
       this._cfg.show.join(","),
       `${this._cfg.layout}${this._cfg.camera_overlay}`,
       d.heads.findIndex((h) => h.active),
-      (() => { const sm = this._spoolman(); return sm ? `sm${sm.online}${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}` : "nosm"; })(),
+      (() => { const sm = this._spoolman(); return sm ? `sm${sm.online}${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}r${Object.entries(sm.restore || {}).map(([k, v]) => `${k}:${v.id}`).join(",")}` : "nosm"; })(),
       d.tc ? `tc${d.tc.inProgress}${d.tc.heads.length}` : "notc",
       d.power ? `p${d.power.on}${d.power.available}${d.power.autoOn}${d.online ? "" : d.power.shuttingDown + "" + d.power.poweringOn}` : "nop",
       d.usage ? `u${d.usage.inProgress}${d.usage.hasEnergy}${d.usage.hasCost}` : "nou",
@@ -48,6 +50,7 @@ export const RenderMixin = (Base) => class extends Base {
       `f${this._ents.flow && d.flow !== null}`,
       d.headStates.join(","),
       `${this._ents.camera}${this._hasCamera2()}`,
+      this._pendingKey(),
     ].join("~");
 
     if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
@@ -99,16 +102,13 @@ export const RenderMixin = (Base) => class extends Base {
     r.querySelectorAll("[data-act]").forEach((b) =>
       b.addEventListener("click", () => {
         const a = b.dataset.act;
-        if (a === "pause") return this._press("pause_print");
-        if (a === "resume") return this._press("resume_print");
+        if (a === "pause") return this._pausePrint();
+        if (a === "resume") return this._resumePrint();
         if (a === "home_all") return this._press("home_all_axes");
         if (a === "home_x") return this._press("home_x_axis");
         if (a === "home_y") return this._press("home_y_axis");
         if (a === "home_z") return this._press("home_z_axis");
-        if (a === "light")
-          return this._hass.callService("light", "toggle", {
-            entity_id: `light.${this._p("led_cavity_led")}`,
-          });
+        if (a === "light") return this._toggleLight();
         if (a === "refresh_files") return this._hass.callService(DOMAIN, "refresh", this._entryData());
         if (a === "upload") { const inp = r.querySelector("input[data-upload]"); if (inp) inp.click(); return; }
         if (a === "backup") return this._call("backup_timelapses", {});
@@ -121,7 +121,7 @@ export const RenderMixin = (Base) => class extends Base {
             icon: "mdi:stop-circle-outline", tone: "error", title: tr("Druck wirklich abbrechen?"),
             text: tr("Der laufende Druck lässt sich danach nicht fortsetzen."), ok: tr("Druck abbrechen"),
             cancel: tr("Weiterdrucken"),
-          }).then((yes) => { if (yes) this._press("cancel_print"); });
+          }).then((yes) => { if (yes) this._cancelPrint(); });
         }
       })
     );
@@ -166,13 +166,14 @@ export const RenderMixin = (Base) => class extends Base {
     r.querySelectorAll("[data-prefsen]").forEach((b) =>
       b.addEventListener("click", () => this._call("set_preference",
         { preference: "entangle_sensitivity", value: b.dataset.prefsen })));
+    r.querySelectorAll("[data-spoolrestore]").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); this._restoreSpool(Number(b.dataset.spoolrestore), Number(b.dataset.spool)); }));
     r.querySelectorAll("[data-spoolpick]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._openSpoolPicker(Number(b.dataset.spoolpick)); }));
 
     r.querySelectorAll("[data-toggle]").forEach((b) =>
       b.addEventListener("click", () => {
-        const id = b.dataset.toggle;
-        this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
+        this._toggleEntity(b.dataset.toggle, b);
       })
     );
 
@@ -261,6 +262,8 @@ export const RenderMixin = (Base) => class extends Base {
       set("uenergy", num(d.usage.energy, 2, "kWh"));
       set("ucost", fmtEuro(d.usage.cost));
     }
+    r.querySelectorAll("[data-toggle]").forEach((b) =>
+      b.classList.toggle("pending", this._isPending(`t:${b.dataset.toggle}`)));
     const lightBtn = r.querySelector('[data-su1="light"]');
     if (lightBtn) {
       lightBtn.classList.toggle("on", d.light);

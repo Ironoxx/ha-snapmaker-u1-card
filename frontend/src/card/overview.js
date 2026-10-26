@@ -55,11 +55,7 @@ export const OverviewMixin = (Base) => class extends Base {
         <span class="dot"></span><span class="cam-state-text"><b data-su1="camstate">${this._statusLabel()}</b>${sub}</span>
       </div>`;
 
-    const actions = [];
-    if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
-    if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
-    if (d.active) actions.push(`<button class="outline grow" data-act="cancel"><ha-icon icon="mdi:stop"></ha-icon>${tr("Abbrechen")}</button>`);
-    actions.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+    const actions = [this._stageActions()];
 
     return `
       <section class="panel stage span2">
@@ -84,12 +80,7 @@ export const OverviewMixin = (Base) => class extends Base {
   }
 
   _noCamera() {
-    const d = this._d;
-    const actions = [];
-    if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
-    if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
-    if (d.active) actions.push(`<button class="outline grow" data-act="cancel"><ha-icon icon="mdi:stop"></ha-icon>${tr("Abbrechen")}</button>`);
-    actions.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+    const actions = [this._stageActions()];
     return `
       <section class="panel stage span2 no-cam">
         <div class="no-cam-msg"><ha-icon icon="mdi:camera-off"></ha-icon>
@@ -261,6 +252,20 @@ export const OverviewMixin = (Base) => class extends Base {
     if (!sm) return "";
     const sp = this._slotSpool(h.idx);
     if (!h.loaded && !sp) return "";
+    const back = !sp && sm.online && sm.restore && sm.restore[String(h.idx)];
+    if (back) {
+      // Unloading made the printer forget the spool: offer the one this head had
+      const busy = this._isPending(`r:${h.idx}`);
+      return `<div class="spool-restore">
+          <button type="button" class="spool-line" data-spoolrestore="${h.idx}" data-spool="${back.id}" ${busy ? 'disabled aria-busy="true"' : ""}
+            title="${esc(tr("Diese Spule steckte vor dem Entladen in diesem Kopf"))}">
+            ${busy ? this._spin() : `<span class="spool-dot" style="--fil:${esc(back.color || "var(--u1-outline)")}"></span>`}
+            <span>${esc(tr("Wieder #{id} {name}?", { id: back.id, name: [back.vendor, back.name].filter(Boolean).join(" ") }))}</span>
+          </button>
+          <button type="button" class="icon outline sm" data-spoolpick="${h.idx}" aria-label="${tr("Andere Spule wählen")}" title="${tr("Andere Spule wählen")}">
+            <ha-icon icon="mdi:database-search-outline"></ha-icon></button>
+        </div>`;
+    }
     if (!sp) {
       return `<button type="button" class="spool-line" data-spoolpick="${h.idx}" data-none="1">
           <ha-icon icon="mdi:database-search-outline"></ha-icon><span>${sm.online ? tr("Spule wählen") : tr("Spoolman nicht erreichbar")}</span>

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.6.0b6"
+VERSION = "1.6.0b7"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -21,6 +21,7 @@ CONF_CAMERA = "camera"
 CONF_SPOOLMAN_URL = "spoolman_url"
 CONF_SPOOLMAN_DEDUCT = "spoolman_deduct"
 CONF_SPOOLMAN_LOW = "spoolman_low"
+CONF_SPOOL_RESTORE = "spool_restore"  # last spool after reloading a head: ask | auto | off
 CONF_FILAMENT_PRICES = "filament_prices"  # {"PLA": 20.0, ...} per kg
 CONF_SHUTDOWN_HOST = "shutdown_host"
 CONF_AUTO_OFF = "auto_off"
@@ -63,6 +64,8 @@ BACKUP_DIR = "snapmaker_u1_backup"
 HISTORY_SIZE = 20
 DEFAULT_SPOOLMAN_DEDUCT = True
 DEFAULT_SPOOLMAN_LOW = 100  # g
+SPOOL_RESTORE_MODES = ("ask", "auto", "off")
+DEFAULT_SPOOL_RESTORE = "ask"
 SPOOLMAN_INTERVAL_S = 60
 DEFAULT_ARCHIVE = False
 DEFAULT_ARCHIVE_KEEP = 5

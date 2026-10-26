@@ -32,7 +32,13 @@ class SpoolManager:
         self._queue: list[dict[str, Any]] = [
             dict(q) for q in stored.get("spool_queue") or [] if isinstance(q, dict) and q.get("spool_id")
         ]
+        # head -> spool it held before the filament was unloaded (offered again on reload)
+        self._last: dict[str, int] = {
+            str(k): int(v) for k, v in (stored.get("spool_last") or {}).items() if isinstance(v, int) and v > 0
+        }
         self.deduct = deduct
+        # option spool_restore != "off": remember and offer the last spool per head
+        self.keep_last = True
         self.spools: list[dict[str, Any]] = []
         self.online = False
         self.error: str | None = None
@@ -63,7 +69,7 @@ class SpoolManager:
         return self._queue
 
     def as_stored(self) -> dict[str, Any]:
-        return {"spool_map": self._map, "spool_queue": self._queue}
+        return {"spool_map": self._map, "spool_queue": self._queue, "spool_last": self._last}
 
     def due(self, interval: float) -> bool:
         return self.enabled and time.monotonic() - self._fetched >= interval
@@ -120,6 +126,9 @@ class SpoolManager:
                     # (otherwise nobody books this head's usage)
                     self.to_push[idx] = old["spool_id"]
                     continue
+                if old.get("source") == "printer" and old.get("spool_id") and sid != old.get("spool_id"):
+                    # The printer dropped the spool (unloading clears filament_spool_id)
+                    self._remember(idx, old["spool_id"], sid)
                 entry = {"spool_id": sid or None, "manual": True, "fp": slot_fingerprint(slot), "source": "printer"}
                 if old != entry:
                     self.mapping[str(idx)] = entry
@@ -143,6 +152,8 @@ class SpoolManager:
                 entry.pop("sync_until", None)
                 changed = True
             if entry.get("fp") != fp or (entry.get("spool_id") and entry["spool_id"] not in known):
+                if entry.get("spool_id") and entry["spool_id"] in known and entry.get("manual"):
+                    self._remember(slot["index"], entry["spool_id"], None)
                 del self.mapping[key]
                 changed = True
                 continue
@@ -152,8 +163,12 @@ class SpoolManager:
             if entry.get("manual") or entry.get("spool_id") is not None:
                 fixed[slot["index"]] = entry.get("spool_id")
         proposal = suggest_spools(slots, self.spools, fixed)
+        # A head that is waiting for its previous spool gets no other one guessed
+        waiting = {k for k, v in self._last.items() if v in known} if self.keep_last else set()
         for slot in slots:
             key = str(slot["index"])
+            if key in waiting:
+                proposal.pop(slot["index"], None)
             entry = self.mapping.get(key)
             if entry is not None:
                 if not entry.get("manual") and entry.get("spool_id") is None and proposal.get(slot["index"]):
@@ -168,9 +183,40 @@ class SpoolManager:
             changed = True
         return changed
 
+    def _remember(self, index: int, old: int, new: int | None) -> None:
+        if not self.keep_last:
+            self._last.clear()
+            return
+        if not new:
+            self._last[str(index)] = int(old)
+        else:
+            self._last.pop(str(index), None)
+
+    def forget_last(self, index: int) -> None:
+        """A spool was chosen for this head (or explicitly none): nothing to offer."""
+        self._last.pop(str(index), None)
+
+    def restorable(self, slots: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+        """Heads loaded again without a spool whose last spool still exists and is free."""
+        assigned = {v.get("spool_id") for v in self.mapping.values() if v.get("spool_id")}
+        out: dict[int, dict[str, Any]] = {}
+        for slot in slots:
+            idx = slot["index"]
+            sid = self._last.get(str(idx)) if self.keep_last else None
+            if not sid or not slot.get("loaded"):
+                continue
+            if (self.mapping.get(str(idx)) or {}).get("spool_id"):
+                continue  # has a spool again
+            spool = self.spool(sid)
+            if spool is None or sid in assigned:
+                continue
+            out[idx] = spool
+        return out
+
     def set_manual(self, slot: dict[str, Any], spool_id: int | None, automatic: bool) -> None:
         """Pin a spool to a head (or release the head with None)."""
         key = str(slot["index"])
+        self.forget_last(slot["index"])
         if automatic:
             self.mapping.pop(key, None)
             return

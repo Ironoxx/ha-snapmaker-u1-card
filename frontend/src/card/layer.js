@@ -360,6 +360,8 @@ export const LayerViewMixin = (Base) => class extends Base {
     } finally {
       this._lvBusy = false;
     }
+    // The print ended while we waited for the answer (_lv was reset)
+    if (this._lv !== lv) return;
     this._paintLayer(needLayer || exChanged);
   }
 

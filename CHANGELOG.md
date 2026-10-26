@@ -4,6 +4,25 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b7
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b6 … b1 below.
+
+**New**
+- **Feedback for commands:** pause, resume and cancel show "Pausing …" / "Resuming …" / "Cancelling …" right after the tap (button and status) until the printer confirms; a hint appears if it does not. The light toggles in the card at once, switches pulse until Home Assistant reports the new state.
+- The card takes the print state from the integration's live connection: a pause or resume shows up seconds earlier than via the Moonraker integration's poll.
+- **Last spool after reloading a head:** without an RFID tag the printer forgets the spool when the filament is unloaded (SpoolLink too). The head now offers its previous spool ("Use #5 … again?"), one tap restores it (with SpoolLink via `SET_SPOOL_ID`). Nothing is booked without the tap. New option under Spoolman: offer (default), set automatically (not during a print), or off. A head waiting for its spool gets no other spool guessed.
+
+**Fixed**
+- Layer view: no error when the print ended while a layer was loading.
+
+---
+**Deutsch**
+- Neu: **Rückmeldung bei Befehlen** – Pause, Fortsetzen und Abbrechen zeigen direkt nach dem Tippen „Pausiere …“ / „Setze fort …“ / „Breche ab …“ (Knopf und Status), bis der Drucker es bestätigt; sonst erscheint ein Hinweis. Das Licht schaltet in der Karte sofort um, Schalter pulsieren, bis Home Assistant den neuen Zustand meldet.
+- Neu: Die Karte nimmt den Druckzustand aus der Live-Verbindung der Integration – Pause/Fortsetzen erscheinen Sekunden früher als über die Abfrage der Moonraker-Integration.
+- Neu: **Letzte Spule nach dem Neu-Einlegen** – ohne RFID-Tag vergisst der Drucker beim Entladen die Spule (auch mit SpoolLink). Der Kopf bietet jetzt seine vorherige Spule an („Wieder #5 …?“), ein Tipp übernimmt sie (mit SpoolLink per `SET_SPOOL_ID`). Ohne Tipp wird nichts gebucht. Neue Option unter Spoolman: vorschlagen (Standard), automatisch setzen (nicht im Druck) oder aus. Ein Kopf, der auf seine Spule wartet, bekommt keine andere geraten.
+- Behoben: Schichtansicht – kein Fehler mehr, wenn der Druck endet, während eine Schicht lädt.
+
 ## 1.6.0b6
 
 **Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b5 … b1 below.

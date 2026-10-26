@@ -425,3 +425,119 @@ async def test_spoollink_choice_shown_right_away(hass: HomeAssistant, mock_clien
         assert sm["slots"]["2"]["id"] == 1
         await _refresh(hass, entry)  # printer still reports 0 a moment later: keep showing it
         assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["slots"]["2"]["id"] == 1
+
+
+async def test_spoollink_offers_last_spool_after_reload(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """Unloading clears filament_spool_id: the head offers its previous spool, one tap restores it."""
+    _real_slots(mock_client)
+    mock_client["components"].return_value = ["spoolman", "spoollink"]
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_spool_id"] = [5, 0, 0, 0]
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    sm = lambda: hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]  # noqa: E731
+    assert sm()["slots"]["0"]["id"] == 5 and sm()["restore"] == {}
+    # unload: the firmware clears filament and spool id
+    ptc["filament_exist"][0] = False
+    ptc["filament_spool_id"] = [0, 0, 0, 0]
+    await _refresh(hass, entry)
+    assert sm()["restore"] == {}, "nothing to offer while empty"
+    # reload (no RFID tag): offered, not set on its own
+    ptc["filament_exist"][0] = True
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await _refresh(hass, entry)
+        assert sm()["restore"]["0"]["id"] == 5 and sm()["slots"]["0"] is None
+        gcode.assert_not_awaited()
+        # one tap
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 1, "spool_id": 5}, blocking=True)
+        gcode.assert_awaited_with("SET_SPOOL_ID CHANNEL=0 SPOOL_ID=5")
+    assert sm()["restore"] == {} and sm()["slots"]["0"]["id"] == 5
+    # survives a restart
+    ptc["filament_spool_id"] = [5, 0, 0, 0]
+    await _refresh(hass, entry)
+    ptc["filament_spool_id"] = [0, 0, 0, 0]
+    await _refresh(hass, entry)
+    assert entry.runtime_data.spools.as_stored()["spool_last"] == {"0": 5}
+    # choosing "no spool" explicitly: no more offer
+    with patch(f"{API}.gcode", AsyncMock()):
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 1, "spool_id": 0}, blocking=True)
+    await _refresh(hass, entry)
+    assert sm()["restore"] == {}
+
+
+async def test_spool_restored_automatically_with_option(hass: HomeAssistant, mock_client, spoolman) -> None:
+    _real_slots(mock_client)
+    mock_client["components"].return_value = ["spoolman", "spoollink"]
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_spool_id"] = [0, 3, 0, 0]
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912", spool_restore="auto")
+    await _refresh(hass, entry)
+    ptc["filament_exist"][1] = False
+    ptc["filament_spool_id"] = [0, 0, 0, 0]
+    await _refresh(hass, entry)
+    ptc["filament_exist"][1] = True
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await _refresh(hass, entry)
+        gcode.assert_awaited_once_with("SET_SPOOL_ID CHANNEL=1 SPOOL_ID=3")
+        await _refresh(hass, entry)  # printer has not confirmed yet: not sent twice
+        assert gcode.await_count == 1
+    # not during a print
+    ptc["filament_spool_id"] = [0, 3, 0, 0]
+    await _refresh(hass, entry)
+    ptc["filament_exist"][1] = False
+    ptc["filament_spool_id"] = [0, 0, 0, 0]
+    await _refresh(hass, entry)
+    ptc["filament_exist"][1] = True
+    _status(mock_client, "printing", "a.gcode")
+    with patch(f"{API}.gcode", AsyncMock()) as gcode, \
+         patch(f"{API}.file_metadata", AsyncMock(return_value={})):
+        await _refresh(hass, entry)
+        gcode.assert_not_awaited()
+
+
+async def test_offer_last_spool_without_spoollink(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """Own assignment: the manual choice expires on unload and is offered again on reload."""
+    _real_slots(mock_client)
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_official"] = [False] * 4
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    with patch(f"{API}.gcode", AsyncMock()):
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 6}, blocking=True)
+    ptc["filament_vendor"][1], ptc["filament_type"][1], ptc["filament_color_rgba"][1] = "Snapmaker", "PETG", "D32F2FFF"
+    await _refresh(hass, entry)
+    await _refresh(hass, entry)
+    sm = lambda: hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]  # noqa: E731
+    assert sm()["slots"]["1"]["id"] == 6
+    # unload and reload: stock firmware reports "PLA Generic" again (no tag)
+    ptc["filament_exist"][1] = False
+    await _refresh(hass, entry)
+    ptc["filament_exist"][1] = True
+    ptc["filament_vendor"][1], ptc["filament_type"][1], ptc["filament_color_rgba"][1] = "Generic", "PLA", "00000000"
+    await _refresh(hass, entry)
+    assert sm()["slots"]["1"] is None and sm()["restore"]["1"]["id"] == 6
+    # black PLA would match spool 1 automatically: the head waits for its own spool instead
+    ptc["filament_color_rgba"][1] = "000000FF"
+    await _refresh(hass, entry)
+    await _refresh(hass, entry)
+    assert sm()["slots"]["1"] is None and sm()["restore"]["1"]["id"] == 6
+    # one tap writes the spool's filament again
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 6}, blocking=True)
+        assert "PETG" in gcode.await_args.args[0]
+    assert sm()["slots"]["1"]["id"] == 6 and sm()["restore"] == {}
+
+
+async def test_spool_restore_off(hass: HomeAssistant, mock_client, spoolman) -> None:
+    _real_slots(mock_client)
+    mock_client["components"].return_value = ["spoolman", "spoollink"]
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_spool_id"] = [5, 0, 0, 0]
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912", spool_restore="off")
+    await _refresh(hass, entry)
+    ptc["filament_exist"][0] = False
+    ptc["filament_spool_id"] = [0, 0, 0, 0]
+    await _refresh(hass, entry)
+    ptc["filament_exist"][0] = True
+    await _refresh(hass, entry)
+    assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["restore"] == {}

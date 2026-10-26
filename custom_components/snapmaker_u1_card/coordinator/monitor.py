@@ -302,6 +302,7 @@ class PrintMonitorMixin:
         if "state" in ps and ps["state"] != self.data.print_state:
             # Visible right away (card, voice commands); the poll follows debounced.
             self.data.print_state = ps["state"]
+            self.async_update_listeners()
         head = diff.get("toolhead", {}).get("extruder") if isinstance(diff.get("toolhead"), dict) else None
         if head is not None and head_index(head) != self.data.active_head:
             self.data.active_head = head_index(head)

@@ -470,6 +470,8 @@ Each spool is assigned to at most one head. In the card, tap the spool row of a 
 
 The same applies to any other `[spoolman]` section in Moonraker's configuration.
 
+**Unloading and reloading.** Without an RFID tag the printer forgets the spool when the filament is unloaded (with SpoolLink it clears `filament_spool_id`). When the head is loaded again, it offers its previous spool: "Use #5 … again?" – one tap restores it (with SpoolLink via `SET_SPOOL_ID`). Until then nothing is booked and no other spool is guessed for that head. Option *Last spool after reloading a head* (Spoolman section): offer (default), set automatically (not during a print; wrong spool if you load a different one and forget to change it), or off.
+
 **Weighing a spool.** In the head details (with a spool assigned) enter what the scale shows: with the empty spool (its weight comes from Spoolman: spool, filament or vendor *empty spool weight*) or the filament only. The integration sets the remaining weight in Spoolman. Service `weigh_spool` (`slot` or `spool_id`, `weight`, `gross`). So only new spools still need Spoolman itself.
 
 Limitation: if the firmware switches to another head automatically during a print (auto-replenish on an empty spool), the whole usage is attributed to the last reported head.

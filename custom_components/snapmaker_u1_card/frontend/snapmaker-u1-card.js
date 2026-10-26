@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.6.0b6";
+  var CARD_VERSION = "1.6.0b7";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -492,6 +492,15 @@
     "Optionen": "Options",
     "Pause": "Pause",
     "Pausiert": "Paused",
+    "Pausiere …": "Pausing …",
+    "Wieder #{id} {name}?": "Use #{id} {name} again?",
+    "Diese Spule steckte vor dem Entladen in diesem Kopf": "This spool was in this head before unloading",
+    "Andere Spule wählen": "Choose another spool",
+    "Setze fort …": "Resuming …",
+    "Breche ab …": "Cancelling …",
+    "Der Drucker hat die Pause noch nicht bestätigt.": "The printer has not confirmed the pause yet.",
+    "Der Drucker hat das Fortsetzen noch nicht bestätigt.": "The printer has not confirmed the resume yet.",
+    "Der Drucker hat den Abbruch noch nicht bestätigt.": "The printer has not confirmed the cancel yet.",
     "Position X": "Position X",
     "Position Y": "Position Y",
     "Position Z": "Position Z",
@@ -902,7 +911,8 @@
         h.active = i === active;
       });
       const hot = active >= 0 ? heads[active] : heads[0];
-      const state = this._s(`sensor.${P("current_print_state")}`, "standby");
+      const liveState = fst && fst.attributes && fst.attributes.live ? fst.attributes.print_state : null;
+      const state = liveState || this._s(`sensor.${P("current_print_state")}`, "standby");
       this._d = {
         online: klipper !== null,
         klipper,
@@ -965,6 +975,7 @@
         longest: this._s(`sensor.${P("longest_print")}`, "—"),
         totalsFilament: this._n(`sensor.${P("totals_filament_used")}`, 0),
         light: this._s(`light.${this._p("led_cavity_led")}`) === "on",
+        lightReal: this._s(`light.${this._p("led_cavity_led")}`) === "on",
         lightBri: (this._st(`light.${this._p("led_cavity_led")}`) || {}).attributes?.brightness ?? 0,
         network: this._cfg.network_tracker ? this._s(this._cfg.network_tracker) : null,
         files: this._files(),
@@ -1099,6 +1110,150 @@
       }
       this._hass.callService("number", "set_value", { entity_id: entity, value: Number(value) });
     }
+    // ── Pending commands ──────────────────────────────────────────────────────
+    // Pause parks the head first and the Moonraker integration polls: without
+    // feedback a tap looks ignored. A pending command shows at once that it was
+    // sent ("Pausiere …", light already toggled) until the printer confirms it.
+    /** key: "pause" | "resume" | "cancel" | "light" | "t:<entity>"; done(d) = confirmed. */
+    _pend(key, done, ms = 3e4, extra = {}) {
+      if (!this._pending) this._pending = /* @__PURE__ */ new Map();
+      this._pending.set(key, { done, until: Date.now() + ms, ...extra });
+      this._pendTimer();
+      this._rerender();
+    }
+    /** One timer for the earliest expiry; none while nothing waits. */
+    _pendTimer() {
+      clearTimeout(this._pendT);
+      this._pendT = null;
+      if (!this._pending || !this._pending.size) return;
+      const next = Math.min(...[...this._pending.values()].map((p) => p.until));
+      this._pendT = setTimeout(() => {
+        this._pendT = null;
+        const before = this._lastPendKey;
+        if (this._settlePending()) {
+          if (this._pendingKey() !== before) this._rerender();
+          else {
+            this._applyPending();
+            this._patch();
+          }
+        }
+        this._pendTimer();
+      }, Math.max(0, next - Date.now()) + 50);
+    }
+    _isPending(key) {
+      const p = this._pending && this._pending.get(key);
+      return !!p && p.until > Date.now();
+    }
+    /** Drop confirmed and expired commands; true = something changed. */
+    _settlePending() {
+      if (!this._pending || !this._pending.size || !this._d) return false;
+      const now = Date.now();
+      let changed = false;
+      for (const [key, p] of this._pending) {
+        let ok = false;
+        try {
+          ok = p.done(this._d);
+        } catch (e) {
+          ok = true;
+        }
+        if (ok || p.until <= now) {
+          this._pending.delete(key);
+          changed = true;
+          if (!ok && p.timeout) this._toast(p.timeout);
+        }
+      }
+      if (changed && !this._pending.size) this._pendTimer();
+      return changed;
+    }
+    /** Optimistic values while a command is on its way (light). */
+    _applyPending() {
+      const d = this._d;
+      if (!d) return;
+      const l = this._pending && this._pending.get("light");
+      d.light = l && l.until > Date.now() ? l.want : d.lightReal;
+    }
+    _rerender() {
+      this._renderKey = null;
+      if (this._d) this._render();
+    }
+    _pendingKey() {
+      this._lastPendKey = this._pending ? [...this._pending.keys()].filter((k) => k !== "light" && !k.startsWith("t:")).join(",") : "";
+      return this._lastPendKey;
+    }
+    _spin() {
+      return `<span class="su1-spin" aria-hidden="true"></span>`;
+    }
+    /** Pause / resume / cancel / light as buttons, with a waiting state. */
+    _stageActions() {
+      const d = this._d;
+      const busy = (key, cls, icon, label, wait) => this._isPending(key) ? `<button class="${cls} grow" disabled aria-busy="true">${this._spin()}${wait}</button>` : `<button class="${cls} grow" data-act="${key}"><ha-icon icon="${icon}"></ha-icon>${label}</button>`;
+      const out = [];
+      const cancelling = this._isPending("cancel");
+      if (d.printing && !cancelling) out.push(busy("pause", "filled", "mdi:pause", tr("Pause"), tr("Pausiere …")));
+      if (d.paused && !cancelling) out.push(busy("resume", "filled", "mdi:play", tr("Fortsetzen"), tr("Setze fort …")));
+      if (d.active) out.push(busy("cancel", "outline", "mdi:stop", tr("Abbrechen"), tr("Breche ab …")));
+      out.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+      return out.join("");
+    }
+    _pausePrint() {
+      this._press("pause_print");
+      this._pend(
+        "pause",
+        (d) => d.paused || !d.active,
+        9e4,
+        { timeout: tr("Der Drucker hat die Pause noch nicht bestätigt.") }
+      );
+    }
+    _resumePrint() {
+      this._press("resume_print");
+      this._pend(
+        "resume",
+        (d) => d.printing || !d.active,
+        9e4,
+        { timeout: tr("Der Drucker hat das Fortsetzen noch nicht bestätigt.") }
+      );
+    }
+    _cancelPrint() {
+      this._press("cancel_print");
+      this._pend(
+        "cancel",
+        (d) => !d.active,
+        12e4,
+        { timeout: tr("Der Drucker hat den Abbruch noch nicht bestätigt.") }
+      );
+    }
+    _toggleLight() {
+      const want = !this._d.light;
+      this._hass.callService("light", "toggle", { entity_id: `light.${this._p("led_cavity_led")}` });
+      if (!this._pending) this._pending = /* @__PURE__ */ new Map();
+      this._pending.set("light", { done: (d) => d.lightReal === want, until: Date.now() + 15e3, want });
+      this._pendTimer();
+      this._applyPending();
+      this._patch();
+    }
+    /** Switch toggles (heater, filter): spinner until the entity has changed. */
+    _toggleEntity(id, btn) {
+      const before = this._s(id);
+      this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
+      if (!this._pending) this._pending = /* @__PURE__ */ new Map();
+      this._pending.set(`t:${id}`, { done: () => this._s(id) !== before, until: Date.now() + 15e3 });
+      this._pendTimer();
+      if (btn) btn.classList.add("pending");
+    }
+    /** Take the head's previous spool again (one tap, after reloading the filament). */
+    async _restoreSpool(idx, spoolId) {
+      this._pend(`r:${idx}`, () => {
+        const sm = this._spoolman();
+        return !sm || !(sm.restore || {})[String(idx)];
+      }, 2e4);
+      try {
+        await this._hass.callService(DOMAIN, "set_spool", { slot: idx + 1, spool_id: spoolId, ...this._entryData() }, void 0, false);
+      } catch (err) {
+        if (this._pending) this._pending.delete(`r:${idx}`);
+        this._rerender();
+        alert(err && (err.message || err.error) || String(err));
+      }
+    }
     // ── Control lock ────────────────────────────────────────────────────────
     // On a phone it is easy to brush a slider while scrolling. So sliders,
     // presets, heater switches and homing are locked until the padlock is
@@ -1179,6 +1334,9 @@
     _statusLabel() {
       const d = this._d;
       if (!d.online) return tr("Offline");
+      if (this._isPending("cancel")) return tr("Breche ab …");
+      if (this._isPending("pause")) return tr("Pausiere …");
+      if (this._isPending("resume")) return tr("Setze fort …");
       return {
         printing: tr("Druckt"),
         standby: tr("Bereit"),
@@ -1343,11 +1501,7 @@
       const pill = `<div class="cam-state" data-tone="${tone}" role="status">
         <span class="dot"></span><span class="cam-state-text"><b data-su1="camstate">${this._statusLabel()}</b>${sub}</span>
       </div>`;
-      const actions = [];
-      if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
-      if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
-      if (d.active) actions.push(`<button class="outline grow" data-act="cancel"><ha-icon icon="mdi:stop"></ha-icon>${tr("Abbrechen")}</button>`);
-      actions.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+      const actions = [this._stageActions()];
       return `
       <section class="panel stage span2">
         <div class="frame" data-dim="${dim}" style="${frameStyle}">
@@ -1370,12 +1524,7 @@
       </section>`;
     }
     _noCamera() {
-      const d = this._d;
-      const actions = [];
-      if (d.printing) actions.push(`<button class="filled grow" data-act="pause"><ha-icon icon="mdi:pause"></ha-icon>${tr("Pause")}</button>`);
-      if (d.paused) actions.push(`<button class="filled grow" data-act="resume"><ha-icon icon="mdi:play"></ha-icon>${tr("Fortsetzen")}</button>`);
-      if (d.active) actions.push(`<button class="outline grow" data-act="cancel"><ha-icon icon="mdi:stop"></ha-icon>${tr("Abbrechen")}</button>`);
-      actions.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
+      const actions = [this._stageActions()];
       return `
       <section class="panel stage span2 no-cam">
         <div class="no-cam-msg"><ha-icon icon="mdi:camera-off"></ha-icon>
@@ -1540,6 +1689,19 @@
       if (!sm) return "";
       const sp = this._slotSpool(h.idx);
       if (!h.loaded && !sp) return "";
+      const back = !sp && sm.online && sm.restore && sm.restore[String(h.idx)];
+      if (back) {
+        const busy = this._isPending(`r:${h.idx}`);
+        return `<div class="spool-restore">
+          <button type="button" class="spool-line" data-spoolrestore="${h.idx}" data-spool="${back.id}" ${busy ? 'disabled aria-busy="true"' : ""}
+            title="${esc(tr("Diese Spule steckte vor dem Entladen in diesem Kopf"))}">
+            ${busy ? this._spin() : `<span class="spool-dot" style="--fil:${esc(back.color || "var(--u1-outline)")}"></span>`}
+            <span>${esc(tr("Wieder #{id} {name}?", { id: back.id, name: [back.vendor, back.name].filter(Boolean).join(" ") }))}</span>
+          </button>
+          <button type="button" class="icon outline sm" data-spoolpick="${h.idx}" aria-label="${tr("Andere Spule wählen")}" title="${tr("Andere Spule wählen")}">
+            <ha-icon icon="mdi:database-search-outline"></ha-icon></button>
+        </div>`;
+      }
       if (!sp) {
         return `<button type="button" class="spool-line" data-spoolpick="${h.idx}" data-none="1">
           <ha-icon icon="mdi:database-search-outline"></ha-icon><span>${sm.online ? tr("Spule wählen") : tr("Spoolman nicht erreichbar")}</span>
@@ -2922,6 +3084,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       } finally {
         this._lvBusy = false;
       }
+      if (this._lv !== lv) return;
       this._paintLayer(needLayer || exChanged);
     }
     _paintLayer(full) {
@@ -3879,6 +4042,24 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   a.btn ha-icon { --mdc-icon-size: 18px; }
   @keyframes u1spin { to { transform: rotate(360deg); } }
+  .spool-restore { display: flex; gap: 6px; align-items: stretch; }
+  .spool-restore .spool-line { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+    border-style: dashed; color: var(--u1-primary); }
+  .spool-restore .spool-line span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spool-restore .spool-dot { width: 12px; height: 12px; flex: none; }
+  /* Command sent, printer has not confirmed yet */
+  .su1-spin {
+    width: 16px; height: 16px; flex: none; border-radius: 50%;
+    border: 2px solid currentColor; border-right-color: transparent;
+    animation: u1spin .8s linear infinite;
+  }
+  button[aria-busy="true"] { cursor: progress; }
+  button[aria-busy="true"]:disabled { opacity: .85; }
+  button.pending { position: relative; cursor: progress; }
+  button.pending::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 0 0 2px var(--u1-primary); animation: pulse 1s ease-in-out infinite;
+  }
   @container u1 (max-width: 520px) {
     .map-row { grid-template-columns: 1fr; }
     .map-slots { justify-content: flex-start; }
@@ -4111,6 +4292,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _render() {
       if (!this._d) return;
       const d = this._d;
+      this._settlePending();
+      this._applyPending();
       const key = [
         LANG,
         d.online ? d.state : "offline",
@@ -4123,7 +4306,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.heads.findIndex((h) => h.active),
         (() => {
           const sm = this._spoolman();
-          return sm ? `sm${sm.online}${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}` : "nosm";
+          return sm ? `sm${sm.online}${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}r${Object.entries(sm.restore || {}).map(([k, v]) => `${k}:${v.id}`).join(",")}` : "nosm";
         })(),
         d.tc ? `tc${d.tc.inProgress}${d.tc.heads.length}` : "notc",
         d.power ? `p${d.power.on}${d.power.available}${d.power.autoOn}${d.online ? "" : d.power.shuttingDown + "" + d.power.poweringOn}` : "nop",
@@ -4149,7 +4332,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.chamber ? `ch${d.chamber.filter !== null && d.chamber.filter !== void 0}` : "noch",
         `f${this._ents.flow && d.flow !== null}`,
         d.headStates.join(","),
-        `${this._ents.camera}${this._hasCamera2()}`
+        `${this._ents.camera}${this._hasCamera2()}`,
+        this._pendingKey()
       ].join("~");
       if (key === this._renderKey && this._root()) {
         this._patch();
@@ -4200,16 +4384,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       r.querySelectorAll("[data-act]").forEach(
         (b) => b.addEventListener("click", () => {
           const a = b.dataset.act;
-          if (a === "pause") return this._press("pause_print");
-          if (a === "resume") return this._press("resume_print");
+          if (a === "pause") return this._pausePrint();
+          if (a === "resume") return this._resumePrint();
           if (a === "home_all") return this._press("home_all_axes");
           if (a === "home_x") return this._press("home_x_axis");
           if (a === "home_y") return this._press("home_y_axis");
           if (a === "home_z") return this._press("home_z_axis");
-          if (a === "light")
-            return this._hass.callService("light", "toggle", {
-              entity_id: `light.${this._p("led_cavity_led")}`
-            });
+          if (a === "light") return this._toggleLight();
           if (a === "refresh_files") return this._hass.callService(DOMAIN, "refresh", this._entryData());
           if (a === "upload") {
             const inp2 = r.querySelector("input[data-upload]");
@@ -4230,7 +4411,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
               ok: tr("Druck abbrechen"),
               cancel: tr("Weiterdrucken")
             }).then((yes) => {
-              if (yes) this._press("cancel_print");
+              if (yes) this._cancelPrint();
             });
           }
         })
@@ -4280,14 +4461,17 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         "set_preference",
         { preference: "entangle_sensitivity", value: b.dataset.prefsen }
       )));
+      r.querySelectorAll("[data-spoolrestore]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._restoreSpool(Number(b.dataset.spoolrestore), Number(b.dataset.spool));
+      }));
       r.querySelectorAll("[data-spoolpick]").forEach((b) => b.addEventListener("click", (e) => {
         e.stopPropagation();
         this._openSpoolPicker(Number(b.dataset.spoolpick));
       }));
       r.querySelectorAll("[data-toggle]").forEach(
         (b) => b.addEventListener("click", () => {
-          const id = b.dataset.toggle;
-          this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
+          this._toggleEntity(b.dataset.toggle, b);
         })
       );
       r.querySelectorAll("[data-set]").forEach(
@@ -4380,6 +4564,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         set("uenergy", num(d.usage.energy, 2, "kWh"));
         set("ucost", fmtEuro(d.usage.cost));
       }
+      r.querySelectorAll("[data-toggle]").forEach((b) => b.classList.toggle("pending", this._isPending(`t:${b.dataset.toggle}`)));
       const lightBtn = r.querySelector('[data-su1="light"]');
       if (lightBtn) {
         lightBtn.classList.toggle("on", d.light);
