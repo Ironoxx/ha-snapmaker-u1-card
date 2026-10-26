@@ -44,8 +44,10 @@ export const RenderMixin = (Base) => class extends Base {
       (() => { const l = this._st(this._ents.liveNotify); return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : ""; })(),
       d.mesh ? `m${d.mesh.profile}${d.mesh.range}${d.mesh.mean}${d.mesh.cols}x${d.mesh.rows}` : "nomesh",
       d.cover ? "cover" : "nocover",
+      d.chamber ? `ch${d.chamber.filter !== null && d.chamber.filter !== undefined}` : "noch",
       `f${this._ents.flow && d.flow !== null}`,
       d.headStates.join(","),
+      `${this._ents.camera}${this._hasCamera2()}`,
     ].join("~");
 
     if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
@@ -125,6 +127,8 @@ export const RenderMixin = (Base) => class extends Base {
     );
     this._wireEstop(r);
     this._wireMachine(r);
+    r.querySelectorAll("[data-camswitch]").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); this._switchCamera(); }));
     this._wireObjects(r.querySelector(".lv-panel"));
     const rl = r.querySelector("[data-reload]");
     // Reload bypassing the cache for the card resource (the URL carries ?v=)
@@ -301,6 +305,13 @@ export const RenderMixin = (Base) => class extends Base {
     set("mem", num(d.memory, 1, "%"));
     set("sys", this._loadText());
     set("stepx", num(d.stepX, 1, "°C"));
+    if (d.chamber) {
+      set("chtemp", num(d.chamber.temperature, 1, "°C"));
+      set("chtarget", d.chamber.target ? num(d.chamber.target, 0, "°C") : tr("aus"));
+      set("chpower", num(d.chamber.power, 0, "%"));
+      const fb = r.querySelector('[data-su1="chfilter"]');
+      if (fb) { fb.classList.toggle("on", d.chamber.filter === true); fb.classList.toggle("outline", d.chamber.filter !== true); }
+    }
     if (d.cover) {
       set("cvmode", esc(this._coverMode(d.cover.mode)));
       set("cvtarget", num(d.cover.desired_temp, 0, "°C"));
@@ -346,6 +357,7 @@ export const RenderMixin = (Base) => class extends Base {
       ...(this._ents.flow ? [[this._ents.flow, d.flow, 0, "%"]] : []),
       ...(d.cover && this._ents.coverExhaust ? [[this._ents.coverExhaust, d.cover.exhaust, 0, "%"]] : []),
       ...(d.cover && this._ents.coverInner ? [[this._ents.coverInner, d.cover.inner, 0, "%"]] : []),
+      ...(d.chamber && this._ents.chamberTarget ? [[this._ents.chamberTarget, d.chamber.target || 0, 0, "°C"]] : []),
       ...d.heads.map((h) => [h.targetEntity, h.target, 0, "°C"]),
     ];
     const now = Date.now();

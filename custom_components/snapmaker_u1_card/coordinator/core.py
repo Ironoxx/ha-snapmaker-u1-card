@@ -45,7 +45,15 @@ from ..jobs import (
     JobQueue,
 )
 from ..live import LiveListener
-from ..machine import parse_bed_mesh, parse_flow, parse_head_states, parse_purifier
+from ..machine import (
+    find_chamber_heater,
+    parse_bed_mesh,
+    parse_chamber,
+    parse_flow,
+    parse_head_states,
+    parse_nozzles,
+    parse_purifier,
+)
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     EXTRUDER_OBJECTS,
@@ -176,8 +184,11 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._wake_last = 0.0  # monotonic time of the last card-requested wake
         self._live_init(None)
         self.webcam = Webcam(client)
+        self.webcam2 = Webcam(client, second=True)  # paxx12 USB camera (/webcam2/)
         self._webcam_task: Any = None
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
+        self._maint_notified: list[str] = []  # maintenance items already announced as due
+        self.chamber_heater: dict[str, Any] | None = None  # Panda Breath / DragonBreath (machine.py)
 
     # ── Options ─────────────────────────────────────────────────────────────
     @property
@@ -240,6 +251,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self.maintenance = Maintenance(extra.get("maintenance"))
         self._print_hours = extra.get("print_hours")
         self._backup = dict(extra.get("backup") or {})
+        self._maint_notified = [k for k in extra.get("maint_notified") or [] if isinstance(k, str)]
         self.firmware["latest"] = extra.get("firmware_latest")
         if self.options.get(CONF_ARCHIVE, DEFAULT_ARCHIVE):
             folder = media_root(dict(self.hass.config.media_dirs), self.hass.config.config_dir) / ARCHIVE_DIR
@@ -285,14 +297,18 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         await self._store.async_save(self._stored())
 
     def _webcam_check(self) -> None:
-        """Detect the camera in the background (online again, images failing, nothing found yet)."""
-        if not self.webcam.due() or (self._webcam_task and not self._webcam_task.done()):
+        """Detect the cameras in the background (online again, images failing, nothing found yet)."""
+        due = [cam for cam in (self.webcam, self.webcam2) if cam.due()]
+        if not due or (self._webcam_task and not self._webcam_task.done()):
             return
 
         async def run() -> None:
-            before = self.webcam.mode
-            await self.webcam.detect()
-            if self.webcam.mode != before:
+            changed = False
+            for cam in due:
+                before = (cam.mode, cam.rtsp_url)
+                await cam.detect()
+                changed = changed or (cam.mode, cam.rtsp_url) != before
+            if changed:
                 self.async_update_listeners()
 
         self._webcam_task = self.hass.async_create_background_task(run(), "snapmaker_u1_card camera detection")
@@ -320,6 +336,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             "maintenance": self.maintenance.as_stored(),
             "print_hours": self._print_hours,
             "backup": self._backup,
+            "maint_notified": self._maint_notified,
             "firmware_latest": self.firmware.get("latest"),
             "live_notify": self._live_stored(),
             **({"archive": self.archive.as_stored()} if self.archive else {}),
@@ -407,12 +424,16 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         if self.power_is_off():
             self.auto_off_armed = None
             self.webcam.reset()
+            self.webcam2.reset()
             self._prev = self._offline()
             return self._prev
         try:
+            heater = self.chamber_heater
             status = await self.client.query_objects(
                 "print_task_config", "purifier",
                 fields={
+                    **({f"heater_generic {heater['name']}": ("temperature", "target", "power")} if heater else {}),
+                    **({f"output_pin {heater['filter']}": ("value",)} if heater and heater.get("filter") else {}),
                     "filament_detect": ("info",),
                     "print_stats": ("state", "filename", "print_duration", "filament_used", "exception", "info"),
                     "exception_manager": ("exceptions",),
@@ -421,7 +442,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                     "heater_bed": ("temperature", "target"),
                     "gcode_move": ("extrude_factor",),
                     "bed_mesh": ("profile_name", "mesh_min", "mesh_max", "probed_matrix"),
-                    **{name: (*SWITCH_FIELDS, "temperature", "target", "state") for name in EXTRUDER_OBJECTS},
+                    **{name: (*SWITCH_FIELDS, "temperature", "target", "state", "nozzle_diameter", "nozzle_volume_type")
+                       for name in EXTRUDER_OBJECTS},
                 },
             )
         except MoonrakerError as err:
@@ -429,6 +451,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             # usable while the printer is off.
             _LOGGER.debug("Printer not reachable: %s", err)
             self.webcam.reset()
+            self.webcam2.reset()
             self._prev = self._offline()
             return self._prev
 
@@ -480,10 +503,15 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             ) if isinstance(t, (int, float))
         ]
 
+        slots = parse_slots(ptc, status.get("filament_detect"))
+        nozzles = parse_nozzles(status)
+        for slot in slots:
+            idx = slot.get("index")
+            slot["nozzle"] = nozzles[idx] if isinstance(idx, int) and idx < len(nozzles) else None
         data = U1Data(
             online=True,
             targets=targets,
-            slots=parse_slots(ptc, status.get("filament_detect")),
+            slots=slots,
             preferences=parse_preferences(ptc),
             map_table=list(ptc.get("extruder_map_table") or [])[:8],
             tool_changes=tool_changes,
@@ -502,6 +530,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             bed_mesh=parse_bed_mesh(status.get("bed_mesh")),
             purifier=parse_purifier(status.get("purifier")),
             head_states=parse_head_states(status),
+            chamber=parse_chamber(status, self.chamber_heater),
         )
         if print_state in ACTIVE_PRINT_STATES:
             data.remaining = self._remaining(stats, vsd)
@@ -562,10 +591,20 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                 self._cpu_count = await self.client.cpu_count()
             except MoonrakerError:
                 pass
+            try:
+                # Moonraker's own [spoolman] (paxx12 SpoolLink or by hand) books usage itself
+                self.spools.external_booking = "spoolman" in await self.client.components()
+            except MoonrakerError:
+                pass
+            try:
+                self.chamber_heater = find_chamber_heater(await self.client.object_list())
+            except MoonrakerError:
+                pass
         data.cpu_count = self._cpu_count
         data.stats = self._stats
         data.print_hours = self._print_hours
         data.maintenance = self._maintenance_status(data.tool_changes)
+        self._check_maintenance_due(data.maintenance, printing)
         data.archive = self._archive_data()
         if not printing:
             self._start_backup()

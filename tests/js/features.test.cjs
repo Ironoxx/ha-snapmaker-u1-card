@@ -63,6 +63,7 @@ own("sensor.snapmaker_u1_card_druckstunden", "123.4", { entry_id: "E1", months,
 own("sensor.snapmaker_u1_card_wartung", "1", { entry_id: "E1", items: [
   { key: "plate", interval_h: 30, used_h: 31, remaining_h: -1, progress: 103, due: true, done_at: null },
   { key: "rails", interval_h: 300, used_h: 250, remaining_h: 50, progress: 83, due: false, done_at: "2026-01-01T00:00:00+00:00" },
+  { key: "lead_screws", interval_m: 3, remaining_d: 41.6, progress: 54, due: false, done_at: 1 },
   { key: "tool_changer", interval: 25100, used: 23000, remaining: 2100, progress: 92, due: false, firmware: true },
 ] }, "maintenance");
 own("sensor.snapmaker_u1_card_meldungen", "1", { errors: [
@@ -103,9 +104,10 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   // 2. Maintenance
   const m = text(R().querySelector(".m-list"));
   assert.match(m, /Druckplatte reinigen 31 \/ 30 h · fällig/);
-  assert.match(m, /Linearführungen schmieren 250 \/ 300 h · noch 50 h/);
+  assert.match(m, /Linearführungen reinigen und schmieren 250 \/ 300 h · noch 50 h/);
+  assert.match(m, /Z-Spindeln und Muttern schmieren alle 3 Monate · noch 42 Tage/);
   assert.match(m, /Werkzeugwechsler \(Firmware\) 23\.000 \/ 25\.100 Wechsel/);
-  assert.strictEqual(R().querySelectorAll("[data-maint]").length, 2, "Firmware-Zaehler ohne Erledigt-Knopf");
+  assert.strictEqual(R().querySelectorAll("[data-maint]").length, 3, "Firmware-Zaehler ohne Erledigt-Knopf");
   assert.strictEqual(R().querySelector('.m-item[data-due="1"] .track').dataset.tone, "error");
   R().querySelector('[data-maint="plate"]').click();
   await tick();

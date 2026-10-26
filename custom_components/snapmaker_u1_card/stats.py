@@ -7,7 +7,9 @@ recorded prints with their real cost, all others estimated from the
 filament price (as in the material table), so that total and table match.
 
 Maintenance counts in print hours (Moonraker ``history/totals``) so the
-state survives a reinstall of Home Assistant.
+state survives a reinstall of Home Assistant, and/or in calendar months
+since it was last done (Snapmaker's U1 maintenance guide gives months, not
+hours). Whichever is reached first makes an item due.
 """
 
 from __future__ import annotations
@@ -29,7 +31,36 @@ MAINTENANCE_ITEMS: dict[str, int] = {
     "rails": 300,       # lubricate linear rails
     "belts": 500,       # check belt tension
     "filter": 0,        # replace the air filter (only with an air purifier)
+    "carbon_rods": 0,   # clean the X carbon rods
+    "lead_screws": 0,   # clean and grease the Z lead screws and nuts
+    "coupling": 0,      # clean the steel pins and balls of the head coupling
+    "pogo": 0,          # clean the pogo contacts of the heads
 }
+# Default interval in calendar months (0 = off), from Snapmaker's U1 core components
+# maintenance guide (wiki, updated 21.09.2026): linear shafts/bearings, X carbon rods
+# and XY belts monthly, Z lead screws and steel pins/balls quarterly, pogo contacts
+# every 4-6 months.
+MAINTENANCE_MONTHS: dict[str, int] = {
+    "plate": 0, "nozzle": 0, "rails": 1, "belts": 1, "filter": 0,
+    "carbon_rods": 1, "lead_screws": 3, "coupling": 3, "pogo": 6,
+}
+DAYS_PER_MONTH = 30.44
+MAINTENANCE_LABELS: dict[str, tuple[str, str]] = {
+    "plate": ("Druckplatte reinigen", "Clean the build plate"),
+    "nozzle": ("Düsen und Abstreifer reinigen", "Clean nozzles and wipers"),
+    "rails": ("Linearführungen reinigen und schmieren", "Clean and lubricate linear shafts"),
+    "belts": ("Riemen prüfen", "Check the belts"),
+    "filter": ("Luftfilter wechseln", "Replace the air filter"),
+    "carbon_rods": ("X-Carbonstangen reinigen", "Clean the X carbon rods"),
+    "lead_screws": ("Z-Spindeln und Muttern schmieren", "Grease the Z lead screws and nuts"),
+    "coupling": ("Stahlstifte und Kugeln der Kopfaufnahme reinigen", "Clean the steel pins and balls of the head coupling"),
+    "pogo": ("Pogo-Kontakte der Köpfe reinigen", "Clean the pogo contacts of the heads"),
+}
+
+
+def maintenance_label(key: str, de: bool = True) -> str:
+    label = MAINTENANCE_LABELS.get(key)
+    return (label[0] if de else label[1]) if label else key
 
 
 def _month(ts: float, tz: tzinfo) -> str:
@@ -262,7 +293,7 @@ class Maintenance:
         """On first use, mark the current state as 'done'.
 
         Otherwise everything would be due right away on a printer that has
-        been in use for a while.
+        been in use for a while. New items (added in an update) start now too.
         """
         if hours is None:
             return False
@@ -279,22 +310,44 @@ class Maintenance:
         prev = self.done.get(key, {})
         self.done[key] = {"hours": round(hours if hours is not None else prev.get("hours", 0.0), 2), "at": now}
 
-    def status(self, hours: float | None, intervals: dict[str, int]) -> list[dict[str, Any]]:
-        """Status of every enabled maintenance item at ``hours`` print hours."""
+    def status(self, hours: float | None, intervals: dict[str, int],
+               months: dict[str, int] | None = None, now: float | None = None) -> list[dict[str, Any]]:
+        """Status of every enabled maintenance item at ``hours`` print hours and time ``now``.
+
+        An item counts in print hours, in months since it was last done, or both;
+        the more advanced of the two decides progress and "due".
+        """
+        months = months or {}
         items = []
         for key, default in MAINTENANCE_ITEMS.items():
             interval = int(intervals.get(key, default) or 0)
-            if interval <= 0:
+            interval_m = int(months.get(key, MAINTENANCE_MONTHS.get(key, 0)) or 0)
+            if interval <= 0 and interval_m <= 0:
                 continue
             done = self.done.get(key) or {}
-            used = None if hours is None else max(0.0, hours - float(done.get("hours", hours)))
-            items.append({
-                "key": key,
-                "interval_h": interval,
-                "used_h": None if used is None else round(used, 1),
-                "remaining_h": None if used is None else round(interval - used, 1),
-                "progress": None if used is None else round(min(used / interval, 9.99) * 100),
-                "due": used is not None and used >= interval,
-                "done_at": done.get("at"),
-            })
+            item: dict[str, Any] = {"key": key, "done_at": done.get("at")}
+            progress: list[float] = []
+            due = False
+            if interval > 0:
+                used = None if hours is None else max(0.0, hours - float(done.get("hours", hours)))
+                item.update(
+                    interval_h=interval,
+                    used_h=None if used is None else round(used, 1),
+                    remaining_h=None if used is None else round(interval - used, 1),
+                )
+                if used is not None:
+                    progress.append(used / interval)
+                    due = due or used >= interval
+            if interval_m > 0 and done.get("at") is not None and now is not None:
+                period = interval_m * DAYS_PER_MONTH * 86400
+                age = max(0.0, now - float(done["at"]))
+                item.update(interval_m=interval_m, due_at=float(done["at"]) + period,
+                            remaining_d=round((period - age) / 86400, 1))
+                progress.append(age / period)
+                due = due or age >= period
+            elif interval_m > 0:
+                item["interval_m"] = interval_m
+            item["progress"] = round(min(max(progress), 9.99) * 100) if progress else None
+            item["due"] = due
+            items.append(item)
         return items

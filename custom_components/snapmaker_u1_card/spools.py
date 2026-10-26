@@ -38,6 +38,10 @@ class SpoolManager:
         self.error: str | None = None
         self._fetched = 0.0
         self.just_booked: list[dict[str, Any]] = []  # for the history, picked up by the coordinator
+        # paxx12 SpoolLink: spool per head from print_task_config.filament_spool_id (None = not present)
+        self.printer_ids: list[int] | None = None
+        # Moonraker's own [spoolman] component books usage while printing (SpoolLink or by hand)
+        self.external_booking = False
 
     @property
     def enabled(self) -> bool:
@@ -74,10 +78,31 @@ class SpoolManager:
             return False
         return await self._flush_queue()
 
+    @property
+    def spoollink(self) -> bool:
+        """The printer keeps the spool per head itself (paxx12 SpoolLink)."""
+        return self.printer_ids is not None
+
+    @property
+    def books(self) -> bool:
+        """Does this integration book usage? Not if Moonraker already does (no double booking)."""
+        return self.deduct and not self.external_booking
+
     def assign(self, slots: list[dict[str, Any]]) -> bool:
         """Update the assignment per head. True = changed (save)."""
         if not self.enabled or not self.online:
             return False
+        if self.printer_ids is not None:
+            # SpoolLink: the printer is the source of truth, no own guessing
+            changed = False
+            for slot in slots:
+                idx = slot["index"]
+                sid = self.printer_ids[idx] if idx < len(self.printer_ids) else 0
+                entry = {"spool_id": sid or None, "manual": True, "fp": slot_fingerprint(slot), "source": "printer"}
+                if self.mapping.get(str(idx)) != entry:
+                    self.mapping[str(idx)] = entry
+                    changed = True
+            return changed
         known = {s["id"] for s in self.spools}
         fixed: dict[int, int | None] = {}
         changed = False
@@ -147,13 +172,14 @@ class SpoolManager:
         spool = self.spool(entry.get("spool_id"))
         if spool is None:
             return None
-        return {**spool, "manual": bool(entry.get("manual"))}
+        return {**spool, "manual": bool(entry.get("manual")), "source": entry.get("source", "integration")}
 
     def book(self, record: dict[str, Any]) -> list[dict[str, Any]]:
         """Schedule the usage of a finished print; returns data for the history."""
         if not self.enabled:
             return []
         spool_ids: dict[str, Any] = record.get("spool_ids") or {}
+        start: dict[str, Any] = record.get("spool_start") or {}
         booked = []
         for slot, grams in sorted(grams_per_slot(record).items()):
             spool_id = spool_ids.get(str(slot))
@@ -164,11 +190,32 @@ class SpoolManager:
                 "spool_id": spool_id, "grams": round(grams, 2),
                 "file": record.get("file"), "slot": slot,
             }
-            booked.append({"slot": slot, "spool_id": spool_id, "grams": item["grams"],
-                           "booked": False if self.deduct else None})
-            if self.deduct and not any(q["key"] == item["key"] for q in self.queue):
+            before = start.get(str(slot))
+            entry: dict[str, Any] = {
+                "slot": slot, "spool_id": spool_id, "grams": item["grams"],
+                # True/False = booked by us (done/pending), "moonraker" = Moonraker books, None = off
+                "booked": False if self.books else ("moonraker" if self.external_booking else None),
+                "before": before,
+                # expected; replaced by Spoolman's value after the booking
+                "after": round(before - item["grams"], 1) if isinstance(before, (int, float)) else None,
+            }
+            booked.append(entry)
+            if self.books and not any(q["key"] == item["key"] for q in self.queue):
                 self.queue.append(item)
         return booked
+
+    def remaining(self, spool_id: Any) -> float | None:
+        spool = self.spool(spool_id) if isinstance(spool_id, int) else None
+        value = (spool or {}).get("remaining_weight")
+        return float(value) if isinstance(value, (int, float)) else None
+
+    def gross_to_remaining(self, spool_id: int, gross: float) -> float:
+        """Weighed spool (with the empty spool) -> filament left."""
+        spool = self.spool(spool_id) or {}
+        empty = spool.get("spool_weight")
+        if not isinstance(empty, (int, float)) or empty <= 0:
+            raise ValueError("no empty spool weight in Spoolman")
+        return max(0.0, round(float(gross) - float(empty), 1))
 
     async def _flush_queue(self) -> bool:
         """Book pending usage in Spoolman; failures stay queued."""

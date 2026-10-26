@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import U1ConfigEntry
 from .coordinator import U1Coordinator
 from .machine import FLOW_MAX, FLOW_MIN
-from .sensor import U1Entity, add_when_top_cover
+from .sensor import U1Entity, add_when_chamber, add_when_top_cover
 
 
 async def async_setup_entry(
@@ -27,6 +27,7 @@ async def async_setup_entry(
     async_add_entities([FlowNumber(coordinator)])
     add_when_top_cover(entry, lambda: async_add_entities(
         [TopCoverFanNumber(coordinator, "exhaust"), TopCoverFanNumber(coordinator, "inner")]))
+    add_when_chamber(entry, lambda: async_add_entities([ChamberTargetNumber(coordinator)]))
 
 
 class FlowNumber(U1Entity, NumberEntity):
@@ -84,4 +85,31 @@ class TopCoverFanNumber(U1Entity, NumberEntity):
         await self.coordinator.async_set_purifier_fan(self._fan, value)
 
 
+class ChamberTargetNumber(U1Entity, NumberEntity):
+    """Chamber heater target in °C; 0 = off. Allowed during a print (slicer M141 does the same)."""
+
+    _attr_translation_key = "chamber_target"
+    _attr_icon = "mdi:heat-wave"
+    _attr_native_unit_of_measurement = "°C"
+    _attr_native_min_value = 0
+    _attr_native_step = 1
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "chamber_target")
+
+    @property
+    def native_max_value(self) -> float:
+        return float((self.coordinator.chamber_heater or {}).get("max") or 80)
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.data.chamber is not None
+
+    @property
+    def native_value(self) -> float | None:
+        return (self.coordinator.data.chamber or {}).get("target")
+
+    async def async_set_native_value(self, value: float) -> None:
+        await self.coordinator.async_set_chamber(value)
 

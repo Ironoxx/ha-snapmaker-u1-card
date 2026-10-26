@@ -138,5 +138,14 @@ Facts taken from Snapmaker's published firmware sources (u1-klipper, u1-moonrake
   physical head n (without `A0` the filament mapping applies first; classic G-code command, so
   `A0`, not `A=0`), `PARK_<extruder>` parks the
   head on the carriage (u1-klipper `kinematics/extruder.py`).
+- paxx12 SpoolLink keeps the spool per head in `print_task_config.filament_spool_id` and sets it with
+  the macro `SET_SPOOL_ID CHANNEL=<n> SPOOL_ID=<id>`; Moonraker's `spoolman` component then books
+  usage itself (`/server/info` components), so the integration does not.
+- Chamber heaters (paxx12) are `heater_generic panda_breath` / `heater_generic dragonbreath`
+  (+ `output_pin dragonbreath_filter`), found via `/printer/objects/list`.
+- Nozzle per head: `extruder*.nozzle_diameter` / `nozzle_volume_type`; per file Snapmaker's
+  Moonraker reports `nozzle_diameter_list`.
+- paxx12 camera service (v4l2-mpp): `/webcam/stream.mjpg`, `/webcam/snapshot.jpg`, WebRTC page
+  `/webcam/webrtc`; USB camera under `/webcam2/`; optional RTSP on ports 8554/8555.
 - The stock camera stops after a while; `camera.start_monitor` (WebSocket, proxied by
   u1-moonraker `repeater.py` to the closed camera service) keeps it running.

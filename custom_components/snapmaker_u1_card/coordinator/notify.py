@@ -155,7 +155,7 @@ class NotifyMixin:
         title = f"Snapmaker U1: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
         message = notify_message(info, de)
         data: dict[str, Any] = {"tag": f"{DOMAIN}_{self.config_entry.entry_id}", "group": DOMAIN}
-        camera = self.camera_entity()
+        camera = None if info.get("no_image") else self.camera_entity()
         if info.get("photo"):
             # Result photo (stored by the integration, served by HA)
             data["image"] = info["photo"]

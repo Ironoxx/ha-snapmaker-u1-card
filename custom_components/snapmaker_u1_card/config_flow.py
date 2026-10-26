@@ -48,6 +48,7 @@ from .const import (
     CONF_LIVE_BUDGET,
     CONF_LIVE_IMAGE,
     CONF_MAINTENANCE,
+    CONF_MAINTENANCE_MONTHS,
     CONF_NOTIFY,
     CONF_NOTIFY_EVENTS,
     CONF_NOTIFY_URL,
@@ -79,16 +80,18 @@ from .const import (
     DEFAULT_SPOOLMAN_DEDUCT,
     DEFAULT_SPOOLMAN_LOW,
     DOMAIN,
+    LIVE_IMAGES,
     NOTIFY_EVENTS,
 )
 from .parsing import FILAMENT_PRICE_KEYS
-from .stats import MAINTENANCE_ITEMS
+from .stats import MAINTENANCE_ITEMS, MAINTENANCE_MONTHS
 
 SEC_POWER, SEC_NOTIFY, SEC_FILAMENT, SEC_FILES = "power", "notify", "filament", "files"
 SEC_SPOOLMAN = "spoolman"
 SEC_TIMELAPSE, SEC_MAINT = "timelapse", "maintenance"
 PRICE_FIELDS = [f"price_{k.lower()}" for k in (*FILAMENT_PRICE_KEYS, "OTHER")]
 MAINT_FIELDS = [f"maint_{k}" for k in MAINTENANCE_ITEMS]
+MAINT_MONTH_FIELDS = [f"maint_m_{k}" for k in MAINTENANCE_ITEMS]
 INT_FIELDS = (CONF_FILES_LIMIT, CONF_AUTO_OFF_TEMP, CONF_AUTO_OFF_DELAY, CONF_SPOOLMAN_LOW, CONF_ARCHIVE_KEEP, CONF_ARCHIVE_MAX, CONF_ARCHIVE_DAYS,
               CONF_ALMOST_DONE, CONF_BED_COOL, CONF_IDLE_OFF)
 
@@ -147,7 +150,9 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             ),
             vol.Required(CONF_ALMOST_DONE, default=DEFAULT_ALMOST_DONE): _box(1, 120, 1, "min"),
             vol.Required(CONF_LIVE_BUDGET, default=DEFAULT_LIVE_BUDGET): _box(10, 400, 1),
-            vol.Required(CONF_LIVE_IMAGE, default=DEFAULT_LIVE_IMAGE): selector.BooleanSelector(),
+            vol.Required(CONF_LIVE_IMAGE, default=DEFAULT_LIVE_IMAGE): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=list(LIVE_IMAGES), translation_key=CONF_LIVE_IMAGE,
+                                              mode=selector.SelectSelectorMode.DROPDOWN)),
             vol.Optional(CONF_NOTIFY_URL): selector.TextSelector(),
             vol.Required(CONF_BED_COOL, default=DEFAULT_BED_COOL): _box(20, 60, 1, "°C"),
             vol.Optional(CONF_CAMERA): selector.EntitySelector(
@@ -185,9 +190,11 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             vol.Required(CONF_ARCHIVE_DAYS, default=DEFAULT_ARCHIVE_DAYS): _box(0, 3650, 1, "d"),
         }
     )
-    maintenance = vol.Schema(
-        {vol.Required(f"maint_{k}", default=v): _box(0, 5000, 1, "h") for k, v in MAINTENANCE_ITEMS.items()}
-    )
+    maint_fields: dict[Any, Any] = {}
+    for k, v in MAINTENANCE_ITEMS.items():
+        maint_fields[vol.Required(f"maint_{k}", default=v)] = _box(0, 5000, 1, "h")
+        maint_fields[vol.Required(f"maint_m_{k}", default=MAINTENANCE_MONTHS.get(k, 0))] = _box(0, 36, 1, "mo")
+    maintenance = vol.Schema(maint_fields)
     return vol.Schema(
         {
             vol.Required(SEC_POWER): section(power, SectionConfig(collapsed=False)),
@@ -218,6 +225,13 @@ def flatten_options(user_input: dict[str, Any]) -> dict[str, Any]:
         if value not in (None, ""):
             prices[key.removeprefix("price_").upper()] = float(value)
     flat[CONF_FILAMENT_PRICES] = prices
+    months = {}
+    for key in MAINT_MONTH_FIELDS:
+        value = flat.pop(key, None)
+        if value not in (None, ""):
+            months[key.removeprefix("maint_m_")] = int(value)
+    if months:
+        flat[CONF_MAINTENANCE_MONTHS] = months
     maint = {}
     for key in MAINT_FIELDS:
         value = flat.pop(key, None)
@@ -236,11 +250,15 @@ def flatten_options(user_input: dict[str, Any]) -> dict[str, Any]:
 def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Stored options -> suggested values per section."""
     opts = dict(options)
+    if isinstance(opts.get(CONF_LIVE_IMAGE), bool):  # before 1.6.0: on/off
+        opts[CONF_LIVE_IMAGE] = "camera" if opts[CONF_LIVE_IMAGE] else "off"
     prices = opts.pop(CONF_FILAMENT_PRICES, {}) or {}
     for key, value in prices.items():
         opts[f"price_{key.lower()}"] = value
     for key, value in (opts.pop(CONF_MAINTENANCE, {}) or {}).items():
         opts[f"maint_{key}"] = value
+    for key, value in (opts.pop(CONF_MAINTENANCE_MONTHS, {}) or {}).items():
+        opts[f"maint_m_{key}"] = value
     groups = {
         SEC_POWER: (CONF_POWER_SWITCH, CONF_POWER_SENSOR, CONF_ENERGY_SENSOR, CONF_ENERGY_PRICE, CONF_ENERGY_PRICE_FIXED,
                     CONF_SHUTDOWN_HOST, CONF_AUTO_ON, CONF_AUTO_OFF, CONF_AUTO_OFF_TEMP,
@@ -250,7 +268,7 @@ def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
         SEC_SPOOLMAN: (CONF_SPOOLMAN_URL, CONF_SPOOLMAN_DEDUCT, CONF_SPOOLMAN_LOW),
         SEC_FILES: (CONF_FILES_LIMIT, CONF_BACKUP),
         SEC_TIMELAPSE: (CONF_ARCHIVE, CONF_ARCHIVE_KEEP, CONF_ARCHIVE_MAX, CONF_ARCHIVE_DAYS),
-        SEC_MAINT: tuple(MAINT_FIELDS),
+        SEC_MAINT: tuple(f for k in MAINTENANCE_ITEMS for f in (f"maint_{k}", f"maint_m_{k}")),
     }
     return {sec: {k: opts[k] for k in keys if k in opts} for sec, keys in groups.items()}
 

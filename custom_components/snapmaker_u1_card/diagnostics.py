@@ -47,6 +47,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
                      "latest": (coord.firmware.get("latest") or {}).get("version")},
         "entry": {"data": dict(entry.data), "options": dict(entry.options)},
         "camera": coord.webcam.as_dict(),
+        "camera2": coord.webcam2.as_dict(),
         "live": {"connected": coord.live.connected, "messages": coord.live.messages,
                  "interval_s": coord.update_interval.total_seconds() if coord.update_interval else None},
         "online": data.online,
@@ -66,7 +67,10 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "layer_view": view,
         "spoolman": data.spoolman,
         "cpu_count": data.cpu_count,
+        "spoolman_mode": {"spoollink": coord.spools.spoollink, "external_booking": coord.spools.external_booking,
+                          "books": coord.spools.books},
         "machine": {"flow": data.flow, "head_states": data.head_states, "purifier": data.purifier,
+                    "chamber": data.chamber,
                     "bed_mesh": {k: v for k, v in (data.bed_mesh or {}).items() if k != "matrix"} or None},
         "printer": raw,
     }, TO_REDACT)

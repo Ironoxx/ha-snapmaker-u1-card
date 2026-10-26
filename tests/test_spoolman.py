@@ -94,7 +94,15 @@ def spoolman():
                 s["remaining_weight"] -= grams
         return {}
 
+    async def set_remaining(self, spool_id, grams):
+        state.setdefault("set", []).append((spool_id, grams))
+        for s in state["spools"]:
+            if s["id"] == spool_id:
+                s["remaining_weight"] = grams
+        return {}
+
     with patch(f"{SM}.spools", spools), patch(f"{SM}.use_weight", use_weight), \
+         patch(f"{SM}.set_remaining", set_remaining), \
          patch(f"{SM}.info", AsyncMock(return_value={"version": "0.27.0"})):
         yield state
 
@@ -179,6 +187,12 @@ async def test_print_books_usage_per_head_and_retries(hass: HomeAssistant, mock_
     assert sorted(spoolman["used"]) == [(1, 3.5), (4, 12.0)]
     assert coord.spools.queue == []
     assert all(sp["booked"] is True for sp in coord.data.history[0]["spools"]), "in der Historie als gebucht markiert"
+    # before/after per spool: head 3 started with 400 g, Spoolman has 388 g left afterwards
+    coord.spools.force()
+    await _refresh(hass, entry)
+    spools = {sp["spool_id"]: sp for sp in coord.data.history[0]["spools"]}
+    assert spools[4]["before"] == 400.0 and spools[4]["after"] == 388.0
+    assert coord.data.history[0]["spools_final"] is True
     sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
     assert sm["slots"]["2"]["remaining_weight"] == 388.0
 
@@ -294,3 +308,67 @@ async def test_choosing_spool_writes_filament(hass: HomeAssistant, mock_client, 
         assert gcode.await_count == calls
         sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
         assert sm["slots"]["2"]["id"] == 2
+
+
+
+async def test_moonraker_books_itself(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """Moonraker has [spoolman] (paxx12 SpoolLink): no own booking, but before/after in the history."""
+    _real_slots(mock_client)
+    mock_client["components"].return_value = ["file_manager", "spoolman", "spoollink"]
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    coord = entry.runtime_data
+    ptc = mock_client["query"].return_value["print_task_config"]
+    ptc["filament_spool_id"] = [5, 0, 0, 0]  # SpoolLink: head 1 holds spool 5
+    await _refresh(hass, entry)
+    sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+    assert sm["external_booking"] is True and sm["books"] is False and sm["spoollink"] is True
+    assert sm["slots"]["0"]["id"] == 5 and sm["slots"]["0"]["source"] == "printer"
+    assert sm["slots"]["1"] is None, "no own guessing with SpoolLink"
+
+    meta = {"filament_type": "PLA", "filament_colour": "#000000", "filament_weight": [20.0]}
+    with patch(f"{API}.file_metadata", AsyncMock(return_value=meta)):
+        st = _status(mock_client, "printing", "a.gcode")
+        st["print_task_config"]["extruder_map_table"] = [0] * 32
+        await _refresh(hass, entry)
+        await _refresh(hass, entry)
+        # Moonraker books while printing
+        for s in spoolman["spools"]:
+            if s["id"] == 5:
+                s["remaining_weight"] -= 20.0
+        _status(mock_client, "complete", "a.gcode")
+        await _refresh(hass, entry)
+    coord.spools.force()
+    await _refresh(hass, entry)
+    assert spoolman["used"] == [], "never booked twice"
+    sp = coord.data.history[0]["spools"][0]
+    assert sp["booked"] == "moonraker" and sp["before"] == 980.0 and sp["after"] == 960.0
+
+    # choosing a spool goes through SpoolLink's own command
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 3}, blocking=True)
+        gcode.assert_awaited_with("SET_SPOOL_ID CHANNEL=1 SPOOL_ID=3")
+        await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2, "spool_id": 0}, blocking=True)
+        gcode.assert_awaited_with("SET_SPOOL_ID CHANNEL=1 SPOOL_ID=0")
+        with pytest.raises(HomeAssistantError, match="SpoolLink"):
+            await hass.services.async_call(DOMAIN, "set_spool", {"slot": 2}, blocking=True)
+
+
+async def test_weigh_spool(hass: HomeAssistant, mock_client, spoolman) -> None:
+    _real_slots(mock_client)
+    for s in spoolman["spools"]:
+        s["spool_weight"] = 200.0 if s["id"] == 1 else None
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    await _refresh(hass, entry)
+    # head 1 has spool 1 (automatic); scale shows 742 g with the spool
+    res = await hass.services.async_call(DOMAIN, "weigh_spool", {"slot": 1, "weight": 742},
+                                         blocking=True, return_response=True)
+    assert res["spool_id"] == 1 and res["remaining_weight"] == 542.0 and res["before"] == 650.0
+    assert spoolman["set"] == [(1, 542.0)]
+    # net weight, by ID
+    await hass.services.async_call(DOMAIN, "weigh_spool", {"spool_id": 2, "weight": 300, "gross": False},
+                                   blocking=True, return_response=True)
+    assert spoolman["set"][-1] == (2, 300.0)
+    # no empty spool weight known: gross refused with a hint
+    with pytest.raises(HomeAssistantError, match="empty spool"):
+        await hass.services.async_call(DOMAIN, "weigh_spool", {"spool_id": 2, "weight": 900},
+                                       blocking=True, return_response=True)

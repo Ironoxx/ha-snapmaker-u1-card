@@ -163,10 +163,15 @@ export const SystemMixin = (Base) => class extends Base {
     const rows = items.map((m) => {
       const pct = Math.min(100, m.progress || 0);
       const tone = m.due ? "error" : pct >= 80 ? "warn" : "";
-      const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}`
-        : m.used_h === null || m.used_h === undefined ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h`;
-      const left = m.firmware ? "" : m.due ? tr("fällig") : m.remaining_h !== null && m.remaining_h !== undefined
-        ? tr("noch {h} h", { h: Math.round(m.remaining_h) }) : "";
+      const hours = m.interval_h ? (m.used_h === null || m.used_h === undefined ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h`) : "";
+      const months = m.interval_m ? tr(m.interval_m === 1 ? "monatlich" : "alle {n} Monate", { n: m.interval_m }) : "";
+      const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}` : [hours, months].filter(Boolean).join(" · ") || "—";
+      // Whatever comes first: remaining hours or days
+      const leftH = m.interval_h && m.remaining_h !== null && m.remaining_h !== undefined ? m.remaining_h : null;
+      const leftD = m.interval_m && m.remaining_d !== null && m.remaining_d !== undefined ? m.remaining_d : null;
+      const left = m.firmware ? "" : m.due ? tr("fällig")
+        : leftD !== null && (leftH === null || leftD * 24 < leftH * 3) ? tr("noch {d} Tage", { d: Math.max(0, Math.round(leftD)) })
+          : leftH !== null ? tr("noch {h} h", { h: Math.round(leftH) }) : "";
       return `
         <div class="m-item" data-due="${m.due ? 1 : 0}">
           <div class="m-top">
@@ -186,7 +191,7 @@ export const SystemMixin = (Base) => class extends Base {
           ${due ? `<span class="chip sm" data-tone="error" style="margin-left:auto">${tr("{n} fällig", { n: due })}</span>` : ""}
         </div>
         <div class="m-list">${rows}</div>
-        <div class="t-label">${tr("Gezählt in Druckstunden. Intervalle in den Optionen der Integration.")}</div>
+        <div class="t-label">${tr("Gezählt in Druckstunden und Monaten (Monatswerte nach Snapmakers U1-Wartungsanleitung). Intervalle in den Optionen der Integration.")}</div>
         ${this._backupLine()}
       </section>`;
   }

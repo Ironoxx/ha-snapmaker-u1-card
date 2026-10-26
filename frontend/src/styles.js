@@ -463,6 +463,12 @@ export const STYLES = `
   }
   .con-form input:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 1px; }
   .con-form.locked input, .con-form.locked button { opacity: .5; }
+  .weigh-form { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .weigh-form > label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--u1-on-variant); }
+  .weigh-form label.check { flex-direction: row; align-items: center; gap: 6px; }
+  .weigh-row { display: flex; align-items: center; gap: 8px; }
+  .weigh-row input { flex: 1 1 auto; min-width: 0; height: 40px; padding: 0 10px; border-radius: var(--u1-r-s);
+    border: 1px solid var(--u1-outline); background: var(--u1-panel-high); color: var(--u1-on); font-family: var(--u1-mono); font-size: 14px; }
   .head-change { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .head-change .t-label { display: inline-flex; align-items: center; gap: 6px; }
   .head-change .t-label ha-icon { --mdc-icon-size: 18px; }
@@ -787,8 +793,9 @@ export const STYLES = `
 
   /* ── Maintenance, archive ────────────────────────────────────────────── */
   .m-list { display: flex; flex-direction: column; gap: 10px; }
-  .m-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-  .m-name { flex: 1; min-width: 0; font-size: 14px; }
+  .m-top { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; margin-bottom: 4px; }
+  .m-name { flex: 1 1 0; min-width: 0; font-size: 14px; }
+  .m-top .t-label { order: 3; flex: 1 1 100%; }
   .m-top button.icon { width: 32px; height: 32px; }
   .m-item[data-due="1"] .m-name { color: var(--u1-error); font-weight: 500; }
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }

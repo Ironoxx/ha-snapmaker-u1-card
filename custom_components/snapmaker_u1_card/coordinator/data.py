@@ -53,3 +53,5 @@ class U1Data:
     bed_mesh: dict[str, Any] | None = None
     purifier: dict[str, Any] | None = None
     head_states: list[str | None] = field(default_factory=list)
+    # Chamber heater (Panda Breath / DragonBreath via paxx12): None without one
+    chamber: dict[str, Any] | None = None

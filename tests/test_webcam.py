@@ -37,6 +37,76 @@ def no_sleep():
         yield
 
 
+REAL_RTSP_OK = wc.rtsp_ok
+
+
+@pytest.fixture(autouse=True)
+def no_rtsp():
+    """No RTSP server unless a test says so (real sockets are blocked in tests)."""
+    with patch.object(wc, "rtsp_ok", AsyncMock(return_value=False)) as m:
+        yield m
+
+
+async def test_rtsp_detected(no_sleep, no_rtsp) -> None:
+    c = _client()
+    cam = wc.Webcam(c)
+    no_rtsp.return_value = True
+    with patch.object(c, "webcams", AsyncMock(return_value=[{"stream_url": "/webcam/stream.mjpg",
+                                                             "snapshot_url": "/webcam/snapshot.jpg"}])), \
+         patch.object(c, "first_mjpeg_frame", AsyncMock(return_value=JPEG_A)):
+        assert await cam.detect() == "live"
+    assert cam.rtsp_url == "rtsp://192.168.0.25:8554/stream"
+    no_rtsp.assert_awaited_with("192.168.0.25", 8554)
+
+
+async def test_second_camera(no_sleep, no_rtsp) -> None:
+    """paxx12 USB camera: the second Moonraker webcam, /webcam2/ as default; never the stock fallback."""
+    c = _client()
+    cams = [{"name": "case", "service": "webrtc-camerastreamer", "stream_url": "/webcam/webrtc",
+             "snapshot_url": "/webcam/snapshot.jpg"},
+            {"name": "usb", "service": "webrtc-camerastreamer", "stream_url": "/webcam2/webrtc",
+             "snapshot_url": "/webcam2/snapshot.jpg"}]
+
+    async def frame(url, timeout=3):
+        return JPEG_A if url.endswith("/stream.mjpg") else None
+
+    cam2 = wc.Webcam(c, second=True)
+    with patch.object(c, "webcams", AsyncMock(return_value=cams)), \
+         patch.object(c, "first_mjpeg_frame", AsyncMock(side_effect=frame)):
+        assert await cam2.detect() == "live"
+    assert cam2.stream_url == "http://192.168.0.25/webcam2/stream.mjpg"
+    # only one camera: nothing, and no stock wake-up attempt
+    cam2 = wc.Webcam(c, second=True)
+    with patch.object(c, "webcams", AsyncMock(return_value=cams[:1])), \
+         patch.object(c, "first_mjpeg_frame", AsyncMock(return_value=None)), \
+         patch.object(c, "fetch_image", AsyncMock(return_value=None)), \
+         patch.object(c, "camera_wake", AsyncMock()) as wake:
+        assert await cam2.detect() == "none"
+        wake.assert_not_awaited()
+
+
+async def test_rtsp_probe(socket_enabled) -> None:
+    """The probe speaks RTSP OPTIONS and only accepts 200."""
+    import asyncio
+
+    answers = [b"RTSP/1.0 200 OK\r\nCSeq: 1\r\n\r\n", b"RTSP/1.0 404 Not Found\r\nCSeq: 1\r\n\r\n"]
+    seen: list[bytes] = []
+
+    async def handle(reader, writer):
+        seen.append(await reader.readuntil(b"\r\n\r\n"))
+        writer.write(answers.pop(0))
+        await writer.drain()
+        writer.close()
+
+    server = await asyncio.start_server(handle, "127.0.0.1", 0)
+    port = server.sockets[0].getsockname()[1]
+    async with server:
+        assert await REAL_RTSP_OK("127.0.0.1", port) is True
+        assert await REAL_RTSP_OK("127.0.0.1", port) is False
+    assert seen[0].startswith(f"OPTIONS rtsp://127.0.0.1:{port}/stream RTSP/1.0".encode())
+    assert await REAL_RTSP_OK("127.0.0.1", port, timeout=0.5) is False  # nothing listening
+
+
 async def test_detect_live(no_sleep) -> None:
     c = _client()
     cam = wc.Webcam(c)
@@ -172,6 +242,29 @@ async def test_camera_entity(hass: HomeAssistant, mock_client, notifications) ->
     await hass.async_block_till_done()
     assert hass.states.get(ent.entity_id).state == "unavailable"
     assert coord.camera_entity() is None
+
+
+@pytest.mark.webcam
+async def test_second_camera_and_rtsp_entities(hass: HomeAssistant, mock_client, notifications, no_rtsp) -> None:
+    from homeassistant.components.camera import CameraEntityFeature
+
+    async def probe(self):
+        return ("live", "http://p/webcam2/stream.mjpg", None) if self.second else ("live", "http://p/s", None)
+
+    no_rtsp.return_value = True
+    with patch.object(wc.Webcam, "_probe", probe):
+        entry = await _setup(hass)
+        await _refresh(hass, entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        await _refresh(hass, entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    cams = {s.entity_id: s for s in hass.states.async_all("camera") if s.entity_id.startswith("camera.snapmaker_u1_card")}
+    assert len(cams) == 2, list(cams)
+    main = next(s for k, s in cams.items() if not k.endswith("_2"))
+    second = next(s for k, s in cams.items() if k.endswith("_2"))
+    assert main.attributes["rtsp_url"] == "rtsp://192.0.2.10:8554/stream"
+    assert second.attributes["rtsp_url"] == "rtsp://192.0.2.10:8555/stream"
+    assert main.attributes["supported_features"] & CameraEntityFeature.STREAM
 
 
 async def test_live_stream_falls_back(hass: HomeAssistant, mock_client, notifications) -> None:

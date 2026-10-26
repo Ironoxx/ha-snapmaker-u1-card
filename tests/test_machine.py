@@ -210,3 +210,111 @@ async def test_send_gcode(hass: HomeAssistant, mock_client, notifications) -> No
         await hass.services.async_call(DOMAIN, "send_gcode", {"script": "M221 S95"},
                                        blocking=True, return_response=True)
         gcode.assert_awaited_with("M221 S95", timeout=180)
+
+
+# ── Nozzles (1.6.0b4) ───────────────────────────────────────────────────────
+def test_nozzles() -> None:
+    from custom_components.snapmaker_u1_card.machine import nozzle_mismatches, parse_nozzles
+    status = {"extruder": {"nozzle_diameter": 0.4, "nozzle_volume_type": "standard"},
+              "extruder1": {"nozzle_diameter": 0.6, "nozzle_volume_type": "high_flow"},
+              "extruder2": {"nozzle_diameter": 0.0}, "extruder3": {}}
+    heads = parse_nozzles(status)
+    assert heads == [{"diameter": 0.4, "type": "standard"}, {"diameter": 0.6, "type": "high_flow"}, None, None]
+    # filament 0 -> head 0 fine, filament 1 (0.4) -> head 1 (0.6) mismatch, unknown values ignored
+    assert nozzle_mismatches([0.4, 0.4, None], {0: 0, 1: 1, 2: 2}, heads) == [
+        {"filament": 1, "head": 1, "file": 0.4, "head_nozzle": 0.6}]
+
+
+def test_file_nozzle_from_metadata() -> None:
+    from custom_components.snapmaker_u1_card.parsing import parse_file_filaments
+    fils = parse_file_filaments({"filament_type": "PLA;PETG", "nozzle_diameter_list": [0.4, 0.6]})
+    assert [f["nozzle"] for f in fils] == [0.4, 0.6]
+    fils = parse_file_filaments({"filament_type": "PLA;PETG", "nozzle_diameter": 0.4})
+    assert [f["nozzle"] for f in fils] == [0.4, 0.4]
+    assert parse_file_filaments({"filament_type": "PLA"})[0]["nozzle"] is None
+
+
+async def test_slot_nozzle_attribute(hass: HomeAssistant, mock_client, notifications) -> None:
+    st = _machine(mock_client)
+    st["extruder"]["nozzle_diameter"] = 0.4
+    st["extruder"]["nozzle_volume_type"] = "standard"
+    await _setup(hass)
+    slots = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["slots"]
+    assert slots[0]["nozzle"] == {"diameter": 0.4, "type": "standard"}
+    assert slots[1]["nozzle"] is None
+
+
+# ── Maintenance push (1.6.0b4) ──────────────────────────────────────────────
+async def test_maintenance_due_push(hass: HomeAssistant, mock_client, notifications) -> None:
+    import time as _t
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["maintenance"])
+    coord = entry.runtime_data
+    # Pretend the monthly items were last done 40 days ago
+    for key in ("rails", "belts", "carbon_rods"):
+        coord.maintenance.done[key] = {"hours": 0.0, "at": _t.time() - 40 * 86400}
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    maint = [c for c in notifications if "Wartung" in c.data["title"] or "Maintenance" in c.data["title"]]
+    assert len(maint) == 1
+    assert "X-Carbonstangen" in maint[0].data["message"] or "carbon" in maint[0].data["message"]
+    assert "image" not in maint[0].data["data"]
+    # Not again on the next poll
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    assert len([c for c in notifications if "Wartung" in c.data["title"] or "Maintenance" in c.data["title"]]) == 1
+    # Done -> may notify again later
+    await hass.services.async_call(DOMAIN, "maintenance_done", {"item": "rails"}, blocking=True)
+    await _refresh(hass, entry)
+    assert "rails" not in coord._maint_notified
+
+
+# ── Chamber heater (1.6.0b4) ────────────────────────────────────────────────
+def test_chamber_helpers() -> None:
+    from custom_components.snapmaker_u1_card.machine import (
+        chamber_filter_gcode, chamber_gcode, find_chamber_heater, parse_chamber)
+    assert find_chamber_heater(["extruder", "heater_bed"]) is None
+    db = find_chamber_heater(["heater_generic dragonbreath", "output_pin dragonbreath_filter"])
+    assert db["name"] == "dragonbreath" and db["filter"] == "dragonbreath_filter" and db["max"] == 75
+    pb = find_chamber_heater(["heater_generic panda_breath"])
+    assert pb["name"] == "panda_breath" and pb["filter"] is None and pb["min"] == 15
+    status = {"heater_generic dragonbreath": {"temperature": 41.27, "target": 50.0, "power": 0.62},
+              "output_pin dragonbreath_filter": {"value": 1.0}}
+    assert parse_chamber(status, db) == {"name": "dragonbreath", "label": "DragonBreath", "min": 0, "max": 75,
+                                         "temperature": 41.3, "target": 50.0, "power": 62, "filter": True}
+    assert chamber_gcode(db, 55) == "SET_HEATER_TEMPERATURE HEATER=dragonbreath TARGET=55"
+    assert chamber_gcode(pb, 0) == "SET_HEATER_TEMPERATURE HEATER=panda_breath TARGET=0"
+    for bad in (10, 90, -1):  # Panda Breath: 0 or 15-80
+        with pytest.raises(ValueError):
+            chamber_gcode(pb, bad)
+    assert chamber_filter_gcode(db, True) == "SET_PIN PIN=dragonbreath_filter VALUE=1"
+    with pytest.raises(ValueError):
+        chamber_filter_gcode(pb, True)
+
+
+async def test_chamber_entities(hass: HomeAssistant, mock_client, notifications) -> None:
+    mock_client["objects"].return_value = ["print_task_config", "heater_generic dragonbreath",
+                                           "output_pin dragonbreath_filter"]
+    st = mock_client["query"].return_value
+    st["heater_generic dragonbreath"] = {"temperature": 38.0, "target": 0.0, "power": 0.0}
+    st["output_pin dragonbreath_filter"] = {"value": 0.0}
+    entry = await _setup(hass)
+    await _refresh(hass, entry)
+    assert hass.states.get("sensor.snapmaker_u1_card_chamber_heater").state == "38.0"
+    assert hass.states.get("switch.snapmaker_u1_card_chamber_heater_filter").state == "off"
+    target = hass.states.get("number.snapmaker_u1_card_chamber_heater_target")
+    assert target.state == "0.0" and target.attributes["max"] == 75
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        _status(mock_client, "printing", "abs.gcode")  # allowed during a print
+        await _refresh(hass, entry)
+        await hass.services.async_call("number", "set_value", {"entity_id": target.entity_id, "value": 55},
+                                       blocking=True)
+        gcode.assert_awaited_with("SET_HEATER_TEMPERATURE HEATER=dragonbreath TARGET=55")
+        await hass.services.async_call("switch", "turn_on",
+                                       {"entity_id": "switch.snapmaker_u1_card_chamber_heater_filter"}, blocking=True)
+        gcode.assert_awaited_with("SET_PIN PIN=dragonbreath_filter VALUE=1")
+
+
+async def test_no_chamber_no_entities(hass: HomeAssistant, mock_client, notifications) -> None:
+    await _setup(hass)
+    assert hass.states.get("sensor.snapmaker_u1_card_chamber_heater") is None
+    assert hass.states.get("number.snapmaker_u1_card_chamber_heater_target") is None

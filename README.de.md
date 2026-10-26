@@ -37,7 +37,7 @@ Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapm
 - **Pause vor Schicht** (z. B. für Magnete oder Muttern) und **Nachdruck aus der Historie** mit der damaligen Zuordnung.
 - **Druckermeldungen im Klartext** statt Firmware-Codes, mit Hinweis, was zu tun ist.
 - **Diagramme** der letzten 12 Monate (Drucke, Stunden, Filament, Kosten) aus Moonrakers Druckhistorie, also auch rückwirkend.
-- **Wartungsplaner** in Druckstunden (Druckplatte, Düsen, Führungen, Riemen, Filter) plus Werkzeugwechsel-Zähler der Firmware.
+- **Wartungsplaner** in Druckstunden und Kalendermonaten (Druckplatte, Düsen, Linearführungen, Riemen, Carbonstangen, Z-Spindeln, Kopfaufnahme, Pogo-Kontakte, Filter; Monatswerte nach Snapmakers U1-Wartungsanleitung) plus Werkzeugwechsel-Zähler der Firmware, mit Push, wenn etwas fällig ist.
 - **Spulenverwaltung mit [Spoolman](https://github.com/Donkie/Spoolman)** (optional): Spule je Kopf mit Restgewicht, automatische Zuordnung, Warnung, wenn eine Spule für den Druck nicht reicht, und Abbuchung des Verbrauchs je Kopf nach dem Druck.
 - **Druckereinstellungen** als Schalter und in der Karte: Filament automatisch nachfüllen, Nachfüllen ohne Farbprüfung, Verhedderungs-Erkennung (mit Empfindlichkeit), Licht aus nach dem Druck. Am Drucker gespeichert, auch während eines Drucks änderbar.
 - **Kamera wach halten** (optional): für Stock-Firmware, deren Kamerabild nach einer Weile stehen bleibt.
@@ -47,6 +47,9 @@ Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapm
 - **G-Code-Konsole** im Tab Steuerung mit den Antworten des Druckers; während eines Drucks nur Feineinstellungen.
 - **Köpfe aufnehmen und ablegen** in den Kopfdetails (nicht während eines Drucks).
 - **Top Cover** (optionales Zubehör): Kammermodus, Abluft- und Umluftlüfter, Filter-Laufzeit – nur sichtbar, wenn eine Abdeckung angeschlossen ist.
+- **Kammerheizung** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): Kammertemperatur, Soll, Heizleistung, Filter – nur sichtbar, wenn eine eingerichtet ist.
+- **Düse je Kopf** (Durchmesser, High Flow) und eine Warnung im Druckdialog, wenn die Datei für eine andere Düse gesliced ist.
+- **Zweite Kamera** (paxx12: USB-Kamera) in der Karte umschaltbar, **RTSP** wird automatisch erkannt für den eigenen H.264-Stream von Home Assistant.
 - Temperaturen, Sollwerte, Lüfter, Licht, Achsen, Diagnose und Statistik.
 
 Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über VPN und über Nabu Casa gleich, ohne CORS- oder Mixed-Content-Probleme.
@@ -184,6 +187,8 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |
 | `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatisch | nur bei mehreren Druckern nötig |
 
+> **Noch eine U1-Karte installiert?** Die Integration [kbaker827/ha-snapmaker-u1](https://github.com/kbaker827/ha-snapmaker-u1) bringt ebenfalls eine Karte `custom:snapmaker-u1-card` mit; wer zuerst lädt, bekommt den Namen. Diese Karte ist deshalb immer auch als `type: custom:snapmaker-u1-card-ironoxx` erreichbar, der Selbsttest weist darauf hin.
+
 ### Mini-Karte
 
 ```yaml
@@ -261,7 +266,7 @@ Moonrakers eigene Warteschlange (`[job_queue]`) ist auf dem U1 nicht geladen und
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 
-`item: plate | nozzle | rails | belts | filter` setzt den Wartungszähler zurück. `backup_timelapses` sichert sofort und räumt danach auf dem Drucker auf. `backup_config` sichert die Drucker-Konfiguration sofort und antwortet mit `status` (`saved`, `unchanged`, `empty`), Anzahl Dateien, übersprungenen Dateien und den vorhandenen Ständen.
+`item: plate | nozzle | rails | belts | filter | carbon_rods | lead_screws | coupling | pogo` setzt den Wartungszähler zurück. `backup_timelapses` sichert sofort und räumt danach auf dem Drucker auf. `backup_config` sichert die Drucker-Konfiguration sofort und antwortet mit `status` (`saved`, `unchanged`, `empty`), Anzahl Dateien, übersprungenen Dateien und den vorhandenen Ständen.
 
 ### `snapmaker_u1_card.set_filament` / `set_preference`
 
@@ -373,13 +378,17 @@ Die Integration abonniert bei Moonraker `print_stats`, `toolhead.extruder`, `vir
 
 **Ergebnisfoto.** Mit eingestellter Kamera entsteht das Bild am Druckende, sobald der Kopf das Teil freigibt: Nach der letzten Extrusion liest die Integration bis zu 15 s die Kopfposition (`motion_report`) und löst aus, sobald der Kopf 25 mm außerhalb der Teile-Umrisse (`EXCLUDE_OBJECT_DEFINE`) ist oder das Bett schon 15 mm abgesenkt wurde. Das Innenraumlicht wird fürs Foto eingeschaltet und danach wieder aus, falls es aus war. Ohne Position oder Umriss: 2 s nach der letzten Extrusion; ohne Zeitprofil: in der letzten Schicht ab 99,5 %. Bei Abbruch oder Fehler entsteht das Bild in dem Moment. Es liegt unter `.storage/snapmaker_u1_card/thumbs/<Eintrag>/results/` und erscheint in der Historie neben dem Vorschaubild; Antippen vergrößert es in der Karte (Antippen oder Esc schließt). Gespeichert bleiben die Fotos der Drucke in der Historie.
 
-## Bed Mesh, Flussrate und Top Cover
+## Bed Mesh, Flussrate, Top Cover und Kammerheizung
 
 **Bed Mesh.** Die Karte zeigt die Messpunkte des in Klipper geladenen Höhenprofils (`bed_mesh.probed_matrix`) als Heatmap: rot über, blau unter null, die Druckervorderseite unten. Das Profil entsteht bei einem Druckstart mit Bettnivellierung; ohne Profil sagt die Karte das.
 
 **Flussrate** ist Klippers Extrusionsfaktor (`M221`), 100 % = wie gesliced. Klipper behält den Wert, bis er geändert wird oder Klipper neu startet – nach einem Test also wieder auf 100 % stellen.
 
 **Top Cover.** Die optionale Abdeckung ist in der Firmware der `purifier`. Ob eine angeschlossen ist, meldet der Drucker (`power_detected`); erst dann erscheinen Entitäten und Bereich. Den Kammermodus setzt die Firmware beim Druckstart nach Material und regelt die Lüfter während des Drucks nach; die Regler stellen Abluft- und Umluftlüfter von Hand (`SET_PURIFIER`). Die Filter-Laufzeit zählt die Betriebsstunden des Umluftlüfters. *Noch nicht an einem Drucker mit Abdeckung getestet – Rückmeldung willkommen (Diagnosedatei).*
+
+**Kammerheizung.** Mit der paxx12 Extended Firmware ist eine BIQU Panda Breath (Stock-Firmware) oder eine Panda Breath mit DragonBreath-Firmware ein Klipper-`heater_generic` (`panda_breath` / `dragonbreath`). Die Integration findet sie in Klippers Objektliste; erst dann erscheinen die Entitäten (*Kammerheizung* Temperatur, *Kammerheizung Soll*, bei DragonBreath *Kammerheizung Filter*) und der Bereich im Tab Steuerung. Das Soll geht als `SET_HEATER_TEMPERATURE` an Klipper (0 = aus; Panda Breath 15–80 °C, DragonBreath bis 75 °C), der Slicer setzt es ohnehin mit `M141`/`M191`. paxx12 warnt: nie unbeaufsichtigt heizen, die Hauptplatine braucht zusätzliche Kühlung.
+
+**Düse je Kopf.** Die Firmware speichert Durchmesser und Typ (Standard / High Flow) je Kopf (am Display beim Hotend-Wechsel gesetzt). Die Kopfdetails zeigen sie; der Druckdialog warnt, wenn ein Filament auf einen Kopf kommt, dessen Düse von der abweicht, für die die Datei gesliced ist (`nozzle_diameter_list` aus Snapmakers Moonraker).
 
 ## Kamera
 
@@ -391,6 +400,10 @@ Ab 1.5 hat die Integration eine eigene Kamera-Entität (*Kamera*) und findet sel
 | `still` | nur eine Snapshot-Adresse funktioniert | Standbild jede Sekunde |
 | `wake` | Stock-Firmware: kein Stream, nur `camera/monitor.jpg`, das sich erst nach `camera.start_monitor` ändert. Das Bild wird vor und nach einem Weckaufruf geholt und muss sich ändern | Standbild alle 1–2 s; die Kamera wird bei Bedarf geweckt (höchstens alle 10 s), solange jemand zuschaut |
 | `none` | nichts gefunden | Entität nicht verfügbar; die Karte zeigt einen Hinweis statt einer schwarzen Fläche |
+
+**RTSP.** Antwortet der Drucker auf `rtsp://<drucker>:8554/stream` (paxx12: *RTSP* in `/firmware-config/`, standardmäßig aus), bietet die Kamera-Entität das zusätzlich als Stream-Quelle an (Attribut `rtsp_url`, `supported_features` Stream): Home Assistant streamt dann selbst H.264 (Info-Dialog, Bildkarten, go2rtc/WebRTC). Die Karte bleibt bei MJPEG.
+
+**Zweite Kamera.** Eine zweite Webcam (paxx12: USB-Kamera unter `/webcam2/`, RTSP-Port 8555) bekommt eine eigene Entität *Kamera 2*, sobald sie gefunden wird; die Karte zeigt dann einen Umschalter auf dem Bild.
 
 Die Erkennung läuft, wenn der Drucker online kommt, wenn Bilder wiederholt ausbleiben, und alle 5 Minuten, solange nichts (oder nur die Stock-Kamera) gefunden wurde. Fällt der Livestream aus, wechselt die Kamera auf Standbilder und versucht den Stream nach 5 Minuten erneut – ein Firmwarewechsel braucht also keine Einstellung. Die Karte nutzt diese Entität, solange `camera` nicht gesetzt ist; Benachrichtigungsbild und Ergebnisfoto nutzen sie, solange in den Integrationsoptionen keine Kamera gewählt ist.
 
@@ -442,9 +455,17 @@ Optional. Ohne Spoolman-Adresse erscheint in Karte und Integration nichts davon.
 
 Jede Spule wird höchstens einem Kopf zugeordnet. In der Karte tippst du auf die Spulenzeile eines Kopfes und wählst „Automatisch“, „Keine Spule“ oder eine bestimmte Spule. Die Wahl einer bestimmten Spule lädt auch ihr Filament in den Drucker: Material (Unterart wie Matte oder Silk aus Material oder Spulenname), Hersteller und Farbe werden in den Slot des Kopfes geschrieben (`SET_PRINT_FILAMENT_CONFIG`), damit Display, Karte und Filamentzuordnung das richtige Filament zeigen. Nicht bei offiziellen Spulen mit RFID-Tag (der Tag gilt) und nicht während eines Drucks. Eine manuelle Wahl bleibt bestehen, bis in dem Kopf ein anderes Filament erkannt wird (Material, Farbe oder Hersteller ändern sich) oder die Spule in Spoolman archiviert wird.
 
-**Abbuchen.** Nach jedem Druck bucht die Integration je Kopf ab: Gewicht laut Slicer je Filament, über die Zuordnungstabelle des Drucks (`print_task_config.extruder_map_table`) auf die Köpfe verteilt; bei Abbruch anteilig nach tatsächlich geförderter Länge. Ist Spoolman gerade nicht erreichbar, wird die Buchung gespeichert und nachgeholt, auch über einen Neustart von Home Assistant hinweg. Die Historie zeigt je Druck `#Spule −g` (⏳ = noch nicht gebucht).
+**Abbuchen.** Nach jedem Druck bucht die Integration je Kopf ab: Gewicht laut Slicer je Filament, über die Zuordnungstabelle des Drucks (`print_task_config.extruder_map_table`) auf die Köpfe verteilt; bei Abbruch anteilig nach tatsächlich geförderter Länge. Ist Spoolman gerade nicht erreichbar, wird die Buchung gespeichert und nachgeholt, auch über einen Neustart von Home Assistant hinweg. Die Historie zeigt je Spule das Restgewicht vor und nach dem Druck (`#5 550 g → 460 g`; ⏳ = noch nicht gebucht).
 
-> **Nicht doppelt buchen:** Bucht bereits etwas anderes ab (z. B. ein `[spoolman]`-Abschnitt in Moonrakers Konfiguration oder paxx12 SpoolLink), in der Integration *Verbrauch abbuchen* ausschalten.
+**paxx12 Extended Firmware mit Spoolman (SpoolLink).** Ist Spoolman in `/firmware-config/` eingeschaltet, bucht Moonraker den Verbrauch selbst während des Drucks und der Drucker merkt sich die Spule je Kopf (`print_task_config.filament_spool_id`). Die Integration erkennt beides automatisch:
+
+- Sie **bucht dann nicht ab** (kein doppeltes Abbuchen, egal wie *Verbrauch abbuchen* steht). Der Selbsttest sagt, wer abbucht.
+- Die Spule je Kopf kommt vom Drucker; die Spulenwahl in der Karte schickt `SET_SPOOL_ID CHANNEL=<kopf> SPOOL_ID=<id>` an den Drucker, der das Filament der Spule selbst übernimmt. „Automatisch“ gibt es dann nicht.
+- Die Historie zeigt trotzdem vorher → nachher, nach dem Druck aus Spoolman gelesen.
+
+Dasselbe gilt für jeden anderen `[spoolman]`-Abschnitt in Moonrakers Konfiguration.
+
+**Spule wiegen.** In den Kopfdetails (mit zugeordneter Spule) eintragen, was die Waage zeigt: mit Leerspule (deren Gewicht kommt aus Spoolman: Spule, Filament oder Hersteller *Leerspulengewicht*) oder nur das Filament. Die Integration setzt das Restgewicht in Spoolman. Dienst `weigh_spool` (`slot` oder `spool_id`, `weight`, `gross`). In Spoolman selbst bleibt damit nur das Anlegen neuer Spulen.
 
 Grenzen: Wechselt die Firmware mitten im Druck automatisch auf einen anderen Kopf (Auto-Nachfüllen bei leerer Spule), wird der gesamte Verbrauch dem zuletzt gemeldeten Kopf zugerechnet.
 

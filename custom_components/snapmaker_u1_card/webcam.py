@@ -16,6 +16,15 @@ Detection order (``detect``):
    ``wake`` (an old file would otherwise look fine).
 4. Otherwise ``none``.
 
+A second camera (paxx12: USB camera at ``/webcam2/``) is a second ``Webcam``
+with ``second=True``: it only looks at the other Moonraker webcams and never
+falls back to the stock camera.
+
+RTSP (paxx12, off by default): if the camera service answers on
+``rtsp://<printer>:8554/stream`` (8555 for the second camera), ``rtsp_url``
+is set and the camera entity offers it as stream source, so Home Assistant
+can play H.264 itself (go2rtc / WebRTC) instead of MJPEG.
+
 Detection runs when the printer comes online, when images keep failing, and
 every few minutes while nothing was found. A failing live stream falls back
 to still images and the stream is tried again after STREAM_RETRY_S.
@@ -49,6 +58,26 @@ DEFAULTS = (
     ("/webcam/?action=stream", "/webcam/?action=snapshot"),
     ("/webcam/stream.mjpg", "/webcam/snapshot.jpg"),
 )
+DEFAULTS_SECOND = (("/webcam2/stream.mjpg", "/webcam2/snapshot.jpg"),)
+RTSP_PORTS = (8554, 8555)  # paxx12: internal camera, USB camera
+RTSP_TIMEOUT_S = 2
+
+
+async def rtsp_ok(host: str, port: int, timeout: float = RTSP_TIMEOUT_S) -> bool:
+    """Does an RTSP server answer OPTIONS on rtsp://host:port/stream?"""
+    url = f"rtsp://{host}:{port}/stream"
+    try:
+        async with asyncio.timeout(timeout):
+            reader, writer = await asyncio.open_connection(host, port)
+            try:
+                writer.write(f"OPTIONS {url} RTSP/1.0\r\nCSeq: 1\r\nUser-Agent: snapmaker_u1_card\r\n\r\n".encode())
+                await writer.drain()
+                line = await reader.readline()
+            finally:
+                writer.close()
+    except (OSError, TimeoutError):
+        return False
+    return line.startswith(b"RTSP/1.0 200")
 # Moonraker webcam services whose stream_url is a web page, not MJPEG
 PAGE_SERVICES = ("webrtc-camerastreamer", "webrtc-go2rtc", "webrtc-mediamtx", "webrtc-janus", "iframe", "hlsstream")
 PAGE_ENDINGS = ("/webrtc", "/player", "/webrtc/", "/player/", ".html")
@@ -84,8 +113,10 @@ def _digest(blob: bytes | None) -> str | None:
 class Webcam:
     """Camera access for one printer: detection, images and wake-up."""
 
-    def __init__(self, client: MoonrakerClient) -> None:
+    def __init__(self, client: MoonrakerClient, second: bool = False) -> None:
         self.client = client
+        self.second = second
+        self.rtsp_url: str | None = None
         self.mode = "unknown"
         self.stream_url: str | None = None
         self.snapshot_url: str | None = None
@@ -117,6 +148,9 @@ class Webcam:
         self._detecting = True
         try:
             mode, stream, snap = await self._probe()
+            port = RTSP_PORTS[1 if self.second else 0]
+            self.rtsp_url = (f"rtsp://{self.client.host}:{port}/stream"
+                             if mode in ("live", "still") and await rtsp_ok(self.client.host, port) else None)
         except MoonrakerError as err:
             _LOGGER.debug("Camera detection failed: %s", err)
             mode, stream, snap = "unknown", None, None
@@ -140,18 +174,23 @@ class Webcam:
             self.next_check = now + STREAM_RETRY_S
         elif mode == "still":
             self.next_check = now + 24 * 3600
+        elif self.second:
+            self.next_check = now + 3600  # a second camera is rare: look again hourly
         else:
             self.next_check = now + NONE_RETRY_S
         return mode
 
     async def _probe(self) -> tuple[str, str | None, str | None]:
         cams = await self.client.webcams()
+        if self.second:
+            # every webcam but the first one Moonraker lists (that is the main camera)
+            cams = cams[1:]
         candidates: list[tuple[str | None, str | None]] = []
         for c in cams:
             snap = self.client.resolve_url(c.get("snapshot_url"))
             streams = [self.client.resolve_url(u) for u in mjpeg_candidates(c)] or [None]
             candidates += [(u, snap) for u in streams]
-        for stream_path, snap_path in DEFAULTS:
+        for stream_path, snap_path in (DEFAULTS_SECOND if self.second else DEFAULTS):
             default = (self.client.resolve_url(stream_path), self.client.resolve_url(snap_path))
             if default[0] not in {s for s, _ in candidates}:
                 candidates.append(default)
@@ -171,6 +210,8 @@ class Webcam:
                 still = (stream, snap)
         if still:
             return "still", still[0], still[1]
+        if self.second:
+            return "none", None, None
         if await self._monitor_changes():
             return "wake", None, None
         return "none", None, None
@@ -252,4 +293,4 @@ class Webcam:
 
     def as_dict(self) -> dict[str, Any]:
         return {"mode": self.mode, "stream_url": self.stream_url, "snapshot_url": self.snapshot_url,
-                "checked_at": self.checked_at, "stream_error": self.stream_error}
+                "rtsp_url": self.rtsp_url, "checked_at": self.checked_at, "stream_error": self.stream_error}

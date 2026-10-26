@@ -202,7 +202,7 @@
               "bed_cool_temp": "„Teil entnehmbar“ ab",
               "camera_wake": "Kamera wach halten",
               "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag",
-              "live_notify_image": "Fortschritts-Benachrichtigung: Kamerabild",
+              "live_notify_image": "Fortschritts-Benachrichtigung: Bild",
               "notify_click_url": "Beim Antippen öffnen"
             },
             "data_description": {
@@ -212,7 +212,7 @@
               "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
               "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht.",
               "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht.",
-              "live_notify_image": "Zeigt das Kamerabild, wenn die Fortschritts-Benachrichtigung aufgeklappt wird (aktualisiert mit jedem Fortschritts-Update, keine zusätzlichen Pushes).",
+              "live_notify_image": "Bild beim Aufklappen der Fortschritts-Benachrichtigung: Kamerabild (mit jedem Update neu) oder das Vorschaubild des Modells aus dem Slicer. Keine zusätzlichen Pushes.",
               "notify_click_url": "Dashboard-Pfad oder URL, die beim Antippen einer Benachrichtigung geöffnet wird, z. B. /dashboard-drucker/0 oder /lovelace/drucker. Leer = Standard der App."
             }
           },
@@ -270,13 +270,26 @@
           },
           "maintenance": {
             "name": "Wartung",
-            "description": "Intervalle in Druckstunden. 0 = Punkt ausblenden.",
+            "description": "Intervalle in Druckstunden (h) und/oder Monaten (mo); was zuerst erreicht ist, macht den Punkt fällig. Monatswerte nach Snapmakers U1-Wartungsanleitung. 0 = aus, beide 0 = Punkt ausblenden.",
             "data": {
-              "maint_plate": "Druckplatte reinigen",
-              "maint_nozzle": "Düsen und Abstreifer reinigen",
-              "maint_rails": "Linearführungen schmieren",
-              "maint_belts": "Riemenspannung prüfen",
-              "maint_filter": "Luftfilter wechseln"
+              "maint_plate": "Druckplatte reinigen (Druckstunden)",
+              "maint_m_plate": "Druckplatte reinigen (Monate)",
+              "maint_nozzle": "Düsen und Abstreifer reinigen (Druckstunden)",
+              "maint_m_nozzle": "Düsen und Abstreifer reinigen (Monate)",
+              "maint_rails": "Linearführungen reinigen und schmieren (Druckstunden)",
+              "maint_m_rails": "Linearführungen reinigen und schmieren (Monate)",
+              "maint_belts": "Riemen prüfen (Druckstunden)",
+              "maint_m_belts": "Riemen prüfen (Monate)",
+              "maint_filter": "Luftfilter wechseln (Druckstunden)",
+              "maint_m_filter": "Luftfilter wechseln (Monate)",
+              "maint_carbon_rods": "X-Carbonstangen reinigen (Druckstunden)",
+              "maint_m_carbon_rods": "X-Carbonstangen reinigen (Monate)",
+              "maint_lead_screws": "Z-Spindeln und Muttern schmieren (Druckstunden)",
+              "maint_m_lead_screws": "Z-Spindeln und Muttern schmieren (Monate)",
+              "maint_coupling": "Stahlstifte und Kugeln der Kopfaufnahme (Druckstunden)",
+              "maint_m_coupling": "Stahlstifte und Kugeln der Kopfaufnahme (Monate)",
+              "maint_pogo": "Pogo-Kontakte der Köpfe reinigen (Druckstunden)",
+              "maint_m_pogo": "Pogo-Kontakte der Köpfe reinigen (Monate)"
             }
           }
         }
@@ -356,6 +369,9 @@
           "hot": "Heiße Kammer",
           "unknown": "Unbekannt"
         }
+      },
+      "chamber_heater": {
+        "name": "Kammerheizung"
       }
     },
     "switch": {
@@ -376,6 +392,9 @@
       },
       "live_notify": {
         "name": "Fortschritts-Benachrichtigung (Android)"
+      },
+      "chamber_filter": {
+        "name": "Kammerheizung Filter"
       }
     },
     "binary_sensor": {
@@ -412,6 +431,9 @@
             }
           }
         }
+      },
+      "camera2": {
+        "name": "Kamera 2"
       }
     },
     "number": {
@@ -423,6 +445,9 @@
       },
       "top_cover_inner": {
         "name": "Top Cover Umluftlüfter"
+      },
+      "chamber_target": {
+        "name": "Kammerheizung Soll"
       }
     }
   },
@@ -816,6 +841,32 @@
           "description": "Nur bei mehreren Druckern nötig."
         }
       }
+    },
+    "weigh_spool": {
+      "name": "Spule wiegen",
+      "description": "Setzt das Restgewicht einer Spule in Spoolman nach der Waage. Mit Leerspule gewogen (Standard): deren Gewicht kommt aus Spoolman.",
+      "fields": {
+        "slot": {
+          "name": "Kopf",
+          "description": "1-4; die Spule, die diesem Kopf zugeordnet ist."
+        },
+        "spool_id": {
+          "name": "Spulen-ID",
+          "description": "Statt eines Kopfes."
+        },
+        "weight": {
+          "name": "Gewicht",
+          "description": "Was die Waage anzeigt, in g."
+        },
+        "gross": {
+          "name": "Mit Leerspule",
+          "description": "An = mit Spule gewogen (brutto), aus = nur Filament."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {
@@ -830,16 +881,21 @@
         "almost_done": "Gleich fertig",
         "spool_low": "Filament reicht nicht (Spoolman)",
         "spool_runout": "Spule läuft im Druck gleich leer (Spoolman)",
-        "bed_cool": "Teil entnehmbar (Bett abgekühlt)"
+        "bed_cool": "Teil entnehmbar (Bett abgekühlt)",
+        "maintenance": "Wartung fällig"
       }
     },
     "maintenance_item": {
       "options": {
         "plate": "Druckplatte reinigen",
         "nozzle": "Düsen und Abstreifer reinigen",
-        "rails": "Linearführungen schmieren",
-        "belts": "Riemenspannung prüfen",
-        "filter": "Luftfilter wechseln"
+        "rails": "Linearführungen reinigen und schmieren",
+        "belts": "Riemen prüfen",
+        "filter": "Luftfilter wechseln",
+        "carbon_rods": "X-Carbonstangen reinigen",
+        "lead_screws": "Z-Spindeln und Muttern schmieren",
+        "coupling": "Stahlstifte und Kugeln der Kopfaufnahme",
+        "pogo": "Pogo-Kontakte der Köpfe reinigen"
       }
     },
     "camera_wake": {
@@ -853,6 +909,13 @@
       "options": {
         "pick": "Aufnehmen",
         "park": "Ablegen"
+      }
+    },
+    "live_notify_image": {
+      "options": {
+        "camera": "Kamerabild",
+        "thumbnail": "Vorschaubild des Modells",
+        "off": "Kein Bild"
       }
     }
   }

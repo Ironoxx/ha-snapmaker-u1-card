@@ -21,6 +21,7 @@ from ..const import (
     CONF_BACKUP,
     CONF_ENERGY_SENSOR,
     CONF_MAINTENANCE,
+    CONF_MAINTENANCE_MONTHS,
     CONF_NOTIFY,
     CONF_POWER_SWITCH,
     DEFAULT_BACKUP,
@@ -29,7 +30,7 @@ from ..const import (
     FIRMWARE_REPOS,
 )
 from ..i18n import tr
-from ..stats import MAINTENANCE_ITEMS, build_stats
+from ..stats import MAINTENANCE_ITEMS, build_stats, maintenance_label
 
 _LOGGER = logging.getLogger(__name__)
 from .helpers import (
@@ -66,7 +67,8 @@ class UpkeepMixin:
 
     def _maintenance_status(self, tool_changes: dict[str, Any] | None) -> list[dict[str, Any]]:
         """Maintenance items plus the firmware's tool changer counter."""
-        items = self.maintenance.status(self._print_hours, self.options.get(CONF_MAINTENANCE) or {})
+        items = self.maintenance.status(self._print_hours, self.options.get(CONF_MAINTENANCE) or {},
+                                        self.options.get(CONF_MAINTENANCE_MONTHS) or {}, time.time())
         if tool_changes:
             worst = max((h.get("since_maintenance") or 0 for h in tool_changes.get("heads") or []), default=0)
             limit = tool_changes.get("maintenance_threshold") or 0
@@ -77,6 +79,26 @@ class UpkeepMixin:
                     "due": worst >= limit, "firmware": True,
                 })
         return items
+
+    def _check_maintenance_due(self, items: list[dict[str, Any]], printing: bool) -> None:
+        """Push once when maintenance items become due; not in the middle of a print.
+
+        Remembered across restarts (``maint_notified``); an item that is done
+        again (not due any more) can notify again next time.
+        """
+        due = {m["key"] for m in items if m.get("due")}
+        notified = set(self._maint_notified)
+        if notified - due:
+            self._maint_notified = sorted(notified & due)
+            self._save(30)
+        new = sorted(due - notified)
+        if not new or printing:
+            return
+        de = self.hass.config.language.lower().startswith("de")
+        labels = [maintenance_label(k, de) for k in new]
+        self._notify("maintenance", {"name": "Snapmaker U1", "text": "\n".join(labels), "no_image": True})
+        self._maint_notified = sorted(notified | set(new))
+        self._save(30)
 
     def mark_maintenance(self, key: str) -> None:
         """Service: mark a maintenance item as done now."""
@@ -135,6 +157,13 @@ class UpkeepMixin:
             t(f"{len(mr)} Entitäten der Moonraker-Integration", f"{len(mr)} Moonraker integration entities") if mr
             else t("Moonraker-Integration fehlt: Temperaturen, Licht und Kamera fehlen in der Karte",
                    "Moonraker integration missing: no temperatures, light or camera in the card"))
+        # Another U1 integration (kbaker827/ha-snapmaker-u1) registers a card with the same name
+        if self.hass.config_entries.async_entries("snapmaker_u1"):
+            add("card_conflict", None, t(
+                "Die Integration „snapmaker_u1“ (kbaker827) ist auch installiert: beide Karten heißen "
+                "custom:snapmaker-u1-card. Für diese Karte type: custom:snapmaker-u1-card-ironoxx verwenden.",
+                "The integration \"snapmaker_u1\" (kbaker827) is installed too: both cards are called "
+                "custom:snapmaker-u1-card. Use type: custom:snapmaker-u1-card-ironoxx for this card."))
         # camera: detection of the own camera entity, then an image from the camera in use
         mode = self.webcam.mode
         mode_text = {
@@ -146,6 +175,14 @@ class UpkeepMixin:
         why = f" – Stream: {self.webcam.stream_error}" if mode != "live" and self.webcam.stream_error else ""
         add("camera_detect", mode in ("live", "still", "wake") or (None if mode == "unknown" else False),
             t(f"Kamera erkannt: {mode_text}{why}", f"Camera detected: {mode_text}{why}"))
+        rtsp = self.webcam.rtsp_url
+        add("camera_rtsp", True if rtsp else None,
+            t(f"RTSP: {rtsp} (Home Assistant streamt H.264 selbst)", f"RTSP: {rtsp} (Home Assistant streams H.264 itself)")
+            if rtsp else t("RTSP aus (paxx12: in /firmware-config/ einschaltbar)",
+                           "RTSP off (paxx12: can be enabled in /firmware-config/)"))
+        if self.webcam2.mode in ("live", "still"):
+            add("camera2", True, t("Zweite Kamera (USB) gefunden", "Second camera (USB) found")
+                + (f", RTSP {self.webcam2.rtsp_url}" if self.webcam2.rtsp_url else ""))
         camera = self.camera_entity()
         if not camera:
             add("camera", None, t("Keine Kamera (Bild in Push und Ergebnisfoto fehlen)",
@@ -197,6 +234,18 @@ class UpkeepMixin:
             add("spoolman", okay, t(f"Spoolman: {len(self.spools.spools)} Spulen", f"Spoolman: {len(self.spools.spools)} spools")
                 if okay else t(f"Spoolman nicht erreichbar ({self.spools.client.url}): {self.spools.error or '?'}",
                                f"Spoolman unreachable ({self.spools.client.url}): {self.spools.error or '?'}"))
+            mgr = self.spools
+            if mgr.external_booking:
+                detail = t("Verbrauch bucht Moonraker (Spoolman im Drucker aktiv), die Integration bucht nicht doppelt",
+                           "Moonraker books usage (Spoolman on the printer), the integration does not book twice")
+            elif mgr.deduct:
+                detail = t("Verbrauch bucht die Integration nach jedem Druck",
+                           "The integration books usage after every print")
+            else:
+                detail = t("Verbrauch wird nicht abgebucht", "Usage is not booked")
+            if mgr.spoollink:
+                detail += t("; Spule je Kopf vom Drucker (SpoolLink)", "; spool per head from the printer (SpoolLink)")
+            add("spoolman_booking", True if (mgr.external_booking or mgr.deduct) else None, detail)
         # Assist
         sentences = Path(self.hass.config.path("custom_sentences", "de", f"{DOMAIN}.yaml"))
         exists = await self.hass.async_add_executor_job(sentences.exists)

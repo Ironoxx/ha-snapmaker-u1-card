@@ -34,6 +34,7 @@ export const ControlTabMixin = (Base) => class extends Base {
         })}
       </section>
       ${this._coverPanel()}
+      ${this._chamberPanel()}
       <section class="panel tpanel">
         <div class="panel-head">
           <ha-icon icon="mdi:chart-line"></ha-icon>

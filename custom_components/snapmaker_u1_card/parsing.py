@@ -202,6 +202,11 @@ def parse_file_filaments(meta: dict[str, Any] | None) -> list[dict[str, Any]]:
     names = _split(meta.get("filament_name"))
     weights = meta.get("filament_weight")
     used_mm = meta.get("filament_used_mm")
+    # Snapmaker Moonraker: nozzle_diameter_list per filament (Orca), else one value for all
+    nozzles = meta.get("nozzle_diameter_list")
+    if not isinstance(nozzles, list):
+        single = meta.get("nozzle_diameter")
+        nozzles = [single] if isinstance(single, (int, float)) else []
     count = max(len(types), len(colors), len(names),
                 len(weights) if isinstance(weights, list) else 0)
     count = min(count, LOGICAL_EXTRUDERS)
@@ -222,9 +227,18 @@ def parse_file_filaments(meta: dict[str, Any] | None) -> list[dict[str, Any]]:
                 "name": _clean(_at(names, i)),
                 "weight": round(float(weight), 2) if weight is not None else None,
                 "used": used,
+                "nozzle": _nozzle(nozzles, i),
             }
         )
     return result
+
+
+def _nozzle(nozzles: list[Any], i: int) -> float | None:
+    """Nozzle diameter for logical filament i; a single value applies to all."""
+    if not nozzles:
+        return None
+    value = nozzles[i] if i < len(nozzles) else (nozzles[0] if len(nozzles) == 1 else None)
+    return round(float(value), 2) if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
 
 def _rgb(color: str | None) -> tuple[int, int, int] | None:
@@ -384,7 +398,8 @@ def _delta(start: float | None, end: float | None) -> float | None:
 
 # Fields of the running print that move into the record when it finishes.
 _CARRY = ("name", "thumb", "filaments", "filament_total", "filament_used", "print_duration",
-          "map_table", "spool_ids", "source", "mapping", "options", "pause_layers", "begin_s", "slicer_print_s")
+          "map_table", "spool_ids", "spool_start", "source", "mapping", "options", "pause_layers", "begin_s",
+          "slicer_print_s")
 
 
 def _close(active: dict[str, Any], counters: dict[str, float | None],
@@ -775,6 +790,9 @@ def compact_spool(spool: dict[str, Any]) -> dict[str, Any]:
         "colors": multi or ([color] if color else []),
         "remaining_weight": _round(spool.get("remaining_weight")),
         "initial_weight": _round(spool.get("initial_weight") or fil.get("weight")),
+        # empty spool: spool, else filament, else vendor default
+        "spool_weight": _round(spool.get("spool_weight") or fil.get("spool_weight")
+                               or (fil.get("vendor") or {}).get("empty_spool_weight")),
         "location": spool.get("location"),
         "last_used": spool.get("last_used"),
         "used_weight": _round(spool.get("used_weight")),

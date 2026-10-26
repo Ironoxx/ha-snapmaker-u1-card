@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.6.0b3";
+  var CARD_VERSION = "1.6.0b4";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -44,10 +44,14 @@
   var MAINT_LABELS = {
     plate: "Druckplatte reinigen",
     nozzle: "Düsen und Abstreifer reinigen",
-    rails: "Linearführungen schmieren",
-    belts: "Riemenspannung prüfen",
+    rails: "Linearführungen reinigen und schmieren",
+    belts: "Riemen prüfen",
     filter: "Luftfilter wechseln",
-    tool_changer: "Werkzeugwechsler (Firmware)"
+    tool_changer: "Werkzeugwechsler (Firmware)",
+    carbon_rods: "X-Carbonstangen reinigen",
+    lead_screws: "Z-Spindeln und Muttern schmieren",
+    coupling: "Stahlstifte und Kugeln der Kopfaufnahme",
+    pogo: "Pogo-Kontakte der Köpfe reinigen"
   };
   var METRICS = [
     ["prints", "Drucke"],
@@ -70,6 +74,34 @@
     return out;
   }
   var EN = {
+    "aus": "off",
+    "Kammerheizung": "Chamber heater",
+    "Gerät": "Device",
+    "Kammer": "Chamber",
+    "Heizleistung": "Heater power",
+    "Kammer-Solltemperatur": "Chamber target",
+    "Der Slicer setzt die Kammer mit M141/M191. Nie unbeaufsichtigt heizen, Hauptplatine braucht zusätzliche Kühlung (Hinweis von paxx12).": "The slicer sets the chamber with M141/M191. Never heat unattended, the mainboard needs extra cooling (paxx12's advice).",
+    "Kamera wechseln": "Switch camera",
+    "Den Verbrauch bucht Moonraker (Spoolman im Drucker aktiv) – die Integration bucht nicht zusätzlich ab.": "Moonraker books the usage (Spoolman active on the printer) – the integration does not book it again.",
+    "Gewogen": "Weighed",
+    "mit Spule": "with spool",
+    "nur Filament": "filament only",
+    "Mit Leerspule gewogen ({g} g werden abgezogen)": "Weighed with the empty spool ({g} g are subtracted)",
+    "Leerspulengewicht fehlt in Spoolman – nur das Filament wiegen.": "Empty spool weight missing in Spoolman – weigh the filament only.",
+    "Spule #{id}: {g} g Filament": "Spool #{id}: {g} g filament",
+    "SpoolLink im Drucker: die Wahl geht an den Drucker (SET_SPOOL_ID), er übernimmt das Filament der Spule.": "SpoolLink on the printer: the choice goes to the printer (SET_SPOOL_ID), which loads the spool's filament.",
+    "monatlich": "monthly",
+    "alle {n} Monate": "every {n} months",
+    "noch {d} Tage": "{d} days left",
+    "Gezählt in Druckstunden und Monaten (Monatswerte nach Snapmakers U1-Wartungsanleitung). Intervalle in den Optionen der Integration.": "Counted in print hours and months (month values from Snapmaker's U1 maintenance guide). Intervals in the integration options.",
+    "X-Carbonstangen reinigen": "Clean the X carbon rods",
+    "Z-Spindeln und Muttern schmieren": "Grease the Z lead screws and nuts",
+    "Stahlstifte und Kugeln der Kopfaufnahme": "Steel pins and balls of the head coupling",
+    "Pogo-Kontakte der Köpfe reinigen": "Clean the pogo contacts of the heads",
+    "Linearführungen reinigen und schmieren": "Clean and lubricate the linear shafts",
+    "Riemen prüfen": "Check the belts",
+    "Düse passt nicht: Datei {a} mm, Kopf {b} mm": "Nozzle mismatch: file {a} mm, head {b} mm",
+    "Düse {d} mm": "Nozzle {d} mm",
     "Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.": "Material, vendor and colour of the chosen spool are loaded into the head.",
     "Profil {p}": "Profile {p}",
     "Höchster minus tiefster Messpunkt": "Highest minus lowest probed point",
@@ -221,7 +253,6 @@
     "Erfolgsquote": "Success rate",
     "Erledigt": "Done",
     "Gesichert in Medien": "Backed up to media",
-    "Gezählt in Druckstunden. Intervalle in den Optionen der Integration.": "Counted in print hours. Intervals in the integration options.",
     "Hochgeladen: {name}": "Uploaded: {name}",
     "In die Warteschlange gestellt: {name}": "Added to queue: {name}",
     "Jetzt sichern": "Back up now",
@@ -229,7 +260,6 @@
     "Gemessen bei Drucken seit Installation der Integration.": "Measured for prints since the integration was installed.",
     "Ältere Drucke mit Filamentpreis geschätzt, ohne Strom.": "Older prints estimated from filament price, without power.",
     "Letzte 12 Monate": "Last 12 months",
-    "Linearführungen schmieren": "Lubricate linear rails",
     "Luftfilter wechseln": "Replace air filter",
     "Löschen auf dem Drucker wird von der Firmware nicht unterstützt.": "The firmware does not support deleting on the printer.",
     "Nach oben": "Move up",
@@ -239,7 +269,6 @@
     "Nächster: {name}": "Next: {name}",
     "Pause vor Schicht": "Pause before layer",
     "Pause vor {l}": "Pause before {l}",
-    "Riemenspannung prüfen": "Check belt tension",
     "Schichten als ganze Zahlen ab 1 angeben, z. B. 12, 40.": "Enter layers as whole numbers from 1, e.g. 12, 40.",
     "Sicherung läuft …": "Backup running …",
     "Starten": "Start",
@@ -818,6 +847,13 @@
       if (!st || ["unknown", "unavailable"].includes(st.state)) return null;
       return { mode: st.state, ...st.attributes };
     }
+    /** Chamber heater (Panda Breath / DragonBreath); null without one. */
+    _chamberData() {
+      const st = this._ents && this._ents.chamber && this._st(this._ents.chamber);
+      if (!st || st.state === "unavailable") return null;
+      const temp = parseFloat(st.state);
+      return { ...st.attributes, temperature: Number.isNaN(temp) ? null : temp };
+    }
     _collect() {
       if (!this._hass) return;
       const P = (n) => this._p(n);
@@ -902,6 +938,7 @@
         flow: this._ents.flow ? this._n(this._ents.flow) : null,
         mesh: this._meshData(),
         cover: this._coverData(),
+        chamber: this._chamberData(),
         headStates: fst && fst.attributes && Array.isArray(fst.attributes.head_states) ? fst.attributes.head_states : [],
         hot,
         heads,
@@ -1321,6 +1358,7 @@
             <button type="button" class="zoom-btn" data-zoom="in" title="${tr("Vergrößern")}" aria-label="${tr("Vergrößern")}"><ha-icon icon="mdi:magnify-plus-outline"></ha-icon></button>
             <button type="button" class="zoom-btn" data-zoom="out" title="${tr("Verkleinern")}" aria-label="${tr("Verkleinern")}" hidden><ha-icon icon="mdi:magnify-minus-outline"></ha-icon></button>
             ${document.fullscreenEnabled || document.webkitFullscreenEnabled ? `<button type="button" class="zoom-btn" data-zoom="full" title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
+            ${this._hasCamera2() ? `<button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="${!!this._ents.camAlt}"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>` : ""}
           </div>
           <span class="zoom-badge" hidden></span>
           ${pill}
@@ -1561,12 +1599,12 @@
           <div class="t-label">${esc([slot.type, slot.sub_type, slot.vendor].filter(Boolean).join(" ") || tr("kein Filament erkannt"))}</div></div>
           <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
         </header>
-        ${slot.official ? "" : `<div class="t-label">${tr("Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.")}</div>`}
+        ${sm.spoollink ? `<div class="t-label">${tr("SpoolLink im Drucker: die Wahl geht an den Drucker (SET_SPOOL_ID), er übernimmt das Filament der Spule.")}</div>` : slot.official ? "" : `<div class="t-label">${tr("Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.")}</div>`}
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
         <div class="spool-list">
-          <button type="button" class="spool-opt" data-pick="auto" aria-pressed="${!!(cur && !cur.manual)}">
+          ${sm.spoollink ? "" : `<button type="button" class="spool-opt" data-pick="auto" aria-pressed="${!!(cur && !cur.manual)}">
             <ha-icon icon="mdi:auto-fix"></ha-icon><span class="spool-opt-text"><span>${tr("Automatisch")}</span>
-            <span class="t-label">${tr("nach Material, Farbe und Hersteller")}</span></span></button>
+            <span class="t-label">${tr("nach Material, Farbe und Hersteller")}</span></span></button>`}
           <button type="button" class="spool-opt" data-pick="0" aria-pressed="${!cur}">
             <ha-icon icon="mdi:close-circle-outline"></ha-icon><span class="spool-opt-text"><span>${tr("Keine Spule")}</span>
             <span class="t-label">${tr("nichts abbuchen")}</span></span></button>
@@ -1885,6 +1923,7 @@
       })}
       </section>
       ${this._coverPanel()}
+      ${this._chamberPanel()}
       <section class="panel tpanel">
         <div class="panel-head">
           <ha-icon icon="mdi:chart-line"></ha-icon>
@@ -2153,8 +2192,12 @@
       const rows = items.map((m) => {
         const pct = Math.min(100, m.progress || 0);
         const tone = m.due ? "error" : pct >= 80 ? "warn" : "";
-        const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}` : m.used_h === null || m.used_h === void 0 ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h`;
-        const left = m.firmware ? "" : m.due ? tr("fällig") : m.remaining_h !== null && m.remaining_h !== void 0 ? tr("noch {h} h", { h: Math.round(m.remaining_h) }) : "";
+        const hours = m.interval_h ? m.used_h === null || m.used_h === void 0 ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h` : "";
+        const months = m.interval_m ? tr(m.interval_m === 1 ? "monatlich" : "alle {n} Monate", { n: m.interval_m }) : "";
+        const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}` : [hours, months].filter(Boolean).join(" · ") || "—";
+        const leftH = m.interval_h && m.remaining_h !== null && m.remaining_h !== void 0 ? m.remaining_h : null;
+        const leftD = m.interval_m && m.remaining_d !== null && m.remaining_d !== void 0 ? m.remaining_d : null;
+        const left = m.firmware ? "" : m.due ? tr("fällig") : leftD !== null && (leftH === null || leftD * 24 < leftH * 3) ? tr("noch {d} Tage", { d: Math.max(0, Math.round(leftD)) }) : leftH !== null ? tr("noch {h} h", { h: Math.round(leftH) }) : "";
         return `
         <div class="m-item" data-due="${m.due ? 1 : 0}">
           <div class="m-top">
@@ -2174,7 +2217,7 @@
           ${due ? `<span class="chip sm" data-tone="error" style="margin-left:auto">${tr("{n} fällig", { n: due })}</span>` : ""}
         </div>
         <div class="m-list">${rows}</div>
-        <div class="t-label">${tr("Gezählt in Druckstunden. Intervalle in den Optionen der Integration.")}</div>
+        <div class="t-label">${tr("Gezählt in Druckstunden und Monaten (Monatswerte nach Snapmakers U1-Wartungsanleitung). Intervalle in den Optionen der Integration.")}</div>
         ${this._backupLine()}
       </section>`;
     }
@@ -2262,8 +2305,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           h.switches ? tr("{n} Wechsel", { n: fmtInt(h.switches) }) : null,
           Array.isArray(h.pause_layers) && h.pause_layers.length ? tr("Pause vor {l}", { l: h.pause_layers.join(", ") }) : null,
           h.error || null,
-          // Spoolman: booked amounts per spool (⏳ = not booked yet)
-          Array.isArray(h.spools) && h.spools.length ? h.spools.map((sp) => `#${sp.spool_id} −${String(sp.grams).replace(".", ",")} g${sp.booked === false ? " ⏳" : ""}`).join(", ") : null
+          // Spoolman per spool: remaining before -> after, else the booked amount (⏳ = not booked yet)
+          Array.isArray(h.spools) && h.spools.length ? h.spools.map((sp) => {
+            const g = (v) => `${Math.round(v)} g`;
+            const pending = sp.booked === false ? " ⏳" : "";
+            if (typeof sp.before === "number" && typeof sp.after === "number")
+              return `#${sp.spool_id} ${g(sp.before)} → ${g(sp.after)}${pending}`;
+            return `#${sp.spool_id} −${String(sp.grams).replace(".", ",")} g${pending}`;
+          }).join(", ") : null
         ].filter(Boolean);
         const thumb = h.thumb ? `<img src="${esc(h.thumb)}" alt="" loading="lazy" />` : `<ha-icon icon="mdi:printer-3d"></ha-icon>`;
         return `
@@ -3566,6 +3615,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .con-form input:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 1px; }
   .con-form.locked input, .con-form.locked button { opacity: .5; }
+  .weigh-form { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .weigh-form > label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--u1-on-variant); }
+  .weigh-form label.check { flex-direction: row; align-items: center; gap: 6px; }
+  .weigh-row { display: flex; align-items: center; gap: 8px; }
+  .weigh-row input { flex: 1 1 auto; min-width: 0; height: 40px; padding: 0 10px; border-radius: var(--u1-r-s);
+    border: 1px solid var(--u1-outline); background: var(--u1-panel-high); color: var(--u1-on); font-family: var(--u1-mono); font-size: 14px; }
   .head-change { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .head-change .t-label { display: inline-flex; align-items: center; gap: 6px; }
   .head-change .t-label ha-icon { --mdc-icon-size: 18px; }
@@ -3890,8 +3945,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
   /* ── Maintenance, archive ────────────────────────────────────────────── */
   .m-list { display: flex; flex-direction: column; gap: 10px; }
-  .m-top { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
-  .m-name { flex: 1; min-width: 0; font-size: 14px; }
+  .m-top { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 8px; margin-bottom: 4px; }
+  .m-name { flex: 1 1 0; min-width: 0; font-size: 14px; }
+  .m-top .t-label { order: 3; flex: 1 1 100%; }
   .m-top button.icon { width: 32px; height: 32px; }
   .m-item[data-due="1"] .m-name { color: var(--u1-error); font-weight: 500; }
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
@@ -4090,8 +4146,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         })(),
         d.mesh ? `m${d.mesh.profile}${d.mesh.range}${d.mesh.mean}${d.mesh.cols}x${d.mesh.rows}` : "nomesh",
         d.cover ? "cover" : "nocover",
+        d.chamber ? `ch${d.chamber.filter !== null && d.chamber.filter !== void 0}` : "noch",
         `f${this._ents.flow && d.flow !== null}`,
-        d.headStates.join(",")
+        d.headStates.join(","),
+        `${this._ents.camera}${this._hasCamera2()}`
       ].join("~");
       if (key === this._renderKey && this._root()) {
         this._patch();
@@ -4179,6 +4237,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       );
       this._wireEstop(r);
       this._wireMachine(r);
+      r.querySelectorAll("[data-camswitch]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._switchCamera();
+      }));
       this._wireObjects(r.querySelector(".lv-panel"));
       const rl = r.querySelector("[data-reload]");
       if (rl) rl.addEventListener("click", () => window.location.reload());
@@ -4358,6 +4420,16 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       set("mem", num(d.memory, 1, "%"));
       set("sys", this._loadText());
       set("stepx", num(d.stepX, 1, "°C"));
+      if (d.chamber) {
+        set("chtemp", num(d.chamber.temperature, 1, "°C"));
+        set("chtarget", d.chamber.target ? num(d.chamber.target, 0, "°C") : tr("aus"));
+        set("chpower", num(d.chamber.power, 0, "%"));
+        const fb = r.querySelector('[data-su1="chfilter"]');
+        if (fb) {
+          fb.classList.toggle("on", d.chamber.filter === true);
+          fb.classList.toggle("outline", d.chamber.filter !== true);
+        }
+      }
       if (d.cover) {
         set("cvmode", esc(this._coverMode(d.cover.mode)));
         set("cvtarget", num(d.cover.desired_temp, 0, "°C"));
@@ -4402,6 +4474,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         ...this._ents.flow ? [[this._ents.flow, d.flow, 0, "%"]] : [],
         ...d.cover && this._ents.coverExhaust ? [[this._ents.coverExhaust, d.cover.exhaust, 0, "%"]] : [],
         ...d.cover && this._ents.coverInner ? [[this._ents.coverInner, d.cover.inner, 0, "%"]] : [],
+        ...d.chamber && this._ents.chamberTarget ? [[this._ents.chamberTarget, d.chamber.target || 0, 0, "°C"]] : [],
         ...d.heads.map((h) => [h.targetEntity, h.target, 0, "°C"])
       ];
       const now = Date.now();
@@ -4677,7 +4750,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       g.used.forEach((f) => {
         const slot = slots[g.map[f.index]];
         if (!slot) return;
+        const nozzle = slot.nozzle && slot.nozzle.diameter;
         if (anyLoaded && !slot.loaded) issues[f.index] = { level: "error", text: tr("Slot ist leer") };
+        else if (f.nozzle && nozzle && Math.abs(f.nozzle - nozzle) > 1e-3)
+          issues[f.index] = { level: "warn", text: tr("Düse passt nicht: Datei {a} mm, Kopf {b} mm", { a: f.nozzle, b: nozzle }) };
         else if (f.type && slot.type && f.type.toUpperCase() !== slot.type.toUpperCase())
           issues[f.index] = { level: "warn", text: tr("Material weicht ab: Datei {a}, Slot {b}", { a: f.type, b: slot.type }) };
       });
@@ -5008,6 +5084,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _directUrl() {
       const mode = this._cfg.camera_direct;
       if (mode === false || mode === "off" || this._preview) return null;
+      if (this._ents && this._ents.camAlt) return null;
       if (Date.now() < (this._directFailUntil || 0)) return null;
       if (this._ents && this._ents.ownCamera) {
         const own = this._st(this._ents.ownCamera);
@@ -5188,6 +5265,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <div style="min-width:0">
             <div class="dlg-title">${esc(head.name)}${slot.official ? ` <span class="rfid">RFID</span>` : ""}</div>
             <div class="t-label">${esc(slot.loaded ? [slot.type, slot.sub_type, slot.vendor].filter(Boolean).join(" · ") || tr("unbekannt") : tr("Leer"))}</div>
+            ${slot.nozzle ? `<div class="t-label">${esc(tr("Düse {d} mm", { d: slot.nozzle.diameter }))}${slot.nozzle.type === "high_flow" ? ` · ${"High Flow"}` : ""}</div>` : ""}
           </div>
           <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
         </header>
@@ -5197,7 +5275,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <button type="button" class="spool-line" data-headspool>
             <ha-icon icon="mdi:database-outline"></ha-icon>
             <span>${spool ? esc(`#${spool.id} ${spool.name}${spool.remaining_weight != null ? ` · ${Math.round(spool.remaining_weight)} g` : ""}`) : tr("Spule wählen")}</span>
-          </button>` : ""}
+          </button>
+          ${spool ? this._weighForm(spool) : ""}
+          ${sm.external_booking ? `<div class="t-label">${tr("Den Verbrauch bucht Moonraker (Spoolman im Drucker aktiv) – die Integration bucht nicht zusätzlich ab.")}</div>` : ""}` : ""}
         ${this._headChangeBlock(idx, locked)}
         <div class="t-label head-sub">${tr("Filament von Hand setzen")}</div>
         ${locked ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${printing ? tr("Während eines Drucks nicht möglich.") : tr("Der Drucker ist ausgeschaltet.")}</div>` : ""}
@@ -5214,6 +5294,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         </form>
       </div>`;
       dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+      this._wireWeigh(dlg, idx);
       const sp = dlg.querySelector("[data-headspool]");
       if (sp) sp.addEventListener("click", () => {
         dlg.close();
@@ -5473,6 +5554,37 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         <div class="t-label">${tr("Während eines Drucks regelt die Firmware die Lüfter je nach Material selbst nach.")}</div>
       </section>`;
     }
+    // ── Chamber heater ───────────────────────────────────────────────────────
+    _chamberPanel() {
+      const c = this._d.chamber;
+      if (!c) return "";
+      const filterOn = c.filter === true;
+      return `
+      <section class="panel">
+        <div class="panel-head">
+          <ha-icon icon="mdi:heat-wave"></ha-icon>
+          <span class="panel-title">${tr("Kammerheizung")}</span>
+          <span class="chip sm" title="${tr("Gerät")}">${esc(c.label || "")}</span>
+          ${this._lockBtn()}
+        </div>
+        <div class="stats">
+          ${this._stat(tr("Kammer"), `<span data-su1="chtemp">${num(c.temperature, 1, "°C")}</span>`)}
+          ${this._stat(tr("Soll"), `<span data-su1="chtarget">${c.target ? num(c.target, 0, "°C") : tr("aus")}</span>`)}
+          ${this._stat(tr("Heizleistung"), `<span data-su1="chpower">${num(c.power, 0, "%")}</span>`)}
+        </div>
+        ${this._ents.chamberTarget ? this._slider({
+        entity: this._ents.chamberTarget,
+        label: tr("Kammer-Solltemperatur"),
+        value: c.target || 0,
+        unit: "°C",
+        presets: [0, 40, 50, 60]
+      }) : ""}
+        ${this._ents.chamberFilter && c.filter !== null && c.filter !== void 0 ? `<div class="switches" data-lockable>
+          <button class="${filterOn ? "on" : "outline"}" data-toggle="${esc(this._ents.chamberFilter)}" data-su1="chfilter">
+            <ha-icon icon="mdi:air-filter"></ha-icon>${tr("Filter")}</button></div>` : ""}
+        <div class="t-label">${tr("Der Slicer setzt die Kammer mit M141/M191. Nie unbeaufsichtigt heizen, Hauptplatine braucht zusätzliche Kühlung (Hinweis von paxx12).")}</div>
+      </section>`;
+    }
     _coverMode(mode) {
       return tr(COVER_MODES[mode] || COVER_MODES.unknown);
     }
@@ -5604,6 +5716,61 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       if (ok) this._toast(action === "park" ? tr("{head} abgelegt", { head: head.name }) : tr("{head} aufgenommen", { head: head.name }));
       return ok;
+    }
+    // ── Weighing a spool (head dialog) ───────────────────────────────────────
+    _weighForm(spool) {
+      const empty = typeof spool.spool_weight === "number" && spool.spool_weight > 0;
+      return `<form class="weigh-form" data-weigh>
+        <label>${tr("Gewogen")}<span class="weigh-row">
+          <input name="weight" type="number" min="0" max="10000" step="1" inputmode="numeric" required
+                 placeholder="${empty ? tr("mit Spule") : tr("nur Filament")}" />
+          <span class="t-label">g</span>
+          <button type="submit" class="tonal"><ha-icon icon="mdi:scale"></ha-icon>${tr("Übernehmen")}</button></span></label>
+        ${empty ? `<label class="check"><input type="checkbox" name="gross" checked />${tr("Mit Leerspule gewogen ({g} g werden abgezogen)", { g: Math.round(spool.spool_weight) })}</label>` : `<div class="t-label">${tr("Leerspulengewicht fehlt in Spoolman – nur das Filament wiegen.")}</div>`}
+        <div class="dlg-error" hidden></div>
+      </form>`;
+    }
+    _wireWeigh(dlg, idx) {
+      const form = dlg.querySelector("[data-weigh]");
+      if (!form) return;
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const f = new FormData(form);
+        const weight = Number(f.get("weight"));
+        const gross = !!f.get("gross");
+        const err = form.querySelector(".dlg-error");
+        try {
+          const res = await this._hass.callService(
+            DOMAIN,
+            "weigh_spool",
+            { slot: idx + 1, weight, gross, ...this._entryData() },
+            void 0,
+            false,
+            true
+          );
+          const r = res && res.response || {};
+          dlg.close();
+          this._toast(tr("Spule #{id}: {g} g Filament", { id: r.spool_id, g: Math.round(r.remaining_weight) }));
+        } catch (ex) {
+          err.hidden = false;
+          err.textContent = ex && ex.message || String(ex);
+        }
+      });
+    }
+    // ── Second camera ────────────────────────────────────────────────────────
+    _hasCamera2() {
+      const id = this._ents && this._ents.camera2;
+      const st = id && this._st(id);
+      return !!(st && !["unavailable", "unknown"].includes(st.state) && !this._cfg.camera && !this._cfg.printer_image);
+    }
+    /** Switch the image between the printer's camera and the second (USB) camera. */
+    _switchCamera() {
+      this._camAlt = !this._camAlt;
+      this._stopStream();
+      this._ents = null;
+      this._resolve();
+      this._renderKey = null;
+      this._render();
     }
   };
 
@@ -5773,10 +5940,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const mine = cams.find((e) => e.entity_id.startsWith(`camera.${prefix}`)) || cams[0];
         camera = mine ? mine.entity_id : `camera.${prefix}_kamera`;
       }
+      const cam2 = ownKey("camera2");
+      const alt = !!(this._camAlt && cam2 && !c.camera);
       this._ents = {
         prefix,
-        camera,
-        ownCamera: camera === ownCam ? ownCam : null,
+        camera: alt ? cam2 : camera,
+        ownCamera: alt ? cam2 : camera === ownCam ? ownCam : null,
+        camera2: cam2,
+        camAlt: alt,
         thumbnail: c.thumbnail || `camera.${prefix}_thumbnail`,
         filaments: c.filaments_sensor || ownKey("filaments"),
         files: c.files_sensor || ownKey("files"),
@@ -5800,7 +5971,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         bedMesh: ownKey("bed_mesh"),
         topCover: ownKey("top_cover"),
         coverExhaust: ownKey("top_cover_exhaust"),
-        coverInner: ownKey("top_cover_inner")
+        coverInner: ownKey("top_cover_inner"),
+        chamber: ownKey("chamber_heater"),
+        chamberTarget: ownKey("chamber_target"),
+        chamberFilter: ownKey("chamber_filter")
       };
     }
     connectedCallback() {
@@ -5924,17 +6098,27 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   };
 
   // frontend/src/index.js
-  if (!customElements.get("snapmaker-u1-card")) {
-    customElements.define("snapmaker-u1-card", SnapmakerU1Card);
-    customElements.define("snapmaker-u1-mini-card", SnapmakerU1MiniCard);
+  var OWN_TYPE = "snapmaker-u1-card-ironoxx";
+  var conflict = false;
+  if (!customElements.get(OWN_TYPE)) {
+    customElements.define(OWN_TYPE, class extends SnapmakerU1Card {
+    });
+    if (!customElements.get("snapmaker-u1-mini-card")) customElements.define("snapmaker-u1-mini-card", SnapmakerU1MiniCard);
+    if (!customElements.get("snapmaker-u1-card")) {
+      customElements.define("snapmaker-u1-card", SnapmakerU1Card);
+    } else {
+      conflict = true;
+      console.warn(`snapmaker-u1-card: another card already uses "custom:snapmaker-u1-card" (e.g. the integration kbaker827/ha-snapmaker-u1). Use "type: custom:${OWN_TYPE}" for this card.`);
+    }
     window.__snapmakerU1CardVersion = CARD_VERSION;
   } else if (window.__snapmakerU1CardVersion !== CARD_VERSION) {
     console.warn(`snapmaker-u1-card: version ${window.__snapmakerU1CardVersion || "?"} is already loaded, ignoring ${CARD_VERSION}. Remove the old resource under Dashboards → Resources and reload.`);
   }
   setLang({ language: document.documentElement.lang });
   window.customCards = window.customCards || [];
-  if (!window.customCards.some((c) => c.type === "snapmaker-u1-card")) window.customCards.push({
-    type: "snapmaker-u1-card",
+  var mainType = conflict ? OWN_TYPE : "snapmaker-u1-card";
+  if (!window.customCards.some((c) => c.type === mainType)) window.customCards.push({
+    type: mainType,
     name: "Snapmaker U1",
     description: tr("Snapmaker U1: Kamera, geladene Filamente, Druckstart mit Filamentzuordnung, Diagnose."),
     preview: false

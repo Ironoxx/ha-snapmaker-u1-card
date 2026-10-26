@@ -100,6 +100,35 @@ export const MachineMixin = (Base) => class extends Base {
       </section>`;
   }
 
+  // ── Chamber heater ───────────────────────────────────────────────────────
+  _chamberPanel() {
+    const c = this._d.chamber;
+    if (!c) return "";
+    const filterOn = c.filter === true;
+    return `
+      <section class="panel">
+        <div class="panel-head">
+          <ha-icon icon="mdi:heat-wave"></ha-icon>
+          <span class="panel-title">${tr("Kammerheizung")}</span>
+          <span class="chip sm" title="${tr("Gerät")}">${esc(c.label || "")}</span>
+          ${this._lockBtn()}
+        </div>
+        <div class="stats">
+          ${this._stat(tr("Kammer"), `<span data-su1="chtemp">${num(c.temperature, 1, "°C")}</span>`)}
+          ${this._stat(tr("Soll"), `<span data-su1="chtarget">${c.target ? num(c.target, 0, "°C") : tr("aus")}</span>`)}
+          ${this._stat(tr("Heizleistung"), `<span data-su1="chpower">${num(c.power, 0, "%")}</span>`)}
+        </div>
+        ${this._ents.chamberTarget ? this._slider({
+          entity: this._ents.chamberTarget, label: tr("Kammer-Solltemperatur"), value: c.target || 0, unit: "°C",
+          presets: [0, 40, 50, 60],
+        }) : ""}
+        ${this._ents.chamberFilter && c.filter !== null && c.filter !== undefined ? `<div class="switches" data-lockable>
+          <button class="${filterOn ? "on" : "outline"}" data-toggle="${esc(this._ents.chamberFilter)}" data-su1="chfilter">
+            <ha-icon icon="mdi:air-filter"></ha-icon>${tr("Filter")}</button></div>` : ""}
+        <div class="t-label">${tr("Der Slicer setzt die Kammer mit M141/M191. Nie unbeaufsichtigt heizen, Hauptplatine braucht zusätzliche Kühlung (Hinweis von paxx12).")}</div>
+      </section>`;
+  }
+
   _coverMode(mode) { return tr(COVER_MODES[mode] || COVER_MODES.unknown); }
 
   // ── G-code console ───────────────────────────────────────────────────────
@@ -221,5 +250,59 @@ export const MachineMixin = (Base) => class extends Base {
     if (btn) { btn.disabled = false; btn.classList.remove("busy"); }
     if (ok) this._toast(action === "park" ? tr("{head} abgelegt", { head: head.name }) : tr("{head} aufgenommen", { head: head.name }));
     return ok;
+  }
+
+  // ── Weighing a spool (head dialog) ───────────────────────────────────────
+  _weighForm(spool) {
+    const empty = typeof spool.spool_weight === "number" && spool.spool_weight > 0;
+    return `<form class="weigh-form" data-weigh>
+        <label>${tr("Gewogen")}<span class="weigh-row">
+          <input name="weight" type="number" min="0" max="10000" step="1" inputmode="numeric" required
+                 placeholder="${empty ? tr("mit Spule") : tr("nur Filament")}" />
+          <span class="t-label">g</span>
+          <button type="submit" class="tonal"><ha-icon icon="mdi:scale"></ha-icon>${tr("Übernehmen")}</button></span></label>
+        ${empty ? `<label class="check"><input type="checkbox" name="gross" checked />${tr("Mit Leerspule gewogen ({g} g werden abgezogen)", { g: Math.round(spool.spool_weight) })}</label>`
+          : `<div class="t-label">${tr("Leerspulengewicht fehlt in Spoolman – nur das Filament wiegen.")}</div>`}
+        <div class="dlg-error" hidden></div>
+      </form>`;
+  }
+
+  _wireWeigh(dlg, idx) {
+    const form = dlg.querySelector("[data-weigh]");
+    if (!form) return;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = new FormData(form);
+      const weight = Number(f.get("weight"));
+      const gross = !!f.get("gross");
+      const err = form.querySelector(".dlg-error");
+      try {
+        const res = await this._hass.callService(DOMAIN, "weigh_spool",
+          { slot: idx + 1, weight, gross, ...this._entryData() }, undefined, false, true);
+        const r = (res && res.response) || {};
+        dlg.close();
+        this._toast(tr("Spule #{id}: {g} g Filament", { id: r.spool_id, g: Math.round(r.remaining_weight) }));
+      } catch (ex) {
+        err.hidden = false;
+        err.textContent = (ex && ex.message) || String(ex);
+      }
+    });
+  }
+
+  // ── Second camera ────────────────────────────────────────────────────────
+  _hasCamera2() {
+    const id = this._ents && this._ents.camera2;
+    const st = id && this._st(id);
+    return !!(st && !["unavailable", "unknown"].includes(st.state) && !this._cfg.camera && !this._cfg.printer_image);
+  }
+
+  /** Switch the image between the printer's camera and the second (USB) camera. */
+  _switchCamera() {
+    this._camAlt = !this._camAlt;
+    this._stopStream();
+    this._ents = null;
+    this._resolve();
+    this._renderKey = null;
+    this._render();
   }
 };

@@ -65,6 +65,14 @@ export const StateMixin = (Base) => class extends Base {
     return { mode: st.state, ...st.attributes };
   }
 
+  /** Chamber heater (Panda Breath / DragonBreath); null without one. */
+  _chamberData() {
+    const st = this._ents && this._ents.chamber && this._st(this._ents.chamber);
+    if (!st || st.state === "unavailable") return null;
+    const temp = parseFloat(st.state);
+    return { ...st.attributes, temperature: Number.isNaN(temp) ? null : temp };
+  }
+
   _collect() {
     if (!this._hass) return;
     const P = (n) => this._p(n);
@@ -155,6 +163,7 @@ export const StateMixin = (Base) => class extends Base {
       flow: this._ents.flow ? this._n(this._ents.flow) : null,
       mesh: this._meshData(),
       cover: this._coverData(),
+      chamber: this._chamberData(),
       headStates: (fst && fst.attributes && Array.isArray(fst.attributes.head_states)) ? fst.attributes.head_states : [],
 
       hot,

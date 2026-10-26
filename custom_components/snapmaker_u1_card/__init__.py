@@ -133,6 +133,14 @@ SET_FILAMENT_SCHEMA = vol.Schema(
         vol.Optional(ATTR_ENTRY): cv.string,
     }
 )
+WEIGH_SPOOL_SCHEMA = vol.All(vol.Schema({
+    vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Optional("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Required("weight"): vol.All(vol.Coerce(float), vol.Range(min=0, max=10000)),
+    # True = weighed with the empty spool (its weight comes from Spoolman)
+    vol.Optional("gross", default=True): cv.boolean,
+    vol.Optional(ATTR_ENTRY): cv.string,
+}), cv.has_at_least_one_key("slot", "spool_id"))
 SEND_GCODE_SCHEMA = vol.Schema({vol.Required("script"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
 TOOL_CHANGE_SCHEMA = vol.Schema({
     vol.Required("head"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
@@ -204,6 +212,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await coordinator.async_set_spool(call.data["slot"] - 1, spool_id, automatic)
 
     hass.services.async_register(DOMAIN, SERVICE_SET_SPOOL, set_spool, schema=SET_SPOOL_SCHEMA)
+
+    async def weigh_spool(call: ServiceCall) -> ServiceResponse:
+        slot = call.data.get("slot")
+        return await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_weigh_spool(
+            slot - 1 if slot else None, call.data.get("spool_id"), call.data["weight"], call.data["gross"])
+
+    hass.services.async_register(DOMAIN, "weigh_spool", weigh_spool, schema=WEIGH_SPOOL_SCHEMA,
+                                 supports_response=SupportsResponse.OPTIONAL)
 
     async def set_preference(call: ServiceCall) -> None:
         coordinator = _coordinator(hass, call.data.get(ATTR_ENTRY))

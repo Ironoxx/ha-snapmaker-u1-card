@@ -37,7 +37,7 @@ from .const import (
 )
 from .coordinator import U1Coordinator
 from .parsing import PRINTER_PREFERENCES
-from .sensor import U1Entity
+from .sensor import U1Entity, add_when
 
 
 async def async_setup_entry(
@@ -50,6 +50,8 @@ async def async_setup_entry(
         entities.append(PowerSwitch(coordinator))
     entities.append(LiveNotifySwitch(coordinator))
     async_add_entities(entities)
+    add_when(entry, lambda d: bool(d.chamber and d.chamber.get("filter") is not None),
+             lambda: async_add_entities([ChamberFilterSwitch(coordinator)]))
 
 
 class PreferenceSwitch(U1Entity, SwitchEntity):
@@ -171,3 +173,29 @@ class PowerSwitch(U1Entity, SwitchEntity):
             "auto_off_delay": opts.get(CONF_AUTO_OFF_DELAY, DEFAULT_AUTO_OFF_DELAY),
             "entry_id": c.config_entry.entry_id,
         }
+
+
+class ChamberFilterSwitch(U1Entity, SwitchEntity):
+    """Filter fan of the DragonBreath chamber heater."""
+
+    _attr_translation_key = "chamber_filter"
+    _attr_icon = "mdi:air-filter"
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "chamber_filter")
+
+    @property
+    def available(self) -> bool:
+        c = self.coordinator.data.chamber if self.coordinator.data else None
+        return super().available and bool(c and c.get("filter") is not None)
+
+    @property
+    def is_on(self) -> bool | None:
+        return (self.coordinator.data.chamber or {}).get("filter")
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_chamber_filter(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        await self.coordinator.async_set_chamber_filter(False)
+

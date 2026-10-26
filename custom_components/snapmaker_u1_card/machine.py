@@ -148,6 +148,64 @@ def purifier_gcode(fan: str, percent: float) -> str:
     return f"SET_PURIFIER FAN={fan} SPEED={value / 100:.2f}"
 
 
+# ── Chamber heater (paxx12: BIQU Panda Breath / DragonBreath firmware) ─────
+# Both are a Klipper ``heater_generic`` (standard status: temperature, target,
+# power); DragonBreath adds ``output_pin dragonbreath_filter``. Limits from
+# paxx12's heater configs (min_temp/max_temp).
+CHAMBER_HEATERS: dict[str, dict[str, Any]] = {
+    "dragonbreath": {"label": "DragonBreath", "min": 0, "max": 75, "filter": "dragonbreath_filter"},
+    "panda_breath": {"label": "Panda Breath", "min": 15, "max": 80, "filter": None},
+}
+
+
+def find_chamber_heater(objects: list[str] | None) -> dict[str, Any] | None:
+    """Chamber heater from Klipper's object list; None without one."""
+    names = set(objects or [])
+    for name, spec in CHAMBER_HEATERS.items():
+        if f"heater_generic {name}" in names:
+            filt = spec["filter"] if spec["filter"] and f"output_pin {spec['filter']}" in names else None
+            return {"name": name, **spec, "filter": filt}
+    return None
+
+
+def parse_chamber(status: dict[str, Any] | None, heater: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Temperature, target, heater power and filter of the chamber heater."""
+    if not heater:
+        return None
+    obj = (status or {}).get(f"heater_generic {heater['name']}")
+    if not isinstance(obj, dict):
+        return None
+    power = _number(obj.get("power"), 3)
+    out: dict[str, Any] = {
+        "name": heater["name"], "label": heater["label"], "min": heater["min"], "max": heater["max"],
+        "temperature": _number(obj.get("temperature")),
+        "target": _number(obj.get("target")),
+        "power": round(power * 100) if power is not None else None,
+        "filter": None,
+    }
+    if heater.get("filter"):
+        value = ((status or {}).get(f"output_pin {heater['filter']}") or {}).get("value")
+        out["filter"] = bool(value) if isinstance(value, (int, float)) else None
+    return out
+
+
+def chamber_gcode(heater: dict[str, Any], target: float) -> str:
+    """SET_HEATER_TEMPERATURE for the chamber; 0 = off, else within the heater's limits."""
+    try:
+        value = float(target)
+    except (TypeError, ValueError) as err:
+        raise ValueError(f"Invalid temperature {target!r}") from err
+    if not math.isfinite(value) or value < 0 or value > heater["max"] or (0 < value < heater["min"]):
+        raise ValueError(f"Chamber target: 0 (off) or {heater['min']}-{heater['max']} °C")
+    return f"SET_HEATER_TEMPERATURE HEATER={heater['name']} TARGET={round(value)}"
+
+
+def chamber_filter_gcode(heater: dict[str, Any], on: bool) -> str:
+    if not heater.get("filter"):
+        raise ValueError("This chamber heater has no filter fan")
+    return f"SET_PIN PIN={heater['filter']} VALUE={1 if on else 0}"
+
+
 # ── Heads ──────────────────────────────────────────────────────────────────
 def parse_head_states(status: dict[str, Any] | None) -> list[str | None]:
     """Per head: "parked" | "active" | "unknown"; None if the firmware does not report it."""
@@ -177,6 +235,47 @@ def park_gcode(head: int) -> str:
     if not isinstance(head, int) or not 0 <= head < len(EXTRUDER_NAMES):
         raise ValueError(f"Invalid head {head!r}")
     return f"PARK_{EXTRUDER_NAMES[head].upper()}"
+
+
+# ── Nozzles ────────────────────────────────────────────────────────────────
+NOZZLE_TYPES = ("standard", "high_flow")
+
+
+def parse_nozzles(status: dict[str, Any] | None) -> list[dict[str, Any] | None]:
+    """Per head: {"diameter": 0.4, "type": "standard" | "high_flow" | ...}; None if not reported.
+
+    The firmware keeps the nozzle per head in its persistent config
+    (``extruder.nozzle_diameter`` / ``nozzle_volume_type``), set on the display
+    when a hotend is changed.
+    """
+    out: list[dict[str, Any] | None] = []
+    for name in EXTRUDER_NAMES:
+        ext = (status or {}).get(name) or {}
+        dia = ext.get("nozzle_diameter")
+        if not isinstance(dia, (int, float)) or isinstance(dia, bool) or dia <= 0:
+            out.append(None)
+            continue
+        vtype = ext.get("nozzle_volume_type")
+        out.append({"diameter": round(float(dia), 2), "type": vtype if isinstance(vtype, str) and vtype else None})
+    return out
+
+
+def nozzle_mismatches(file_nozzles: list[float | None], mapping: dict[int, int],
+                      heads: list[dict[str, Any] | None]) -> list[dict[str, Any]]:
+    """Filaments whose head has another nozzle diameter than the file was sliced for.
+
+    ``file_nozzles[i]`` is the slicer's nozzle for logical filament i,
+    ``mapping`` logical filament -> head, ``heads`` the printer's nozzles.
+    """
+    out: list[dict[str, Any]] = []
+    for fil, head in sorted(mapping.items()):
+        want = file_nozzles[fil] if 0 <= fil < len(file_nozzles) else None
+        have = heads[head] if 0 <= head < len(heads) else None
+        if want is None or not have:
+            continue
+        if abs(float(want) - float(have["diameter"])) > 0.001:
+            out.append({"filament": fil, "head": head, "file": round(float(want), 2), "head_nozzle": have["diameter"]})
+    return out
 
 
 # ── G-code console ─────────────────────────────────────────────────────────

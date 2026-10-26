@@ -1,7 +1,7 @@
 /** Constants shared by the card modules. */
 
 export const DOMAIN = "snapmaker_u1_card";
-export const CARD_VERSION = "1.6.0b3";
+export const CARD_VERSION = "1.6.0b4";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -31,8 +31,10 @@ export const RESULT = {
 
 export const LAYER_PALETTE = ["#e53935", "#1e88e5", "#43a047", "#fdd835", "#8e24aa", "#fb8c00", "#00acc1", "#6d4c41"];
 export const MAINT_LABELS = {
-  plate: "Druckplatte reinigen", nozzle: "Düsen und Abstreifer reinigen", rails: "Linearführungen schmieren",
-  belts: "Riemenspannung prüfen", filter: "Luftfilter wechseln", tool_changer: "Werkzeugwechsler (Firmware)",
+  plate: "Druckplatte reinigen", nozzle: "Düsen und Abstreifer reinigen", rails: "Linearführungen reinigen und schmieren",
+  belts: "Riemen prüfen", filter: "Luftfilter wechseln", tool_changer: "Werkzeugwechsler (Firmware)",
+  carbon_rods: "X-Carbonstangen reinigen", lead_screws: "Z-Spindeln und Muttern schmieren",
+  coupling: "Stahlstifte und Kugeln der Kopfaufnahme", pogo: "Pogo-Kontakte der Köpfe reinigen",
 };
 export const METRICS = [
   ["prints", "Drucke"], ["hours", "Stunden"], ["filament_g", "Filament"], ["cost", "Kosten"],

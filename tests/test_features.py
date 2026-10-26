@@ -168,14 +168,35 @@ def test_maintenance_baseline_and_due() -> None:
     m = Maintenance(None)
     assert m.baseline(100.0, 1.0)
     assert not m.baseline(120.0, 2.0)  # only the first time
-    items = {i["key"]: i for i in m.status(140.0, {"belts": 0})}
-    assert "belts" not in items and "filter" not in items  # 0 = off
+    items = {i["key"]: i for i in m.status(140.0, {"belts": 0}, {"belts": 0})}
+    assert "belts" not in items and "filter" not in items  # 0 = off (hours and months)
     assert items["plate"]["due"] and items["plate"]["used_h"] == 40.0
     assert not items["nozzle"]["due"] and items["nozzle"]["remaining_h"] == 60.0
     m.mark_done("plate", 140.0, 3.0)
     assert not {i["key"]: i for i in m.status(141.0, {})}["plate"]["due"]
     with pytest.raises(KeyError):
         m.mark_done("nope", 1.0, 1.0)
+
+
+def test_maintenance_months() -> None:
+    """Calendar intervals from Snapmaker's U1 guide; hours or months, whichever comes first."""
+    day = 86400.0
+    m = Maintenance(None)
+    m.baseline(100.0, 0.0)
+    items = {i["key"]: i for i in m.status(101.0, {}, None, 20 * day)}
+    # month-only items (default 0 h) are listed with their month interval
+    assert items["lead_screws"]["interval_m"] == 3 and "interval_h" not in items["lead_screws"]
+    assert not items["rails"]["due"] and items["rails"]["remaining_d"] == pytest.approx(10.4, abs=0.1)
+    items = {i["key"]: i for i in m.status(101.0, {}, None, 35 * day)}
+    assert items["rails"]["due"] and items["carbon_rods"]["due"]  # monthly
+    assert not items["lead_screws"]["due"] and not items["pogo"]["due"]
+    assert items["rails"]["progress"] > 100
+    # hours still count: plate (30 h) due by hours, months off for it
+    items = {i["key"]: i for i in m.status(131.0, {}, None, 1 * day)}
+    assert items["plate"]["due"] and "interval_m" not in items["plate"]
+    # own month values from the options
+    items = {i["key"]: i for i in m.status(101.0, {}, {"rails": 2}, 35 * day)}
+    assert not items["rails"]["due"]
 
 
 # ── Upload ─────────────────────────────────────────────────────────────────

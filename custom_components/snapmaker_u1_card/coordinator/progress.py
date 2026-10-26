@@ -34,6 +34,7 @@ from ..const import (
     DEFAULT_LIVE_BUDGET,
     DEFAULT_LIVE_IMAGE,
     DOMAIN,
+    LIVE_IMAGES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +55,23 @@ class ProgressNotifyMixin:
     """Ongoing progress notification with push budget."""
 
     # ── State (persisted: enabled flag and today's count) ───────────────────
+    def _live_image(self) -> str | None:
+        """Image of the progress notification: camera (refreshed every update) or the model preview."""
+        mode = self.options.get(CONF_LIVE_IMAGE, DEFAULT_LIVE_IMAGE)
+        if mode is True:
+            mode = "camera"
+        elif mode is False or mode not in LIVE_IMAGES:
+            mode = "off"
+        if mode == "thumbnail":
+            thumb = (self._print_state.get("active") or {}).get("thumb")
+            if thumb:
+                return str(thumb)  # static path of the integration, loads without login
+            mode = "camera"  # no preview in the file: camera instead
+        if mode == "camera":
+            camera = self.camera_entity()
+            return f"/api/camera_proxy/{camera}?ts={int(time.time())}" if camera else None
+        return None
+
     def _live_init(self, stored: dict[str, Any] | None) -> None:
         saved = (stored or {}).get("live_notify") or {}
         self.live_notify_on = bool(saved.get("enabled"))
@@ -192,9 +210,9 @@ class ProgressNotifyMixin:
         }
         # Larger view: camera image when the notification is expanded (refreshed
         # with every update, no extra push); tap opens the configured dashboard.
-        camera = self.camera_entity() if self.options.get(CONF_LIVE_IMAGE, DEFAULT_LIVE_IMAGE) else None
-        if camera:
-            data["image"] = f"/api/camera_proxy/{camera}?ts={int(time.time())}"
+        image = self._live_image()
+        if image:
+            data["image"] = image
         data.update(self._click_data())
         if eta is not None and not paused:
             data["chronometer"] = True

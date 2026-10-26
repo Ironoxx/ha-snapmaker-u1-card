@@ -11,6 +11,8 @@ from ..api import MoonrakerError
 from ..i18n import tr
 from ..machine import (
     blocked_while_printing,
+    chamber_filter_gcode,
+    chamber_gcode,
     console_lines,
     console_responses,
     flow_gcode,
@@ -45,6 +47,25 @@ class MachineMixin:
                 self.hass, "Keine Top Cover erkannt.", "No top cover detected."))
         try:
             script = purifier_gcode(fan, percent)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await self._run_gcode(script)
+
+    async def async_set_chamber(self, target: float) -> None:
+        """Chamber heater target (0 = off); allowed during a print."""
+        if not self.chamber_heater:
+            raise HomeAssistantError(tr(self.hass, "Keine Kammerheizung gefunden.", "No chamber heater found."))
+        try:
+            script = chamber_gcode(self.chamber_heater, target)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await self._run_gcode(script)
+
+    async def async_set_chamber_filter(self, on: bool) -> None:
+        if not self.chamber_heater:
+            raise HomeAssistantError(tr(self.hass, "Keine Kammerheizung gefunden.", "No chamber heater found."))
+        try:
+            script = chamber_filter_gcode(self.chamber_heater, on)
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
         await self._run_gcode(script)

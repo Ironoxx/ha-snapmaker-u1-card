@@ -52,6 +52,7 @@ export const HeadDialogMixin = (Base) => class extends Base {
           <div style="min-width:0">
             <div class="dlg-title">${esc(head.name)}${slot.official ? ` <span class="rfid">RFID</span>` : ""}</div>
             <div class="t-label">${esc(slot.loaded ? [slot.type, slot.sub_type, slot.vendor].filter(Boolean).join(" · ") || tr("unbekannt") : tr("Leer"))}</div>
+            ${slot.nozzle ? `<div class="t-label">${esc(tr("Düse {d} mm", { d: slot.nozzle.diameter }))}${slot.nozzle.type === "high_flow" ? ` · ${"High Flow"}` : ""}</div>` : ""}
           </div>
           <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
         </header>
@@ -61,7 +62,9 @@ export const HeadDialogMixin = (Base) => class extends Base {
           <button type="button" class="spool-line" data-headspool>
             <ha-icon icon="mdi:database-outline"></ha-icon>
             <span>${spool ? esc(`#${spool.id} ${spool.name}${spool.remaining_weight != null ? ` · ${Math.round(spool.remaining_weight)} g` : ""}`) : tr("Spule wählen")}</span>
-          </button>` : ""}
+          </button>
+          ${spool ? this._weighForm(spool) : ""}
+          ${sm.external_booking ? `<div class="t-label">${tr("Den Verbrauch bucht Moonraker (Spoolman im Drucker aktiv) – die Integration bucht nicht zusätzlich ab.")}</div>` : ""}` : ""}
         ${this._headChangeBlock(idx, locked)}
         <div class="t-label head-sub">${tr("Filament von Hand setzen")}</div>
         ${locked ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${printing ? tr("Während eines Drucks nicht möglich.") : tr("Der Drucker ist ausgeschaltet.")}</div>` : ""}
@@ -78,6 +81,7 @@ export const HeadDialogMixin = (Base) => class extends Base {
         </form>
       </div>`;
     dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+    this._wireWeigh(dlg, idx);
     const sp = dlg.querySelector("[data-headspool]");
     if (sp) sp.addEventListener("click", () => { dlg.close(); this._openSpoolPicker(idx); });
     const hc = dlg.querySelector("[data-headchange]");

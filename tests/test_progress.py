@@ -266,3 +266,18 @@ async def test_progress_notification_without_image(hass: HomeAssistant, mock_cli
     await hass.async_block_till_done()
     d = _live(notifications)[0].data["data"]
     assert "image" not in d and "clickAction" not in d
+
+
+async def test_progress_notification_model_preview(hass: HomeAssistant, mock_client, notifications) -> None:
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], camera="camera.cam",
+                         live_notify_image="thumbnail")
+    coord = entry.runtime_data
+    await coord.async_set_live_notify(True)
+    coord._print_state["active"] = {"file": "a", "started": 1.0, "begin_s": 50, "thumb": "/snapmaker_u1_card/thumbs/E/a.png"}
+    coord._live_tick("printing", coord._print_state["active"], 0.1, 3600, 1, 10)
+    await hass.async_block_till_done()
+    assert _live(notifications)[0].data["data"]["image"] == "/snapmaker_u1_card/thumbs/E/a.png"
+    # Old stored on/off values still work
+    from custom_components.snapmaker_u1_card.config_flow import nest_options
+    assert nest_options({"live_notify_image": True})["notify"]["live_notify_image"] == "camera"
+    assert nest_options({"live_notify_image": False})["notify"]["live_notify_image"] == "off"

@@ -116,6 +116,8 @@ export const CameraMixin = (Base) => class extends Base {
   _directUrl() {
     const mode = this._cfg.camera_direct;
     if (mode === false || mode === "off" || this._preview) return null;
+    // Second camera shown: the configured/known direct URL belongs to the first one
+    if (this._ents && this._ents.camAlt) return null;
     if (Date.now() < (this._directFailUntil || 0)) return null;
     // Own camera entity without a live stream (stock firmware, snapshots only):
     // there is no printer stream to load directly.

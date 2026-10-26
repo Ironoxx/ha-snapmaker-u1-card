@@ -34,6 +34,7 @@ RESULT_TEXT = {
     "spool_runout": "Spule läuft gleich leer",
     "bed_cool": "Teil entnehmbar",
     "cancel_confirm": "Druck abbrechen?",
+    "maintenance": "Wartung fällig",
 }
 RESULT_TEXT_EN = {
     "complete": "Print finished",
@@ -48,6 +49,7 @@ RESULT_TEXT_EN = {
     "spool_runout": "Spool about to run out",
     "bed_cool": "Part ready to remove",
     "cancel_confirm": "Cancel print?",
+    "maintenance": "Maintenance due",
 }
 
 

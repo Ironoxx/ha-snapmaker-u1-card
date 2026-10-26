@@ -226,10 +226,15 @@ export class SnapmakerU1Card extends U1Base {
       camera = mine ? mine.entity_id : `camera.${prefix}_kamera`;
     }
 
+    // Second camera (paxx12 USB): the card can switch to it (camera button on the image)
+    const cam2 = ownKey("camera2");
+    const alt = !!(this._camAlt && cam2 && !c.camera);
     this._ents = {
       prefix,
-      camera,
-      ownCamera: camera === ownCam ? ownCam : null,
+      camera: alt ? cam2 : camera,
+      ownCamera: alt ? cam2 : camera === ownCam ? ownCam : null,
+      camera2: cam2,
+      camAlt: alt,
       thumbnail: c.thumbnail || `camera.${prefix}_thumbnail`,
       filaments: c.filaments_sensor || ownKey("filaments"),
       files: c.files_sensor || ownKey("files"),
@@ -254,6 +259,9 @@ export class SnapmakerU1Card extends U1Base {
       topCover: ownKey("top_cover"),
       coverExhaust: ownKey("top_cover_exhaust"),
       coverInner: ownKey("top_cover_inner"),
+      chamber: ownKey("chamber_heater"),
+      chamberTarget: ownKey("chamber_target"),
+      chamberFilter: ownKey("chamber_filter"),
     };
   }
 

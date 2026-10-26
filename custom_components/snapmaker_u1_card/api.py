@@ -88,6 +88,18 @@ class MoonrakerClient:
         result = await self._get_json("/server/files/roots")
         return [r["name"] for r in result or [] if isinstance(r, dict) and r.get("name")]
 
+    async def object_list(self) -> list[str]:
+        """Klipper's printer objects (to find optional hardware such as a chamber heater)."""
+        result = await self._get_json("/printer/objects/list")
+        objs = result.get("objects") if isinstance(result, dict) else None
+        return [str(o) for o in objs] if isinstance(objs, list) else []
+
+    async def components(self) -> list[str]:
+        """Loaded Moonraker components (``spoolman`` = Moonraker books usage itself)."""
+        result = await self._get_json("/server/info")
+        comps = result.get("components") if isinstance(result, dict) else None
+        return [str(c) for c in comps] if isinstance(comps, list) else []
+
     async def klippy_ready(self) -> bool:
         """Moonraker reachable and Klipper ready."""
         result = await self._get_json("/server/info")
@@ -472,3 +484,7 @@ class SpoolmanClient:
 
     async def use_weight(self, spool_id: int, grams: float) -> dict[str, Any]:
         return await self._request("PUT", f"/spool/{int(spool_id)}/use", json={"use_weight": round(grams, 2)})
+
+    async def set_remaining(self, spool_id: int, grams: float) -> dict[str, Any]:
+        """Set the remaining filament weight of a spool (after weighing it)."""
+        return await self._request("PATCH", f"/spool/{int(spool_id)}", json={"remaining_weight": round(grams, 1)})

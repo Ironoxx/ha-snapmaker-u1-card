@@ -4,6 +4,31 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b4
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b3, b2 and b1 below.
+
+**New**
+- **Spoolman with paxx12 SpoolLink:** detected automatically. Moonraker books the usage then, so the integration no longer books it too (no double booking); the spool per head comes from the printer and choosing a spool in the card sends `SET_SPOOL_ID` to the printer. The self test says who books.
+- **Spoolman:** the history shows the remaining weight per spool before and after the print (`#5 550 g → 460 g`). **Weigh a spool** in the head details (with or without the empty spool, whose weight comes from Spoolman); service `weigh_spool`.
+- **Chamber heater** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): temperature, target, heater power and filter, with a panel in the control tab. Entities only appear when a heater is configured.
+- **Nozzle per head** (diameter, high flow) in the head details; the print dialog warns when the file was sliced for another nozzle.
+- **Maintenance in calendar months** next to print hours, with the intervals from Snapmaker's U1 maintenance guide: linear shafts and belts monthly (new for the existing items), X carbon rods monthly, Z lead screws and the head coupling quarterly, pogo contacts every 6 months. New notification *Maintenance due* (on by default). Month values can be changed in the options.
+- **Camera:** RTSP (paxx12, off by default in `/firmware-config/`) is detected automatically and offered as stream source, so Home Assistant streams H.264 itself. A **second camera** (paxx12 USB camera at `/webcam2/`) gets its own entity and a switch button in the card.
+- **Progress notification:** image can now also be the model preview from the slicer (option *Progress notification: image*: camera, model preview or none).
+- **Card name conflict:** the integration kbaker827/ha-snapmaker-u1 ships a card with the same name `custom:snapmaker-u1-card`. This card is now always available as `custom:snapmaker-u1-card-ironoxx` too, and the self test points out the conflict.
+
+---
+**Deutsch**
+- Neu: **Spoolman mit paxx12 SpoolLink** wird automatisch erkannt. Dann bucht Moonraker ab und die Integration nicht zusätzlich (kein doppeltes Abbuchen); die Spule je Kopf kommt vom Drucker, die Spulenwahl in der Karte geht als `SET_SPOOL_ID` an den Drucker. Der Selbsttest sagt, wer abbucht.
+- Neu: **Spoolman** – die Historie zeigt je Spule das Restgewicht vor und nach dem Druck (`#5 550 g → 460 g`). **Spule wiegen** in den Kopfdetails (mit oder ohne Leerspule, deren Gewicht aus Spoolman kommt); Dienst `weigh_spool`.
+- Neu: **Kammerheizung** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): Temperatur, Soll, Heizleistung und Filter, mit Bereich im Tab Steuerung. Entitäten erscheinen nur, wenn eine Heizung eingerichtet ist.
+- Neu: **Düse je Kopf** (Durchmesser, High Flow) in den Kopfdetails; der Druckdialog warnt, wenn die Datei für eine andere Düse gesliced ist.
+- Neu: **Wartung in Kalendermonaten** neben Druckstunden, mit den Intervallen aus Snapmakers U1-Wartungsanleitung: Linearführungen und Riemen monatlich (neu für die vorhandenen Punkte), X-Carbonstangen monatlich, Z-Spindeln und Kopfaufnahme vierteljährlich, Pogo-Kontakte alle 6 Monate. Neue Benachrichtigung *Wartung fällig* (standardmäßig an). Monatswerte in den Optionen änderbar.
+- Neu: **Kamera** – RTSP (paxx12, in `/firmware-config/` standardmäßig aus) wird automatisch erkannt und als Stream-Quelle angeboten, Home Assistant streamt dann selbst H.264. Eine **zweite Kamera** (paxx12 USB-Kamera unter `/webcam2/`) bekommt eine eigene Entität und einen Umschalter in der Karte.
+- Neu: **Fortschritts-Benachrichtigung** – als Bild jetzt auch das Vorschaubild des Modells (Option *Fortschritts-Benachrichtigung: Bild*: Kamera, Modellvorschau oder keins).
+- Neu: **Kartenname** – die Integration kbaker827/ha-snapmaker-u1 bringt eine Karte mit demselben Namen `custom:snapmaker-u1-card` mit. Diese Karte ist jetzt immer auch als `custom:snapmaker-u1-card-ironoxx` erreichbar, der Selbsttest weist auf den Konflikt hin.
+
 ## 1.6.0b3
 
 **Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b2 and 1.6.0b1 below.

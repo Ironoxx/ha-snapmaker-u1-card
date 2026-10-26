@@ -202,7 +202,7 @@
               "bed_cool_temp": "“Part ready” at",
               "camera_wake": "Keep camera awake",
               "live_notify_budget": "Progress notification: updates per day",
-              "live_notify_image": "Progress notification: camera image",
+              "live_notify_image": "Progress notification: image",
               "notify_click_url": "Open when tapped"
             },
             "data_description": {
@@ -212,7 +212,7 @@
               "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
               "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it.",
               "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here.",
-              "live_notify_image": "Shows the camera image when the progress notification is expanded (updated with every progress update, no extra pushes).",
+              "live_notify_image": "Image when the progress notification is expanded: camera image (refreshed with every update) or the slicer's model preview. No extra pushes.",
               "notify_click_url": "Dashboard path or URL opened when a notification is tapped, e.g. /dashboard-printer/0 or /lovelace/printer. Empty = the app's default."
             }
           },
@@ -270,13 +270,26 @@
           },
           "maintenance": {
             "name": "Maintenance",
-            "description": "Intervals in print hours. 0 = hide item.",
+            "description": "Intervals in print hours (h) and/or months (mo); whichever is reached first makes the item due. Month values follow Snapmaker's U1 maintenance guide. 0 = off, both 0 = hide item.",
             "data": {
-              "maint_plate": "Clean build plate",
-              "maint_nozzle": "Clean nozzles and wiper",
-              "maint_rails": "Lubricate linear rails",
-              "maint_belts": "Check belt tension",
-              "maint_filter": "Replace air filter"
+              "maint_plate": "Clean build plate (print hours)",
+              "maint_m_plate": "Clean build plate (months)",
+              "maint_nozzle": "Clean nozzles and wiper (print hours)",
+              "maint_m_nozzle": "Clean nozzles and wiper (months)",
+              "maint_rails": "Clean and lubricate linear shafts (print hours)",
+              "maint_m_rails": "Clean and lubricate linear shafts (months)",
+              "maint_belts": "Check belts (print hours)",
+              "maint_m_belts": "Check belts (months)",
+              "maint_filter": "Replace air filter (print hours)",
+              "maint_m_filter": "Replace air filter (months)",
+              "maint_carbon_rods": "Clean X carbon rods (print hours)",
+              "maint_m_carbon_rods": "Clean X carbon rods (months)",
+              "maint_lead_screws": "Grease Z lead screws and nuts (print hours)",
+              "maint_m_lead_screws": "Grease Z lead screws and nuts (months)",
+              "maint_coupling": "Steel pins and balls of the head coupling (print hours)",
+              "maint_m_coupling": "Steel pins and balls of the head coupling (months)",
+              "maint_pogo": "Clean pogo contacts of the heads (print hours)",
+              "maint_m_pogo": "Clean pogo contacts of the heads (months)"
             }
           }
         }
@@ -356,6 +369,9 @@
           "hot": "Hot chamber",
           "unknown": "Unknown"
         }
+      },
+      "chamber_heater": {
+        "name": "Chamber heater"
       }
     },
     "switch": {
@@ -376,6 +392,9 @@
       },
       "live_notify": {
         "name": "Progress notification (Android)"
+      },
+      "chamber_filter": {
+        "name": "Chamber heater filter"
       }
     },
     "binary_sensor": {
@@ -412,6 +431,9 @@
             }
           }
         }
+      },
+      "camera2": {
+        "name": "Camera 2"
       }
     },
     "number": {
@@ -423,6 +445,9 @@
       },
       "top_cover_inner": {
         "name": "Top cover circulation fan"
+      },
+      "chamber_target": {
+        "name": "Chamber heater target"
       }
     }
   },
@@ -816,6 +841,32 @@
           "description": "Only needed with several printers."
         }
       }
+    },
+    "weigh_spool": {
+      "name": "Weigh spool",
+      "description": "Sets the remaining filament of a spool in Spoolman from the scale. Weighed with the empty spool (default): its weight comes from Spoolman.",
+      "fields": {
+        "slot": {
+          "name": "Head",
+          "description": "1-4; the spool assigned to this head."
+        },
+        "spool_id": {
+          "name": "Spool ID",
+          "description": "Instead of a head."
+        },
+        "weight": {
+          "name": "Weight",
+          "description": "What the scale shows in g."
+        },
+        "gross": {
+          "name": "With empty spool",
+          "description": "On = weighed with the spool (gross), off = filament only."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {
@@ -830,16 +881,21 @@
         "almost_done": "Almost done",
         "spool_low": "Not enough filament (Spoolman)",
         "spool_runout": "Spool about to run out during print (Spoolman)",
-        "bed_cool": "Part ready to remove (bed cooled)"
+        "bed_cool": "Part ready to remove (bed cooled)",
+        "maintenance": "Maintenance due"
       }
     },
     "maintenance_item": {
       "options": {
         "plate": "Clean build plate",
         "nozzle": "Clean nozzles and wiper",
-        "rails": "Lubricate linear rails",
-        "belts": "Check belt tension",
-        "filter": "Replace air filter"
+        "rails": "Clean and lubricate linear shafts",
+        "belts": "Check belts",
+        "filter": "Replace air filter",
+        "carbon_rods": "Clean X carbon rods",
+        "lead_screws": "Grease Z lead screws and nuts",
+        "coupling": "Steel pins and balls of the head coupling",
+        "pogo": "Clean pogo contacts of the heads"
       }
     },
     "camera_wake": {
@@ -853,6 +909,13 @@
       "options": {
         "pick": "Pick",
         "park": "Park"
+      }
+    },
+    "live_notify_image": {
+      "options": {
+        "camera": "Camera image",
+        "thumbnail": "Model preview",
+        "off": "No image"
       }
     }
   }

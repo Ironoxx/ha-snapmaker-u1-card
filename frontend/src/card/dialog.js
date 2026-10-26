@@ -121,7 +121,11 @@ export const PrintDialogMixin = (Base) => class extends Base {
     g.used.forEach((f) => {
       const slot = slots[g.map[f.index]];
       if (!slot) return;
+      const nozzle = slot.nozzle && slot.nozzle.diameter;
       if (anyLoaded && !slot.loaded) issues[f.index] = { level: "error", text: tr("Slot ist leer") };
+      // Sliced for another nozzle: extrusion widths and flow are wrong for this head
+      else if (f.nozzle && nozzle && Math.abs(f.nozzle - nozzle) > 0.001)
+        issues[f.index] = { level: "warn", text: tr("Düse passt nicht: Datei {a} mm, Kopf {b} mm", { a: f.nozzle, b: nozzle }) };
       else if (f.type && slot.type && f.type.toUpperCase() !== slot.type.toUpperCase())
         issues[f.index] = { level: "warn", text: tr("Material weicht ab: Datei {a}, Slot {b}", { a: f.type, b: slot.type }) };
     });

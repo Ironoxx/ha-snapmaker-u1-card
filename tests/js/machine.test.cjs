@@ -43,7 +43,7 @@ let reply = { response: { script: "M105", ok: true, error: null, responses: ["ok
 const hass = () => ({
   states: JSON.parse(JSON.stringify(states)), entities: { ...reg },
   locale: { language: lang }, language: lang,
-  callService: async (...a) => { calls.push(a); if (a[1] === "send_gcode") { if (reply instanceof Error) throw reply; return reply; } return {}; },
+  callService: async (...a) => { calls.push(a); if (a[1] === "send_gcode" || a[1] === "weigh_spool") { if (reply instanceof Error) throw reply; return reply; } return {}; },
 });
 const card = w.document.createElement("snapmaker-u1-card");
 card.setConfig({ type: "custom:snapmaker-u1-card", controls_lock: "off" });
@@ -143,11 +143,78 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   assert.ok(D().querySelector("[data-headchange]").disabled, "Kopfwechsel im Druck gesperrt");
   states[`sensor.${P}_current_print_state`].state = "standby";
 
+  // 5b. Nozzle per head: shown in the head dialog, mismatch warned in the print dialog
+  const fil = states["sensor.snapmaker_u1_card_filaments"].attributes;
+  fil.slots[0].nozzle = { diameter: 0.4, type: "standard" };
+  fil.slots[1].nozzle = { diameter: 0.6, type: "high_flow" };
+  states["sensor.snapmaker_u1_card_files"].attributes.files = [{ path: "teil.gcode", name: "teil", modified: 1,
+    filaments: [{ index: 0, type: "PLA", color: "#FF0000", used: true, weight: 5, nozzle: 0.4 },
+                { index: 1, type: "PLA", color: "#FF0000", used: true, weight: 5, nozzle: 0.4 }] }];
+  card.hass = hass();
+  card._openHeadInfo(1);
+  assert.ok(D().textContent.includes("Düse 0.6 mm") && D().textContent.includes("High Flow"), "Düse im Kopf-Dialog");
+  D().querySelector("dialog.u1head").removeAttribute("open");
+  card._openPrint("teil.gcode");
+  card._dlg.map = { 0: 0, 1: 1 };
+  card._renderDialog();
+  assert.ok(D().textContent.includes("Düse passt nicht: Datei 0.4 mm, Kopf 0.6 mm"), "Düsenwarnung");
+  card._closeDialog();
+
+  // 5c. Spoolman: weigh form in the head dialog, before -> after in the history
+  fil.spoolman = { online: true, slots: { 0: { id: 5, name: "Black", remaining_weight: 270, spool_weight: 200, manual: true } },
+    spools: [], external_booking: true, books: false, spoollink: true };
+  card.hass = hass();
+  card._openHeadInfo(0);
+  const wf = D().querySelector("[data-weigh]");
+  assert.ok(wf && D().textContent.includes("200 g werden abgezogen"), "Wiegen mit Leerspule");
+  assert.ok(D().textContent.includes("Den Verbrauch bucht Moonraker"), "Hinweis: Moonraker bucht");
+  reply = { response: { spool_id: 5, remaining_weight: 542, before: 270 } };
+  wf.querySelector("[name=weight]").value = "742";
+  wf.dispatchEvent(new w.Event("submit", { cancelable: true }));
+  await flush(); await flush();
+  const wcall = calls.filter((c) => c[1] === "weigh_spool").pop();
+  assert.deepStrictEqual(plain(wcall[2]), { slot: 1, weight: 742, gross: true, config_entry_id: "E1" });
+  // spool picker: no "automatic" with SpoolLink
+  card._openSpoolPicker(0);
+  assert.ok(!D().querySelector('[data-pick="auto"]') && D().textContent.includes("SpoolLink"), "SpoolLink-Auswahl");
+  D().querySelector("dialog.u1spool").removeAttribute("open");
+  own("sensor.snapmaker_u1_card_print_history", "1", { prints: [{ name: "Teil", file: "teil.gcode", ended: "2026-10-26T10:00:00",
+    result: "complete", spools: [{ slot: 0, spool_id: 5, grams: 90, booked: "moonraker", before: 550, after: 460 }] }] }, "history");
+  card.hass = hass();
+  card._selectTab("history");
+  assert.ok(R().textContent.includes("#5 550 g → 460 g"), "vorher/nachher in der Historie");
+  card._selectTab("control");
+
+  // 5d. Second camera: switch button, swaps the camera entity
+  own("camera.snapmaker_u1_card_camera_2", "idle", { entity_picture: "/api/camera_proxy/camera.snapmaker_u1_card_camera_2?token=B",
+    access_token: "B", mode: "live" }, "camera2");
+  card.hass = hass();
+  card._selectTab("overview");
+  const sw = R().querySelector("[data-camswitch]");
+  assert.ok(sw, "Kamera-Umschalter");
+  sw.click();
+  assert.strictEqual(card._ents.camera, "camera.snapmaker_u1_card_camera_2");
+  R().querySelector("[data-camswitch]").click();
+  assert.notStrictEqual(card._ents.camera, "camera.snapmaker_u1_card_camera_2");
+  card._selectTab("control");
+
+  // 5e. Chamber heater panel (DragonBreath), only with the entity
+  assert.ok(!R().textContent.includes("Kammerheizung"), "kein Panel ohne Heizung");
+  own("sensor.snapmaker_u1_card_chamber_heater", "41.3", { target: 50, power: 62, filter: false, label: "DragonBreath", min: 0, max: 75 }, "chamber_heater");
+  own("number.snapmaker_u1_card_chamber_heater_target", "50", { min: 0, max: 75, step: 1 }, "chamber_target");
+  own("switch.snapmaker_u1_card_chamber_heater_filter", "off", {}, "chamber_filter");
+  card.hass = hass();
+  card._selectTab("control");
+  assert.ok(R().textContent.includes("Kammerheizung") && R().textContent.includes("DragonBreath"), "Panel");
+  assert.ok(R().querySelector('input[data-num="number.snapmaker_u1_card_chamber_heater_target"]'), "Regler");
+  R().querySelector('[data-toggle="switch.snapmaker_u1_card_chamber_heater_filter"]').click();
+  assert.deepStrictEqual(plain(calls.pop().slice(0, 3)), ["switch", "toggle", { entity_id: "switch.snapmaker_u1_card_chamber_heater_filter" }]);
+
   // 6. English
   lang = "en";
   card.hass = hass();
   const text = R().textContent;
-  for (const de of ["Flussrate", "Bettnivellierung", "G-Code-Konsole", "Höchster (mm)"]) assert.ok(!text.includes(de), `Deutsch übrig: ${de}`);
+  for (const de of ["Flussrate", "Bettnivellierung", "G-Code-Konsole", "Höchster (mm)", "Kammerheizung", "Heizleistung", "Kamera wechseln"]) assert.ok(!text.includes(de), `Deutsch übrig: ${de}`);
   assert.ok(text.includes("G-code console") && text.includes("Flow"), "Englisch");
 
   console.log("MACHINE OK – flow, bed mesh, top cover, console, head change, English");

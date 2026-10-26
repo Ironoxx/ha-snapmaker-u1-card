@@ -55,6 +55,7 @@ async def async_setup_entry(
         entities.append(PrintCostSensor(coordinator))
     async_add_entities(entities)
     add_when_top_cover(entry, lambda: async_add_entities([TopCoverSensor(coordinator)]))
+    add_when_chamber(entry, lambda: async_add_entities([ChamberSensor(coordinator)]))
 
 
 def add_when_top_cover(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
@@ -63,12 +64,22 @@ def add_when_top_cover(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
     Printers without a cover get no entities that would only ever be unavailable.
     Once added, the entities stay (unavailable while the cover is unplugged).
     """
+    add_when(entry, lambda d: bool(d.purifier and d.purifier.get("present")), add)
+
+
+def add_when_chamber(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
+    """Call ``add`` once a chamber heater (Panda Breath / DragonBreath) shows up."""
+    add_when(entry, lambda d: d.chamber is not None, add)
+
+
+def add_when(entry: U1ConfigEntry, test: Callable[[Any], bool], add: Callable[[], None]) -> None:
+    """Call ``add`` once ``test(data)`` is true, now or on a later update."""
     coordinator = entry.runtime_data
     done = False
 
     def present() -> bool:
         data = coordinator.data
-        return bool(data and data.purifier and data.purifier.get("present"))
+        return bool(data and test(data))
 
     @callback
     def check() -> None:
@@ -613,4 +624,30 @@ class TopCoverSensor(U1Entity, SensorEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         p = self.coordinator.data.purifier or {}
         return {k: p.get(k) for k in ("exhaust", "inner", "inner_rpm", "filter_hours", "desired_temp")}
+
+
+class ChamberSensor(U1Entity, SensorEntity):
+    """Chamber temperature of the chamber heater; target, power and device in the attributes."""
+
+    _attr_translation_key = "chamber_heater"
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = "°C"
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "chamber_heater")
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.data.chamber is not None
+
+    @property
+    def native_value(self) -> float | None:
+        return (self.coordinator.data.chamber or {}).get("temperature")
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        c = self.coordinator.data.chamber or {}
+        return {k: c.get(k) for k in ("target", "power", "filter", "label", "min", "max")}
 

@@ -19,9 +19,15 @@ export const HistoryMixin = (Base) => class extends Base {
         h.switches ? tr("{n} Wechsel", { n: fmtInt(h.switches) }) : null,
         Array.isArray(h.pause_layers) && h.pause_layers.length ? tr("Pause vor {l}", { l: h.pause_layers.join(", ") }) : null,
         h.error || null,
-        // Spoolman: booked amounts per spool (⏳ = not booked yet)
+        // Spoolman per spool: remaining before -> after, else the booked amount (⏳ = not booked yet)
         Array.isArray(h.spools) && h.spools.length
-          ? h.spools.map((sp) => `#${sp.spool_id} −${String(sp.grams).replace(".", ",")} g${sp.booked === false ? " ⏳" : ""}`).join(", ")
+          ? h.spools.map((sp) => {
+            const g = (v) => `${Math.round(v)} g`;
+            const pending = sp.booked === false ? " ⏳" : "";
+            if (typeof sp.before === "number" && typeof sp.after === "number")
+              return `#${sp.spool_id} ${g(sp.before)} → ${g(sp.after)}${pending}`;
+            return `#${sp.spool_id} −${String(sp.grams).replace(".", ",")} g${pending}`;
+          }).join(", ")
           : null,
       ].filter(Boolean);
       const thumb = h.thumb ? `<img src="${esc(h.thumb)}" alt="" loading="lazy" />`

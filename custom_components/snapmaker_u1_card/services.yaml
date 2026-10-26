@@ -169,6 +169,10 @@ maintenance_done:
             - rails
             - belts
             - filter
+            - carbon_rods
+            - lead_screws
+            - coupling
+            - pogo
     config_entry_id:
       selector:
         config_entry:
@@ -331,6 +335,40 @@ tool_change:
           options:
             - pick
             - park
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+weigh_spool:
+  fields:
+    slot:
+      example: 2
+      selector:
+        number:
+          min: 1
+          max: 4
+          mode: box
+    spool_id:
+      example: 12
+      selector:
+        number:
+          min: 1
+          max: 100000
+          mode: box
+    weight:
+      required: true
+      example: 742
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 1
+          unit_of_measurement: g
+          mode: box
+    gross:
+      default: true
+      selector:
+        boolean:
     config_entry_id:
       selector:
         config_entry:

@@ -37,7 +37,7 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **Pause at layer** (e.g. for magnets or nuts) and **reprint from the history** with the original mapping.
 - **Printer messages in plain language** instead of firmware codes, with a hint on what to do.
 - **Charts** of the last 12 months (prints, hours, filament, cost) from Moonraker's print history, so retroactive too.
-- **Maintenance planner** in print hours (build plate, nozzles, rails, belts, filter) plus the firmware's tool changer counter.
+- **Maintenance planner** in print hours and calendar months (build plate, nozzles, linear shafts, belts, carbon rods, Z lead screws, head coupling, pogo contacts, filter; month values from Snapmaker's U1 maintenance guide) plus the firmware's tool changer counter, with a push when something is due.
 - **Spool management with [Spoolman](https://github.com/Donkie/Spoolman)** (optional): spool per head with remaining weight, automatic assignment, a warning when a spool is not enough for the print, and usage booked per head after the print.
 - **Printer settings** as switches and in the card: auto-replenish filament, replenish ignoring colour, filament entangle detection (with sensitivity), light off after print. Stored on the printer, changeable during a print.
 - **Keep the camera awake** (optional): for stock firmware whose camera image stops after a while.
@@ -47,6 +47,9 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **G-code console** in the control tab with the printer's answers; during a print only tuning commands.
 - **Pick and park heads** from the head details (not during a print).
 - **Top cover** (optional accessory): chamber mode, exhaust and circulation fan, filter runtime – only shown when a cover is plugged in.
+- **Chamber heater** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): chamber temperature, target, heater power, filter – only shown when one is configured.
+- **Nozzle per head** (diameter, high flow) and a warning in the print dialog when the file was sliced for another nozzle.
+- **Second camera** (paxx12: USB camera) switchable in the card, **RTSP** detected automatically for Home Assistant's own H.264 stream.
 - Temperatures, targets, fans, light, axes, diagnostics and statistics.
 
 Everything runs through the Home Assistant connection. It works the same locally, over VPN and through Nabu Casa, without CORS or mixed-content problems.
@@ -186,6 +189,8 @@ All options are optional; except head names and presets they can also be set in 
 | `network_tracker` | – | `device_tracker` for a WiFi chip in the header |
 | `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatic | only needed with several printers |
 
+> **Another U1 card installed?** The integration [kbaker827/ha-snapmaker-u1](https://github.com/kbaker827/ha-snapmaker-u1) also ships a card called `custom:snapmaker-u1-card`; whichever loads first gets that name. This card is always available as `type: custom:snapmaker-u1-card-ironoxx` too, and the self test points it out.
+
 ### Mini card
 
 ```yaml
@@ -266,7 +271,7 @@ Moonraker's own queue (`[job_queue]`) is not loaded on the U1 and knows nothing 
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 
-`item: plate | nozzle | rails | belts | filter` resets the maintenance counter. `backup_timelapses` backs up right away and then cleans up the printer. `backup_config` backs up the printer configuration right away and responds with `status` (`saved`, `unchanged`, `empty`), the number of files, skipped files and the existing snapshots.
+`item: plate | nozzle | rails | belts | filter | carbon_rods | lead_screws | coupling | pogo` resets the maintenance counter. `backup_timelapses` backs up right away and then cleans up the printer. `backup_config` backs up the printer configuration right away and responds with `status` (`saved`, `unchanged`, `empty`), the number of files, skipped files and the existing snapshots.
 
 ### `snapmaker_u1_card.set_filament` / `set_preference`
 
@@ -378,13 +383,17 @@ The integration subscribes to `print_stats`, `toolhead.extruder`, `virtual_sdcar
 
 **Result photo.** With a camera configured, the integration takes the image at the end of the print once the head has left the part: after the last extrusion it reads the head position (`motion_report`) for up to 15 s and shoots as soon as the head is 25 mm outside the parts' outline (`EXCLUDE_OBJECT_DEFINE`) or the bed has already dropped by 15 mm. The chamber light is switched on for the photo and back off afterwards if it was off. Without position or outline: 2 s after the last extrusion; without a time profile: in the last layer from 99.5 %. On cancel or error the image is taken at that moment. It is stored under `.storage/snapmaker_u1_card/thumbs/<entry>/results/` and appears in the history next to the thumbnail; tapping enlarges it in the card (tap or Esc closes). Photos are kept for the prints in the history.
 
-## Bed mesh, flow and top cover
+## Bed mesh, flow, top cover and chamber heater
 
 **Bed mesh.** The card shows the probed points of the mesh Klipper has loaded (`bed_mesh.probed_matrix`) as a heatmap: red above, blue below zero, the front of the printer at the bottom. The mesh is created when a print starts with bed leveling; without one the card says so.
 
 **Flow** is Klipper's extrusion factor (`M221`), 100 % = as sliced. Klipper keeps the value until it is changed or Klipper restarts, so set it back to 100 % after a test.
 
 **Top cover.** The optional cover is the firmware's `purifier`. Whether one is plugged in is reported by the printer (`power_detected`); only then do the entities and the panel appear. The firmware sets the chamber mode from the material at print start and keeps adjusting the fans during the print; the sliders set exhaust and circulation fan by hand (`SET_PURIFIER`). Filter runtime counts the hours of the circulation fan. *Not yet tested on a printer with a cover – feedback welcome (diagnostics file).*
+
+**Chamber heater.** With the paxx12 Extended Firmware a BIQU Panda Breath (stock firmware) or a Panda Breath with DragonBreath firmware is a Klipper `heater_generic` (`panda_breath` / `dragonbreath`). The integration finds it in Klipper's object list; only then do the entities (*Chamber heater* temperature, *Chamber heater target*, for DragonBreath *Chamber heater filter*) and the panel in the control tab appear. The target goes to Klipper as `SET_HEATER_TEMPERATURE` (0 = off; Panda Breath 15–80 °C, DragonBreath up to 75 °C), the slicer sets it with `M141`/`M191` anyway. paxx12 warns: never heat unattended, the mainboard needs extra cooling.
+
+**Nozzle per head.** The firmware keeps diameter and type (standard / high flow) per head (set on the display when a hotend is changed). The head details show them; the print dialog warns when a filament goes to a head whose nozzle differs from the one the file was sliced for (`nozzle_diameter_list` of Snapmaker's Moonraker).
 
 ## Camera
 
@@ -396,6 +405,10 @@ From 1.5 the integration has its own camera entity (*Camera*) and finds out by i
 | `still` | only a snapshot URL works | still image every second |
 | `wake` | stock firmware: no stream, only `camera/monitor.jpg`, which only changes after `camera.start_monitor`. The image is fetched twice around a wake call and must change | still image every 1–2 s; the camera is woken as needed (at most every 10 s) while someone watches |
 | `none` | nothing found | entity unavailable; the card shows a hint instead of a black area |
+
+**RTSP.** If the printer answers on `rtsp://<printer>:8554/stream` (paxx12: *RTSP* in `/firmware-config/`, off by default), the camera entity also offers it as stream source (attribute `rtsp_url`, `supported_features` stream): Home Assistant then streams H.264 itself (more-info dialog, picture cards, go2rtc/WebRTC). The card keeps using MJPEG.
+
+**Second camera.** A second webcam (paxx12: USB camera at `/webcam2/`, RTSP port 8555) gets its own entity *Camera 2* once it is found; the card shows a switch button on the image.
 
 Detection runs when the printer comes online, when images keep failing and every 5 minutes while nothing (or only the stock camera) was found. If the live stream fails, the camera switches to still images and tries the stream again after 5 minutes, so a firmware change needs no setting. The card uses this entity unless `camera` is set; notification images and the result photo use it unless a camera is set in the integration options.
 
@@ -447,9 +460,17 @@ Optional. Without a Spoolman address none of this appears in the card or the int
 
 Each spool is assigned to at most one head. In the card, tap the spool row of a head and choose "Automatic", "No spool" or a specific spool. Choosing a specific spool also loads its filament into the printer: material (sub type such as Matte or Silk from the material or the spool name), vendor and colour are written to the head's slot (`SET_PRINT_FILAMENT_CONFIG`), so the display, the card and the filament mapping show the right filament. Not for official spools with RFID tag (the tag wins) and not during a print. A manual choice stays until a different filament is detected in that head (material, colour or vendor change) or the spool is archived in Spoolman.
 
-**Booking usage.** After every print the integration books usage per head: weight per filament from the slicer, distributed to the heads via the print's map table (`print_task_config.extruder_map_table`); for cancelled prints pro rata by the actually extruded length. If Spoolman is unreachable, the booking is stored and retried later, even across Home Assistant restarts. The history shows `#spool −g` per print (⏳ = not booked yet).
+**Booking usage.** After every print the integration books usage per head: weight per filament from the slicer, distributed to the heads via the print's map table (`print_task_config.extruder_map_table`); for cancelled prints pro rata by the actually extruded length. If Spoolman is unreachable, the booking is stored and retried later, even across Home Assistant restarts. The history shows the remaining weight per spool before and after the print (`#5 550 g → 460 g`; ⏳ = not booked yet).
 
-> **Do not book twice:** if something else already books usage (e.g. a `[spoolman]` section in Moonraker's config or paxx12 SpoolLink), turn off *Book usage* in the integration.
+**paxx12 Extended Firmware with Spoolman (SpoolLink).** If Spoolman is enabled in `/firmware-config/`, Moonraker books the usage itself while printing and the printer keeps the spool per head (`print_task_config.filament_spool_id`). The integration detects both automatically:
+
+- It **does not book** usage then (no double booking, whatever *Book usage* is set to). The self test says who books.
+- The spool per head comes from the printer; choosing a spool in the card sends `SET_SPOOL_ID CHANNEL=<head> SPOOL_ID=<id>` to the printer, which loads the spool's filament itself. "Automatic" is not offered.
+- The history still shows before → after, read back from Spoolman after the print.
+
+The same applies to any other `[spoolman]` section in Moonraker's configuration.
+
+**Weighing a spool.** In the head details (with a spool assigned) enter what the scale shows: with the empty spool (its weight comes from Spoolman: spool, filament or vendor *empty spool weight*) or the filament only. The integration sets the remaining weight in Spoolman. Service `weigh_spool` (`slot` or `spool_id`, `weight`, `gross`). So only new spools still need Spoolman itself.
 
 Limitation: if the firmware switches to another head automatically during a print (auto-replenish on an empty spool), the whole usage is attributed to the last reported head.
 

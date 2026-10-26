@@ -71,6 +71,7 @@ export const OverviewMixin = (Base) => class extends Base {
             <button type="button" class="zoom-btn" data-zoom="in" title="${tr("Vergrößern")}" aria-label="${tr("Vergrößern")}"><ha-icon icon="mdi:magnify-plus-outline"></ha-icon></button>
             <button type="button" class="zoom-btn" data-zoom="out" title="${tr("Verkleinern")}" aria-label="${tr("Verkleinern")}" hidden><ha-icon icon="mdi:magnify-minus-outline"></ha-icon></button>
             ${document.fullscreenEnabled || document.webkitFullscreenEnabled ? `<button type="button" class="zoom-btn" data-zoom="full" title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
+            ${this._hasCamera2() ? `<button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="${!!this._ents.camAlt}"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>` : ""}
           </div>
           <span class="zoom-badge" hidden></span>
           ${pill}
@@ -323,12 +324,13 @@ export const OverviewMixin = (Base) => class extends Base {
           <div class="t-label">${esc([slot.type, slot.sub_type, slot.vendor].filter(Boolean).join(" ") || tr("kein Filament erkannt"))}</div></div>
           <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
         </header>
-        ${slot.official ? "" : `<div class="t-label">${tr("Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.")}</div>`}
+        ${sm.spoollink ? `<div class="t-label">${tr("SpoolLink im Drucker: die Wahl geht an den Drucker (SET_SPOOL_ID), er übernimmt das Filament der Spule.")}</div>`
+          : slot.official ? "" : `<div class="t-label">${tr("Material, Hersteller und Farbe der gewählten Spule werden in den Kopf übernommen.")}</div>`}
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
         <div class="spool-list">
-          <button type="button" class="spool-opt" data-pick="auto" aria-pressed="${!!(cur && !cur.manual)}">
+          ${sm.spoollink ? "" : `<button type="button" class="spool-opt" data-pick="auto" aria-pressed="${!!(cur && !cur.manual)}">
             <ha-icon icon="mdi:auto-fix"></ha-icon><span class="spool-opt-text"><span>${tr("Automatisch")}</span>
-            <span class="t-label">${tr("nach Material, Farbe und Hersteller")}</span></span></button>
+            <span class="t-label">${tr("nach Material, Farbe und Hersteller")}</span></span></button>`}
           <button type="button" class="spool-opt" data-pick="0" aria-pressed="${!cur}">
             <ha-icon icon="mdi:close-circle-outline"></ha-icon><span class="spool-opt-text"><span>${tr("Keine Spule")}</span>
             <span class="t-label">${tr("nichts abbuchen")}</span></span></button>

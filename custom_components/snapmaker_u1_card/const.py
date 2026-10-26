@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "1.6.0b3"
+VERSION = "1.6.0b4"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -32,6 +32,7 @@ CONF_ARCHIVE_KEEP = "timelapse_keep"    # keep this many newest on the printer (
 CONF_ARCHIVE_MAX = "timelapse_archive_max"    # newest videos kept
 CONF_ARCHIVE_DAYS = "timelapse_archive_days"  # delete backups older than this
 CONF_MAINTENANCE = "maintenance"        # {"plate": 30, ...} intervals in print hours
+CONF_MAINTENANCE_MONTHS = "maintenance_months"  # {"rails": 1, ...} intervals in calendar months
 
 DEFAULT_PORT = 80
 DEFAULT_FILES_LIMIT = 24
@@ -41,8 +42,8 @@ DEFAULT_AUTO_OFF_TEMP = 50
 DEFAULT_AUTO_OFF_DELAY = 5  # minutes
 DEFAULT_AUTO_ON = False
 NOTIFY_EVENTS = ("complete", "cancelled", "error", "paused", "alert", "first_layer", "almost_done",
-                 "spool_low", "spool_runout", "bed_cool")
-DEFAULT_NOTIFY_EVENTS = ["complete", "error", "paused", "alert", "spool_low", "spool_runout"]
+                 "spool_low", "spool_runout", "bed_cool", "maintenance")
+DEFAULT_NOTIFY_EVENTS = ["complete", "error", "paused", "alert", "spool_low", "spool_runout", "maintenance"]
 CONF_BED_COOL = "bed_cool_temp"
 DEFAULT_BED_COOL = 35  # °C: the PEI plate releases the part
 CONF_IDLE_OFF = "idle_off_hours"
@@ -119,7 +120,9 @@ UPLOAD_URL = f"/api/{DOMAIN}/upload"
 # Stock firmware stops the camera after a while; modified firmware usually does not need it.
 CONF_LIVE_BUDGET = "live_notify_budget"
 CONF_LIVE_IMAGE = "live_notify_image"
-DEFAULT_LIVE_IMAGE = True
+# camera | thumbnail (slicer preview of the model) | off; older versions stored True/False
+DEFAULT_LIVE_IMAGE = "camera"
+LIVE_IMAGES = ("camera", "thumbnail", "off")
 # Tapping a notification opens this path/URL (e.g. /dashboard-drucker/0)
 CONF_NOTIFY_URL = "notify_click_url"
 DEFAULT_LIVE_BUDGET = 150  # progress updates per day and device
