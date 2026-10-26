@@ -281,3 +281,32 @@ async def test_progress_notification_model_preview(hass: HomeAssistant, mock_cli
     from custom_components.snapmaker_u1_card.config_flow import nest_options
     assert nest_options({"live_notify_image": True})["notify"]["live_notify_image"] == "camera"
     assert nest_options({"live_notify_image": False})["notify"]["live_notify_image"] == "off"
+
+
+async def test_progress_notification_removed_at_print_end_after_restart(hass: HomeAssistant, mock_client,
+                                                                        notifications) -> None:
+    """Restart during a print (e.g. an update): the ongoing notification must still go away at the end."""
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["complete"])
+    coord = entry.runtime_data
+    await coord.async_set_live_notify(True)
+    _status(mock_client, "printing", "a.gcode", print_duration=100)
+    await _refresh(hass, entry)
+    active = coord._print_state["active"]
+    active["begin_s"] = 100
+    coord._live_tick("printing", active, 0.4, 1800, 40, 100)
+    await hass.async_block_till_done()
+    assert len(_live(notifications)) == 1
+    # state survives the store round trip
+    stored = coord._live_stored()
+    assert stored["current"]["sent"] == 1
+    coord._live_init({"live_notify": stored})
+    assert coord._ln.get("sent") == 1
+    # simulate a restart with an older version: nothing known about the notification
+    coord._ln = {}
+    _status(mock_client, "complete", "a.gcode", print_duration=3000)
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    msgs = [c.data["message"] for c in notifications]
+    clear = msgs.index("clear_notification")
+    done = next(i for i, c in enumerate(notifications) if "fertig" in c.data.get("title", "") or "finished" in c.data.get("title", ""))
+    assert clear < done, "removed before the result push"

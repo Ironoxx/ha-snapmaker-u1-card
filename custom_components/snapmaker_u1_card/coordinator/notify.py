@@ -61,6 +61,7 @@ class NotifyMixin:
     # ── Print end and notification ──────────────────────────────────────────
     def _finished(self, record: dict[str, Any]) -> None:
         """A print ended: book it, notify, deduct spools and arm auto-off."""
+        self._live_end()
         if is_pause_copy(record.get("file")):
             copy = record["file"]
             record = {**record, "file": record.get("source") or original_file(copy)}

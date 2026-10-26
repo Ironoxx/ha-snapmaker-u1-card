@@ -4,6 +4,17 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.0b6
+
+**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b5 … b1 below.
+
+**Fixed**
+- The ongoing progress notification (Android) stayed after the print had finished. It is now removed at the print end, before the "print finished" push, also when Home Assistant was restarted during the print (e.g. for an update); its state is now kept across restarts.
+
+---
+**Deutsch**
+- Behoben: Die laufende Fortschritts-Benachrichtigung (Android) blieb nach Druckende stehen. Sie wird jetzt am Druckende entfernt, vor der „Druck fertig“-Meldung, auch wenn Home Assistant während des Drucks neu gestartet wurde (z. B. für ein Update); ihr Zustand übersteht jetzt einen Neustart.
+
 ## 1.6.0b5
 
 **Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b4 … b1 below.

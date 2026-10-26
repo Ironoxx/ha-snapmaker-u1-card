@@ -77,10 +77,15 @@ class ProgressNotifyMixin:
         self.live_notify_on = bool(saved.get("enabled"))
         self._ln_day = saved.get("day") or utc_day()
         self._ln_count = int(saved.get("count") or 0)
-        self._ln: dict[str, Any] = {}
+        # The running print's notification survives a restart of Home Assistant
+        # (e.g. an update during a print), otherwise it would never be removed.
+        current = saved.get("current")
+        self._ln: dict[str, Any] = dict(current) if isinstance(current, dict) and current.get("key") else {}
 
     def _live_stored(self) -> dict[str, Any]:
-        return {"enabled": self.live_notify_on, "day": self._ln_day, "count": self._ln_count}
+        current = {k: self._ln[k] for k in ("key", "sent", "step", "eta", "state") if k in self._ln} \
+            if self._ln.get("sent") else None
+        return {"enabled": self.live_notify_on, "day": self._ln_day, "count": self._ln_count, "current": current}
 
     @property
     def live_budget(self) -> int:
@@ -147,6 +152,7 @@ class ProgressNotifyMixin:
         ln = self._ln
         if not ln:
             ln.update(key=key, sent=0, step=-1, eta=None, state=None, at=0.0)
+        ln.setdefault("at", 0.0)
         # Wait for the start sequence to finish: before that the end time is vague
         if print_state == "printing" and ln["sent"] == 0 and remaining is None:
             return
@@ -226,6 +232,15 @@ class ProgressNotifyMixin:
                 ),
                 f"{DOMAIN} progress {service}",
             )
+
+    def _live_end(self) -> None:
+        """Print over: remove the ongoing notification right away (before the result push)."""
+        # Also when nothing is known about it (e.g. after a restart with an older version):
+        # clearing a notification that does not exist is harmless.
+        if self._ln.get("sent") or self.live_notify_on:
+            self._live_clear()
+        self._ln = {}
+        self._save(5)
 
     def _live_clear(self) -> None:
         for service in self._live_targets():
