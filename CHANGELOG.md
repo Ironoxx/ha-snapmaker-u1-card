@@ -4,149 +4,98 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
-## 1.6.0b8
+## 1.6.0
 
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b7 … b1 below.
+**The big one.** 1.6.0 is the largest update so far: machine control, a much smarter Spoolman, WebRTC camera, slicer settings before printing, a status-light blueprint and lots of small things that make the card feel faster. Everything below is new since 1.5.2. Thanks to everyone who tested the betas!
 
-**New**
-- **Camera over WebRTC in the card** (paxx12 Extended Firmware): less delay and far less data than MJPEG. Signalling goes through Home Assistant (the printer sends no CORS headers), the video directly between browser and printer – at home and over VPN. MJPEG stays as fallback. Card option `camera_webrtc` (`auto`/`off`).
-- **Slicer settings in the print dialog:** profile, layer height, walls, infill and pattern, supports, brim, prime tower, seam, plate type, speeds, nozzle and bed temperature per filament – read once per file from the settings block at the end of the G-code. Service `file_settings`.
-- **Status light blueprint:** installed with the integration; colours WLED or any colour light by the print state (printing with optional effect, paused, error, finished for a set time, idle).
-- **Accent colour** for the card and the mini card (`accent_color`, colour picker in the editor).
-- **Multi-colour spools:** a Spoolman spool with several colours (silk dual/tri, rainbow) is written to the printer with all colours (`COLOR_NUMS`/`COLORS`); `set_filament` takes `colors`. With SpoolLink the printer already does this itself.
-- The direct MJPEG stream uses the detected stream address (paxx12 2.x: `/webcam/stream.mjpg`).
-- The "use the last spool again" hint is laid out for narrow head columns.
+**Control the machine**
+- **Flow** (M221) slider next to the speed, also during a print.
+- **Bed mesh heatmap** of the probed points with spread, lowest and highest point.
+- **G-code console** with the printer's answers; during a print only safe tuning commands are accepted.
+- **Pick and park heads** from the head details (service `tool_change`), locked during a print.
+- **Top cover** support (chamber mode, exhaust/circulation fan, filter runtime) and **chamber heaters** BIQU Panda Breath / DragonBreath (paxx12 firmware) – their entities only appear when the hardware is there.
+- **Nozzle per head**: diameter and high flow in the head details; the print dialog warns when a file was sliced for another nozzle.
 
----
-**Deutsch**
-- Neu: **Kamera per WebRTC in der Karte** (paxx12 Extended Firmware) – weniger Verzögerung, viel weniger Daten als MJPEG. Die Signalisierung läuft über Home Assistant (der Drucker sendet keine CORS-Header), das Video direkt zwischen Browser und Drucker – zu Hause und per VPN. MJPEG bleibt als Rückfall. Kartenoption `camera_webrtc` (`auto`/`off`).
-- Neu: **Slicer-Einstellungen im Druckdialog** – Profil, Schichthöhe, Wände, Infill und Muster, Stützen, Brim, Reinigungsturm, Naht, Plattentyp, Geschwindigkeiten, Düsen- und Betttemperatur je Filament; einmal je Datei aus dem Einstellungsblock am Ende des G-Codes gelesen. Dienst `file_settings`.
-- Neu: **Blueprint Status-Licht** – wird mit der Integration installiert; färbt WLED oder jede Farblampe nach dem Druckzustand (druckt mit optionalem Effekt, Pause, Fehler, fertig für eine einstellbare Zeit, bereit).
-- Neu: **Akzentfarbe** für Karte und Mini-Karte (`accent_color`, Farbwähler im Editor).
-- Neu: **Mehrfarbige Spulen** – eine Spoolman-Spule mit mehreren Farben (Silk Dual/Tri, Regenbogen) wird mit allen Farben an den Drucker geschrieben (`COLOR_NUMS`/`COLORS`); `set_filament` nimmt `colors`. Mit SpoolLink macht das der Drucker schon selbst.
-- Der direkte MJPEG-Stream nutzt die erkannte Stream-Adresse (paxx12 2.x: `/webcam/stream.mjpg`).
-- Der Hinweis „Wieder Spule …?“ passt jetzt auch in schmale Kopf-Spalten.
+**Instant feedback**
+- Pause, resume and cancel show "Pausing …" / "Resuming …" / "Cancelling …" right after the tap, the light toggles immediately, switches pulse until confirmed.
+- The print state comes from the integration's live connection – a pause shows up seconds earlier.
 
-## 1.6.0b7
+**Camera**
+- **WebRTC in the card** (paxx12 Extended Firmware): less delay and far less data than MJPEG, MJPEG stays as fallback (option `camera_webrtc`).
+- paxx12 2.x stream detected correctly, **RTSP** offered to Home Assistant automatically, **second camera** (USB) with a switch button.
 
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b6 … b1 below.
+**Spoolman**
+- **paxx12 SpoolLink** detected automatically: no double booking, spool per head comes from the printer, choosing a spool sends `SET_SPOOL_ID`.
+- Choosing a spool **loads its filament** into the head (material, sub type, vendor, colour) – **multi-colour spools** with all their colours.
+- **Before → after per print** in the history (`#5 550 g → 460 g`).
+- **Weigh a spool** in the head details – Spoolman is only needed to add new spools.
+- **Unload and reload a head:** it offers its previous spool ("Use #5 … again?"), one tap restores it. Option: offer, set automatically or off.
 
-**New**
-- **Feedback for commands:** pause, resume and cancel show "Pausing …" / "Resuming …" / "Cancelling …" right after the tap (button and status) until the printer confirms; a hint appears if it does not. The light toggles in the card at once, switches pulse until Home Assistant reports the new state.
-- The card takes the print state from the integration's live connection: a pause or resume shows up seconds earlier than via the Moonraker integration's poll.
-- **Last spool after reloading a head:** without an RFID tag the printer forgets the spool when the filament is unloaded (SpoolLink too). The head now offers its previous spool ("Use #5 … again?"), one tap restores it (with SpoolLink via `SET_SPOOL_ID`). Nothing is booked without the tap. New option under Spoolman: offer (default), set automatically (not during a print), or off. A head waiting for its spool gets no other spool guessed.
+**Files and printing**
+- **Slicer settings in the print dialog:** layer height, walls, infill, supports, brim, plate, speeds and temperatures per filament (service `file_settings`).
 
-**Fixed**
-- Layer view: no error when the print ended while a layer was loading.
+**Notifications and maintenance**
+- **Maintenance in calendar months** (Snapmaker's U1 maintenance guide) next to print hours, with a *Maintenance due* push.
+- Progress notification: camera image or model preview; it now disappears reliably when the print is finished, also after a restart during the print.
 
----
-**Deutsch**
-- Neu: **Rückmeldung bei Befehlen** – Pause, Fortsetzen und Abbrechen zeigen direkt nach dem Tippen „Pausiere …“ / „Setze fort …“ / „Breche ab …“ (Knopf und Status), bis der Drucker es bestätigt; sonst erscheint ein Hinweis. Das Licht schaltet in der Karte sofort um, Schalter pulsieren, bis Home Assistant den neuen Zustand meldet.
-- Neu: Die Karte nimmt den Druckzustand aus der Live-Verbindung der Integration – Pause/Fortsetzen erscheinen Sekunden früher als über die Abfrage der Moonraker-Integration.
-- Neu: **Letzte Spule nach dem Neu-Einlegen** – ohne RFID-Tag vergisst der Drucker beim Entladen die Spule (auch mit SpoolLink). Der Kopf bietet jetzt seine vorherige Spule an („Wieder #5 …?“), ein Tipp übernimmt sie (mit SpoolLink per `SET_SPOOL_ID`). Ohne Tipp wird nichts gebucht. Neue Option unter Spoolman: vorschlagen (Standard), automatisch setzen (nicht im Druck) oder aus. Ein Kopf, der auf seine Spule wartet, bekommt keine andere geraten.
-- Behoben: Schichtansicht – kein Fehler mehr, wenn der Druck endet, während eine Schicht lädt.
+**Look and automations**
+- **Status light blueprint** installed with the integration: colours WLED or any colour light by the print state.
+- **Own accent colour** for the card and the mini card.
+- The card is also available as `custom:snapmaker-u1-card-ironoxx` (another integration ships a card with the same name; the self test tells you).
 
-## 1.6.0b6
+**Good to know when updating**
+- Restart Home Assistant and reload the dashboard.
+- Card sections `mesh` and `console` are new; if you list sections with `show:`, add them.
+- With SpoolLink the integration no longer books usage itself – Moonraker does.
 
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b5 … b1 below.
-
-**Fixed**
-- The ongoing progress notification (Android) stayed after the print had finished. It is now removed at the print end, before the "print finished" push, also when Home Assistant was restarted during the print (e.g. for an update); its state is now kept across restarts.
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
 
 ---
 **Deutsch**
-- Behoben: Die laufende Fortschritts-Benachrichtigung (Android) blieb nach Druckende stehen. Sie wird jetzt am Druckende entfernt, vor der „Druck fertig“-Meldung, auch wenn Home Assistant während des Drucks neu gestartet wurde (z. B. für ein Update); ihr Zustand übersteht jetzt einen Neustart.
 
-## 1.6.0b5
+**Das große Update.** 1.6.0 ist die bisher größte Version: Maschinensteuerung, ein deutlich schlaueres Spoolman, WebRTC-Kamera, Slicer-Einstellungen vor dem Druck, ein Blueprint fürs Status-Licht und viele Kleinigkeiten, durch die sich die Karte schneller anfühlt. Alles hier ist neu seit 1.5.2. Danke an alle, die die Betas getestet haben!
 
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b4 … b1 below.
+**Maschine steuern**
+- **Flussrate** (M221) als Regler neben der Geschwindigkeit, auch im Druck.
+- **Bed-Mesh-Heatmap** der Messpunkte mit Spanne, tiefstem und höchstem Punkt.
+- **G-Code-Konsole** mit den Antworten des Druckers; im Druck nur sichere Feineinstellungen.
+- **Köpfe aufnehmen und ablegen** in den Kopfdetails (Dienst `tool_change`), im Druck gesperrt.
+- **Top Cover** (Kammermodus, Abluft-/Umluftlüfter, Filter-Laufzeit) und **Kammerheizungen** BIQU Panda Breath / DragonBreath (paxx12-Firmware) – die Entitäten erscheinen nur, wenn die Hardware da ist.
+- **Düse je Kopf**: Durchmesser und High Flow in den Kopfdetails; der Druckdialog warnt, wenn die Datei für eine andere Düse geslict wurde.
 
-**Fixed**
-- Spoolman with paxx12 SpoolLink: spools chosen in the card before 1.6.0b4 were dropped, because the printer did not know them yet; the heads showed "Choose spool". Spools chosen in the card are now handed to the printer once (`SET_SPOOL_ID`) when SpoolLink is found. Spools already lost with b4: choose them once more.
-- A spool chosen with SpoolLink is shown right away instead of only after the printer has taken it over.
-- SpoolLink is only assumed when Moonraker's `spoollink` component is loaded; paxx12's RFID patch adds `filament_spool_id` also with Spoolman switched off.
-- Self test: hint when Moonraker has Spoolman without SpoolLink (it only books its one active spool). Diagnostics include the SpoolLink state.
+**Sofortige Rückmeldung**
+- Pause, Fortsetzen und Abbrechen zeigen direkt nach dem Tippen „Pausiere …“ / „Setze fort …“ / „Breche ab …“, das Licht schaltet sofort um, Schalter pulsieren bis zur Bestätigung.
+- Der Druckzustand kommt aus der Live-Verbindung der Integration – eine Pause erscheint Sekunden früher.
 
----
-**Deutsch**
-- Behoben: Spoolman mit paxx12 SpoolLink – vor 1.6.0b4 in der Karte gewählte Spulen gingen verloren, weil der Drucker sie noch nicht kannte; die Köpfe zeigten „Spule wählen“. In der Karte gewählte Spulen werden jetzt einmal an den Drucker übergeben (`SET_SPOOL_ID`), sobald SpoolLink erkannt ist. Mit b4 bereits verlorene Spulen einmal neu wählen.
-- Behoben: Eine mit SpoolLink gewählte Spule erscheint sofort, nicht erst wenn der Drucker sie übernommen hat.
-- SpoolLink gilt nur, wenn Moonrakers Komponente `spoollink` geladen ist; paxx12s RFID-Patch legt `filament_spool_id` auch bei ausgeschaltetem Spoolman an.
-- Selbsttest: Hinweis, wenn Moonraker Spoolman ohne SpoolLink hat (bucht dann nur seine eine aktive Spule). Diagnose enthält den SpoolLink-Zustand.
+**Kamera**
+- **WebRTC in der Karte** (paxx12 Extended Firmware): weniger Verzögerung und viel weniger Daten als MJPEG, MJPEG bleibt als Rückfall (Option `camera_webrtc`).
+- Stream von paxx12 2.x wird richtig erkannt, **RTSP** automatisch an Home Assistant übergeben, **zweite Kamera** (USB) mit Umschalter.
 
-## 1.6.0b4
+**Spoolman**
+- **paxx12 SpoolLink** wird automatisch erkannt: kein doppeltes Abbuchen, die Spule je Kopf kommt vom Drucker, die Spulenwahl schickt `SET_SPOOL_ID`.
+- Eine gewählte Spule **lädt ihr Filament** in den Kopf (Material, Unterart, Hersteller, Farbe) – **mehrfarbige Spulen** mit allen Farben.
+- **Vorher → nachher je Druck** in der Historie (`#5 550 g → 460 g`).
+- **Spule wiegen** in den Kopfdetails – Spoolman selbst brauchst du nur noch zum Anlegen neuer Spulen.
+- **Kopf entladen und neu einlegen:** Er bietet seine vorherige Spule an („Wieder #5 …?“), ein Tipp übernimmt sie. Option: vorschlagen, automatisch setzen oder aus.
 
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b3, b2 and b1 below.
+**Dateien und Drucken**
+- **Slicer-Einstellungen im Druckdialog:** Schichthöhe, Wände, Infill, Stützen, Brim, Druckplatte, Geschwindigkeiten und Temperaturen je Filament (Dienst `file_settings`).
 
-**New**
-- **Spoolman with paxx12 SpoolLink:** detected automatically. Moonraker books the usage then, so the integration no longer books it too (no double booking); the spool per head comes from the printer and choosing a spool in the card sends `SET_SPOOL_ID` to the printer. The self test says who books.
-- **Spoolman:** the history shows the remaining weight per spool before and after the print (`#5 550 g → 460 g`). **Weigh a spool** in the head details (with or without the empty spool, whose weight comes from Spoolman); service `weigh_spool`.
-- **Chamber heater** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): temperature, target, heater power and filter, with a panel in the control tab. Entities only appear when a heater is configured.
-- **Nozzle per head** (diameter, high flow) in the head details; the print dialog warns when the file was sliced for another nozzle.
-- **Maintenance in calendar months** next to print hours, with the intervals from Snapmaker's U1 maintenance guide: linear shafts and belts monthly (new for the existing items), X carbon rods monthly, Z lead screws and the head coupling quarterly, pogo contacts every 6 months. New notification *Maintenance due* (on by default). Month values can be changed in the options.
-- **Camera:** RTSP (paxx12, off by default in `/firmware-config/`) is detected automatically and offered as stream source, so Home Assistant streams H.264 itself. A **second camera** (paxx12 USB camera at `/webcam2/`) gets its own entity and a switch button in the card.
-- **Progress notification:** image can now also be the model preview from the slicer (option *Progress notification: image*: camera, model preview or none).
-- **Card name conflict:** the integration kbaker827/ha-snapmaker-u1 ships a card with the same name `custom:snapmaker-u1-card`. This card is now always available as `custom:snapmaker-u1-card-ironoxx` too, and the self test points out the conflict.
+**Benachrichtigungen und Wartung**
+- **Wartung in Kalendermonaten** (Snapmakers U1-Wartungsanleitung) neben Druckstunden, mit Push *Wartung fällig*.
+- Fortschritts-Benachrichtigung: Kamerabild oder Modellvorschau; sie verschwindet jetzt zuverlässig bei Druckende, auch nach einem Neustart während des Drucks.
 
----
-**Deutsch**
-- Neu: **Spoolman mit paxx12 SpoolLink** wird automatisch erkannt. Dann bucht Moonraker ab und die Integration nicht zusätzlich (kein doppeltes Abbuchen); die Spule je Kopf kommt vom Drucker, die Spulenwahl in der Karte geht als `SET_SPOOL_ID` an den Drucker. Der Selbsttest sagt, wer abbucht.
-- Neu: **Spoolman** – die Historie zeigt je Spule das Restgewicht vor und nach dem Druck (`#5 550 g → 460 g`). **Spule wiegen** in den Kopfdetails (mit oder ohne Leerspule, deren Gewicht aus Spoolman kommt); Dienst `weigh_spool`.
-- Neu: **Kammerheizung** BIQU Panda Breath / DragonBreath (paxx12 Extended Firmware): Temperatur, Soll, Heizleistung und Filter, mit Bereich im Tab Steuerung. Entitäten erscheinen nur, wenn eine Heizung eingerichtet ist.
-- Neu: **Düse je Kopf** (Durchmesser, High Flow) in den Kopfdetails; der Druckdialog warnt, wenn die Datei für eine andere Düse gesliced ist.
-- Neu: **Wartung in Kalendermonaten** neben Druckstunden, mit den Intervallen aus Snapmakers U1-Wartungsanleitung: Linearführungen und Riemen monatlich (neu für die vorhandenen Punkte), X-Carbonstangen monatlich, Z-Spindeln und Kopfaufnahme vierteljährlich, Pogo-Kontakte alle 6 Monate. Neue Benachrichtigung *Wartung fällig* (standardmäßig an). Monatswerte in den Optionen änderbar.
-- Neu: **Kamera** – RTSP (paxx12, in `/firmware-config/` standardmäßig aus) wird automatisch erkannt und als Stream-Quelle angeboten, Home Assistant streamt dann selbst H.264. Eine **zweite Kamera** (paxx12 USB-Kamera unter `/webcam2/`) bekommt eine eigene Entität und einen Umschalter in der Karte.
-- Neu: **Fortschritts-Benachrichtigung** – als Bild jetzt auch das Vorschaubild des Modells (Option *Fortschritts-Benachrichtigung: Bild*: Kamera, Modellvorschau oder keins).
-- Neu: **Kartenname** – die Integration kbaker827/ha-snapmaker-u1 bringt eine Karte mit demselben Namen `custom:snapmaker-u1-card` mit. Diese Karte ist jetzt immer auch als `custom:snapmaker-u1-card-ironoxx` erreichbar, der Selbsttest weist auf den Konflikt hin.
+**Aussehen und Automationen**
+- **Blueprint Status-Licht** wird mit installiert: färbt WLED oder jede Farblampe nach dem Druckzustand.
+- **Eigene Akzentfarbe** für Karte und Mini-Karte.
+- Die Karte gibt es zusätzlich als `custom:snapmaker-u1-card-ironoxx` (eine andere Integration bringt eine Karte mit gleichem Namen mit; der Selbsttest weist darauf hin).
 
-## 1.6.0b3
+**Gut zu wissen beim Update**
+- Home Assistant neu starten und das Dashboard neu laden.
+- Die Kartenbereiche `mesh` und `console` sind neu; wer Bereiche per `show:` aufzählt, ergänzt sie.
+- Mit SpoolLink bucht die Integration den Verbrauch nicht mehr selbst ab – das macht Moonraker.
 
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b2 and 1.6.0b1 below.
-
-**Fixed**
-- Camera with paxx12 Extended Firmware 2.x: Moonraker announces the WebRTC page (`/webcam/webrtc`) as stream, which is not MJPEG, so the integration fell back to still images. It now uses the MJPEG stream the camera service serves next to it (`/webcam/stream.mjpg`, also for `/webcam2/` and the player page). The self test names the stream addresses that failed.
-
----
-**Deutsch**
-- Behoben: Kamera mit paxx12 Extended Firmware 2.x – Moonraker meldet die WebRTC-Seite (`/webcam/webrtc`) als Stream, das ist kein MJPEG, daher fiel die Integration auf Standbilder zurück. Jetzt nutzt sie den MJPEG-Stream, den der Kameradienst daneben anbietet (`/webcam/stream.mjpg`, ebenso für `/webcam2/` und die Player-Seite). Der Selbsttest nennt die Stream-Adressen, die nicht funktioniert haben.
-
-## 1.6.0b2
-
-**Beta** – only offered by HACS with "show beta versions" enabled. Contains everything from 1.6.0b1 below.
-
-**Fixed**
-- Spoolman: choosing a spool for a head only assigned it for usage booking; the head kept showing what the printer had (stock firmware: "PLA Generic" for every head without RFID tag). Choosing a specific spool now also loads its filament into the printer: material, sub type (Matte, Silk, … from the material or the spool name), vendor and colour. Not for official RFID spools and not during a print. Spools you already assigned: pick them once more.
-- Picking a head failed with "unable to parse =0": the command is now sent as `T<n> A0` (Klipper's classic G-code syntax).
-
----
-**Deutsch**
-- Behoben: Spoolman – die Wahl einer Spule ordnete sie nur fürs Abbuchen zu; der Kopf zeigte weiter, was im Drucker stand (Stock-Firmware: „PLA Generic“ bei jedem Kopf ohne RFID-Tag). Die Wahl einer bestimmten Spule lädt jetzt auch ihr Filament in den Drucker: Material, Unterart (Matte, Silk … aus Material oder Spulenname), Hersteller und Farbe. Nicht bei offiziellen RFID-Spulen und nicht während eines Drucks. Bereits zugeordnete Spulen einmal neu wählen.
-- Behoben: Kopf aufnehmen scheiterte mit „unable to parse =0“; der Befehl geht jetzt als `T<n> A0` raus (klassische G-Code-Schreibweise von Klipper).
-
-## 1.6.0b1
-
-**Beta** – only offered by HACS with "show beta versions" enabled for this repository. Feedback welcome, especially from top cover owners (diagnostics file).
-
-**New**
-- **Flow** (M221) as a slider next to the speed in the control tab and as entity `number.…_flow`, changeable during a print.
-- **Bed mesh**: heatmap of the probed points in the control tab (red above, blue below zero, front at the bottom) with spread, lowest and highest point; sensor *Bed mesh spread* with the points as attributes.
-- **G-code console** in the control tab, showing the printer's answers (arrow keys recall earlier commands). New service `send_gcode` with response. During a print only tuning commands are accepted (temperatures, fans, speed, flow, Z offset, pressure advance, light, top cover, queries); anything that moves or changes heads is refused until the print is over.
-- **Pick and park heads** from the head details, and service `tool_change`. Uses the firmware's own commands, locked during a print. The attribute `head_states` shows which head is on the carriage.
-- **Top cover** (optional accessory): chamber mode, exhaust and circulation fan, circulation fan speed and filter runtime. The entities and the panel only appear once the printer reports a plugged-in cover. Not yet tested on a printer with a cover – a diagnostics file from an owner would help.
-- Diagnostics include flow, bed mesh, head states and the raw top cover status.
-
-Card sections `mesh` and `console` are new; if you list sections with `show:`, add them there.
-
----
-**Deutsch**
-- Neu: **Flussrate** (M221) als Regler neben der Geschwindigkeit im Tab Steuerung und als Entität `number.…_flussrate`, auch während des Drucks änderbar.
-- Neu: **Bed Mesh** als Heatmap der Messpunkte im Tab Steuerung (rot über, blau unter null, vorne unten) mit Spanne, tiefstem und höchstem Punkt; Sensor *Bettnivellierung Spanne* mit den Punkten als Attribute.
-- Neu: **G-Code-Konsole** im Tab Steuerung mit den Antworten des Druckers (Pfeiltasten holen frühere Befehle zurück). Neuer Dienst `send_gcode` mit Antwort. Während eines Drucks nur Feineinstellungen (Temperaturen, Lüfter, Geschwindigkeit, Flussrate, Z-Versatz, Pressure Advance, Licht, Top Cover, Abfragen); alles, was fährt oder Köpfe wechselt, wird bis Druckende abgelehnt.
-- Neu: **Köpfe aufnehmen und ablegen** in den Kopfdetails und per Dienst `tool_change`. Nutzt die Befehle der Firmware, während eines Drucks gesperrt. Das Attribut `head_states` zeigt, welcher Kopf auf dem Schlitten ist.
-- Neu: **Top Cover** (optionales Zubehör): Kammermodus, Abluft- und Umluftlüfter, Drehzahl und Filter-Laufzeit. Entitäten und Bereich erscheinen erst, wenn der Drucker eine angeschlossene Abdeckung meldet. Noch nicht an einem Drucker mit Abdeckung getestet – eine Diagnosedatei von Besitzern hilft.
-- Diagnose enthält Flussrate, Bed Mesh, Kopfzustände und den Rohstatus der Top Cover.
-
-Die Kartenbereiche `mesh` und `console` sind neu; wer Bereiche per `show:` aufzählt, ergänzt sie dort.
+⭐ Gefällt dir die Karte? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Spendier mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
 
 ## 1.5.2
 
