@@ -49,6 +49,7 @@ Nabu Casa.
 | `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `number.py`, `update.py` | Entities (top cover entities are added once a cover is detected) |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
 | `webrtc_view.py` | Relays the camera-streamer WebRTC signalling (request/answer/candidates) to the paxx12 camera; the video flows browser ↔ printer |
+| `whats_new.py` | One persistent notification with the highlights after an update to a new minor version (texts per version in the module) |
 | `blueprints.py`, `blueprints/` | Copies the shipped automation blueprints (status light) to `config/blueprints/automation/snapmaker_u1_card/` |
 | `webcam.py` | Camera detection (`live` / `still` / `wake` / `none`), images, wake-up, stream fallback |
 | `camera.py` | Own camera entity: MJPEG pass-through (`live`) or still images (HA builds the stream) |

@@ -26,7 +26,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from . import blueprints, resource
+from . import blueprints, resource, whats_new
 from .api import MoonrakerClient
 from .const import (
     CARD_FILENAME,
@@ -384,6 +384,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: U1ConfigEntry) -> bool:
     coordinator.start_live()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_reload))
+    # After an update to a new minor version: one notification with the highlights
+    if not hass.data[DOMAIN].get("whats_new_checked"):
+        hass.data[DOMAIN]["whats_new_checked"] = True
+        await whats_new.async_show(hass, getattr(entry, "created_at", None))
     return True
 
 

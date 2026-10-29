@@ -4,6 +4,15 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.1
+
+**New**
+- After an update to a new minor version, Home Assistant shows a notification with the highlights once (not on a fresh install). Many setups only showed a link to the release notes. Coming from 1.5.x: everything new in 1.6 is listed under 1.6.0 below.
+
+---
+**Deutsch**
+- Neu: Nach einem Update auf eine neue Unterversion zeigt Home Assistant einmal eine Benachrichtigung mit den Neuerungen (nicht bei einer Neuinstallation). Bei vielen war im Update-Dialog nur ein Link zu den Versionshinweisen zu sehen. Von 1.5.x kommend: alles Neue in 1.6 steht unten bei 1.6.0.
+
 ## 1.6.0
 
 **The big one.** 1.6.0 is the largest update so far: machine control, a much smarter Spoolman, WebRTC camera, slicer settings before printing, a status-light blueprint and lots of small things that make the card feel faster. Everything below is new since 1.5.2. Thanks to everyone who tested the betas!
