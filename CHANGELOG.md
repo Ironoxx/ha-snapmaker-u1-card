@@ -4,6 +4,17 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.2
+
+**Fixed**
+- Maintenance: for items counted in hours and months (linear shafts, belts) the text showed the remaining hours while the bar followed the months. Text and bar now both follow whichever comes first ("noch 14 Tage").
+- Maintenance: *Replace the air filter* only appears once a top cover was detected – the U1 has no air filter without it.
+
+---
+**Deutsch**
+- Behoben: Wartung – bei Punkten, die nach Stunden und Monaten zählen (Linearführungen, Riemen), zeigte der Text die restlichen Stunden, der Balken aber die Monate. Text und Balken folgen jetzt beide dem, was zuerst fällig ist („noch 14 Tage“).
+- Behoben: *Luftfilter wechseln* erscheint nur noch, wenn eine Top Cover erkannt wurde – ohne sie hat der U1 keinen Luftfilter.
+
 ## 1.6.1
 
 **New**

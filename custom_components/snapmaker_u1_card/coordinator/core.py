@@ -605,7 +605,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         data.cpu_count = self._cpu_count
         data.stats = self._stats
         data.print_hours = self._print_hours
-        data.maintenance = self._maintenance_status(data.tool_changes)
+        data.maintenance = self._maintenance_status(data.tool_changes, data.purifier)
         self._check_maintenance_due(data.maintenance, printing)
         data.archive = self._archive_data()
         if not printing:

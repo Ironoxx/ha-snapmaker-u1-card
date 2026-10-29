@@ -2456,7 +2456,8 @@
         const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}` : [hours, months].filter(Boolean).join(" · ") || "—";
         const leftH = m.interval_h && m.remaining_h !== null && m.remaining_h !== void 0 ? m.remaining_h : null;
         const leftD = m.interval_m && m.remaining_d !== null && m.remaining_d !== void 0 ? m.remaining_d : null;
-        const left = m.firmware ? "" : m.due ? tr("fällig") : leftD !== null && (leftH === null || leftD * 24 < leftH * 3) ? tr("noch {d} Tage", { d: Math.max(0, Math.round(leftD)) }) : leftH !== null ? tr("noch {h} h", { h: Math.round(leftH) }) : "";
+        const byDays = m.by ? m.by === "months" : leftD !== null && leftH === null;
+        const left = m.firmware ? "" : m.due ? tr("fällig") : byDays && leftD !== null ? tr("noch {d} Tage", { d: Math.max(0, Math.round(leftD)) }) : leftH !== null ? tr("noch {h} h", { h: Math.round(leftH) }) : leftD !== null ? tr("noch {d} Tage", { d: Math.max(0, Math.round(leftD)) }) : "";
         return `
         <div class="m-item" data-due="${m.due ? 1 : 0}">
           <div class="m-top">

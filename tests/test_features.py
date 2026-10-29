@@ -197,6 +197,19 @@ def test_maintenance_months() -> None:
     # own month values from the options
     items = {i["key"]: i for i in m.status(101.0, {}, {"rails": 2}, 35 * day)}
     assert not items["rails"]["due"]
+    # the more advanced measure decides what is shown: 16 of 30 days beats 1 of 300 h
+    rails = {i["key"]: i for i in m.status(101.0, {}, None, 16 * day)}["rails"]
+    assert rails["by"] == "months" and rails["progress"] == 53 and rails["remaining_h"] == 299.0
+    rails = {i["key"]: i for i in m.status(390.0, {}, None, 1 * day)}["rails"]
+    assert rails["by"] == "hours"
+    assert {i["key"]: i for i in m.status(101.0, {}, None, 1 * day)}["plate"]["by"] == "hours"
+
+
+def test_maintenance_filter_only_with_top_cover() -> None:
+    m = Maintenance(None)
+    m.baseline(0.0, 0.0)
+    assert "filter" not in {i["key"] for i in m.status(10.0, {"filter": 150}, None, 1.0)}
+    assert "filter" in {i["key"] for i in m.status(10.0, {"filter": 150}, None, 1.0, has_filter=True)}
 
 
 # ── Upload ─────────────────────────────────────────────────────────────────

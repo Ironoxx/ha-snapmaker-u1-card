@@ -65,10 +65,17 @@ class UpkeepMixin:
             if self.maintenance.baseline(self._print_hours, time.time()):
                 self._save()
 
-    def _maintenance_status(self, tool_changes: dict[str, Any] | None) -> list[dict[str, Any]]:
-        """Maintenance items plus the firmware's tool changer counter."""
+    def _maintenance_status(self, tool_changes: dict[str, Any] | None,
+                            cover: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        """Maintenance items plus the firmware's tool changer counter.
+
+        The air filter item only appears once a top cover was seen (it has the filter).
+        """
+        if cover and cover.get("present"):
+            self._cover_seen = True
         items = self.maintenance.status(self._print_hours, self.options.get(CONF_MAINTENANCE) or {},
-                                        self.options.get(CONF_MAINTENANCE_MONTHS) or {}, time.time())
+                                        self.options.get(CONF_MAINTENANCE_MONTHS) or {}, time.time(),
+                                        has_filter=getattr(self, "_cover_seen", False))
         if tool_changes:
             worst = max((h.get("since_maintenance") or 0 for h in tool_changes.get("heads") or []), default=0)
             limit = tool_changes.get("maintenance_threshold") or 0
@@ -107,7 +114,7 @@ class UpkeepMixin:
         self.maintenance.mark_done(key, self._print_hours, time.time())
         self._save()
         if self.data is not None:
-            self.data.maintenance = self._maintenance_status(self.data.tool_changes)
+            self.data.maintenance = self._maintenance_status(self.data.tool_changes, self.data.purifier)
             self.async_update_listeners()
 
 

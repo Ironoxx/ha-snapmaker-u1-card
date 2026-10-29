@@ -30,7 +30,7 @@ MAINTENANCE_ITEMS: dict[str, int] = {
     "nozzle": 100,      # clean nozzles and wipers
     "rails": 300,       # lubricate linear rails
     "belts": 500,       # check belt tension
-    "filter": 0,        # replace the air filter (only with an air purifier)
+    "filter": 0,        # replace the air filter (only shown with the top cover)
     "carbon_rods": 0,   # clean the X carbon rods
     "lead_screws": 0,   # clean and grease the Z lead screws and nuts
     "coupling": 0,      # clean the steel pins and balls of the head coupling
@@ -311,22 +311,27 @@ class Maintenance:
         self.done[key] = {"hours": round(hours if hours is not None else prev.get("hours", 0.0), 2), "at": now}
 
     def status(self, hours: float | None, intervals: dict[str, int],
-               months: dict[str, int] | None = None, now: float | None = None) -> list[dict[str, Any]]:
+               months: dict[str, int] | None = None, now: float | None = None,
+               has_filter: bool = False) -> list[dict[str, Any]]:
         """Status of every enabled maintenance item at ``hours`` print hours and time ``now``.
 
         An item counts in print hours, in months since it was last done, or both;
-        the more advanced of the two decides progress and "due".
+        the more advanced of the two decides progress, "due" and which remaining
+        value is shown (``by``: "hours" or "months"). The air filter only exists
+        with the top cover (``has_filter``).
         """
         months = months or {}
         items = []
         for key, default in MAINTENANCE_ITEMS.items():
+            if key == "filter" and not has_filter:
+                continue
             interval = int(intervals.get(key, default) or 0)
             interval_m = int(months.get(key, MAINTENANCE_MONTHS.get(key, 0)) or 0)
             if interval <= 0 and interval_m <= 0:
                 continue
             done = self.done.get(key) or {}
             item: dict[str, Any] = {"key": key, "done_at": done.get("at")}
-            progress: list[float] = []
+            progress: dict[str, float] = {}
             due = False
             if interval > 0:
                 used = None if hours is None else max(0.0, hours - float(done.get("hours", hours)))
@@ -336,18 +341,20 @@ class Maintenance:
                     remaining_h=None if used is None else round(interval - used, 1),
                 )
                 if used is not None:
-                    progress.append(used / interval)
+                    progress["hours"] = used / interval
                     due = due or used >= interval
             if interval_m > 0 and done.get("at") is not None and now is not None:
                 period = interval_m * DAYS_PER_MONTH * 86400
                 age = max(0.0, now - float(done["at"]))
                 item.update(interval_m=interval_m, due_at=float(done["at"]) + period,
                             remaining_d=round((period - age) / 86400, 1))
-                progress.append(age / period)
+                progress["months"] = age / period
                 due = due or age >= period
             elif interval_m > 0:
                 item["interval_m"] = interval_m
-            item["progress"] = round(min(max(progress), 9.99) * 100) if progress else None
+            by = max(progress, key=progress.get) if progress else None
+            item["by"] = by
+            item["progress"] = round(min(progress[by], 9.99) * 100) if by else None
             item["due"] = due
             items.append(item)
         return items
