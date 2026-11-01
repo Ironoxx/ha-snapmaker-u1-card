@@ -145,6 +145,14 @@ states["sensor.snapmaker_u1_card_filaments"].attributes.spoolman.restore = {};
 states["sensor.snapmaker_u1_card_filaments"].attributes.spoolman.slots[0] = { id: 5, name: "PLA Black", manual: true, remaining_weight: 800, initial_weight: 1000 };
 card.hass = hass();
 assert.ok(!R().querySelector("[data-spoolrestore]"), "uebernommen");
+// SpoolLink marks Spoolman spools as official: badge "Spoolman", not "RFID"
+states["sensor.snapmaker_u1_card_filaments"].attributes.slots[0].official = true;
+card.hass = hass();
+const badge = R().querySelector(".head-name .rfid");
+assert.ok(badge && badge.textContent === "Spoolman" && badge.dataset.src === "spoolman", "Spoolman-Abzeichen");
+states["sensor.snapmaker_u1_card_filaments"].attributes.slots[0].rfid = { tag: true, official: true };
+card._renderKey = null; card.hass = hass();
+assert.strictEqual(R().querySelector(".head-name .rfid").textContent, "RFID", "echter Tag bleibt RFID");
 
 console.log("FEEDBACK OK – pause, resume, cancel, light, switches, live state, spool restore");
 process.exit(0);

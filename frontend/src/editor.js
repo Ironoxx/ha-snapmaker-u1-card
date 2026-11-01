@@ -36,7 +36,7 @@ export const FORM_HELPERS = {
   prefix: "Nur bei mehreren Druckern nötig",
   network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
-  layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+  layout: "Leer = Reiter. Tablet / Monitor: Kamera, Druckauftrag und Druckköpfe links, Reiter rechts (ab ca. 900 px Breite)",
   bed_image: "z. B. /local/u1_oben.png (Datei unter config/www). Ersetzt Platte und Köpfe in der Draufsicht.",
   bed_image_area: "Welche Druckerkoordinaten das Bild abdeckt. Leer = genau die Platte 0, 0, 270, 270. Für ein Foto des ganzen Druckers z. B. -40, -30, 310, 360.",
   layer_view: "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.",

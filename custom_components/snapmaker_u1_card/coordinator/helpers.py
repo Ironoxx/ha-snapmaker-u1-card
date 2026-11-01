@@ -175,12 +175,14 @@ def notify_message(info: dict[str, Any], de: bool = True) -> str:
         parts.append(f"{hours} h {rest // 60} min" if hours else f"{rest // 60} min")
     if info.get("filament_g") is not None:
         parts.append(f"{info['filament_g']:.0f} g")
+    dec = "," if de else "."
     if info.get("energy") is not None:
-        parts.append(f"{info['energy']:.2f} kWh")
+        parts.append(f"{info['energy']:.2f} kWh".replace(".", dec))
     if info.get("total_cost") is not None:
-        parts.append(f"{info['total_cost']:.2f} €".replace(".", ","))
-    if info.get("switches"):
-        parts.append(f"{info['switches']} {'Wechsel' if de else 'changes'}")
+        parts.append(f"{info['total_cost']:.2f} €".replace(".", dec))
+    # One pick of the only head is no change worth mentioning
+    if (info.get("switches") or 0) > 1:
+        parts.append(f"{info['switches']} {'Kopfwechsel' if de else 'tool changes'}")
     return " · ".join(parts)
 
 

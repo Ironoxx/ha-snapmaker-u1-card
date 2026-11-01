@@ -25,7 +25,7 @@ add(`sensor.${P}_printer_state`, "ready");
 add(`sensor.${P}_current_print_state`, "printing");
 add(`sensor.${P}_filename`, "teil.gcode");
 add(`camera.${P}_webcam`, "idle", { entity_picture: "/api/camera_proxy/cam?token=A", access_token: "A" });
-add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.6.2" }, "snapmaker_u1_card", "files");
+add("sensor.snapmaker_u1_card_druckdateien", "0", { entry_id: "E1", files: [], version: "1.6.3" }, "snapmaker_u1_card", "files");
 
 add("switch.snapmaker_u1_card_fortschritt", "off", { targets: ["notify.mobile_app_handy"], sent_today: 4, budget: 150 },
   "snapmaker_u1_card", "live_notify");
@@ -118,7 +118,8 @@ const pressed = (name) => calls.some((c) => c[0] === "button" && c[2].entity_id 
   assert.ok(!R.querySelector(".tablet-main .stage"), "camera not in the tabs");
   assert.ok(R.querySelector(".tablet-main [data-tab]"), "tabs in the main column");
   const tabs = [...R.querySelectorAll(".tablet-main [data-tab]")].map((t) => t.dataset.tab);
-  assert.ok(tabs.includes("overview"), "toolheads keep the overview tab");
+  assert.ok(side.querySelector(".head-name") || side.textContent.includes("Druckköpfe"), "heads in the side column");
+  assert.strictEqual(tabs.includes("overview"), !!card._d.active, "overview tab only with the layer view (during a print)");
 
   // 5. Camera wake-up: rate limited, only with the service present
   calls.length = 0;
@@ -146,7 +147,7 @@ const pressed = (name) => calls.some((c) => c[0] === "button" && c[2].entity_id 
   assert.ok(!R.querySelector("[data-reload]"));
 
   // 7. Direct stream: printer URL on an http page, HA proxy after an error
-  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.6.2";
+  states["sensor.snapmaker_u1_card_druckdateien"].attributes.version = "1.6.3";
   states["sensor.snapmaker_u1_card_druckdateien"].attributes.stream_url = "http://192.168.0.25/webcam/?action=stream";
   card = make();
   card._onScreen = true;

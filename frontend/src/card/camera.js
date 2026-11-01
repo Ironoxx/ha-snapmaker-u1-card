@@ -56,7 +56,8 @@ export const CameraMixin = (Base) => class extends Base {
 
   _tickCamera() {
     const root = this.shadowRoot?.getElementById("u1card");
-    if (root) this._fitAspect(root.querySelector(".stage .frame > img"));
+    // While WebRTC plays, the video sets the format (MJPEG may have another one, e.g. 4:3 vs 16:9)
+    if (root && !(this._rtc && this._rtc.playing)) this._fitAspect(root.querySelector(".stage .frame > img"));
     const img = root?.querySelector("img[data-live]");
     if (!img) return;
     const cam = this._st(this._ents && this._ents.camera);

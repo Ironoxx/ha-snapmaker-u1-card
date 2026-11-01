@@ -1,7 +1,7 @@
 /** Constants shared by the card modules. */
 
 export const DOMAIN = "snapmaker_u1_card";
-export const CARD_VERSION = "1.6.2";
+export const CARD_VERSION = "1.6.3";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -21,7 +21,8 @@ export const TABS = [
   { id: "system", icon: "mdi:chip", label: "System", sections: ["maintenance", "system"] },
 ];
 // layout: tablet – always visible in the left column
-export const TABLET_SIDE = ["stage", "job"];
+// Tablet: always visible on the left; the heads fill the space under the job
+export const TABLET_SIDE = ["stage", "job", "toolheads"];
 export const TAB_STORE = "snapmaker-u1-card.tab";
 
 export const RESULT = {

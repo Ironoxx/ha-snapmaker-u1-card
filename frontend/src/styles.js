@@ -134,6 +134,8 @@ export const STYLES = `
   }
   .tablet-side > .panel { width: 100%; }
   .tablet-main > .tabs { margin: 0; padding: 0; }
+  /* The right column is narrower than the card: the layer view takes its full width */
+  .tablet-main .layout > .lv-panel { grid-column: 1 / -1; }
   @container u1 (min-width: 900px) {
     .tablet { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); }
   }
@@ -228,7 +230,14 @@ export const STYLES = `
     background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-family: var(--u1-mono); }
   .zoom-badge[hidden] { display: none; }
   .frame:fullscreen { height: 100% !important; min-height: 0 !important; background: #000; }
-  .frame:fullscreen img { object-fit: contain !important; }
+  .frame:fullscreen img, .frame:fullscreen video[data-rtc] { object-fit: contain !important; }
+  /* Fullscreen on a big screen: overlays grow with it instead of staying phone-sized */
+  @media (min-width: 1200px) {
+    .frame:fullscreen :is(.hud, .thumb, .cam-state, .zoom-ctl, .zoom-badge, .badge-stale) { zoom: 1.5; }
+  }
+  @media (min-width: 1900px) {
+    .frame:fullscreen :is(.hud, .thumb, .cam-state, .zoom-ctl, .zoom-badge, .badge-stale) { zoom: 2; }
+  }
   .thumb {
     position: absolute; left: 10px; bottom: 10px; z-index: 3;
     background: color-mix(in srgb, var(--u1-panel) 85%, transparent);

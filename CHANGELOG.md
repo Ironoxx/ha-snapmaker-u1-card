@@ -4,6 +4,127 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 1.6.3
+
+Bug fix release on top of the big 1.6 update – the full list of what's new in 1.6 is below.
+
+**Fixed in 1.6.3**
+- Camera with WebRTC: the image frame took the format of the MJPEG stream (e.g. 4:3) while the WebRTC video is 16:9 – black bars above and below. The playing video now sets the format.
+- Spools from Spoolman via SpoolLink showed an "RFID" badge although the spool has no tag; they now show "Spoolman". A real tag stays "RFID".
+- Timelapses showed up twice when the firmware lists the same folder under two Moonraker roots.
+- "Print finished": energy and cost use the language's decimal separator (0,04 kWh); a single head pick is no longer listed as a tool change (also in the history).
+- Fullscreen camera on a large screen: progress, state and buttons grow with the screen.
+- Tablet layout: the print heads now sit on the left under the job (always visible), the layer view uses the full right column, and there is no empty overview tab while idle.
+
+**Fixed in 1.6.2 / 1.6.1**
+- Maintenance: text and bar follow whichever of hours and months comes first; *Replace the air filter* only with a top cover.
+- After an update to a new minor version, Home Assistant shows a notification with the highlights once.
+
+**The big one.** 1.6 is the largest update so far: machine control, a much smarter Spoolman, WebRTC camera, slicer settings before printing, a status-light blueprint and lots of small things that make the card feel faster. Everything below is new since 1.5.2. Thanks to everyone who tested the betas!
+
+**Control the machine**
+- **Flow** (M221) slider next to the speed, also during a print.
+- **Bed mesh heatmap** of the probed points with spread, lowest and highest point.
+- **G-code console** with the printer's answers; during a print only safe tuning commands are accepted.
+- **Pick and park heads** from the head details (service `tool_change`), locked during a print.
+- **Top cover** support (chamber mode, exhaust/circulation fan, filter runtime) and **chamber heaters** BIQU Panda Breath / DragonBreath (paxx12 firmware) – their entities only appear when the hardware is there.
+- **Nozzle per head**: diameter and high flow in the head details; the print dialog warns when a file was sliced for another nozzle.
+
+**Instant feedback**
+- Pause, resume and cancel show "Pausing …" / "Resuming …" / "Cancelling …" right after the tap, the light toggles immediately, switches pulse until confirmed.
+- The print state comes from the integration's live connection – a pause shows up seconds earlier.
+
+**Camera**
+- **WebRTC in the card** (paxx12 Extended Firmware): less delay and far less data than MJPEG, MJPEG stays as fallback (option `camera_webrtc`).
+- paxx12 2.x stream detected correctly, **RTSP** offered to Home Assistant automatically, **second camera** (USB) with a switch button.
+
+**Spoolman**
+- **paxx12 SpoolLink** detected automatically: no double booking, spool per head comes from the printer, choosing a spool sends `SET_SPOOL_ID`.
+- Choosing a spool **loads its filament** into the head (material, sub type, vendor, colour) – **multi-colour spools** with all their colours.
+- **Before → after per print** in the history (`#5 550 g → 460 g`).
+- **Weigh a spool** in the head details – Spoolman is only needed to add new spools.
+- **Unload and reload a head:** it offers its previous spool ("Use #5 … again?"), one tap restores it. Option: offer, set automatically or off.
+
+**Files and printing**
+- **Slicer settings in the print dialog:** layer height, walls, infill, supports, brim, plate, speeds and temperatures per filament (service `file_settings`).
+
+**Notifications and maintenance**
+- **Maintenance in calendar months** (Snapmaker's U1 maintenance guide) next to print hours, with a *Maintenance due* push.
+- Progress notification: camera image or model preview; it now disappears reliably when the print is finished, also after a restart during the print.
+
+**Look and automations**
+- **Status light blueprint** installed with the integration: colours WLED or any colour light by the print state.
+- **Own accent colour** for the card and the mini card.
+- The card is also available as `custom:snapmaker-u1-card-ironoxx` (another integration ships a card with the same name; the self test tells you).
+
+**Good to know when updating**
+- Restart Home Assistant and reload the dashboard.
+- Card sections `mesh` and `console` are new; if you list sections with `show:`, add them.
+- With SpoolLink the integration no longer books usage itself – Moonraker does.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+Bugfix-Version auf dem großen 1.6-Update – die komplette Liste der Neuerungen in 1.6 steht darunter.
+
+**Behoben in 1.6.3**
+- Kamera mit WebRTC: Der Bildrahmen übernahm das Format des MJPEG-Streams (z. B. 4:3), das WebRTC-Video ist aber 16:9 – schwarze Balken oben und unten. Jetzt bestimmt das laufende Video das Format.
+- Spulen aus Spoolman über SpoolLink zeigten ein „RFID“-Abzeichen, obwohl die Spule keinen Tag hat; jetzt steht dort „Spoolman“. Ein echter Tag bleibt „RFID“.
+- Zeitraffer erschienen doppelt, wenn die Firmware denselben Ordner unter zwei Moonraker-Wurzeln anbietet.
+- „Druck fertig“: Energie und Kosten mit dem Dezimaltrennzeichen der Sprache (0,04 kWh); einmaliges Aufnehmen des einzigen Kopfes zählt nicht mehr als Kopfwechsel (auch in der Historie).
+- Vollbild-Kamera auf großen Bildschirmen: Fortschritt, Status und Knöpfe wachsen mit.
+- Tablet-Layout: Die Druckköpfe stehen jetzt links unter dem Druckauftrag (immer sichtbar), die Schichtansicht nutzt die volle rechte Spalte, und im Leerlauf gibt es keinen leeren Übersicht-Reiter.
+
+**Behoben in 1.6.2 / 1.6.1**
+- Wartung: Text und Balken folgen dem, was zuerst fällig ist (Stunden oder Monate); *Luftfilter wechseln* nur mit Top Cover.
+- Nach einem Update auf eine neue Unterversion zeigt Home Assistant einmal eine Benachrichtigung mit den Neuerungen.
+
+**Das große Update.** 1.6 ist die bisher größte Version: Maschinensteuerung, ein deutlich schlaueres Spoolman, WebRTC-Kamera, Slicer-Einstellungen vor dem Druck, ein Blueprint fürs Status-Licht und viele Kleinigkeiten, durch die sich die Karte schneller anfühlt. Alles hier ist neu seit 1.5.2. Danke an alle, die die Betas getestet haben!
+
+**Maschine steuern**
+- **Flussrate** (M221) als Regler neben der Geschwindigkeit, auch im Druck.
+- **Bed-Mesh-Heatmap** der Messpunkte mit Spanne, tiefstem und höchstem Punkt.
+- **G-Code-Konsole** mit den Antworten des Druckers; im Druck nur sichere Feineinstellungen.
+- **Köpfe aufnehmen und ablegen** in den Kopfdetails (Dienst `tool_change`), im Druck gesperrt.
+- **Top Cover** (Kammermodus, Abluft-/Umluftlüfter, Filter-Laufzeit) und **Kammerheizungen** BIQU Panda Breath / DragonBreath (paxx12-Firmware) – die Entitäten erscheinen nur, wenn die Hardware da ist.
+- **Düse je Kopf**: Durchmesser und High Flow in den Kopfdetails; der Druckdialog warnt, wenn die Datei für eine andere Düse geslict wurde.
+
+**Sofortige Rückmeldung**
+- Pause, Fortsetzen und Abbrechen zeigen direkt nach dem Tippen „Pausiere …“ / „Setze fort …“ / „Breche ab …“, das Licht schaltet sofort um, Schalter pulsieren bis zur Bestätigung.
+- Der Druckzustand kommt aus der Live-Verbindung der Integration – eine Pause erscheint Sekunden früher.
+
+**Kamera**
+- **WebRTC in der Karte** (paxx12 Extended Firmware): weniger Verzögerung und viel weniger Daten als MJPEG, MJPEG bleibt als Rückfall (Option `camera_webrtc`).
+- Stream von paxx12 2.x wird richtig erkannt, **RTSP** automatisch an Home Assistant übergeben, **zweite Kamera** (USB) mit Umschalter.
+
+**Spoolman**
+- **paxx12 SpoolLink** wird automatisch erkannt: kein doppeltes Abbuchen, die Spule je Kopf kommt vom Drucker, die Spulenwahl schickt `SET_SPOOL_ID`.
+- Eine gewählte Spule **lädt ihr Filament** in den Kopf (Material, Unterart, Hersteller, Farbe) – **mehrfarbige Spulen** mit allen Farben.
+- **Vorher → nachher je Druck** in der Historie (`#5 550 g → 460 g`).
+- **Spule wiegen** in den Kopfdetails – Spoolman selbst brauchst du nur noch zum Anlegen neuer Spulen.
+- **Kopf entladen und neu einlegen:** Er bietet seine vorherige Spule an („Wieder #5 …?“), ein Tipp übernimmt sie. Option: vorschlagen, automatisch setzen oder aus.
+
+**Dateien und Drucken**
+- **Slicer-Einstellungen im Druckdialog:** Schichthöhe, Wände, Infill, Stützen, Brim, Druckplatte, Geschwindigkeiten und Temperaturen je Filament (Dienst `file_settings`).
+
+**Benachrichtigungen und Wartung**
+- **Wartung in Kalendermonaten** (Snapmakers U1-Wartungsanleitung) neben Druckstunden, mit Push *Wartung fällig*.
+- Fortschritts-Benachrichtigung: Kamerabild oder Modellvorschau; sie verschwindet jetzt zuverlässig bei Druckende, auch nach einem Neustart während des Drucks.
+
+**Aussehen und Automationen**
+- **Blueprint Status-Licht** wird mit installiert: färbt WLED oder jede Farblampe nach dem Druckzustand.
+- **Eigene Akzentfarbe** für Karte und Mini-Karte.
+- Die Karte gibt es zusätzlich als `custom:snapmaker-u1-card-ironoxx` (eine andere Integration bringt eine Karte mit gleichem Namen mit; der Selbsttest weist darauf hin).
+
+**Gut zu wissen beim Update**
+- Home Assistant neu starten und das Dashboard neu laden.
+- Die Kartenbereiche `mesh` und `console` sind neu; wer Bereiche per `show:` aufzählt, ergänzt sie.
+- Mit SpoolLink bucht die Integration den Verbrauch nicht mehr selbst ab – das macht Moonraker.
+
+⭐ Gefällt dir die Karte? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Spendier mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 1.6.2
 
 Bug fix release on top of the big 1.6 update – the full list of what's new in 1.6 is below.

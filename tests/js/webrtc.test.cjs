@@ -84,6 +84,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(frame().classList.contains("rtc-on"));
   assert.strictEqual(card._streamImg, null, "MJPEG stopped while WebRTC plays");
   assert.strictEqual(frame().style.aspectRatio, "1280 / 720");
+  // the camera tick must not switch back to the MJPEG image's format (e.g. 4:3)
+  const im = frame().querySelector("img[data-live]");
+  Object.defineProperty(im, "naturalWidth", { value: 1600, configurable: true });
+  Object.defineProperty(im, "naturalHeight", { value: 1200, configurable: true });
+  card._tickCamera();
+  assert.strictEqual(frame().style.aspectRatio, "1280 / 720", "video format stays");
   assert.strictEqual(card._tickRtc(frame(), frame().querySelector("img[data-live]")), true);
 
   // rebuild of the card: the same video moves into the new frame

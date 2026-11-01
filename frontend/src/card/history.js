@@ -16,7 +16,7 @@ export const HistoryMixin = (Base) => class extends Base {
         h.duration ? fmtMin(h.duration / 60) : null,
         h.filament_g !== undefined && h.filament_g !== null ? `${Math.round(h.filament_g)} g` : null,
         h.energy !== undefined && h.energy !== null ? num(h.energy, 2, "kWh") : null,
-        h.switches ? tr("{n} Wechsel", { n: fmtInt(h.switches) }) : null,
+        h.switches > 1 ? tr("{n} Wechsel", { n: fmtInt(h.switches) }) : null,
         Array.isArray(h.pause_layers) && h.pause_layers.length ? tr("Pause vor {l}", { l: h.pause_layers.join(", ") }) : null,
         h.error || null,
         // Spoolman per spool: remaining before -> after, else the booked amount (⏳ = not booked yet)

@@ -174,7 +174,8 @@ export const LayoutMixin = (Base) => class extends Base {
       // Tablet / wall monitor: camera and job stay visible on the left, the
       // remaining tabs on the right. Narrow screens stack both columns.
       const side = TABLET_SIDE.filter((s) => sections.includes(s));
-      const rest = sections.filter((s) => !side.includes(s));
+      // The layer view only exists during a print: without it no empty overview tab
+      const rest = sections.filter((s) => !side.includes(s) && (s !== "layer" || (this._d && this._d.active)));
       if (side.length) {
         return `<div class="tablet">
           <div class="tablet-side">${side.map((s) => this._section(s)).join("")}</div>

@@ -139,6 +139,8 @@ def parse_rfid(info: Any) -> dict[str, Any] | None:
     nozzle = (_tag_number(info.get("HOTEND_MIN_TEMP")), _tag_number(info.get("HOTEND_MAX_TEMP")))
     return {
         "official": bool(info.get("OFFICIAL")),
+        # a physical tag was read (SpoolLink marks spools from Spoolman as official without one)
+        "tag": bool(isinstance(info.get("CARD_UID"), list) and any(info.get("CARD_UID"))),
         "vendor": vendor,
         "manufacturer": _clean(info.get("MANUFACTURER")),
         "sku": _tag_number(info.get("SKU")),
@@ -834,6 +836,24 @@ TIMELAPSE_SKIP_ROOTS = ("config", "logs", "config_examples", "docs")
 # Stock firmware: <print name>_<YYYYMMDDHHMMSS>.mp4 plus _cover.jpg (large) and
 # .jpg (thumbnail) with the same stem.
 _STAMP = re.compile(r"^(?P<name>.*?)_(?P<ts>\d{14})$")
+
+
+def dedupe_timelapses(videos: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Newest first, each video once.
+
+    paxx12 firmware can expose the same timelapse folder under two Moonraker
+    roots (e.g. ``camera`` and ``timelapse``); the same file then shows up twice
+    with identical name, size and time. The first root (sorted before) wins.
+    """
+    seen: set[tuple[str, Any, Any]] = set()
+    out = []
+    for v in sorted(videos, key=lambda v: v.get("modified") or 0, reverse=True):
+        key = (posixpath.basename(str(v.get("path", ""))).lower(), v.get("size"), round(float(v.get("modified") or 0)))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(v)
+    return out
 
 
 def pick_timelapses(root: str, entries: list[dict[str, Any]], limit: int = 20) -> list[dict[str, Any]]:

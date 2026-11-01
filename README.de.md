@@ -67,15 +67,25 @@ Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über 
 
 ## Screenshots
 
-![Übersicht mit Kamera, letztem Druck und Druckköpfen](docs/screenshots/uebersicht.png)
+![Übersicht im Druck: Kamera, laufender Auftrag, Schichtansicht mit Objekten und die Druckköpfe mit ihren Spoolman-Spulen](docs/screenshots/uebersicht.png)
 
-| Druckstart mit Filamentzuordnung | Verlauf und Statistik |
+| Steuerung: Bed Mesh, Flussrate, Temperaturen, G-Code-Konsole | Verlauf und Statistik |
 |---|---|
-| ![Druckstart](docs/screenshots/druckstart.png) | ![Verlauf](docs/screenshots/verlauf.png) |
-| **Steuerung** | **System, Wartung und Diagnose** |
-| ![Steuerung](docs/screenshots/steuerung.png) | ![System](docs/screenshots/system.png) |
-| **Zeitraffer** | |
-| ![Zeitraffer](docs/screenshots/zeitraffer.png) | |
+| ![Steuerung](docs/screenshots/steuerung.png) | ![Verlauf](docs/screenshots/verlauf.png) |
+| **Dateien mit Vorschaubildern** | **System, Wartung und Diagnose** |
+| ![Dateien](docs/screenshots/dateien.png) | ![System](docs/screenshots/system.png) |
+| **Objekt im Druck ausschließen** | **Zeitraffer-Player** |
+| ![Objekt ausschließen](docs/screenshots/objekte.png) | ![Zeitraffer](docs/screenshots/zeitraffer.png) |
+| **Druckstart mit Filamentzuordnung** | **Selbsttest** |
+| ![Druckstart](docs/screenshots/druckstart.png) | ![Selbsttest](docs/screenshots/selbsttest.png) |
+
+**Benachrichtigungen (Android):** erste Schicht fertig mit Pause- und Licht-Knopf, Druck fertig mit Ergebnisfoto und die laufende Fortschritts-Benachrichtigung.
+
+![Benachrichtigungen](docs/screenshots/benachrichtigungen.png)
+
+**Am Handy:** Schichtansicht des ganzen Betts und auf das Teil vergrößert.
+
+![Handy](docs/screenshots/handy.png)
 
 ## Voraussetzungen
 
@@ -163,7 +173,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 
 | Option | Standard | Bedeutung |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander, `tablet` = Kamera und Druckauftrag immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander) |
+| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander, `tablet` = Kamera, Druckauftrag und Druckköpfe immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander) |
 | `layer_view` | `part` | Schichtansicht: `part` = auf das Teil vergrößert, `bed` = Draufsicht auf die ganze Platte mit geparkten Köpfen und Düsen-Marker. Auch direkt in der Schichtansicht umschaltbar (Raster-Knopf, merkt sich der Browser) |
 | `bed_image` | – | eigenes Hintergrundbild für die Draufsicht, z. B. `/local/u1_oben.png` (Datei in `config/www`); ersetzt die gezeichnete Platte und die Köpfe |
 | `bed_image_area` | `0, 0, 270, 270` | welche Druckerkoordinaten in mm das Bild abdeckt (x0, y0, x1, y1). Foto des ganzen Druckers: zwei Punkte ausmessen, z. B. `-40, -30, 310, 360` |

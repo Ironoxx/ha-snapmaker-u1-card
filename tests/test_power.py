@@ -303,7 +303,7 @@ async def test_full_print_cycle(hass: HomeAssistant, mock_client, notifications,
     assert len(notifications) == 2
     msg = notifications[1].data
     assert msg["title"] == "Snapmaker U1: Druck fertig"
-    assert msg["message"] == "new · 59 min · 10 g · 1.00 kWh · 0,47 € · 30 Wechsel"
+    assert msg["message"] == "new · 59 min · 10 g · 1,00 kWh · 0,47 € · 30 Kopfwechsel"
     assert hass.states.get(OWN_SWITCH).attributes["auto_off_pending"] is True
     assert hass.states.get(SWITCH).state == "on"
 

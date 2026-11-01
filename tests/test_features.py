@@ -299,3 +299,13 @@ def test_view_box_ignores_purge_lines_and_uses_objects(tmp_path: Path) -> None:
     x0, y0, x1, y1 = meta["bbox"]
     assert 115 <= x0 <= 121 and 115 <= y0 <= 121, meta["bbox"]
     assert 139 <= x1 <= 145 and 139 <= y1 <= 145, meta["bbox"]
+
+
+def test_timelapses_listed_once_across_roots() -> None:
+    from conftest import parsing as p2
+    a = {"root": "camera", "path": "dog_PLA_20261026162900.mp4", "size": 18, "modified": 100.2}
+    b = {"root": "timelapse", "path": "dog_PLA_20261026162900.mp4", "size": 18, "modified": 100.4}
+    c = {"root": "camera", "path": "clip.mp4", "size": 12, "modified": 90}
+    out = p2.dedupe_timelapses([c, b, a])
+    assert [v["path"] for v in out] == ["dog_PLA_20261026162900.mp4", "clip.mp4"]
+    assert out[0]["root"] == "timelapse"  # newest first; same file only once

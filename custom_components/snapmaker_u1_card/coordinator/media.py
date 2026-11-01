@@ -34,6 +34,7 @@ from ..parsing import (
     PRINTABLE_SUFFIXES,
     SETTINGS_TAIL_BYTES,
     TIMELAPSE_SKIP_ROOTS,
+    dedupe_timelapses,
     describe_file,
     parse_slicer_settings,
     pick_thumbnail,
@@ -143,7 +144,7 @@ class MediaMixin:
                 found += pick_timelapses(root, await self.client.list_files(root))
             except MoonrakerError as err:
                 _LOGGER.debug("Folder %s not readable: %s", root, err)
-        found.sort(key=lambda v: v.get("modified") or 0, reverse=True)
+        found = dedupe_timelapses(found)
         found = found[:20]
         await self._cache_timelapse_images(found)
         return found

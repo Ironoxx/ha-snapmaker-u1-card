@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.6.2";
+  var CARD_VERSION = "1.6.3";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -32,7 +32,7 @@
     { id: "timelapse", icon: "mdi:filmstrip", label: "Zeitraffer", sections: ["timelapse"] },
     { id: "system", icon: "mdi:chip", label: "System", sections: ["maintenance", "system"] }
   ];
-  var TABLET_SIDE = ["stage", "job"];
+  var TABLET_SIDE = ["stage", "job", "toolheads"];
   var TAB_STORE = "snapmaker-u1-card.tab";
   var RESULT = {
     complete: ["Fertig", "ok"],
@@ -484,7 +484,7 @@
     "Aus (immer über Home Assistant)": "Off (always through Home Assistant)",
     "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant": "Empty = automatic: directly from the printer at home (less delay), through Home Assistant on https or away from home",
     "Leer = http://<Drucker>/webcam/?action=stream": "Empty = http://<printer>/webcam/?action=stream",
-    "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)": "Empty = tabs. Tablet / monitor: camera and job on the left, tabs on the right (from about 900 px width)",
+    "Leer = Reiter. Tablet / Monitor: Kamera, Druckauftrag und Druckköpfe links, Reiter rechts (ab ca. 900 px Breite)": "Empty = tabs. Tablet / monitor: camera, job and print heads on the left, tabs on the right (from about 900 px width)",
     "Leer = anzeigen. Der Not-Halt-Button in Home Assistant bleibt in jedem Fall erhalten.": "Empty = show. The emergency stop button entity in Home Assistant is always kept.",
     "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).": "Empty = on. If the image stops, the card sends camera.start_monitor to the printer (only while it is visible).",
     "Not-Halt stoppt Klipper sofort. Ein Neustart der Firmware ist danach nötig.": "Emergency stop halts Klipper immediately. A firmware restart is needed afterwards.",
@@ -493,6 +493,7 @@
     "Pause": "Pause",
     "Pausiert": "Paused",
     "Pausiere …": "Pausing …",
+    "Spule aus Spoolman, vom Drucker per SpoolLink übernommen": "Spool from Spoolman, taken over by the printer via SpoolLink",
     "3D-Waben": "3D honeycomb",
     "Adaptiv kubisch": "Adaptive cubic",
     "Außenwand {v}": "Outer wall {v}",
@@ -705,7 +706,7 @@
     prefix: "Nur bei mehreren Druckern nötig",
     network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
-    layout: "Leer = Reiter. Tablet / Monitor: Kamera und Druckauftrag links, Reiter rechts (ab ca. 900 px Breite)",
+    layout: "Leer = Reiter. Tablet / Monitor: Kamera, Druckauftrag und Druckköpfe links, Reiter rechts (ab ca. 900 px Breite)",
     bed_image: "z. B. /local/u1_oben.png (Datei unter config/www). Ersetzt Platte und Köpfe in der Draufsicht.",
     bed_image_area: "Welche Druckerkoordinaten das Bild abdeckt. Leer = genau die Platte 0, 0, 270, 270. Für ein Foto des ganzen Druckers z. B. -40, -30, 310, 360.",
     layer_view: "Leer = Teil vergrößert. Umschalten geht auch direkt in der Schichtansicht.",
@@ -1738,7 +1739,7 @@
           <div class="head-card-top" data-headopen="${h.idx}" title="${tr("Details und Filament bearbeiten")}">
             ${this._spoolSvg(h.color, h.active, h.colors)}
             <div style="min-width:0">
-              <div class="head-name">${esc(h.name)}${h.official ? ` <span class="rfid" title="${tr("Snapmaker-Spule, per RFID erkannt")}">RFID</span>` : ""}</div>
+              <div class="head-name">${esc(h.name)}${this._headBadge(h)}</div>
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
@@ -1780,6 +1781,17 @@
         </div>
         <div class="heads">${cards}</div>
       </section>`;
+    }
+    /** "RFID" for a read tag; SpoolLink marks Spoolman spools as official without a tag. */
+    _headBadge(h) {
+      if (!h.official) return "";
+      const slot = (this._slots() || [])[h.idx] || {};
+      const sm = this._spoolman();
+      const tag = slot.rfid && slot.rfid.tag;
+      if (!tag && sm && sm.spoollink && this._slotSpool(h.idx)) {
+        return ` <span class="rfid" data-src="spoolman" title="${tr("Spule aus Spoolman, vom Drucker per SpoolLink übernommen")}">Spoolman</span>`;
+      }
+      return ` <span class="rfid" title="${tr("Snapmaker-Spule, per RFID erkannt")}">RFID</span>`;
     }
     /** The head's spool from Spoolman (only with Spoolman configured). */
     _spoolLine(h) {
@@ -2562,7 +2574,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           h.duration ? fmtMin(h.duration / 60) : null,
           h.filament_g !== void 0 && h.filament_g !== null ? `${Math.round(h.filament_g)} g` : null,
           h.energy !== void 0 && h.energy !== null ? num(h.energy, 2, "kWh") : null,
-          h.switches ? tr("{n} Wechsel", { n: fmtInt(h.switches) }) : null,
+          h.switches > 1 ? tr("{n} Wechsel", { n: fmtInt(h.switches) }) : null,
           Array.isArray(h.pause_layers) && h.pause_layers.length ? tr("Pause vor {l}", { l: h.pause_layers.join(", ") }) : null,
           h.error || null,
           // Spoolman per spool: remaining before -> after, else the booked amount (⏳ = not booked yet)
@@ -3374,7 +3386,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       if (this._cfg.layout === "tablet") {
         const side = TABLET_SIDE.filter((s) => sections.includes(s));
-        const rest = sections.filter((s) => !side.includes(s));
+        const rest = sections.filter((s) => !side.includes(s) && (s !== "layer" || this._d && this._d.active));
         if (side.length) {
           return `<div class="tablet">
           <div class="tablet-side">${side.map((s) => this._section(s)).join("")}</div>
@@ -3547,6 +3559,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .tablet-side > .panel { width: 100%; }
   .tablet-main > .tabs { margin: 0; padding: 0; }
+  /* The right column is narrower than the card: the layer view takes its full width */
+  .tablet-main .layout > .lv-panel { grid-column: 1 / -1; }
   @container u1 (min-width: 900px) {
     .tablet { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); }
   }
@@ -3641,7 +3655,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-family: var(--u1-mono); }
   .zoom-badge[hidden] { display: none; }
   .frame:fullscreen { height: 100% !important; min-height: 0 !important; background: #000; }
-  .frame:fullscreen img { object-fit: contain !important; }
+  .frame:fullscreen img, .frame:fullscreen video[data-rtc] { object-fit: contain !important; }
+  /* Fullscreen on a big screen: overlays grow with it instead of staying phone-sized */
+  @media (min-width: 1200px) {
+    .frame:fullscreen :is(.hud, .thumb, .cam-state, .zoom-ctl, .zoom-badge, .badge-stale) { zoom: 1.5; }
+  }
+  @media (min-width: 1900px) {
+    .frame:fullscreen :is(.hud, .thumb, .cam-state, .zoom-ctl, .zoom-badge, .badge-stale) { zoom: 2; }
+  }
   .thumb {
     position: absolute; left: 10px; bottom: 10px; z-index: 3;
     background: color-mix(in srgb, var(--u1-panel) 85%, transparent);
@@ -5452,7 +5473,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     _tickCamera() {
       const root = this.shadowRoot?.getElementById("u1card");
-      if (root) this._fitAspect(root.querySelector(".stage .frame > img"));
+      if (root && !(this._rtc && this._rtc.playing)) this._fitAspect(root.querySelector(".stage .frame > img"));
       const img = root?.querySelector("img[data-live]");
       if (!img) return;
       const cam = this._st(this._ents && this._ents.camera);

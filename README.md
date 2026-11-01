@@ -69,15 +69,25 @@ Everything runs through the Home Assistant connection. It works the same locally
 
 The screenshots show the German UI; with Home Assistant set to English the card is in English.
 
-![Overview with camera, last print and print heads](docs/screenshots/uebersicht.png)
+![Overview while printing: camera, running job, layer view with objects and the print heads with their Spoolman spools](docs/screenshots/uebersicht.png)
 
-| Print start with filament mapping | History and statistics |
+| Control: bed mesh, flow, temperatures, G-code console | History and statistics |
 |---|---|
-| ![Print start](docs/screenshots/druckstart.png) | ![History](docs/screenshots/verlauf.png) |
-| **Control** | **System, maintenance and diagnostics** |
-| ![Control](docs/screenshots/steuerung.png) | ![System](docs/screenshots/system.png) |
-| **Timelapse** | |
-| ![Timelapse](docs/screenshots/zeitraffer.png) | |
+| ![Control](docs/screenshots/steuerung.png) | ![History](docs/screenshots/verlauf.png) |
+| **Files with thumbnails** | **System, maintenance and diagnostics** |
+| ![Files](docs/screenshots/dateien.png) | ![System](docs/screenshots/system.png) |
+| **Exclude an object during the print** | **Timelapse player** |
+| ![Exclude object](docs/screenshots/objekte.png) | ![Timelapse](docs/screenshots/zeitraffer.png) |
+| **Print start with filament mapping** | **Self test** |
+| ![Print start](docs/screenshots/druckstart.png) | ![Self test](docs/screenshots/selbsttest.png) |
+
+**Notifications (Android):** first layer done with pause and light buttons, print finished with the result photo, and the live progress notification.
+
+![Notifications](docs/screenshots/benachrichtigungen.png)
+
+**On the phone:** layer view of the whole bed and zoomed to the part.
+
+![Phone](docs/screenshots/handy.png)
 
 ## Requirements
 
@@ -165,7 +175,7 @@ All options are optional; except head names and presets they can also be set in 
 
 | Option | Default | Meaning |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked, `tablet` = camera and job always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px) |
+| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked, `tablet` = camera, job and print heads always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px) |
 | `layer_view` | `part` | layer view: `part` = zoomed to the part, `bed` = top view of the whole plate with the parked heads and a nozzle marker. Also switchable in the layer view (grid button, remembered per browser) |
 | `bed_image` | – | own background image for the top view, e.g. `/local/u1_top.png` (file in `config/www`); replaces the drawn plate and heads |
 | `bed_image_area` | `0, 0, 270, 270` | printer coordinates in mm the image covers (x0, y0, x1, y1). Photo of the whole printer: measure two points, e.g. `-40, -30, 310, 360` |

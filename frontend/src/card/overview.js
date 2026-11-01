@@ -204,7 +204,7 @@ export const OverviewMixin = (Base) => class extends Base {
           <div class="head-card-top" data-headopen="${h.idx}" title="${tr("Details und Filament bearbeiten")}">
             ${this._spoolSvg(h.color, h.active, h.colors)}
             <div style="min-width:0">
-              <div class="head-name">${esc(h.name)}${h.official ? ` <span class="rfid" title="${tr("Snapmaker-Spule, per RFID erkannt")}">RFID</span>` : ""}</div>
+              <div class="head-name">${esc(h.name)}${this._headBadge(h)}</div>
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
@@ -244,6 +244,18 @@ export const OverviewMixin = (Base) => class extends Base {
         </div>
         <div class="heads">${cards}</div>
       </section>`;
+  }
+
+  /** "RFID" for a read tag; SpoolLink marks Spoolman spools as official without a tag. */
+  _headBadge(h) {
+    if (!h.official) return "";
+    const slot = (this._slots() || [])[h.idx] || {};
+    const sm = this._spoolman();
+    const tag = slot.rfid && slot.rfid.tag;
+    if (!tag && sm && sm.spoollink && this._slotSpool(h.idx)) {
+      return ` <span class="rfid" data-src="spoolman" title="${tr("Spule aus Spoolman, vom Drucker per SpoolLink übernommen")}">Spoolman</span>`;
+    }
+    return ` <span class="rfid" title="${tr("Snapmaker-Spule, per RFID erkannt")}">RFID</span>`;
   }
 
   /** The head's spool from Spoolman (only with Spoolman configured). */
