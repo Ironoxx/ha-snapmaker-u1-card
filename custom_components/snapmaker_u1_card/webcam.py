@@ -106,6 +106,15 @@ def mjpeg_candidates(cam: dict[str, Any]) -> list[str]:
     return out
 
 
+def cam_folder(cam: dict[str, Any]) -> str | None:
+    """Folder of a webcam's URLs (``/webcam/``, ``/webcam2/`` …): same folder = same camera."""
+    for key in ("stream_url", "snapshot_url"):
+        url = str(cam.get(key) or "").strip().split("?")[0]
+        if url:
+            return url.rsplit("/", 1)[0] + "/"
+    return None
+
+
 def webrtc_url(cam: dict[str, Any]) -> str | None:
     """Signalling URL of a camera-streamer WebRTC webcam (paxx12 2.x), else None."""
     stream = str(cam.get("stream_url") or "").strip()
@@ -194,8 +203,10 @@ class Webcam:
     async def _probe(self) -> tuple[str, str | None, str | None]:
         cams = await self.client.webcams()
         if self.second:
-            # every webcam but the first one Moonraker lists (that is the main camera)
-            cams = cams[1:]
+            # webcams in another folder than the first one Moonraker lists (that is
+            # the main camera); paxx12 may list the main camera twice (MJPEG + WebRTC)
+            main = cam_folder(cams[0]) if cams else None
+            cams = [c for c in cams[1:] if cam_folder(c) != main]
         self.webrtc_url = next((self.client.resolve_url(u) for u in (webrtc_url(c) for c in cams[:1]) if u), None)
         candidates: list[tuple[str | None, str | None]] = []
         for c in cams:

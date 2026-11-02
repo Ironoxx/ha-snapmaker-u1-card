@@ -75,6 +75,21 @@ async def test_second_camera(no_sleep, no_rtsp) -> None:
          patch.object(c, "first_mjpeg_frame", AsyncMock(side_effect=frame)):
         assert await cam2.detect() == "live"
     assert cam2.stream_url == "http://192.168.0.25/webcam2/stream.mjpg"
+    # main camera listed twice (MJPEG + WebRTC), /webcam2/ answers 502: no second camera
+    twice = [{"name": "case", "stream_url": "/webcam/stream.mjpg", "snapshot_url": "/webcam/snapshot.jpg"},
+             {"name": "case-rtc", "service": "webrtc-camerastreamer", "stream_url": "/webcam/webrtc",
+              "snapshot_url": "/webcam/snapshot.jpg"}]
+
+    async def main_only(url, timeout=3):
+        return JPEG_A if "/webcam/" in url else None
+
+    cam2 = wc.Webcam(c, second=True)
+    with patch.object(c, "webcams", AsyncMock(return_value=twice)), \
+         patch.object(c, "first_mjpeg_frame", AsyncMock(side_effect=main_only)), \
+         patch.object(c, "fetch_image", AsyncMock(side_effect=main_only)):
+        assert await cam2.detect() == "none"
+    assert wc.cam_folder({"stream_url": "/webcam/?action=stream"}) == "/webcam/"
+    assert wc.cam_folder({"snapshot_url": "http://h/webcam2/snapshot.jpg"}) == "http://h/webcam2/"
     # only one camera: nothing, and no stock wake-up attempt
     cam2 = wc.Webcam(c, second=True)
     with patch.object(c, "webcams", AsyncMock(return_value=cams[:1])), \
