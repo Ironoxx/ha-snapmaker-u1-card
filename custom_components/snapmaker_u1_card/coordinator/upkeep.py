@@ -160,7 +160,7 @@ class UpkeepMixin:
         from homeassistant.helpers import entity_registry as er
 
         reg = er.async_get(self.hass)
-        mr = [e for e in reg.entities.values() if e.platform == "moonraker"]
+        mr = [e for e in reg.entities.values() if e.platform == "moonraker" and e.disabled_by is None]
         own = bool(self.data and self.data.machine)
         add("moonraker_integration", bool(mr) or own,
             t("Werte direkt vom Drucker – Moonraker-Integration nicht nötig"
