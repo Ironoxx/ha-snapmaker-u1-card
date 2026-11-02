@@ -4,9 +4,27 @@ import { DOMAIN } from "../const.js";
 import { esc, num } from "../format.js";
 import { LANG, tr } from "../i18n.js";
 
+/** Card buttons → action/target of the integration's machine_command service. */
+const OWN_BUTTONS = {
+  pause_print: ["pause"], resume_print: ["resume"], cancel_print: ["cancel"],
+  emergency_stop: ["emergency_stop"], home_all_axes: ["home", "all"],
+  home_x_axis: ["home", "x"], home_y_axis: ["home", "y"], home_z_axis: ["home", "z"],
+};
+
 export const ControlsMixin = (Base) => class extends Base {
   _press(name) {
-    this._hass.callService("button", "press", { entity_id: `button.${this._p(name)}` });
+    const own = this._ownControl() && OWN_BUTTONS[name];
+    if (own) this._machineCommand(...own);
+    else this._hass.callService("button", "press", { entity_id: `button.${this._p(name)}` });
+  }
+
+  /** Key of a machine value for an entity id of the printer (``number.<prefix>_bed_target`` → ``bed_target``). */
+  _machineKey(entity) {
+    const m = this._ownControl() && this._machine();
+    if (!m) return null;
+    const dot = entity.indexOf(".");
+    const key = dot > 0 && entity.startsWith(m.pre, dot) ? entity.slice(dot + m.pre.length) : null;
+    return key && Object.prototype.hasOwnProperty.call(m.values, key) ? key : null;
   }
 
   _setNumber(entity, value) {
@@ -17,7 +35,9 @@ export const ControlsMixin = (Base) => class extends Base {
       this._patch();
       return;
     }
-    this._hass.callService("number", "set_value", { entity_id: entity, value: Number(value) });
+    const key = this._machineKey(entity);
+    if (key) this._machineCommand("set", key, Number(value));
+    else this._hass.callService("number", "set_value", { entity_id: entity, value: Number(value) });
   }
 
   // ── Pending commands ──────────────────────────────────────────────────────
@@ -129,7 +149,9 @@ export const ControlsMixin = (Base) => class extends Base {
 
   _toggleLight() {
     const want = !this._d.light;
-    this._hass.callService("light", "toggle", { entity_id: `light.${this._p("led_cavity_led")}` });
+    const light = `light.${this._p("led_cavity_led")}`;
+    if (this._machineKey(light)) this._machineCommand("switch", "led_cavity_led", want);
+    else this._hass.callService("light", "toggle", { entity_id: light });
     // Patched in place: a rebuild would reconnect the camera stream
     if (!this._pending) this._pending = new Map();
     this._pending.set("light", { done: (d) => d.lightReal === want, until: Date.now() + 15000, want });
@@ -141,7 +163,9 @@ export const ControlsMixin = (Base) => class extends Base {
   /** Switch toggles (heater, filter): spinner until the entity has changed. */
   _toggleEntity(id, btn) {
     const before = this._s(id);
-    this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
+    const key = this._machineKey(id);
+    if (key && /^(output_pin|led)_/.test(key)) this._machineCommand("switch", key, before !== "on");
+    else this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
     if (!this._pending) this._pending = new Map();
     this._pending.set(`t:${id}`, { done: () => this._s(id) !== before, until: Date.now() + 15000 });
     this._pendTimer();
@@ -230,6 +254,8 @@ export const ControlsMixin = (Base) => class extends Base {
   }
 
   _more(entityId) {
+    // values from the integration without a Moonraker entity: no more-info dialog to open
+    if (this._hass && !this._hass.states[entityId]) return;
     this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: { entityId }, bubbles: true, composed: true,
     }));

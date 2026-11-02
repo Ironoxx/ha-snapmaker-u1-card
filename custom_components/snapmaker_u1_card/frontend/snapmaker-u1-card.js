@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "1.6.3";
+  var CARD_VERSION = "2.0.0b1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -370,7 +370,7 @@
     "Der Strom wird abgeschaltet, sobald er heruntergefahren ist.": "Power will be cut once it has shut down.",
     "Die Datei enthält keine Filamentangaben. Der Drucker nutzt seine Standardzuordnung (Filament 1 → Kopf 1 …).": "The file has no filament information. The printer uses its default mapping (filament 1 → head 1 …).",
     "Die Integration <b>Snapmaker U1 Card</b> ist nicht eingerichtet.": "The <b>Snapmaker U1 Card</b> integration is not set up.",
-    "Die Moonraker-Integration meldet keinen Status.": "The Moonraker integration reports no status.",
+    "Der Drucker antwortet nicht im Netzwerk.": "The printer does not respond on the network.",
     "Druck": "Print",
     "Druck gestartet: {name}": "Print started: {name}",
     "Druck gestoppt": "Print stopped",
@@ -900,8 +900,68 @@
 
   // frontend/src/card/state.js
   var StateMixin = (Base) => class extends Base {
+    /**
+     * State of an entity. Since 2.0 the integration reads the printer values itself
+     * and hands them over in one sensor (``values``/``attrs``, keyed like the
+     * Moonraker integration's entities): ``<domain>.<prefix>_<key>`` is answered
+     * from there first, the Moonraker integration is only the fallback.
+     */
     _st(id) {
-      return this._hass && this._hass.states[id];
+      const h = this._hass;
+      if (!h) return void 0;
+      const m = id && this._machine();
+      if (m) {
+        const dot = id.indexOf(".");
+        if (dot > 0 && id.startsWith(m.pre, dot)) {
+          const key = id.slice(dot + m.pre.length);
+          if (Object.prototype.hasOwnProperty.call(m.values, key)) {
+            let e = m.cache.get(id);
+            if (!e) {
+              const real = h.states[id];
+              e = {
+                entity_id: id,
+                state: String(m.values[key]),
+                attributes: { ...real && real.attributes, ...m.attrs[key] || {} }
+              };
+              m.cache.set(id, e);
+            }
+            return e;
+          }
+        }
+      }
+      return h.states[id];
+    }
+    /** The integration's machine values (null without them, e.g. printer offline). */
+    _machine() {
+      const id = this._ents && this._ents.machine;
+      const st = id && this._hass.states[id];
+      const a = st && st.attributes;
+      if (!a || !a.values || typeof a.values !== "object") return null;
+      if (!this._mach || this._mach.src !== st || this._mach.prefix !== this._ents.prefix) {
+        this._mach = {
+          src: st,
+          prefix: this._ents.prefix,
+          pre: `.${this._ents.prefix}_`,
+          values: a.values,
+          attrs: a.attrs || {},
+          entry: a.entry_id,
+          cache: /* @__PURE__ */ new Map()
+        };
+      }
+      return this._mach;
+    }
+    /** Controls through the integration (2.0) instead of the Moonraker integration's entities. */
+    _ownControl() {
+      const sv = this._hass && this._hass.services && this._hass.services.snapmaker_u1_card;
+      return !!(sv && sv.machine_command && this._machine());
+    }
+    _machineCommand(action, target, value) {
+      const data = { action };
+      if (target !== void 0) data.target = target;
+      if (value !== void 0) data.value = value;
+      const entry = this._machine() && this._machine().entry;
+      if (entry) data.config_entry_id = entry;
+      return this._hass.callService("snapmaker_u1_card", "machine_command", data);
     }
     _s(id, fb = null) {
       const e = this._st(id);
@@ -1197,9 +1257,29 @@
   };
 
   // frontend/src/card/controls.js
+  var OWN_BUTTONS = {
+    pause_print: ["pause"],
+    resume_print: ["resume"],
+    cancel_print: ["cancel"],
+    emergency_stop: ["emergency_stop"],
+    home_all_axes: ["home", "all"],
+    home_x_axis: ["home", "x"],
+    home_y_axis: ["home", "y"],
+    home_z_axis: ["home", "z"]
+  };
   var ControlsMixin = (Base) => class extends Base {
     _press(name) {
-      this._hass.callService("button", "press", { entity_id: `button.${this._p(name)}` });
+      const own = this._ownControl() && OWN_BUTTONS[name];
+      if (own) this._machineCommand(...own);
+      else this._hass.callService("button", "press", { entity_id: `button.${this._p(name)}` });
+    }
+    /** Key of a machine value for an entity id of the printer (``number.<prefix>_bed_target`` → ``bed_target``). */
+    _machineKey(entity) {
+      const m = this._ownControl() && this._machine();
+      if (!m) return null;
+      const dot = entity.indexOf(".");
+      const key = dot > 0 && entity.startsWith(m.pre, dot) ? entity.slice(dot + m.pre.length) : null;
+      return key && Object.prototype.hasOwnProperty.call(m.values, key) ? key : null;
     }
     _setNumber(entity, value) {
       if (this._d && this._d.active && /_target$/.test(entity) && !confirm(tr("Solltemperatur während des Drucks auf {v} °C ändern?", { v: Number(value) }))) {
@@ -1207,7 +1287,9 @@
         this._patch();
         return;
       }
-      this._hass.callService("number", "set_value", { entity_id: entity, value: Number(value) });
+      const key = this._machineKey(entity);
+      if (key) this._machineCommand("set", key, Number(value));
+      else this._hass.callService("number", "set_value", { entity_id: entity, value: Number(value) });
     }
     // ── Pending commands ──────────────────────────────────────────────────────
     // Pause parks the head first and the Moonraker integration polls: without
@@ -1323,7 +1405,9 @@
     }
     _toggleLight() {
       const want = !this._d.light;
-      this._hass.callService("light", "toggle", { entity_id: `light.${this._p("led_cavity_led")}` });
+      const light = `light.${this._p("led_cavity_led")}`;
+      if (this._machineKey(light)) this._machineCommand("switch", "led_cavity_led", want);
+      else this._hass.callService("light", "toggle", { entity_id: light });
       if (!this._pending) this._pending = /* @__PURE__ */ new Map();
       this._pending.set("light", { done: (d) => d.lightReal === want, until: Date.now() + 15e3, want });
       this._pendTimer();
@@ -1333,7 +1417,9 @@
     /** Switch toggles (heater, filter): spinner until the entity has changed. */
     _toggleEntity(id, btn) {
       const before = this._s(id);
-      this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
+      const key = this._machineKey(id);
+      if (key && /^(output_pin|led)_/.test(key)) this._machineCommand("switch", key, before !== "on");
+      else this._hass.callService(id.split(".")[0], "toggle", { entity_id: id });
       if (!this._pending) this._pending = /* @__PURE__ */ new Map();
       this._pending.set(`t:${id}`, { done: () => this._s(id) !== before, until: Date.now() + 15e3 });
       this._pendTimer();
@@ -1414,6 +1500,7 @@
       });
     }
     _more(entityId) {
+      if (this._hass && !this._hass.states[entityId]) return;
       this.dispatchEvent(new CustomEvent("hass-more-info", {
         detail: { entityId },
         bubbles: true,
@@ -3283,7 +3370,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           "mdi:power-plug-off",
           tr("Drucker ist aus"),
           p.autoOn ? tr("Zum Drucken einfach eine Datei wählen, er schaltet sich selbst ein.") : ""
-        ] : ["mdi:lan-disconnect", tr("Drucker nicht erreichbar"), tr("Die Moonraker-Integration meldet keinen Status.")];
+        ] : ["mdi:lan-disconnect", tr("Drucker nicht erreichbar"), tr("Der Drucker antwortet nicht im Netzwerk.")];
         const btn = off ? `<button class="filled" data-act="power"><ha-icon icon="mdi:power"></ha-icon>${tr("Einschalten")}</button>` : "";
         const avail = OFFLINE_SECTIONS.filter((s) => this._cfg.show.includes(s) && (s !== "files" || p && p.autoOn));
         const extra = this._layout(avail);
@@ -6556,6 +6643,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         maintenance: ownKey("maintenance"),
         errors: ownKey("errors"),
         live: ownKey("live"),
+        machine: ownKey("machine"),
         remaining: ownKey("remaining"),
         finish: ownKey("finish"),
         firmware: ownKey("firmware"),

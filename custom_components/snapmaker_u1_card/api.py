@@ -395,6 +395,21 @@ class MoonrakerClient:
         """pause | resume | cancel via JSON-RPC (Moonraker: printer.print.<action>)."""
         await self.rpc(f"printer.print.{action}", response_timeout=30)
 
+    async def emergency_stop(self) -> None:
+        """Klipper's emergency stop (needs a firmware restart afterwards)."""
+        await self.rpc("printer.emergency_stop", response_timeout=10)
+
+    async def proc_stats(self) -> dict[str, Any]:
+        """Moonraker's process and system statistics (memory, CPU)."""
+        result = await self._get_json("/machine/proc_stats")
+        return result if isinstance(result, dict) else {}
+
+    async def job_queue_state(self) -> str | None:
+        """State of Moonraker's job queue (ready / loading / starting / paused)."""
+        result = await self._get_json("/server/job_queue/status")
+        state = result.get("queue_state") if isinstance(result, dict) else None
+        return str(state) if state else None
+
     async def gcode(self, script: str, timeout: float = 30) -> None:
         """Run a G-code script (JSON-RPC printer.gcode.script); firmware errors raise."""
         await self.rpc("printer.gcode.script", {"script": script}, response_timeout=timeout)

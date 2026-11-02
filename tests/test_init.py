@@ -257,3 +257,60 @@ async def test_tool_changes_unavailable_without_counters(hass: HomeAssistant, mo
     await _setup(hass)
     assert hass.states.get("sensor.snapmaker_u1_card_tool_changes").state == "unavailable"
     assert hass.states.get("sensor.snapmaker_u1_card_filaments").state == "2"
+
+
+async def test_machine_values_and_commands(hass: HomeAssistant, mock_client) -> None:
+    """2.0: values and controls without the Moonraker integration."""
+    from homeassistant.exceptions import ServiceValidationError
+    from homeassistant.helpers import entity_registry as er
+
+    status = mock_client["query"].return_value
+    status["webhooks"] = {"state": "ready", "state_message": "ok"}
+    status["heater_bed"] = {"temperature": 60.0, "target": 60.0, "power": 0.4}
+    status["extruder"].update(temperature=210.0, target=215.0, power=0.3)
+    status["fan"] = {"speed": 0.5}
+    status["gcode_move"] = {"speed_factor": 1.0, "speed": 3000.0}
+    status["led cavity_led"] = {"color_data": [[1.0, 1.0, 1.0, 1.0]]}
+    mock_client["objects"].return_value = ["print_task_config", "extruder", "heater_bed", "fan", "gcode_move",
+                                           "webhooks", "print_stats", "led cavity_led"]
+    with patch(f"{API}.gcode", AsyncMock()) as gcode, \
+         patch(f"{API}.print_action", AsyncMock()) as action, \
+         patch(f"{API}.emergency_stop", AsyncMock()) as estop:
+        await _setup(hass)
+        await hass.async_block_till_done()
+        ent = er.async_get(hass)
+        mine = {e.translation_key: e.entity_id for e in ent.entities.values() if e.platform == DOMAIN}
+        machine = hass.states.get(mine["machine"])
+        assert machine is not None and machine.state == "ready"
+        values = machine.attributes["values"]
+        assert values["bed_temperature"] == 60.0 and values["extruder_target"] == 215
+        assert values["led_cavity_led"] == "on"
+        assert machine.attributes["attrs"]["bed_target"]["max"] == 120
+        assert hass.states.get(mine["bed_temperature"]).state == "60.0"
+        assert hass.states.get(mine["bed_target"]).state == "60.0"
+        assert hass.states.get(mine["chamber_light"]).state == "on"
+        assert "pause_print" in mine and "emergency_stop" in mine
+
+        async def cmd(**data):
+            await hass.services.async_call(DOMAIN, "machine_command", data, blocking=True)
+
+        await cmd(action="pause")
+        action.assert_awaited_with("pause")
+        await cmd(action="emergency_stop")
+        estop.assert_awaited_once()
+        await cmd(action="set", target="bed_target", value=70)
+        gcode.assert_awaited_with("SET_HEATER_TEMPERATURE HEATER=heater_bed TARGET=70")
+        await cmd(action="switch", target="led_cavity_led", value=False)
+        assert "SET_LED LED=cavity_led RED=0" in gcode.await_args.args[0]
+        await cmd(action="home", target="z")
+        assert gcode.await_args.args[0] == "G28 Z"
+        with pytest.raises(ServiceValidationError):
+            await cmd(action="set", target="extruder3_target", value=200)
+        with pytest.raises(ServiceValidationError):
+            await cmd(action="switch", target="output_pin_nope", value=True)
+        # number entity -> same command
+        await hass.services.async_call("number", "set_value", {"entity_id": mine["nozzle_target"], "value": 200},
+                                       blocking=True)
+        assert gcode.await_args.args[0] == "SET_HEATER_TEMPERATURE HEATER=extruder TARGET=200"
+        await hass.services.async_call("button", "press", {"entity_id": mine["resume_print"]}, blocking=True)
+        action.assert_awaited_with("resume")

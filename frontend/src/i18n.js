@@ -293,7 +293,7 @@ export const EN = {
   "Der Strom wird abgeschaltet, sobald er heruntergefahren ist.": "Power will be cut once it has shut down.",
   "Die Datei enthält keine Filamentangaben. Der Drucker nutzt seine Standardzuordnung (Filament 1 → Kopf 1 …).": "The file has no filament information. The printer uses its default mapping (filament 1 → head 1 …).",
   "Die Integration <b>Snapmaker U1 Card</b> ist nicht eingerichtet.": "The <b>Snapmaker U1 Card</b> integration is not set up.",
-  "Die Moonraker-Integration meldet keinen Status.": "The Moonraker integration reports no status.",
+  "Der Drucker antwortet nicht im Netzwerk.": "The printer does not respond on the network.",
   "Druck": "Print",
   "Druck gestartet: {name}": "Print started: {name}",
   "Druck gestoppt": "Print stopped",

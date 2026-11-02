@@ -1,6 +1,6 @@
 # Installed by the Snapmaker U1 Card integration (snapmaker_u1_card).
 # It is copied again when the integration ships a newer version, unless you
-# remove the "managed" line below. Version: 1
+# remove the "managed" line below. Version: 2
 # managed: snapmaker_u1_card
 blueprint:
   name: Snapmaker U1 – status light
@@ -14,11 +14,14 @@ blueprint:
     state_sensor:
       name: Print state
       description: >-
-        The Moonraker integration's "Current print state" sensor of the printer
+        The print state sensor of the printer: "Print state" of this integration
+        (2.0) or "Current print state" of the Moonraker integration
         (states printing, paused, complete, cancelled, error, standby).
       selector:
         entity:
           filter:
+            - domain: sensor
+              integration: snapmaker_u1_card
             - domain: sensor
               integration: moonraker
     lights:

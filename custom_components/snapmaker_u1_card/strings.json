@@ -376,6 +376,35 @@
       },
       "chamber_heater": {
         "name": "Chamber heater"
+      },
+      "machine": {
+        "name": "Printer values"
+      },
+      "bed_temperature": {
+        "name": "Bed temperature"
+      },
+      "nozzle_temperature": {
+        "name": "Nozzle {head} temperature"
+      },
+      "cavity_temperature": {
+        "name": "Chamber temperature"
+      },
+      "progress": {
+        "name": "Progress"
+      },
+      "print_state": {
+        "name": "Print state",
+        "state": {
+          "standby": "Ready",
+          "printing": "Printing",
+          "paused": "Paused",
+          "complete": "Complete",
+          "cancelled": "Cancelled",
+          "error": "Error"
+        }
+      },
+      "current_layer": {
+        "name": "Layer"
       }
     },
     "switch": {
@@ -452,6 +481,43 @@
       },
       "chamber_target": {
         "name": "Chamber heater target"
+      },
+      "bed_target": {
+        "name": "Bed target"
+      },
+      "nozzle_target": {
+        "name": "Nozzle {head} target"
+      },
+      "part_fan": {
+        "name": "Part cooling fan"
+      },
+      "speed_factor": {
+        "name": "Speed factor"
+      }
+    },
+    "button": {
+      "pause_print": {
+        "name": "Pause print"
+      },
+      "resume_print": {
+        "name": "Resume print"
+      },
+      "cancel_print": {
+        "name": "Cancel print"
+      },
+      "emergency_stop": {
+        "name": "Emergency stop"
+      },
+      "home": {
+        "name": "Home all axes"
+      }
+    },
+    "light": {
+      "chamber_light": {
+        "name": "Chamber light"
+      },
+      "led": {
+        "name": "LED {name}"
       }
     }
   },
@@ -883,6 +949,28 @@
         "gross": {
           "name": "With empty spool",
           "description": "On = weighed with the spool (gross), off = filament only."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "machine_command": {
+      "name": "Machine command",
+      "description": "Pause, resume, cancel, emergency stop, homing, setpoints and switches without the Moonraker integration.",
+      "fields": {
+        "action": {
+          "name": "Action",
+          "description": "pause, resume, cancel, emergency_stop, home, set or switch."
+        },
+        "target": {
+          "name": "Target",
+          "description": "home: all/x/y/z; set: bed_target, extruder1_target, fan_speed, speed_factor, <fan>_speed; switch: output_pin_<name> or led_<name>."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Number for set, on/off for switch."
         },
         "config_entry_id": {
           "name": "Printer",

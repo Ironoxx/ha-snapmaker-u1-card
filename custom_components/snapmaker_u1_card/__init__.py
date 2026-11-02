@@ -67,7 +67,8 @@ from .webrtc_view import WebrtcView
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CAMERA, Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.LIGHT, Platform.NUMBER, Platform.SELECT,
+             Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type U1ConfigEntry = ConfigEntry[U1Coordinator]
@@ -304,6 +305,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                                  supports_response=SupportsResponse.OPTIONAL)
     async def file_details(call: ServiceCall) -> ServiceResponse:
         return {"file": await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_file_details(call.data["path"])}
+
+    async def machine_command(call: ServiceCall) -> None:
+        await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_machine_command(
+            call.data["action"], call.data.get("target"), call.data.get("value"))
+
+    hass.services.async_register(DOMAIN, "machine_command", machine_command, schema=vol.Schema({
+        vol.Required("action"): vol.In(["pause", "resume", "cancel", "emergency_stop", "home", "set", "switch"]),
+        vol.Optional("target"): cv.string,
+        vol.Optional("value"): vol.Any(vol.Coerce(float), cv.boolean),
+        vol.Optional(ATTR_ENTRY): cv.string,
+    }))
 
     async def file_settings(call: ServiceCall) -> ServiceResponse:
         coord = _coordinator(hass, call.data.get(ATTR_ENTRY))

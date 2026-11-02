@@ -20,6 +20,7 @@ from ..machine import (
     pick_gcode,
     purifier_gcode,
 )
+from ..machine_status import HOME_AXES, CommandError, set_gcode, switch_gcode
 from ..parsing import ACTIVE_PRINT_STATES
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,3 +130,46 @@ class MachineMixin:
         _LOGGER.info("Console: %s -> %s", text.replace("\n", " | "), error or "ok")
         await self.async_request_refresh()
         return {"script": text, "ok": error is None, "error": error, "responses": responses}
+
+    # ── 2.0: controls without the Moonraker integration ─────────────────────
+    async def async_machine_command(self, action: str, target: str | None = None, value: Any = None) -> None:
+        """Pause, resume, cancel, emergency stop, homing, setpoints and switches.
+
+        ``set``: target = machine value key (bed_target, extruder1_target, fan_speed,
+        speed_factor, <fan>_speed), value = number. ``switch``: target = output_pin_X
+        or led_X, value = on/off. ``home``: target = all | x | y | z.
+        Only objects the printer reported are accepted.
+        """
+        objects = list(self._objects or [])
+        try:
+            if action in ("pause", "resume", "cancel"):
+                if self.power_is_off():
+                    raise HomeAssistantError(tr(self.hass, "Der Drucker ist ausgeschaltet.", "The printer is switched off."))
+                await self.client.print_action(action)
+                await self.async_request_refresh()
+                return
+            if action == "emergency_stop":
+                await self.client.emergency_stop()
+                await self.async_request_refresh()
+                return
+            if action == "home":
+                axis = str(target or "all").lower()
+                if axis not in HOME_AXES:
+                    raise CommandError(f"Unknown axis {target!r}")
+                if self.current_print_state() in ACTIVE_PRINT_STATES:
+                    raise HomeAssistantError(tr(self.hass, "Referenzfahrt ist während des Drucks gesperrt.",
+                                                "Homing is locked during a print."))
+                await self._run_gcode(HOME_AXES[axis], timeout=LONG_GCODE_S)
+                return
+            if action == "set":
+                script = set_gcode(str(target or ""), value, objects)
+            elif action == "switch":
+                on = bool(value) if isinstance(value, (bool, int, float)) else str(value).lower() in ("1", "on", "true")
+                script = switch_gcode(str(target or ""), on, objects)
+            else:
+                raise CommandError(f"Unknown action {action!r}")
+        except CommandError as err:
+            raise ServiceValidationError(str(err)) from err
+        except MoonrakerError as err:
+            raise HomeAssistantError(tr(self.hass, f"Drucker lehnt ab: {err}", f"Printer refused: {err}")) from err
+        await self._run_gcode(script)

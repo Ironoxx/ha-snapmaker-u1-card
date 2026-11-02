@@ -52,6 +52,7 @@ class UpkeepMixin:
         try:
             jobs = await self.client.history()
             totals = await self.client.history_totals()
+            self._job_totals = totals
         except MoonrakerError as err:
             _LOGGER.debug("Print history not readable: %s", err)
             return
@@ -155,15 +156,19 @@ class UpkeepMixin:
                 add("storage", free >= 500, t(f"{free:.0f} MiB frei", f"{free:.0f} MiB free"))
         except MoonrakerError:
             pass
-        # Moonraker integration (temperatures, camera, light in the card)
+        # Printer values for the card: own (2.0), else the Moonraker integration
         from homeassistant.helpers import entity_registry as er
 
         reg = er.async_get(self.hass)
         mr = [e for e in reg.entities.values() if e.platform == "moonraker"]
-        add("moonraker_integration", bool(mr),
-            t(f"{len(mr)} Entitäten der Moonraker-Integration", f"{len(mr)} Moonraker integration entities") if mr
-            else t("Moonraker-Integration fehlt: Temperaturen, Licht und Kamera fehlen in der Karte",
-                   "Moonraker integration missing: no temperatures, light or camera in the card"))
+        own = bool(self.data and self.data.machine)
+        add("moonraker_integration", bool(mr) or own,
+            t("Werte direkt vom Drucker – Moonraker-Integration nicht nötig"
+              + (f" ({len(mr)} Entitäten vorhanden, nur Rückfall)" if mr else ""),
+              "Values straight from the printer – Moonraker integration not needed"
+              + (f" ({len(mr)} entities present, fallback only)" if mr else "")) if own
+            else t(f"{len(mr)} Entitäten der Moonraker-Integration", f"{len(mr)} Moonraker integration entities") if mr
+            else t("Keine Druckerwerte: Drucker nicht erreichbar", "No printer values: printer not reachable"))
         # Another U1 integration (kbaker827/ha-snapmaker-u1) registers a card with the same name
         if self.hass.config_entries.async_entries("snapmaker_u1"):
             add("card_conflict", None, t(

@@ -308,6 +308,8 @@ class SpoolMixin:
             active["filament_total"] = total
         if isinstance(meta.get("estimated_time"), (int, float)):
             active["estimated_time"] = meta["estimated_time"]
+        if isinstance(meta.get("object_height"), (int, float)):
+            active["object_height"] = meta["object_height"]
         active["name"] = (info or {}).get("name") or describe_file(original_file(path), {}, meta)["name"]
         if info and info.get("thumb"):
             active["thumb"] = info["thumb"]

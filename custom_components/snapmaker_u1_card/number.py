@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import U1ConfigEntry
 from .coordinator import U1Coordinator
 from .machine import FLOW_MAX, FLOW_MIN
-from .sensor import U1Entity, add_when_chamber, add_when_top_cover
+from .sensor import U1Entity, add_when, add_when_chamber, add_when_top_cover
 
 
 async def async_setup_entry(
@@ -28,6 +28,15 @@ async def async_setup_entry(
     add_when_top_cover(entry, lambda: async_add_entities(
         [TopCoverFanNumber(coordinator, "exhaust"), TopCoverFanNumber(coordinator, "inner")]))
     add_when_chamber(entry, lambda: async_add_entities([ChamberTargetNumber(coordinator)]))
+    # 2.0: target temperatures, part fan and speed factor without the Moonraker integration
+    from .machine_entities import (
+        PercentNumber,
+        TargetNumber,
+        heater_keys,
+    )
+    add_when(entry, lambda d: bool(d.machine), lambda: async_add_entities(
+        [TargetNumber(coordinator, k) for k in heater_keys(coordinator.data.machine)]
+        + [PercentNumber(coordinator, k) for k in ("fan_speed", "speed_factor") if k in coordinator.data.machine]))
 
 
 class FlowNumber(U1Entity, NumberEntity):

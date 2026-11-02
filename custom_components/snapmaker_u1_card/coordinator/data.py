@@ -55,3 +55,7 @@ class U1Data:
     head_states: list[str | None] = field(default_factory=list)
     # Chamber heater (Panda Breath / DragonBreath via paxx12): None without one
     chamber: dict[str, Any] | None = None
+    # 2.0: printer values the card used to take from the Moonraker integration
+    # (machine_status.py): key -> value, key -> {unit_of_measurement, min, max, step}
+    machine: dict[str, Any] = field(default_factory=dict)
+    machine_attrs: dict[str, dict[str, Any]] = field(default_factory=dict)

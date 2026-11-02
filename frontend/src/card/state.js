@@ -4,7 +4,63 @@ import { SUFFIX } from "../const.js";
 import { LANG, tr } from "../i18n.js";
 
 export const StateMixin = (Base) => class extends Base {
-  _st(id) { return this._hass && this._hass.states[id]; }
+  /**
+   * State of an entity. Since 2.0 the integration reads the printer values itself
+   * and hands them over in one sensor (``values``/``attrs``, keyed like the
+   * Moonraker integration's entities): ``<domain>.<prefix>_<key>`` is answered
+   * from there first, the Moonraker integration is only the fallback.
+   */
+  _st(id) {
+    const h = this._hass;
+    if (!h) return undefined;
+    const m = id && this._machine();
+    if (m) {
+      const dot = id.indexOf(".");
+      if (dot > 0 && id.startsWith(m.pre, dot)) {
+        const key = id.slice(dot + m.pre.length);
+        if (Object.prototype.hasOwnProperty.call(m.values, key)) {
+          let e = m.cache.get(id);
+          if (!e) {
+            const real = h.states[id];
+            e = { entity_id: id, state: String(m.values[key]),
+              attributes: { ...(real && real.attributes), ...(m.attrs[key] || {}) } };
+            m.cache.set(id, e);
+          }
+          return e;
+        }
+      }
+    }
+    return h.states[id];
+  }
+
+  /** The integration's machine values (null without them, e.g. printer offline). */
+  _machine() {
+    const id = this._ents && this._ents.machine;
+    const st = id && this._hass.states[id];
+    const a = st && st.attributes;
+    if (!a || !a.values || typeof a.values !== "object") return null;
+    // one cache per state object: stable objects between two updates
+    if (!this._mach || this._mach.src !== st || this._mach.prefix !== this._ents.prefix) {
+      this._mach = { src: st, prefix: this._ents.prefix, pre: `.${this._ents.prefix}_`,
+        values: a.values, attrs: a.attrs || {}, entry: a.entry_id, cache: new Map() };
+    }
+    return this._mach;
+  }
+
+  /** Controls through the integration (2.0) instead of the Moonraker integration's entities. */
+  _ownControl() {
+    const sv = this._hass && this._hass.services && this._hass.services.snapmaker_u1_card;
+    return !!(sv && sv.machine_command && this._machine());
+  }
+
+  _machineCommand(action, target, value) {
+    const data = { action };
+    if (target !== undefined) data.target = target;
+    if (value !== undefined) data.value = value;
+    const entry = this._machine() && this._machine().entry;
+    if (entry) data.config_entry_id = entry;
+    return this._hass.callService("snapmaker_u1_card", "machine_command", data);
+  }
 
   _s(id, fb = null) {
     const e = this._st(id);

@@ -21,6 +21,7 @@ Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapm
 - **Netzschalter**: beliebige Steckdose (Shelly, KNX, Zigbee …). Ausschalten fährt den Drucker vorher sauber herunter und ist während eines Drucks gesperrt. Auf Wunsch automatisch aus nach dem Druck und automatisch ein beim Druckstart aus der Karte.
 - **Strom und Kosten je Druck**: Verbrauch aus dem Energiezähler, Kosten mit Preis-Entität (auch dynamische Tarife), festem Preis oder dem Preis aus dem Energie-Dashboard von Home Assistant, Filamentkosten aus Slicer-Gewicht und Preis je kg.
 - **Druckhistorie** der letzten 20 Drucke mit Ergebnis, Dauer, Gewicht, kWh, Wechseln und Kosten.
+- **Keine zweite Integration nötig (2.0)**: Die Integration liest Temperaturen, Lüfter, Licht, Achsen, Schicht und Systemwerte direkt vom Drucker und steuert sie selbst (Pause, Licht, Temperaturen, Lüfter, Not-Halt, Referenzfahrt). Die Moonraker-Integration ist optional, nur noch Rückfall.
 - **Live statt Abfragen**: Moonraker meldet Statuswechsel, Schicht, aktiven Kopf und Fehler sofort (WebSocket-Abo). Die regelmäßige Abfrage läuft dann nur noch alle 30 s als Abgleich.
 - **Benachrichtigung** aufs Handy bei Druckende, Fehler oder Pause (z. B. Filament leer), bei neuen Druckermeldungen im Druck, nach der ersten Schicht, kurz vor Ende und wenn eine Spule nicht reicht, mit Kamerabild.
 - **Kosten vor dem Druck** im Startdialog: Filament aus Slicer-Gewicht × Preis, Strom aus Druckzeit × mittlerer Leistung deiner bisherigen Drucke × aktuellem Preis.
@@ -93,18 +94,20 @@ Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über 
 |---|---|---|
 | Home Assistant 2025.3 oder neuer | | ja |
 | [HACS](https://hacs.xyz) | Installation und Updates | empfohlen |
-| [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) | Temperaturen, Lüfter, Licht, Achsen, Schicht, Kamera und Systemwerte in der Karte | ja |
+| [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) | seit 2.0 nur Rückfall; die Integration liest alle Druckerwerte selbst | nein |
 | Snapmaker U1 im Netzwerk, feste IP-Adresse (DHCP-Reservierung im Router) | Verbindung | ja |
 | Drucker-Firmware: Snapmaker-Stock, Extended Firmware (paxx12) oder Stock mit Bespok3d | | ja |
 | Home-Assistant-Companion-App | Push-Benachrichtigungen mit Bild und Knöpfen | optional |
 | Steckdose/Schalter in HA (Shelly, Zigbee, KNX …), Energiezähler, Strompreis-Sensor | Netzschalter, Auto-Ein/-Aus, Strom und Kosten | optional |
 | [Spoolman](https://github.com/Donkie/Spoolman) | Spulenverwaltung | optional |
 
-Beide Integrationen sprechen direkt mit Moonraker auf dem Drucker (Port 80). Auf der Stock-Firmware ist dafür kein API-Schlüssel nötig.
+Die Integration spricht direkt mit Moonraker auf dem Drucker (Port 80). Auf der Stock-Firmware ist dafür kein API-Schlüssel nötig.
 
 ## Installation
 
-### 1. Moonraker-Integration
+### 1. Moonraker-Integration (optional)
+
+Seit 2.0 nicht mehr nötig: Die Karte bekommt alle Werte und Steuerungen von der Integration Snapmaker U1 Card. Eine vorhandene Moonraker-Integration kann bleiben; ihre Entitäten sind dann nur Rückfall (z. B. kurz, während die Integration neu startet). Wer sie trotzdem einrichten will:
 
 1. HACS → *Integrationen* → nach **Moonraker** suchen → installieren → Home Assistant neu starten.
 2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → „Moonraker“*.
@@ -119,7 +122,7 @@ Die Karte findet die Entitäten der Moonraker-Integration selbst, auch bei ander
    *Ohne HACS:* `snapmaker_u1_card-<Version>-install.zip` aus dem [neuesten Release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) entpacken, den Ordner `custom_components/snapmaker_u1_card` nach `/config/custom_components/` kopieren, neu starten.
 2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → „Snapmaker U1 Card“* → IP-Adresse des Druckers, Port `80`.
 3. Im zweiten Schritt die Einstellungen ausfüllen (alles optional, später unter *Konfigurieren* änderbar, siehe [Einstellungen](#einstellungen-der-integration)).
-4. **Selbsttest:** In der Karte unter *System → Selbsttest* (oder Dienst `snapmaker_u1_card.self_test`). Er zeigt, ob Drucker, Moonraker-Integration, Kamera, Strom-Entitäten und Benachrichtigungen passen.
+4. **Selbsttest:** In der Karte unter *System → Selbsttest* (oder Dienst `snapmaker_u1_card.self_test`). Er zeigt, ob Drucker, Druckerwerte, Kamera, Strom-Entitäten und Benachrichtigungen passen.
 
 ### 3. Karte ins Dashboard
 
@@ -234,6 +237,12 @@ navigation_path: /dashboard-drucker/0   # optional: beim Antippen dorthin, sonst
 | `sensor.…_zeitraffer` | Anzahl, Attribut `videos`; mit Sicherung `archive` (gesicherte Videos, Status) |
 | `sensor.…_warteschlange` | Anzahl Aufträge, Attribut `jobs` (id, Datei, Zuordnung, Optionen, Pause) |
 | `sensor.…_druckstunden` | Druckstunden gesamt (Moonraker), Attribute `months`, `totals`, `top_files` |
+| `sensor.…_druckerwerte` | 2.0: Zustand von Klipper, Attribute `values` (alle Druckerwerte für die Karte, benannt wie die Entitäten der Moonraker-Integration: `bed_temperature`, `extruder1_target`, `cavity_fan`, `led_cavity_led` …) und `attrs` (Einheit, Reglerbereich). Wird nicht aufgezeichnet |
+| `sensor.…_betttemperatur`, `sensor.…_duse_1_temperatur` … `_4_…`, `sensor.…_innenraumtemperatur` | 2.0: Temperaturen |
+| `sensor.…_fortschritt`, `sensor.…_druckstatus`, `sensor.…_schicht` | 2.0: Fortschritt in %, Druckzustand (`standby`, `printing`, `paused`, `complete`, `cancelled`, `error`), aktuelle Schicht (Attribut `total_layer`) |
+| `number.…_bett_solltemperatur`, `number.…_duse_1_solltemperatur` … `_4_…`, `number.…_bauteillufter`, `number.…_geschwindigkeit` | 2.0: Solltemperaturen, Bauteillüfter, Geschwindigkeit |
+| `button.…_druck_pausieren`, `…_druck_fortsetzen`, `…_druck_abbrechen`, `…_not_halt`, `…_referenzfahrt_alle_achsen` | 2.0: Drucksteuerung und Referenzfahrt |
+| `light.…_innenraumlicht` | 2.0: Innenraumlicht (und weitere `led`-Objekte des Druckers) |
 | `sensor.…_wartung_fallig` | Anzahl fälliger Wartungspunkte, Attribut `items` |
 | `sensor.…_druckermeldungen` | Anzahl offener Firmware-Meldungen, Attribut `errors` mit Text (de/en), Hinweis und Rohcode |
 | `switch.…_filament_automatisch_nachfullen`, `…_nachfullen_ohne_farbprufung`, `…_verhedderungs_erkennung`, `…_licht_aus_nach_dem_druck` | Firmware-Einstellungen (am Drucker gespeichert) |
@@ -323,6 +332,15 @@ data:
 `send_gcode` nimmt höchstens 20 Zeilen. Während eines Drucks sind nur Feineinstellungen erlaubt: Temperaturen (`M104`, `M140`, `SET_HEATER_TEMPERATURE`), Lüfter (`M106`, `M107`, `SET_FAN_SPEED`), Geschwindigkeit und Flussrate (`M220`, `M221`), `SET_GCODE_OFFSET`, `SET_PRESSURE_ADVANCE`, `SET_VELOCITY_LIMIT`, `SET_RETRACTION`, `SET_LED`, `SET_PURIFIER`, Meldungen, `PAUSE`/`RESUME`/`CANCEL_PRINT`, `EXCLUDE_OBJECT`, `M112` und lesende `GET_…`/`QUERY_…`-Befehle. Alles, was fährt, referenziert, misst oder Köpfe wechselt, wird bis zum Druckende abgelehnt. Lehnt die Firmware einen Befehl ab, kommt das als `ok: false` mit der Meldung zurück. Die Antworten stammen aus dem G-Code-Speicher von Moonraker.
 
 `tool_change` nutzt die Befehle der Firmware (`T<n> A0` nimmt den physischen Kopf n ohne Filamentzuordnung, `PARK_EXTRUDER…` legt den Kopf vom Schlitten ab). Bei Bedarf fährt der Drucker vorher X/Y an.
+
+### `snapmaker_u1_card.machine_command`
+
+2.0: Das, was die Bedienelemente der Karte senden, auch für Automationen. `action`: `pause`, `resume`, `cancel`, `emergency_stop`, `home` (`target`: `all`, `x`, `y`, `z`; im Druck gesperrt), `set` (`target`: `bed_target`, `extruder…_target`, `fan_speed`, `speed_factor`, `<lüfter>_speed`; `value`: Zahl) oder `switch` (`target`: `output_pin_<name>`, `led_<name>`; `value`: an/aus). Nur Objekte, die der Drucker meldet; Werte werden begrenzt (Bett 0–120 °C, Düse 0–300 °C, Geschwindigkeit 10–300 %).
+
+```yaml
+action: snapmaker_u1_card.machine_command
+data: { action: set, target: bed_target, value: 60 }
+```
 
 ### `snapmaker_u1_card.refresh`
 
@@ -526,7 +544,7 @@ Die U1-Firmware meldet Fehler strukturiert (Modul, Kopf, Code). Die Integration 
 
 ## Fehlersuche
 
-- **Karte zeigt keine Temperaturen, kein Licht, keine Kamera**: Die Moonraker-Integration fehlt oder ist nicht verbunden (siehe [Installation](#1-moonraker-integration)). Der Selbsttest meldet das.
+- **Karte zeigt keine Temperaturen, kein Licht, keine Kamera**: Drucker nicht erreichbar oder Klipper nicht bereit. Seit 2.0 kommen die Werte von dieser Integration (`sensor.…_druckerwerte`); der Selbsttest zeigt, woran es hängt.
 - **Integration findet den Drucker nicht**: IP prüfen (`http://<IP>/server/info` im Browser muss JSON zeigen), Port 80, Drucker eingeschaltet. Nach einem IP-Wechsel: *Geräte & Dienste → Snapmaker U1 Card → ⋮ → Neu konfigurieren* (Einstellungen und Historie bleiben). Besser eine feste IP vergeben.
 - **„401/403“ von Moonraker** (geänderte Firmware mit Anmeldung): API-Schlüssel aus der Weboberfläche des Druckers bei der Einrichtung eintragen.
 - **Kamerabild friert ein**: Prüf, ob noch ein Kamera-Keepalive-Add-on oder eine zweite Kamera-Entität auf den Drucker zugreift. Mit `camera_mode: still` testen.

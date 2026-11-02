@@ -389,3 +389,22 @@ weigh_spool:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+machine_command:
+  fields:
+    action:
+      required: true
+      selector:
+        select:
+          options: [pause, resume, cancel, emergency_stop, home, set, switch]
+    target:
+      example: bed_target
+      selector:
+        text:
+    value:
+      example: 60
+      selector:
+        text:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card

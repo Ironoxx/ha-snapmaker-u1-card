@@ -56,6 +56,20 @@ async def async_setup_entry(
     async_add_entities(entities)
     add_when_top_cover(entry, lambda: async_add_entities([TopCoverSensor(coordinator)]))
     add_when_chamber(entry, lambda: async_add_entities([ChamberSensor(coordinator)]))
+    # 2.0: own machine values (no Moonraker integration needed)
+    from .machine_entities import (
+        LayerSensor,
+        MachineSensor,
+        PrintStateSensor,
+        ProgressSensor,
+        TemperatureSensor,
+        heater_keys,
+    )
+    add_when(entry, lambda d: bool(d.machine), lambda: async_add_entities(
+        [MachineSensor(coordinator), ProgressSensor(coordinator), PrintStateSensor(coordinator),
+         LayerSensor(coordinator)]
+        + [TemperatureSensor(coordinator, k) for k in heater_keys(coordinator.data.machine)]
+        + ([TemperatureSensor(coordinator, "cavity")] if "cavity_temp" in coordinator.data.machine else [])))
 
 
 def add_when_top_cover(entry: U1ConfigEntry, add: Callable[[], None]) -> None:

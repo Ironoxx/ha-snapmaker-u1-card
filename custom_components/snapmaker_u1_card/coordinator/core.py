@@ -54,6 +54,8 @@ from ..machine import (
     parse_nozzles,
     parse_purifier,
 )
+from ..machine_status import build as machine_build
+from ..machine_status import subscription as machine_subscription
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     EXTRUDER_OBJECTS,
@@ -161,6 +163,14 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._starting = False
         self._cpu_count: int | None = None
         self._cpu_tried = False
+        # 2.0: Klipper objects of this printer and the last polled status (machine values)
+        self._objects: list[str] | None = None
+        self._poll_status: dict[str, Any] = {}
+        self._machine_extras: dict[str, Any] = {}
+        self._machine_slow: dict[str, Any] = {}
+        self._machine_slow_at = -1e9
+        self._machine_timer: Any = None
+        self._job_totals: dict[str, Any] = {}
         # Firmware: installed (from the printer), latest (GitHub, daily)
         self.firmware: dict[str, Any] = {"installed": None, "latest": None}
         self._fw_task: asyncio.Task | None = None
@@ -270,11 +280,90 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         except Exception as err:  # noqa: BLE001 - energy is optional
             _LOGGER.debug("Energy dashboard not available: %s", err)
 
+    def _with_machine_fields(self, fields: dict[str, tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
+        """Add the objects of the card's machine values (2.0) to a poll, fields merged."""
+        if self._objects is None:
+            return fields
+        out = dict(fields)
+        for obj, wanted in machine_subscription(self._objects).items():
+            out[obj] = tuple(sorted(set(out.get(obj, ())) | set(wanted or ())))
+        return out
+
+    def _build_machine(self) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
+        """Machine values from the last poll, overlaid with the fresher live data."""
+        status = {k: dict(v) if isinstance(v, dict) else v for k, v in self._poll_status.items()}
+        if self.live.connected:
+            for obj, fields in self.live.status.items():
+                if isinstance(fields, dict):
+                    status.setdefault(obj, {}).update(fields)
+        return machine_build(status, self._machine_extras)
+
+    async def _update_machine_extras(self, print_state: str | None) -> None:
+        """Values outside Klipper's objects: memory, job queue, totals, file data."""
+        extras: dict[str, Any] = {}
+        # memory and queue change slowly: once a minute is enough
+        now = time.monotonic()
+        if now - self._machine_slow_at >= 60:
+            self._machine_slow_at = now
+            slow: dict[str, Any] = {}
+            try:
+                mem = (await self.client.proc_stats()).get("system_memory") or {}
+                if isinstance(mem.get("total"), (int, float)) and mem["total"] > 0 and isinstance(mem.get("used"), (int, float)):
+                    slow["memory_used"] = (round(mem["used"] / mem["total"] * 100, 1), {"unit_of_measurement": "%"})
+            except MoonrakerError:
+                pass
+            try:
+                state = await self.client.job_queue_state()
+                if state:
+                    slow["queue_state"] = state
+            except MoonrakerError:
+                pass
+            self._machine_slow = slow
+        extras.update(self._machine_slow)
+        t = self._job_totals
+        if isinstance(t.get("total_jobs"), (int, float)):
+            extras["totals_jobs"] = int(t["total_jobs"])
+        if isinstance(t.get("total_print_time"), (int, float)):
+            extras["totals_print_time"] = f"{round(t['total_print_time'] / 3600)} h"
+        if isinstance(t.get("longest_print"), (int, float)):
+            mins = round(t["longest_print"] / 60)
+            extras["longest_print"] = f"{mins // 60} h {mins % 60} min" if mins >= 60 else f"{mins} min"
+        if isinstance(t.get("total_filament_used"), (int, float)):
+            extras["totals_filament_used"] = (round(t["total_filament_used"] / 1000, 1), {"unit_of_measurement": "m"})
+        active = self._print_state.get("active") or {}
+        if print_state in ACTIVE_PRINT_STATES and active:
+            if isinstance(active.get("object_height"), (int, float)):
+                extras["object_height"] = (active["object_height"], {"unit_of_measurement": "mm"})
+            est = active.get("estimated_time")
+            dur = (self._poll_status.get("print_stats") or {}).get("print_duration")
+            if isinstance(est, (int, float)) and isinstance(dur, (int, float)):
+                extras["slicer_print_time_left_estimate"] = (round(max(0.0, est - dur) / 60, 1), {"unit_of_measurement": "min"})
+            if active.get("thumb"):
+                extras["thumbnail"] = ("idle", {"entity_picture": active["thumb"]})
+        self._machine_extras = extras
+
+    def machine_soon(self) -> None:
+        """Live change of a machine value: publish it within a second (throttled)."""
+        if self._machine_timer is None and self.data is not None and self.data.online:
+            self._machine_timer = self.hass.loop.call_later(1.0, self._publish_machine)
+
+    def _publish_machine(self) -> None:
+        self._machine_timer = None
+        if self.data is None or not self.data.online:
+            return
+        machine, attrs = self._build_machine()
+        if machine != self.data.machine or attrs != self.data.machine_attrs:
+            self.data.machine, self.data.machine_attrs = machine, attrs
+            self.async_update_listeners()
+
     async def async_shutdown(self) -> None:
         """Cancel background tasks, stop the live subscription and save state."""
         # Flush the delayed save now; otherwise reloading the integration
         # in the middle of a print would lose the baseline.
         await super().async_shutdown()
+        if self._machine_timer is not None:
+            self._machine_timer.cancel()
+            self._machine_timer = None
         if self._power_task and not self._power_task.done():
             self._power_task.cancel()
         if self._archive_task and not self._archive_task.done():
@@ -431,7 +520,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             heater = self.chamber_heater
             status = await self.client.query_objects(
                 "print_task_config", "purifier",
-                fields={
+                fields=self._with_machine_fields({
                     **({f"heater_generic {heater['name']}": ("temperature", "target", "power")} if heater else {}),
                     **({f"output_pin {heater['filter']}": ("value",)} if heater and heater.get("filter") else {}),
                     "filament_detect": ("info",),
@@ -444,7 +533,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                     "bed_mesh": ("profile_name", "mesh_min", "mesh_max", "probed_matrix"),
                     **{name: (*SWITCH_FIELDS, "temperature", "target", "state", "nozzle_diameter", "nozzle_volume_type")
                        for name in EXTRUDER_OBJECTS},
-                },
+                }),
             )
         except MoonrakerError as err:
             # Offline is not an integration error: the power switch must remain
@@ -532,6 +621,9 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             head_states=parse_head_states(status),
             chamber=parse_chamber(status, self.chamber_heater),
         )
+        self._poll_status = status
+        await self._update_machine_extras(print_state)
+        data.machine, data.machine_attrs = self._build_machine()
         if print_state in ACTIVE_PRINT_STATES:
             data.remaining = self._remaining(stats, vsd)
             if data.remaining is not None:
@@ -599,7 +691,12 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             except MoonrakerError:
                 pass
             try:
-                self.chamber_heater = find_chamber_heater(await self.client.object_list())
+                objects = await self.client.object_list()
+                self.chamber_heater = find_chamber_heater(objects)
+                if objects != self._objects:
+                    self._objects = objects
+                    self.live.extra = machine_subscription(objects)
+                    self.hass.async_create_task(self.live.resubscribe(), f"{DOMAIN} resubscribe")
             except MoonrakerError:
                 pass
         data.cpu_count = self._cpu_count

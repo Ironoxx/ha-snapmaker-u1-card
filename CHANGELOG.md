@@ -4,6 +4,51 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0b1
+
+**Beta of 2.0 – please test and report back.** Installs only if you turn on *Show beta versions* for this repository in HACS (in the redownload dialog). Everything from 1.6.3 is included.
+
+**No Moonraker integration needed any more.** The card used to need a second integration for temperatures, fans, light, axes, layer and the controls. Since 2.0 the Snapmaker U1 Card integration talks to the printer for all of it itself – over the live subscription it already had, so values arrive within a second instead of every 30 s.
+
+**What's new**
+- **All printer values from the integration:** temperatures (bed, all four nozzles, chamber, stepper drivers), target temperatures and heater power, fans (part, chamber, nozzle fans), light, output pins, filament sensors, axes position, speed, layer, progress, MCU load and awake time, system load, memory, job queue and print totals. Objects are taken from the printer's object list, so other configs work too.
+- **All controls through the integration:** pause, resume, cancel, emergency stop, homing (all/X/Y/Z, locked during a print), target temperatures, part fan, chamber fan, speed, chamber light and switches. New service `snapmaker_u1_card.machine_command` for automations – only objects the printer reports are accepted, values are clamped.
+- **New entities:** printer values (one diagnostic sensor the card reads), bed/nozzle/chamber temperature, progress, print state, layer, target temperatures, part fan, speed, buttons for pause/resume/cancel/emergency stop/homing and the chamber light.
+- **Fallback:** an existing Moonraker integration can stay. The card prefers the integration's values and only falls back to the Moonraker entities when its own are missing (e.g. an older backend).
+- **Status-light blueprint** also accepts the integration's *Print state* sensor.
+- **Self test:** "Values straight from the printer – Moonraker integration not needed" instead of a warning when it is missing.
+- Notification button *Light* and the light for the result photo use the integration's own light.
+
+**Good to know**
+- Restart Home Assistant and reload the dashboard.
+- The Moonraker integration's camera is no longer needed either: the integration has had its own camera since 1.5.
+- If you set `prefix` in the card for several printers, keep it: it still selects the printer.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Beta von 2.0 – bitte testen und Rückmeldung geben.** Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist (im Dialog „Erneut herunterladen“). Alles aus 1.6.3 ist enthalten.
+
+**Keine Moonraker-Integration mehr nötig.** Bisher brauchte die Karte für Temperaturen, Lüfter, Licht, Achsen, Schicht und die Steuerung eine zweite Integration. Seit 2.0 spricht die Integration Snapmaker U1 Card dafür selbst mit dem Drucker – über das Live-Abo, das sie ohnehin hatte. Werte kommen dadurch innerhalb einer Sekunde statt alle 30 s.
+
+**Neu**
+- **Alle Druckerwerte von der Integration:** Temperaturen (Bett, alle vier Düsen, Innenraum, Schrittmotortreiber), Solltemperaturen und Heizleistung, Lüfter (Bauteil, Innenraum, Düsenlüfter), Licht, Ausgänge, Filamentsensoren, Achsposition, Geschwindigkeit, Schicht, Fortschritt, MCU-Last und Wachzeit, Systemlast, Speicher, Warteschlange und Druckstatistik. Die Objekte kommen aus der Objektliste des Druckers, andere Konfigurationen funktionieren also auch.
+- **Alle Steuerungen über die Integration:** Pause, Fortsetzen, Abbrechen, Not-Halt, Referenzfahrt (alle/X/Y/Z, im Druck gesperrt), Solltemperaturen, Bauteillüfter, Innenraumlüfter, Geschwindigkeit, Innenraumlicht und Schalter. Neuer Dienst `snapmaker_u1_card.machine_command` für Automationen – nur Objekte, die der Drucker meldet, Werte werden begrenzt.
+- **Neue Entitäten:** Druckerwerte (ein Diagnose-Sensor, den die Karte liest), Bett-/Düsen-/Innenraumtemperatur, Fortschritt, Druckstatus, Schicht, Solltemperaturen, Bauteillüfter, Geschwindigkeit, Knöpfe für Pause/Fortsetzen/Abbrechen/Not-Halt/Referenzfahrt und das Innenraumlicht.
+- **Rückfall:** Eine vorhandene Moonraker-Integration kann bleiben. Die Karte nimmt bevorzugt die Werte der Integration und greift nur auf die Moonraker-Entitäten zurück, wenn eigene fehlen (z. B. älteres Backend).
+- **Blueprint Status-Licht** nimmt auch den Sensor *Druckstatus* der Integration.
+- **Selbsttest:** „Werte direkt vom Drucker – Moonraker-Integration nicht nötig“ statt einer Warnung, wenn sie fehlt.
+- Benachrichtigungsknopf *Licht* und das Licht fürs Ergebnisfoto nutzen das eigene Licht der Integration.
+
+**Gut zu wissen**
+- Home Assistant neu starten und das Dashboard neu laden.
+- Die Kamera der Moonraker-Integration wird ebenfalls nicht mehr gebraucht: Die Integration hat seit 1.5 eine eigene.
+- Wer in der Karte bei mehreren Druckern `prefix` gesetzt hat, lässt ihn so: Er wählt weiterhin den Drucker.
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 1.6.3
 
 Bug fix release on top of the big 1.6 update – the full list of what's new in 1.6 is below.

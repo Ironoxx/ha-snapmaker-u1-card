@@ -307,7 +307,9 @@ async def test_self_test(hass: HomeAssistant, mock_client, notifications) -> Non
     keys = {c["key"]: c for c in res["checks"]}
     assert keys["printer"]["ok"] is True
     assert keys["storage"]["ok"] is False and "300 MiB" in keys["storage"]["detail"]
-    assert keys["moonraker_integration"]["ok"] is False
+    # 2.0: own printer values replace the Moonraker integration
+    assert keys["moonraker_integration"]["ok"] is True
+    assert "nicht nötig" in keys["moonraker_integration"]["detail"]
     assert keys["camera"]["ok"] is None
     assert keys["firmware"]["detail"].startswith("Installiert 1.6.0")
     notify = [c for c in res["checks"] if c["key"] == "notify"]

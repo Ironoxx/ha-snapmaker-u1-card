@@ -376,6 +376,35 @@
       },
       "chamber_heater": {
         "name": "Kammerheizung"
+      },
+      "machine": {
+        "name": "Druckerwerte"
+      },
+      "bed_temperature": {
+        "name": "Betttemperatur"
+      },
+      "nozzle_temperature": {
+        "name": "Düse {head} Temperatur"
+      },
+      "cavity_temperature": {
+        "name": "Innenraumtemperatur"
+      },
+      "progress": {
+        "name": "Fortschritt"
+      },
+      "print_state": {
+        "name": "Druckstatus",
+        "state": {
+          "standby": "Bereit",
+          "printing": "Druckt",
+          "paused": "Pausiert",
+          "complete": "Fertig",
+          "cancelled": "Abgebrochen",
+          "error": "Fehler"
+        }
+      },
+      "current_layer": {
+        "name": "Schicht"
       }
     },
     "switch": {
@@ -452,6 +481,43 @@
       },
       "chamber_target": {
         "name": "Kammerheizung Soll"
+      },
+      "bed_target": {
+        "name": "Bett Solltemperatur"
+      },
+      "nozzle_target": {
+        "name": "Düse {head} Solltemperatur"
+      },
+      "part_fan": {
+        "name": "Bauteillüfter"
+      },
+      "speed_factor": {
+        "name": "Geschwindigkeit"
+      }
+    },
+    "button": {
+      "pause_print": {
+        "name": "Druck pausieren"
+      },
+      "resume_print": {
+        "name": "Druck fortsetzen"
+      },
+      "cancel_print": {
+        "name": "Druck abbrechen"
+      },
+      "emergency_stop": {
+        "name": "Not-Halt"
+      },
+      "home": {
+        "name": "Referenzfahrt alle Achsen"
+      }
+    },
+    "light": {
+      "chamber_light": {
+        "name": "Innenraumlicht"
+      },
+      "led": {
+        "name": "LED {name}"
       }
     }
   },
@@ -883,6 +949,28 @@
         "gross": {
           "name": "Mit Leerspule",
           "description": "An = mit Spule gewogen (brutto), aus = nur Filament."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "machine_command": {
+      "name": "Maschinenbefehl",
+      "description": "Pause, Fortsetzen, Abbrechen, Not-Halt, Referenzfahrt, Sollwerte und Schalter ohne Moonraker-Integration.",
+      "fields": {
+        "action": {
+          "name": "Aktion",
+          "description": "pause, resume, cancel, emergency_stop, home, set oder switch."
+        },
+        "target": {
+          "name": "Ziel",
+          "description": "home: all/x/y/z; set: bed_target, extruder1_target, fan_speed, speed_factor, <lüfter>_speed; switch: output_pin_<name> oder led_<name>."
+        },
+        "value": {
+          "name": "Wert",
+          "description": "Zahl bei set, an/aus bei switch."
         },
         "config_entry_id": {
           "name": "Drucker",

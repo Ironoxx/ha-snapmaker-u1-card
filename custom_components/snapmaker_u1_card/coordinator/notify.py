@@ -239,10 +239,15 @@ class NotifyMixin:
         await self.async_request_refresh()
 
     def _light_entity(self) -> str | None:
-        """Light entity of the Moonraker integration for this printer, if any."""
+        """Chamber light: own entity (2.0), else the Moonraker integration's."""
         from homeassistant.helpers import entity_registry as er
 
         reg = er.async_get(self.hass)
+        mine = [e.entity_id for e in reg.entities.values()
+                if e.platform == DOMAIN and e.config_entry_id == self.config_entry.entry_id
+                and e.translation_key == "chamber_light"]
+        if mine:
+            return mine[0]
         hits = [e.entity_id for e in reg.entities.values()
                 if e.domain == "light" and e.platform == "moonraker" and "cavity_led" in e.entity_id]
         return hits[0] if hits else None

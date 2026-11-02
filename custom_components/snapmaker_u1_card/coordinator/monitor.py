@@ -319,6 +319,9 @@ class PrintMonitorMixin:
             self._print_events(status.get("print_stats") or {}, status.get("virtual_sdcard") or {})
         if refresh:
             self.hass.async_create_task(self.async_request_refresh(), f"{DOMAIN} live refresh")
+        elif diff:
+            # temperatures, fans, LEDs, position …: to the card within a second
+            self.machine_soon()
 
     def current_print_state(self) -> str | None:
         """Print state, as fresh as possible (live subscription before the last poll)."""

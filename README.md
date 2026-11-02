@@ -21,6 +21,7 @@ A Home Assistant integration with a built-in dashboard card for the **Snapmaker 
 - **Power switch**: any plug (Shelly, KNX, Zigbee …). Switching off shuts the printer down cleanly first and is blocked during a print. Optional auto-off after the print and auto-on when starting a print from the card.
 - **Energy and cost per print**: consumption from an energy meter, cost with a price entity (dynamic tariffs work too), a fixed price or the price from the Home Assistant energy dashboard, filament cost from slicer weight and price per kg.
 - **Print history** of the last 20 prints with result, duration, weight, kWh, tool changes and cost.
+- **No second integration needed (2.0)**: the integration reads temperatures, fans, light, axes, layer and system values straight from the printer and controls them itself (pause, light, temperatures, fans, emergency stop, homing). The Moonraker integration is optional, only a fallback.
 - **Live instead of polling**: Moonraker reports state changes, layer, active head and errors immediately (WebSocket subscription). Regular polling then only runs every 30 s as a consistency check.
 - **Phone notifications** at print end, error or pause (e.g. filament runout), for new printer messages during a print, after the first layer, shortly before the end and when a spool will not last, with a camera image.
 - **Cost before printing** in the start dialog: filament from slicer weight × price, energy from print time × average power of your previous prints × current price.
@@ -95,18 +96,20 @@ The screenshots show the German UI; with Home Assistant set to English the card 
 |---|---|---|
 | Home Assistant 2025.3 or newer | | yes |
 | [HACS](https://hacs.xyz) | installation and updates | recommended |
-| [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) | temperatures, fans, light, axes, layer, camera and system values in the card | yes |
+| [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) | since 2.0 only a fallback; the integration reads all printer values itself | no |
 | Snapmaker U1 on the network with a fixed IP address (DHCP reservation in the router) | connection | yes |
 | Printer firmware: Snapmaker stock, Extended Firmware (paxx12) or stock with Bespok3d | | yes |
 | Home Assistant Companion app | push notifications with image and buttons | optional |
 | Plug/switch in HA (Shelly, Zigbee, KNX …), energy meter, energy price sensor | power switch, auto-on/-off, energy and cost | optional |
 | [Spoolman](https://github.com/Donkie/Spoolman) | spool management | optional |
 
-Both integrations talk directly to Moonraker on the printer (port 80). The stock firmware needs no API key for that.
+The integration talks directly to Moonraker on the printer (port 80). The stock firmware needs no API key for that.
 
 ## Installation
 
-### 1. Moonraker integration
+### 1. Moonraker integration (optional)
+
+Since 2.0 not needed: the card gets all values and controls from the Snapmaker U1 Card integration. An existing Moonraker integration can stay; its entities are then only the fallback (e.g. for a moment while the integration restarts). To set it up anyway:
 
 1. HACS → *Integrations* → search for **Moonraker** → install → restart Home Assistant.
 2. *Settings → Devices & services → Add integration → "Moonraker"*.
@@ -121,7 +124,7 @@ The card finds the Moonraker entities by itself, even with a different device na
    *Without HACS:* unpack `snapmaker_u1_card-<version>-install.zip` from the [latest release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest), copy the folder `custom_components/snapmaker_u1_card` to `/config/custom_components/`, restart.
 2. *Settings → Devices & services → Add integration → "Snapmaker U1 Card"* → printer IP address, port `80`.
 3. Fill in the settings in the second step (all optional, can be changed later under *Configure*, see [settings](#integration-settings)).
-4. **Self test:** in the card under *System → Self test* (or the service `snapmaker_u1_card.self_test`). It shows whether printer, Moonraker integration, camera, power entities and notifications are set up correctly.
+4. **Self test:** in the card under *System → Self test* (or the service `snapmaker_u1_card.self_test`). It shows whether printer, printer values, camera, power entities and notifications are set up correctly.
 
 ### 3. Add the card to a dashboard
 
@@ -242,6 +245,12 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 | `sensor.…_printer_messages` | number of open firmware messages, attribute `errors` with text (de/en), hint and raw code |
 | `sensor.…_time_remaining` / `sensor.…_finish_time` | remaining time and expected end of the running print |
 | `binary_sensor.…_live_connection` | live subscription to Moonraker up or not |
+| `sensor.…_printer_values` | 2.0: state of Klipper, attributes `values` (all printer values for the card, named like the Moonraker integration's entities: `bed_temperature`, `extruder1_target`, `cavity_fan`, `led_cavity_led` …) and `attrs` (unit, slider range). Not recorded |
+| `sensor.…_bed_temperature`, `sensor.…_nozzle_1_temperature` … `_4_…`, `sensor.…_chamber_temperature` | 2.0: temperatures |
+| `sensor.…_progress`, `sensor.…_print_state`, `sensor.…_layer` | 2.0: progress in %, print state (`standby`, `printing`, `paused`, `complete`, `cancelled`, `error`), current layer (attribute `total_layer`) |
+| `number.…_bed_target`, `number.…_nozzle_1_target` … `_4_…`, `number.…_part_cooling_fan`, `number.…_speed_factor` | 2.0: target temperatures, part fan, speed |
+| `button.…_pause_print`, `…_resume_print`, `…_cancel_print`, `…_emergency_stop`, `…_home_all_axes` | 2.0: print controls and homing |
+| `light.…_chamber_light` | 2.0: chamber light (and further `led` objects of the printer) |
 | `update.…_firmware` | installed and latest firmware |
 | `switch.…_auto_replenish_filament`, `…_replenish_ignoring_colour`, `…_filament_entangle_detection`, `…_light_off_after_print` | firmware preferences (stored on the printer) |
 | `select.…_entangle_detection_sensitivity` | `low`, `medium`, `high` |
@@ -328,6 +337,15 @@ data:
 `send_gcode` takes at most 20 lines. While a print runs only tuning is allowed: temperatures (`M104`, `M140`, `SET_HEATER_TEMPERATURE`), fans (`M106`, `M107`, `SET_FAN_SPEED`), speed and flow (`M220`, `M221`), `SET_GCODE_OFFSET`, `SET_PRESSURE_ADVANCE`, `SET_VELOCITY_LIMIT`, `SET_RETRACTION`, `SET_LED`, `SET_PURIFIER`, messages, `PAUSE`/`RESUME`/`CANCEL_PRINT`, `EXCLUDE_OBJECT`, `M112` and read-only `GET_…`/`QUERY_…` commands. Everything that moves, homes, probes or changes heads is refused until the print is over. A refusal by the firmware comes back as `ok: false` with the message. The answers are read from Moonraker's gcode store.
 
 `tool_change` uses the firmware's own commands (`T<n> A0` takes physical head n without filament mapping, `PARK_EXTRUDER…` parks the head on the carriage). The printer homes X/Y first if needed.
+
+### `snapmaker_u1_card.machine_command`
+
+2.0: what the card's controls send, usable in automations too. `action`: `pause`, `resume`, `cancel`, `emergency_stop`, `home` (`target`: `all`, `x`, `y`, `z`; locked during a print), `set` (`target`: `bed_target`, `extruder…_target`, `fan_speed`, `speed_factor`, `<fan>_speed`; `value`: number) or `switch` (`target`: `output_pin_<name>`, `led_<name>`; `value`: on/off). Only objects the printer reports are accepted, values are clamped (bed 0–120 °C, nozzle 0–300 °C, speed 10–300 %).
+
+```yaml
+action: snapmaker_u1_card.machine_command
+data: { action: set, target: bed_target, value: 60 }
+```
 
 ### `snapmaker_u1_card.refresh`
 
@@ -531,7 +549,7 @@ The U1 firmware reports errors in a structured way (module, head, code). The int
 
 ## Troubleshooting
 
-- **No temperatures, light or camera in the card**: the Moonraker integration is missing or not connected (see [installation](#1-moonraker-integration)). The self test reports this.
+- **No temperatures, light or camera in the card**: the printer is not reachable or Klipper is not ready. Since 2.0 the values come from this integration (`sensor.…_printer_values`); the self test shows where it fails.
 - **The integration cannot find the printer**: check the IP (`http://<IP>/server/info` in a browser must show JSON), port 80, printer switched on. After an IP change: *Devices & services → Snapmaker U1 Card → ⋮ → Reconfigure* (settings and history are kept). Better assign a fixed IP.
 - **"401/403" from Moonraker** (modified firmware with authentication): enter the API key from the printer's web interface during setup.
 - **Camera image freezes**: check whether a camera keepalive add-on or a second camera entity still accesses the printer. Test with `camera_mode: still`.

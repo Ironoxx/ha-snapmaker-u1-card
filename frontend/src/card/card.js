@@ -255,6 +255,7 @@ export class SnapmakerU1Card extends U1Base {
       maintenance: ownKey("maintenance"),
       errors: ownKey("errors"),
       live: ownKey("live"),
+      machine: ownKey("machine"),
       remaining: ownKey("remaining"),
       finish: ownKey("finish"),
       firmware: ownKey("firmware"),

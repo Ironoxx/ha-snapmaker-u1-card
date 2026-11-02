@@ -50,6 +50,28 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 
 ⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
     },
+    "2.0": {
+        "de": ("Snapmaker U1 Card 2.0 – das ist neu", f"""**Keine Moonraker-Integration mehr nötig.** Die Integration liest alle Druckerwerte selbst und steuert den Drucker direkt:
+
+- **Werte live vom Drucker:** Temperaturen, Lüfter, Licht, Achsen, Schicht, Fortschritt, MCU- und Systemlast – innerhalb einer Sekunde statt alle 30 s
+- **Steuerung über die Integration:** Pause, Fortsetzen, Abbrechen, Not-Halt, Referenzfahrt, Solltemperaturen, Lüfter, Geschwindigkeit, Licht
+- **Neue Entitäten** für Temperaturen, Fortschritt, Druckstatus, Schicht, Solltemperaturen, Knöpfe und Licht – plus Dienst `machine_command` für Automationen
+- Eine vorhandene Moonraker-Integration darf bleiben, sie ist nur noch Rückfall
+
+Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/releases)
+
+⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
+        "en": ("Snapmaker U1 Card 2.0 – what's new", f"""**No Moonraker integration needed any more.** The integration reads all printer values itself and controls the printer directly:
+
+- **Live values from the printer:** temperatures, fans, light, axes, layer, progress, MCU and system load – within a second instead of every 30 s
+- **Controls through the integration:** pause, resume, cancel, emergency stop, homing, target temperatures, fans, speed, light
+- **New entities** for temperatures, progress, print state, layer, targets, buttons and light – plus the service `machine_command` for automations
+- An existing Moonraker integration may stay, it is only a fallback now
+
+Please reload the dashboard once. All details: [release notes]({GITHUB}/releases)
+
+⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
+    },
 }
 
 

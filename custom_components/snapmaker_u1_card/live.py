@@ -64,6 +64,10 @@ class LiveListener:
         self.messages = 0
         self._task: asyncio.Task | None = None
         self._ids = 1000
+        # 2.0: further objects (heaters, fans, sensors, LEDs …) from /printer/objects/list
+        self.extra: dict[str, list[str] | None] = {}
+        self._ws: aiohttp.ClientWebSocketResponse | None = None
+        self._pending = 0
 
     def start(self, hass: Any) -> None:
         if self._task is None:
@@ -103,26 +107,45 @@ class LiveListener:
             await asyncio.sleep(BACKOFF[min(attempt, len(BACKOFF) - 1)])
             attempt += 1
 
+    def objects(self) -> dict[str, list[str] | None]:
+        """Subscribed objects: the fixed ones plus ``extra`` (fields merged)."""
+        out: dict[str, list[str] | None] = {k: list(v) for k, v in SUBSCRIBE.items()}
+        for obj, fields in self.extra.items():
+            if obj in out and out[obj] is not None and fields is not None:
+                out[obj] = sorted(set(out[obj]) | set(fields))
+            else:
+                out[obj] = None if fields is None else list(fields)
+        return out
+
     async def _subscribe(self, ws: aiohttp.ClientWebSocketResponse) -> int:
         """Send the subscription request; returns its JSON-RPC id."""
         self._ids += 1
         await ws.send_json({
             "jsonrpc": "2.0", "method": "printer.objects.subscribe",
-            "params": {"objects": SUBSCRIBE}, "id": self._ids,
+            "params": {"objects": self.objects()}, "id": self._ids,
         })
+        self._pending = self._ids
         return self._ids
+
+    async def resubscribe(self) -> None:
+        """New object set while connected: Moonraker replaces the subscription."""
+        ws = self._ws
+        if ws is not None and not ws.closed:
+            with contextlib.suppress(Exception):
+                await self._subscribe(ws)
 
     async def _session(self) -> None:
         """One connection: subscribe and forward status updates until it closes."""
         async with self.client.websocket() as ws:
-            pending = await self._subscribe(ws)
+            self._ws = ws
+            await self._subscribe(ws)
             async for msg in ws:
                 if msg.type != aiohttp.WSMsgType.TEXT:
                     if msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
                         break
                     continue
                 data = json.loads(msg.data)
-                if data.get("id") == pending:
+                if data.get("id") == self._pending:
                     if "error" in data:
                         # Klipper not ready yet: wait for notify_klippy_ready
                         _LOGGER.debug("Subscription refused: %s", data["error"])
@@ -142,6 +165,6 @@ class LiveListener:
                     self.messages += 1
                     self._on_update(diff)
                 elif method == "notify_klippy_ready":
-                    pending = await self._subscribe(ws)
+                    await self._subscribe(ws)
                 elif method in ("notify_klippy_disconnected", "notify_klippy_shutdown"):
                     self._set(False)

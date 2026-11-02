@@ -57,6 +57,17 @@ else:
                 self.next_check = float("inf")
                 return "none"
             monkeypatch.setattr(_webcam.Webcam, "detect", _no_detect)
+        # Extra machine values (2.0) poll Moonraker endpoints most tests do not mock
+        if "machine_http" not in request.keywords:
+            from custom_components.snapmaker_u1_card.api import MoonrakerClient
+
+            async def _empty(self):
+                return {}
+
+            async def _none(self):
+                return None
+            monkeypatch.setattr(MoonrakerClient, "proc_stats", _empty)
+            monkeypatch.setattr(MoonrakerClient, "job_queue_state", _none)
         yield
 
 

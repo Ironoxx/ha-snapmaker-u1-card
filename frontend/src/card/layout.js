@@ -75,7 +75,7 @@ export const LayoutMixin = (Base) => class extends Base {
           : off
             ? ["mdi:power-plug-off", tr("Drucker ist aus"),
               p.autoOn ? tr("Zum Drucken einfach eine Datei wählen, er schaltet sich selbst ein.") : ""]
-            : ["mdi:lan-disconnect", tr("Drucker nicht erreichbar"), tr("Die Moonraker-Integration meldet keinen Status.")];
+            : ["mdi:lan-disconnect", tr("Drucker nicht erreichbar"), tr("Der Drucker antwortet nicht im Netzwerk.")];
       const btn = off ? `<button class="filled" data-act="power"><ha-icon icon="mdi:power"></ha-icon>${tr("Einschalten")}</button>` : "";
       const avail = OFFLINE_SECTIONS.filter((s) => this._cfg.show.includes(s)
         && (s !== "files" || (p && p.autoOn)));
