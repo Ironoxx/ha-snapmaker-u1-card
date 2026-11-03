@@ -10,6 +10,7 @@
  */
 
 import { DOMAIN } from "../const.js";
+import { remoteCloud } from "./hastream.js";
 
 const RTC_CONNECT_MS = 8000;          // first frame must arrive by then
 const RTC_RETRY_MS = 10 * 60 * 1000;  // after a failure: MJPEG for this long
@@ -22,6 +23,8 @@ export const WebrtcMixin = (Base) => class extends Base {
     if (typeof window.RTCPeerConnection !== "function") return false;
     if (this._ents && this._ents.camAlt) return false; // second camera: MJPEG
     if (Date.now() < (this._rtcFailUntil || 0)) return false;
+    // Nabu Casa: no direct path to the printer, do not wait 8 s for a failure
+    if (remoteCloud()) return false;
     const st = this._ents && this._ents.files && this._st(this._ents.files);
     return !!(st && st.attributes && st.attributes.webrtc && st.attributes.entry_id);
   }

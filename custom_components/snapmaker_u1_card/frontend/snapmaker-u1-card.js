@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.0.0b6";
+  var CARD_VERSION = "2.0.0b7";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -576,6 +576,8 @@
     "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
     "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
     "Spule für {head}": "Spool for {head}",
+    "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).": "Empty = automatic: when there is no direct connection to the printer (e.g. Nabu Casa), Home Assistant plays the RTSP stream – smoother and far less data than MJPEG. Only with RTSP (paxx12).",
+    "Unterwegs: RTSP über Home Assistant": "Away: RTSP through Home Assistant",
     "CPU": "CPU",
     "Temperatur des Rechners im Drucker (Moonraker).": "Temperature of the printer's computer (Moonraker).",
     "CPU-Temperatur": "CPU temperature",
@@ -743,6 +745,7 @@
     camera_direct: "Direktstream vom Drucker",
     camera_direct_url: "Adresse des Direktstreams",
     camera_webrtc: "WebRTC (paxx12-Firmware)",
+    camera_ha_stream: "Unterwegs: RTSP über Home Assistant",
     camera_zoom_reset: "Zoom zurücksetzen nach (s)"
   };
   var FORM_HELPERS = {
@@ -758,6 +761,7 @@
     camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
     camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
     camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
+    camera_ha_stream: "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).",
     camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
@@ -858,6 +862,7 @@
           { name: "camera_direct", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (immer über Home Assistant)"]]) } } },
           { name: "camera_direct_url", selector: { text: {} } },
           { name: "camera_webrtc", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
+          { name: "camera_ha_stream", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
           { name: "printer_image", selector: { text: {} } }
         ]
       },
@@ -3909,6 +3914,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     background: transparent; opacity: 0; transition: opacity var(--u1-motion); will-change: transform;
   }
   .frame.rtc-on video[data-rtc] { opacity: 1; }
+  /* RTSP through Home Assistant (ha-camera-stream); gestures stay on the frame */
+  .frame [data-hastream] {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
+    opacity: 0; transition: opacity var(--u1-motion); will-change: transform; --video-max-height: 100%;
+  }
+  .frame.rtc-on [data-hastream] { opacity: 1; }
   .zoom-ctl { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 3;
     display: flex; flex-direction: column; gap: 6px; opacity: .55; transition: opacity var(--u1-motion); }
   .frame:hover .zoom-ctl, .frame.zoomed .zoom-ctl { opacity: 1; }
@@ -5157,7 +5168,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         z.s = clamp(z.s, 1, 6);
         z.x = clamp(z.x, w * (1 - z.s), 0);
         z.y = clamp(z.y, h * (1 - z.s), 0);
-        [img(), frame.querySelector("video[data-rtc]")].forEach((el) => {
+        [img(), frame.querySelector("video[data-rtc]"), frame.querySelector("[data-hastream]")].forEach((el) => {
           if (!el) return;
           el.style.transformOrigin = "0 0";
           el.style.transform = z.s > 1 ? `translate(${z.x}px, ${z.y}px) scale(${z.s})` : "";
@@ -5822,7 +5833,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     _tickCamera() {
       const root = this.shadowRoot?.getElementById("u1card");
-      if (root && !(this._rtc && this._rtc.playing)) this._fitAspect(root.querySelector(".stage .frame > img"));
+      if (root && !(this._rtc && this._rtc.playing) && !(this._hs && this._hs.playing)) this._fitAspect(root.querySelector(".stage .frame > img"));
       const img = root?.querySelector("img[data-live]");
       if (!img) return;
       const cam = this._st(this._ents && this._ents.camera);
@@ -5831,10 +5842,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (document.hidden || !this._onScreen || pane && pane.hidden) {
         if (this._streamImg) this._stopStream();
         this._stopRtc();
+        this._stopHaStream();
         return;
       }
       const frame = img.closest(".frame");
-      if (frame && this._tickRtc(frame, img)) return;
+      if (frame && this._tickRtc(frame, img)) {
+        this._stopHaStream();
+        return;
+      }
+      if (frame && !this._rtc && this._tickHaStream(frame, img, cam)) return;
       const wantStream = this._cfg.camera_mode !== "still" && !this._preview && Date.now() >= this._streamFailUntil;
       if (wantStream) {
         this._tickStream(img, cam);
@@ -6572,6 +6588,125 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/card/hastream.js
+  var HS_CONNECT_MS = 15e3;
+  var HS_RETRY_MS = 10 * 60 * 1e3;
+  function remoteCloud() {
+    return /\.ui\.nabu\.casa$/i.test(window.location.hostname || "");
+  }
+  var HaStreamMixin = (Base) => class extends Base {
+    _hsWanted(cam) {
+      const v = this._cfg.camera_ha_stream;
+      if (v === false || v === "off" || this._preview) return false;
+      if (this._cfg.camera_mode === "still" || this._cfg.printer_image) return false;
+      if (Date.now() < (this._hsFailUntil || 0)) return false;
+      return !!(cam && Number(cam.attributes.supported_features) & 2);
+    }
+    /** HA's stream element is loaded lazily by the frontend; a picture-entity card pulls it in. */
+    async _hsLoad(camId) {
+      if (customElements.get("ha-camera-stream")) return true;
+      try {
+        const helpers = window.loadCardHelpers && await window.loadCardHelpers();
+        if (helpers) {
+          const card = await helpers.createCardElement({ type: "picture-entity", entity: camId, camera_view: "live" });
+          if (card) card.hass = this._hass;
+        }
+      } catch (e) {
+      }
+      await Promise.race([customElements.whenDefined("ha-camera-stream"), new Promise((r) => setTimeout(r, 5e3))]);
+      return !!customElements.get("ha-camera-stream");
+    }
+    /** Called from the camera tick when direct WebRTC is not in use. true = HA stream shows the picture. */
+    _tickHaStream(frame, img, cam) {
+      if (!this._hsWanted(cam)) {
+        this._stopHaStream();
+        return false;
+      }
+      let hs = this._hs;
+      if (hs && hs.cam !== this._ents.camera) {
+        this._stopHaStream();
+        hs = null;
+      }
+      if (!hs) {
+        this._startHaStream(frame, img, cam);
+        return false;
+      }
+      if (!hs.el) return false;
+      hs.el.hass = this._hass;
+      if (hs.el.parentNode !== frame) {
+        frame.insertBefore(hs.el, img.nextSibling);
+        if (hs.playing) frame.classList.add("rtc-on");
+      }
+      if (!hs.playing) {
+        if (Date.now() - hs.started > HS_CONNECT_MS) this._hsFailed("timeout");
+        return false;
+      }
+      const video = this._hsVideo(hs.el);
+      if (video) {
+        const t = video.currentTime;
+        if (t !== hs.lastTime) {
+          hs.lastTime = t;
+          this._lastChange = Date.now();
+        }
+        if (Date.now() - this._lastChange > 2e4) {
+          this._hsFailed("frozen");
+          return false;
+        }
+      }
+      return true;
+    }
+    _hsVideo(el) {
+      const player = el.shadowRoot && el.shadowRoot.querySelector("ha-web-rtc-player, ha-hls-player");
+      return player && player.shadowRoot && player.shadowRoot.querySelector("video") || null;
+    }
+    _startHaStream(frame, img, cam) {
+      const hs = this._hs = { el: null, cam: this._ents.camera, playing: false, started: Date.now(), lastTime: -1 };
+      this._hsLoad(this._ents.camera).then((ok) => {
+        if (this._hs !== hs) return;
+        if (!ok) {
+          this._hsFailed("no ha-camera-stream");
+          return;
+        }
+        const el = document.createElement("ha-camera-stream");
+        el.dataset.hastream = "";
+        el.hass = this._hass;
+        el.stateObj = this._st(this._ents.camera) || cam;
+        el.muted = true;
+        el.controls = false;
+        el.fitMode = img.style.objectFit === "cover" ? "cover" : "contain";
+        el.addEventListener("load", () => {
+          if (this._hs !== hs) return;
+          hs.playing = true;
+          this._lastChange = Date.now();
+          const f2 = el.closest(".frame");
+          if (f2) f2.classList.add("rtc-on");
+          if (this._streamImg) this._stopStream();
+          if (this._applyZoom) this._applyZoom();
+        });
+        hs.el = el;
+        hs.started = Date.now();
+        const f = this.shadowRoot && this.shadowRoot.querySelector(".stage .frame");
+        const live = f && f.querySelector("img[data-live]");
+        if (f && live) f.insertBefore(el, live.nextSibling);
+      });
+    }
+    _hsFailed(why) {
+      if (this._cfg.debug_camera) console.info("snapmaker-u1-card: HA stream off,", why);
+      this._hsFailUntil = Date.now() + HS_RETRY_MS;
+      this._stopHaStream();
+    }
+    _stopHaStream() {
+      const hs = this._hs;
+      if (!hs) return;
+      this._hs = null;
+      if (hs.el) {
+        const frame = hs.el.closest(".frame");
+        if (frame && !(this._rtc && this._rtc.playing)) frame.classList.remove("rtc-on");
+        hs.el.remove();
+      }
+    }
+  };
+
   // frontend/src/card/webrtc.js
   var RTC_CONNECT_MS = 8e3;
   var RTC_RETRY_MS = 10 * 60 * 1e3;
@@ -6583,6 +6718,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (typeof window.RTCPeerConnection !== "function") return false;
       if (this._ents && this._ents.camAlt) return false;
       if (Date.now() < (this._rtcFailUntil || 0)) return false;
+      if (remoteCloud()) return false;
       const st = this._ents && this._ents.files && this._st(this._ents.files);
       return !!(st && st.attributes && st.attributes.webrtc && st.attributes.entry_id);
     }
@@ -6994,7 +7130,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     SafetyMixin,
     MachineMixin,
     WebrtcMixin,
-    SettingsMixin
+    SettingsMixin,
+    HaStreamMixin
   ];
   var U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
   var SnapmakerU1Card = class extends U1Base {
@@ -7027,6 +7164,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (document.hidden) {
           this._stopStream();
           this._stopRtc();
+          this._stopHaStream();
           this._resetZoom();
         } else this._tickCamera();
       };

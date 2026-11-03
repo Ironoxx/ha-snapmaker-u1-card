@@ -485,6 +485,8 @@ export const EN = {
   "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
   "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
   "Spule für {head}": "Spool for {head}",
+  "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).": "Empty = automatic: when there is no direct connection to the printer (e.g. Nabu Casa), Home Assistant plays the RTSP stream – smoother and far less data than MJPEG. Only with RTSP (paxx12).",
+  "Unterwegs: RTSP über Home Assistant": "Away: RTSP through Home Assistant",
   "CPU": "CPU",
   "Temperatur des Rechners im Drucker (Moonraker).": "Temperature of the printer's computer (Moonraker).",
   "CPU-Temperatur": "CPU temperature",

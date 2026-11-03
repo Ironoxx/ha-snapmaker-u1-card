@@ -57,7 +57,7 @@ export const CameraMixin = (Base) => class extends Base {
   _tickCamera() {
     const root = this.shadowRoot?.getElementById("u1card");
     // While WebRTC plays, the video sets the format (MJPEG may have another one, e.g. 4:3 vs 16:9)
-    if (root && !(this._rtc && this._rtc.playing)) this._fitAspect(root.querySelector(".stage .frame > img"));
+    if (root && !(this._rtc && this._rtc.playing) && !(this._hs && this._hs.playing)) this._fitAspect(root.querySelector(".stage .frame > img"));
     const img = root?.querySelector("img[data-live]");
     if (!img) return;
     const cam = this._st(this._ents && this._ents.camera);
@@ -66,11 +66,15 @@ export const CameraMixin = (Base) => class extends Base {
     if (document.hidden || !this._onScreen || (pane && pane.hidden)) {
       if (this._streamImg) this._stopStream();
       this._stopRtc();
+      this._stopHaStream();
       return;
     }
     // paxx12: WebRTC first; while it connects, MJPEG keeps showing the picture
     const frame = img.closest(".frame");
-    if (frame && this._tickRtc(frame, img)) return;
+    if (frame && this._tickRtc(frame, img)) { this._stopHaStream(); return; }
+    // Away from home (no direct path to the printer): RTSP through Home Assistant,
+    // once direct WebRTC is not possible; MJPEG meanwhile and as the fallback
+    if (frame && !this._rtc && this._tickHaStream(frame, img, cam)) return;
 
     const wantStream = this._cfg.camera_mode !== "still" && !this._preview
       && Date.now() >= this._streamFailUntil;

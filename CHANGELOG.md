@@ -4,6 +4,25 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0b7
+
+**Seventh beta of 2.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b6 is included (details below).
+
+**New**
+- **Smooth camera away from home:** over Nabu Casa (or another way without a direct path to the printer) the card used to fall back to MJPEG through the HA proxy – choppy, like the stock firmware. With RTSP enabled (paxx12) it now plays the RTSP stream through Home Assistant's own streaming (WebRTC via HA with Nabu Casa's relay servers, else HLS): H.264, far less data, smooth. With Nabu Casa it no longer waits 8 s for a direct WebRTC attempt that cannot work. At home the direct WebRTC stays (fastest). Without RTSP (stock firmware) nothing changes. Card option `camera_ha_stream: off` turns it off.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Siebte Beta von 2.0.** Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist. Alles aus b1–b6 ist enthalten (Details unten).
+
+**Neu**
+- **Flüssige Kamera unterwegs:** Über Nabu Casa (oder einen anderen Weg ohne direkte Verbindung zum Drucker) fiel die Karte bisher auf MJPEG über den HA-Proxy zurück – ruckelig wie bei der Original-Firmware. Mit eingeschaltetem RTSP (paxx12) spielt sie jetzt den RTSP-Stream über das eigene Streaming von Home Assistant ab (WebRTC über HA mit den Vermittlungsservern von Nabu Casa, sonst HLS): H.264, viel weniger Daten, flüssig. Bei Nabu Casa wartet sie nicht mehr 8 s auf einen direkten WebRTC-Versuch, der dort nicht klappen kann. Zu Hause bleibt das direkte WebRTC (am schnellsten). Ohne RTSP (Stock-Firmware) ändert sich nichts. Kartenoption `camera_ha_stream: off` schaltet es ab.
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0b6
 
 **Sixth beta of 2.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b5 is included (details below).

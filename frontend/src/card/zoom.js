@@ -17,7 +17,7 @@ export const ZoomMixin = (Base) => class extends Base {
       z.s = clamp(z.s, 1, 6);
       z.x = clamp(z.x, w * (1 - z.s), 0);
       z.y = clamp(z.y, h * (1 - z.s), 0);
-      [img(), frame.querySelector("video[data-rtc]")].forEach((el) => {
+      [img(), frame.querySelector("video[data-rtc]"), frame.querySelector("[data-hastream]")].forEach((el) => {
         if (!el) return;
         el.style.transformOrigin = "0 0";
         el.style.transform = z.s > 1 ? `translate(${z.x}px, ${z.y}px) scale(${z.s})` : "";

@@ -220,6 +220,12 @@ export const STYLES = `
     background: transparent; opacity: 0; transition: opacity var(--u1-motion); will-change: transform;
   }
   .frame.rtc-on video[data-rtc] { opacity: 1; }
+  /* RTSP through Home Assistant (ha-camera-stream); gestures stay on the frame */
+  .frame [data-hastream] {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none;
+    opacity: 0; transition: opacity var(--u1-motion); will-change: transform; --video-max-height: 100%;
+  }
+  .frame.rtc-on [data-hastream] { opacity: 1; }
   .zoom-ctl { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 3;
     display: flex; flex-direction: column; gap: 6px; opacity: .55; transition: opacity var(--u1-motion); }
   .frame:hover .zoom-ctl, .frame.zoomed .zoom-ctl { opacity: 1; }

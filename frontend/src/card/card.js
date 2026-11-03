@@ -24,6 +24,7 @@
  *   camera_mode       auto | stream | still                  (auto: the camera entity decides)
  *   accent_color      [r, g, b] or "#rrggbb"                 (own accent colour; empty = theme)
  *   camera_webrtc     auto | off                             (paxx12: WebRTC, falls back to MJPEG)
+ *   camera_ha_stream  auto | off                             (RTSP through HA when direct WebRTC is not possible)
  *   camera_zoom_reset seconds until the zoom goes back to 1x (60; 0 = never; always when the page is left)
  *   refresh           still image rate in seconds            (2)
  *   stream_check      stream check interval in seconds       (10)
@@ -75,13 +76,14 @@ import { SafetyMixin } from "./safety.js";
 import { MachineMixin } from "./machine.js";
 import { WebrtcMixin } from "./webrtc.js";
 import { SettingsMixin } from "./settings.js";
+import { HaStreamMixin } from "./hastream.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin,
+  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin, HaStreamMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -113,7 +115,7 @@ export class SnapmakerU1Card extends U1Base {
     this._entsSource = null;  // hass.entities the IDs were resolved from
     this._dlg = null;         // open print dialog
     this._onVis = () => {
-      if (document.hidden) { this._stopStream(); this._stopRtc(); this._resetZoom(); }
+      if (document.hidden) { this._stopStream(); this._stopRtc(); this._stopHaStream(); this._resetZoom(); }
       else this._tickCamera();
     };
     this._preview = false;   // edit mode or preview in the editor

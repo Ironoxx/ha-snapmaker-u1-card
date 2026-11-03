@@ -30,6 +30,7 @@ export const FORM_LABELS = {
   camera_direct: "Direktstream vom Drucker",
   camera_direct_url: "Adresse des Direktstreams",
   camera_webrtc: "WebRTC (paxx12-Firmware)",
+  camera_ha_stream: "Unterwegs: RTSP über Home Assistant",
   camera_zoom_reset: "Zoom zurücksetzen nach (s)",
 };
 export const FORM_HELPERS = {
@@ -45,6 +46,7 @@ export const FORM_HELPERS = {
   camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
   camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
   camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
+  camera_ha_stream: "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).",
   camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
@@ -119,6 +121,7 @@ export function configForm(mini) {
         { name: "camera_direct", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (immer über Home Assistant)"]]) } } },
         { name: "camera_direct_url", selector: { text: {} } },
         { name: "camera_webrtc", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
+        { name: "camera_ha_stream", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
         { name: "printer_image", selector: { text: {} } },
       ],
     },
