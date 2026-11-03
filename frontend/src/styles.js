@@ -682,6 +682,47 @@ export const STYLES = `
   .rows .chip[data-prefset], .rows .chip[data-prefsen] { height: 28px; padding: 0 12px; font-size: 12px; cursor: pointer; box-shadow: none; }
   .rows .chip[aria-pressed="true"], .rows .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
   .dlg-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  /* ── Settings (2.0) ─────────────────────────────────────────────────── */
+  dialog.u1settings { width: min(760px, calc(100vw - 24px)); }
+  .cfg-dlg { padding-bottom: 0; }
+  .cfg-list { display: flex; flex-direction: column; gap: 8px; }
+  .cfg-sec { border-radius: var(--u1-r-l); background: var(--u1-panel); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-outline) 45%, transparent); }
+  .cfg-sec > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .cfg-sec > summary::-webkit-details-marker { display: none; }
+  .cfg-sec > summary .caret { transition: transform .2s; color: var(--u1-on-variant); }
+  .cfg-sec[open] > summary .caret { transform: rotate(180deg); }
+  .cfg-sum { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cfg-sum .t-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cfg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--u1-primary); flex-shrink: 0; }
+  .cfg-body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .cfg-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 260px); gap: 6px 16px; align-items: start;
+    padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--u1-outline) 40%, transparent); }
+  .cfg-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; }
+  .cfg-ctl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .cfg-ctl input:not([type="checkbox"]), .cfg-ctl select, .cfg-maint input {
+    font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high); width: 100%;
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; min-height: 38px; box-sizing: border-box; }
+  .cfg-num { display: flex; align-items: center; gap: 6px; }
+  .cfg-num input { min-width: 0; }
+  .cfg-now { font-size: 12px; color: var(--u1-on-variant); overflow-wrap: anywhere; }
+  .cfg-bool { grid-template-columns: minmax(0, 1fr) auto; cursor: pointer; }
+  .cfg-bool input { width: 20px; height: 20px; accent-color: var(--u1-primary); margin-top: 2px; }
+  .cfg-multi { display: flex; flex-direction: column; gap: 6px; }
+  .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .cfg-chk input { accent-color: var(--u1-primary); width: 18px; height: 18px; }
+  .cfg-maint { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
+  .cfg-maint-head { padding-top: 8px; font-size: 12px; }
+  .cfg-maint-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cfg-foot {
+    position: sticky; bottom: 0; margin: 0 -22px; padding: 10px 22px 16px; background: var(--u1-panel-high);
+    border-top: 1px solid color-mix(in srgb, var(--u1-outline) 40%, transparent); display: flex; flex-direction: column; gap: 6px; }
+  .cfg-foot .dlg-actions { margin-top: 0; }
+  @media (max-width: 560px) {
+    .cfg-row:not(.cfg-bool) { grid-template-columns: 1fr; }
+    .cfg-maint { grid-template-columns: minmax(0, 1fr) 84px 84px; font-size: 13px; }
+  }
   .dlg-actions button { min-width: 120px; }
   ha-icon.spin { animation: u1spin 1s linear infinite; }
   ha-icon.spin-slow { animation: pulse 2s ease-in-out infinite; }

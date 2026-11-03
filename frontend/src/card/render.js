@@ -114,6 +114,7 @@ export const RenderMixin = (Base) => class extends Base {
         if (a === "backup") return this._call("backup_timelapses", {});
         if (a === "backup_config") return this._call("backup_config", {});
         if (a === "selftest") return this._runSelfTest();
+        if (a === "settings") return this._openSettings();
         if (a === "lock") return this._toggleLock();
         if (a === "power") return this._togglePower();
         if (a === "cancel") {

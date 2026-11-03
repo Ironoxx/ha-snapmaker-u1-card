@@ -4,58 +4,24 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
-## 2.0.0
+## 2.0.0b3
 
-**No Moonraker integration needed any more.** Until now the card needed a second integration for temperatures, fans, light, axes, layer and most controls. Since 2.0 the Snapmaker U1 Card integration talks to the printer itself for all of it – one integration, one setup, and everything reacts faster: values arrive over the live connection within about a second instead of every 30 s. Thanks to everyone who tested the betas!
+**Third beta of 2.0 – the last one before 2.0.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1 and b2 is included: the card no longer needs the Moonraker integration (details below).
 
-**Straight from the printer**
-- **All printer values from the integration:** temperatures (bed, all four nozzles, chamber, stepper drivers), target temperatures and heater power, fans (part, chamber, nozzle fans), light, outputs, filament sensors, axis position, speed, layer, progress, MCU load and awake time, system load, memory, job queue and print totals. The objects are read from the printer's object list, so other configurations work too.
-- **All controls through the integration:** pause, resume, cancel, emergency stop, homing (all/X/Y/Z, locked during a print), target temperatures, part fan, chamber fan, speed, chamber light and switches.
-- **New entities:** printer values (one diagnostic sensor the card reads), bed/nozzle/chamber temperature, progress, print state, layer, target temperatures, part fan, speed, buttons for pause/resume/cancel/emergency stop/homing and the chamber light.
-- **New service `machine_command`** for automations: only objects the printer reports are accepted, values are clamped (bed 0–120 °C, nozzle 0–300 °C, speed 10–300 %).
-- An existing Moonraker integration may stay – the card only falls back to it when its own values are missing. You can also disable or remove it.
-- The status-light blueprint accepts the integration's *Print state* sensor; the self test, the notification button *Light* and the light for the result photo use the integration's own entities.
-
-**Spoolman**
-- **Create a spool from the card:** the spool picker has *Create new spool*, prefilled with the head's material, vendor and colour (RFID data if there is a tag). Vendor and filament are reused if they exist, otherwise created; the new spool is assigned to the head right away (with SpoolLink via `SET_SPOOL_ID`). Also as service `create_spool`.
-- **Filament prices from Spoolman:** at the end of a print the price of the spool in each head counts, otherwise the average price per kg of your spools of that material. The prices in the settings only apply to materials without a price in Spoolman. The print cost sensor now also exists with Spoolman alone.
-
-**Camera**
-- **Zoom goes back by itself:** after 60 s without interaction and always when you leave the page, switch apps or scroll the card away. Card option `camera_zoom_reset` (seconds, `0` = never).
-- Fixed: "Second camera (USB) found" without a USB camera (paxx12 lists the built-in camera twice). Only a webcam in another folder (`/webcam2/`) counts now; the entity *Camera 2* then becomes unavailable and can be deleted.
-
-**Good to know when updating**
-- Restart Home Assistant and reload the dashboard.
-- The Moonraker integration is optional now. To try without it: *Settings → Devices & services → Moonraker → ⋮ → Disable*. Automations of your own that use its entities (`sensor.<printer>_…`) need the new entities instead.
-- If you set `prefix` in the card for several printers, keep it.
+**New**
+- **Settings right in the card:** *System → Settings* (admins only). The same options as *Configure* in Home Assistant, but grouped with a short summary per section, the current value next to each chosen entity (e.g. "Thomi 3D: on", "85 W") and the Spoolman price next to each filament price. Only changed sections are saved, with the same checks as in Home Assistant; the integration then reloads briefly.
+- **Filament prices from Spoolman:** at the end of a print the price of the spool in each head counts, otherwise the average price per kg of your spools of that material. Your own prices only apply to materials without a price in Spoolman. The print cost sensor now also exists with Spoolman alone.
 
 ⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
 
 ---
 **Deutsch**
 
-**Keine Moonraker-Integration mehr nötig.** Bisher brauchte die Karte für Temperaturen, Lüfter, Licht, Achsen, Schicht und die meisten Steuerungen eine zweite Integration. Seit 2.0 spricht die Integration Snapmaker U1 Card dafür selbst mit dem Drucker – eine Integration, eine Einrichtung, und alles reagiert schneller: Werte kommen über die Live-Verbindung innerhalb etwa einer Sekunde statt alle 30 s. Danke an alle, die die Betas getestet haben!
+**Dritte Beta von 2.0 – die letzte vor 2.0.0.** Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist. Alles aus b1 und b2 ist enthalten: Die Karte braucht keine Moonraker-Integration mehr (Details unten).
 
-**Direkt vom Drucker**
-- **Alle Druckerwerte von der Integration:** Temperaturen (Bett, alle vier Düsen, Innenraum, Schrittmotortreiber), Solltemperaturen und Heizleistung, Lüfter (Bauteil, Innenraum, Düsenlüfter), Licht, Ausgänge, Filamentsensoren, Achsposition, Geschwindigkeit, Schicht, Fortschritt, MCU-Last und Wachzeit, Systemlast, Speicher, Warteschlange und Druckstatistik. Die Objekte kommen aus der Objektliste des Druckers, andere Konfigurationen funktionieren also auch.
-- **Alle Steuerungen über die Integration:** Pause, Fortsetzen, Abbrechen, Not-Halt, Referenzfahrt (alle/X/Y/Z, im Druck gesperrt), Solltemperaturen, Bauteillüfter, Innenraumlüfter, Geschwindigkeit, Innenraumlicht und Schalter.
-- **Neue Entitäten:** Druckerwerte (ein Diagnose-Sensor, den die Karte liest), Bett-/Düsen-/Innenraumtemperatur, Fortschritt, Druckstatus, Schicht, Solltemperaturen, Bauteillüfter, Geschwindigkeit, Knöpfe für Pause/Fortsetzen/Abbrechen/Not-Halt/Referenzfahrt und das Innenraumlicht.
-- **Neuer Dienst `machine_command`** für Automationen: nur Objekte, die der Drucker meldet, Werte werden begrenzt (Bett 0–120 °C, Düse 0–300 °C, Geschwindigkeit 10–300 %).
-- Eine vorhandene Moonraker-Integration darf bleiben – die Karte greift nur darauf zurück, wenn eigene Werte fehlen. Man kann sie auch deaktivieren oder entfernen.
-- Der Blueprint Status-Licht nimmt den Sensor *Druckstatus* der Integration; Selbsttest, Benachrichtigungsknopf *Licht* und das Licht fürs Ergebnisfoto nutzen die eigenen Entitäten.
-
-**Spoolman**
-- **Spule direkt aus der Karte anlegen:** In der Spulenauswahl gibt es *Neue Spule anlegen*, vorausgefüllt mit Material, Hersteller und Farbe des Kopfs (RFID-Daten, wenn ein Tag da ist). Hersteller und Filament werden wiederverwendet, wenn es sie gibt, sonst angelegt; die neue Spule wird dem Kopf sofort zugeordnet (mit SpoolLink per `SET_SPOOL_ID`). Auch als Dienst `create_spool`.
-- **Filamentpreise aus Spoolman:** Am Druckende zählt der Preis der Spule im jeweiligen Kopf, sonst der Durchschnittspreis je kg deiner Spulen dieses Materials. Die Preise in den Einstellungen gelten nur noch für Materialien ohne Preis in Spoolman. Der Sensor für die Druckkosten entsteht jetzt auch mit Spoolman allein.
-
-**Kamera**
-- **Zoom geht von selbst zurück:** nach 60 s ohne Bedienung und immer, wenn man die Seite verlässt, die App wechselt oder die Karte wegscrollt. Kartenoption `camera_zoom_reset` (Sekunden, `0` = nie).
-- Behoben: „Zweite Kamera (USB) gefunden“ ohne USB-Kamera (paxx12 listet die eingebaute Kamera doppelt). Es zählt nur noch eine Webcam in einem anderen Ordner (`/webcam2/`); die Entität *Kamera 2* wird dann nicht verfügbar und kann gelöscht werden.
-
-**Gut zu wissen beim Update**
-- Home Assistant neu starten und das Dashboard neu laden.
-- Die Moonraker-Integration ist jetzt optional. Zum Ausprobieren ohne sie: *Einstellungen → Geräte & Dienste → Moonraker → ⋮ → Deaktivieren*. Eigene Automationen mit ihren Entitäten (`sensor.<drucker>_…`) brauchen dann die neuen Entitäten.
-- Wer in der Karte bei mehreren Druckern `prefix` gesetzt hat, lässt ihn so.
+**Neu**
+- **Einstellungen direkt in der Karte:** *System → Einstellungen* (nur für Admins). Dieselben Optionen wie *Konfigurieren* in Home Assistant, aber gegliedert mit kurzer Zusammenfassung je Bereich, dem aktuellen Wert neben jeder gewählten Entität (z. B. „Thomi 3D: an“, „85 W“) und dem Spoolman-Preis neben jedem Filamentpreis. Gespeichert werden nur geänderte Bereiche, mit denselben Prüfungen wie in Home Assistant; die Integration lädt danach kurz neu.
+- **Filamentpreise aus Spoolman:** Am Druckende zählt der Preis der Spule im jeweiligen Kopf, sonst der Durchschnittspreis je kg deiner Spulen dieses Materials. Eigene Preise gelten nur für Materialien ohne Preis in Spoolman. Der Sensor für die Druckkosten entsteht jetzt auch mit Spoolman allein.
 
 ⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
 

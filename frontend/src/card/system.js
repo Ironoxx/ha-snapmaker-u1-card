@@ -37,7 +37,10 @@ export const SystemMixin = (Base) => class extends Base {
             ${this._printerSettingsHtml()}
             ${this._liveNotifyHtml()}
             <div class="selftest-wrap">
-              <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
+              <div class="chip-row" style="justify-content:flex-start">
+                <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
+                ${this._settingsButtonHtml()}
+              </div>
               <div class="selftest" data-selftest>${this._selfTestHtml()}</div>
             </div>
             <div class="t-label" style="padding-top:6px">${tr("MCU-Last und -Wachzeit sind wie in Mainsail berechnet; einstellige Werte sind normal, kritisch wird die Last erst gegen 100 %.")}</div>

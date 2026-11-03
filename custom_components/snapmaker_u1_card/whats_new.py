@@ -56,6 +56,7 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 - **Werte live vom Drucker:** Temperaturen, Lüfter, Licht, Achsen, Schicht, Fortschritt, MCU- und Systemlast – innerhalb einer Sekunde statt alle 30 s
 - **Steuerung über die Integration:** Pause, Fortsetzen, Abbrechen, Not-Halt, Referenzfahrt, Solltemperaturen, Lüfter, Geschwindigkeit, Licht
 - **Neue Entitäten** für Temperaturen, Fortschritt, Druckstatus, Schicht, Solltemperaturen, Knöpfe und Licht – plus Dienst `machine_command` für Automationen
+- **Einstellungen direkt in der Karte** (System → Einstellungen), übersichtlich mit aktuellen Werten
 - **Spoolman:** neue Spule direkt aus der Karte anlegen, Filamentpreise aus Spoolman
 - **Kamera-Zoom** geht nach 60 s oder beim Verlassen der Seite zurück
 - Die Moonraker-Integration kann deaktiviert werden; wenn sie bleibt, ist sie nur noch Rückfall
@@ -68,6 +69,7 @@ Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/
 - **Live values from the printer:** temperatures, fans, light, axes, layer, progress, MCU and system load – within a second instead of every 30 s
 - **Controls through the integration:** pause, resume, cancel, emergency stop, homing, target temperatures, fans, speed, light
 - **New entities** for temperatures, progress, print state, layer, targets, buttons and light – plus the service `machine_command` for automations
+- **Settings right in the card** (System → Settings), clearly laid out with current values
 - **Spoolman:** create a new spool right from the card, filament prices from Spoolman
 - **Camera zoom** goes back after 60 s or when you leave the page
 - The Moonraker integration can be disabled; if it stays, it is only a fallback

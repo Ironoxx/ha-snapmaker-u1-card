@@ -170,6 +170,10 @@ Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen 
 | Spoolman | Adresse (leer = aus), Verbrauch je Kopf abbuchen (an/aus), Warnschwelle in g |
 | Dateien | Anzahl neuester Dateien, Drucker-Konfiguration sichern (an) |
 
+## Einstellungen in der Karte
+
+Admins finden in der Karte *System → Einstellungen*: die Einstellungen der Integration (Strom, Benachrichtigungen, Filamentpreise, Spoolman, Dateien, Zeitraffer-Sicherung, Wartung) nach Themen gegliedert, mit dem aktuellen Wert neben jeder gewählten Entität und dem Spoolman-Preis neben jedem Filamentpreis. Das ist dasselbe wie *Einstellungen → Geräte & Dienste → Snapmaker U1 Card → Konfigurieren*, mit denselben Prüfungen; gespeichert werden nur geänderte Bereiche, danach lädt die Integration kurz neu. Kartenoptionen (Layout, Kameradarstellung …) bleiben im Karten-Editor, weil sie zum Dashboard gehören.
+
 ## Kartenoptionen
 
 Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuellen Editor einstellbar.

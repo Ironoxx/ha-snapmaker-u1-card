@@ -74,13 +74,14 @@ import { HeadDialogMixin } from "./head-dialog.js";
 import { SafetyMixin } from "./safety.js";
 import { MachineMixin } from "./machine.js";
 import { WebrtcMixin } from "./webrtc.js";
+import { SettingsMixin } from "./settings.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin,
+  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 

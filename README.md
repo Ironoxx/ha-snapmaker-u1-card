@@ -172,6 +172,10 @@ During setup a second step with all settings follows right after the address. La
 | Spoolman | address (empty = off), book usage per head (on/off), warning threshold in g |
 | Files | number of newest files, back up printer configuration (on) |
 
+## Settings in the card
+
+Admins find *System → Settings* in the card: the integration's settings (power, notifications, filament prices, Spoolman, files, timelapse backup, maintenance) grouped by topic, with the current value next to each chosen entity and the Spoolman price next to each filament price. It is the same as *Settings → Devices & services → Snapmaker U1 Card → Configure*, with the same checks; only changed sections are saved and the integration then reloads briefly. Card options (layout, camera display …) stay in the card editor because they belong to the dashboard.
+
 ## Card options
 
 All options are optional; except head names and presets they can also be set in the visual editor.

@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.0.0";
+  var CARD_VERSION = "2.0.0b3";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -247,7 +247,6 @@
     "Die Datei hat nur {n} Schichten.": "The file only has {n} layers.",
     "Drucke": "Prints",
     "Druckplatte reinigen": "Clean build plate",
-    "Druckstunden": "Print hours",
     "Düsen und Abstreifer reinigen": "Clean nozzles and wiper",
     "Entfernen": "Remove",
     "Erfolgsquote": "Success rate",
@@ -577,6 +576,30 @@
     "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
     "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
     "Spule für {head}": "Spool for {head}",
+    "Einstellungen": "Settings",
+    "Änderungen verwerfen?": "Discard changes?",
+    "Lade Einstellungen …": "Loading settings …",
+    "Entität nicht gefunden": "Entity not found",
+    "nicht verfügbar": "unavailable",
+    "Auto-Aus": "Auto-off",
+    "Auto-Ein": "Auto-on",
+    "kein Netzschalter": "no power switch",
+    "{n} Ziel(e)": "{n} target(s)",
+    "keine Benachrichtigungen": "no notifications",
+    "Spoolman: {n} Materialien": "Spoolman: {n} materials",
+    "keine Preise": "no prices",
+    "keine": "none",
+    "Spoolman: {p} €/kg – hat Vorrang": "Spoolman: {p} €/kg – takes precedence",
+    "keine verfügbar": "none available",
+    "Mon.": "mo.",
+    "Monate": "Months",
+    "0 = aus. Fällig ist, was zuerst erreicht wird.": "0 = off. Due is whichever comes first.",
+    "geändert": "changed",
+    "Verwerfen": "Discard",
+    "Speichern": "Save",
+    "Gilt für die Integration (alle Dashboards). Nach dem Speichern lädt sie kurz neu.": "Applies to the integration (all dashboards). It reloads briefly after saving.",
+    "Einstellungen gespeichert – die Integration lädt neu.": "Settings saved – the integration reloads.",
+    "Keine Änderung.": "No change.",
     "Neue Spule anlegen": "Create new spool",
     "in Spoolman, mit dem Filament dieses Kopfs vorausgefüllt": "in Spoolman, prefilled with this head's filament",
     "Neue Spule für {head}": "New spool for {head}",
@@ -2522,7 +2545,10 @@
             ${this._printerSettingsHtml()}
             ${this._liveNotifyHtml()}
             <div class="selftest-wrap">
-              <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
+              <div class="chip-row" style="justify-content:flex-start">
+                <button class="tonal" data-act="selftest"><ha-icon icon="mdi:stethoscope"></ha-icon>${tr("Selbsttest")}</button>
+                ${this._settingsButtonHtml()}
+              </div>
               <div class="selftest" data-selftest>${this._selfTestHtml()}</div>
             </div>
             <div class="t-label" style="padding-top:6px">${tr("MCU-Last und -Wachzeit sind wie in Mainsail berechnet; einstellige Werte sind normal, kritisch wird die Last erst gegen 100 %.")}</div>
@@ -4280,6 +4306,47 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .rows .chip[data-prefset], .rows .chip[data-prefsen] { height: 28px; padding: 0 12px; font-size: 12px; cursor: pointer; box-shadow: none; }
   .rows .chip[aria-pressed="true"], .rows .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
   .dlg-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 6px; }
+  /* ── Settings (2.0) ─────────────────────────────────────────────────── */
+  dialog.u1settings { width: min(760px, calc(100vw - 24px)); }
+  .cfg-dlg { padding-bottom: 0; }
+  .cfg-list { display: flex; flex-direction: column; gap: 8px; }
+  .cfg-sec { border-radius: var(--u1-r-l); background: var(--u1-panel); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-outline) 45%, transparent); }
+  .cfg-sec > summary {
+    list-style: none; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .cfg-sec > summary::-webkit-details-marker { display: none; }
+  .cfg-sec > summary .caret { transition: transform .2s; color: var(--u1-on-variant); }
+  .cfg-sec[open] > summary .caret { transform: rotate(180deg); }
+  .cfg-sum { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cfg-sum .t-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cfg-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--u1-primary); flex-shrink: 0; }
+  .cfg-body { padding: 0 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .cfg-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(180px, 260px); gap: 6px 16px; align-items: start;
+    padding: 10px 0; border-top: 1px solid color-mix(in srgb, var(--u1-outline) 40%, transparent); }
+  .cfg-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; }
+  .cfg-ctl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .cfg-ctl input:not([type="checkbox"]), .cfg-ctl select, .cfg-maint input {
+    font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high); width: 100%;
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; min-height: 38px; box-sizing: border-box; }
+  .cfg-num { display: flex; align-items: center; gap: 6px; }
+  .cfg-num input { min-width: 0; }
+  .cfg-now { font-size: 12px; color: var(--u1-on-variant); overflow-wrap: anywhere; }
+  .cfg-bool { grid-template-columns: minmax(0, 1fr) auto; cursor: pointer; }
+  .cfg-bool input { width: 20px; height: 20px; accent-color: var(--u1-primary); margin-top: 2px; }
+  .cfg-multi { display: flex; flex-direction: column; gap: 6px; }
+  .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .cfg-chk input { accent-color: var(--u1-primary); width: 18px; height: 18px; }
+  .cfg-maint { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
+  .cfg-maint-head { padding-top: 8px; font-size: 12px; }
+  .cfg-maint-head span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cfg-foot {
+    position: sticky; bottom: 0; margin: 0 -22px; padding: 10px 22px 16px; background: var(--u1-panel-high);
+    border-top: 1px solid color-mix(in srgb, var(--u1-outline) 40%, transparent); display: flex; flex-direction: column; gap: 6px; }
+  .cfg-foot .dlg-actions { margin-top: 0; }
+  @media (max-width: 560px) {
+    .cfg-row:not(.cfg-bool) { grid-template-columns: 1fr; }
+    .cfg-maint { grid-template-columns: minmax(0, 1fr) 84px 84px; font-size: 13px; }
+  }
   .dlg-actions button { min-width: 120px; }
   ha-icon.spin { animation: u1spin 1s linear infinite; }
   ha-icon.spin-slow { animation: pulse 2s ease-in-out infinite; }
@@ -4717,6 +4784,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           if (a === "backup") return this._call("backup_timelapses", {});
           if (a === "backup_config") return this._call("backup_config", {});
           if (a === "selftest") return this._runSelfTest();
+          if (a === "settings") return this._openSettings();
           if (a === "lock") return this._toggleLock();
           if (a === "power") return this._togglePower();
           if (a === "cancel") {
@@ -6564,6 +6632,265 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/card/settings.js
+  var SEC_ICONS = {
+    power: "mdi:power-plug-outline",
+    notify: "mdi:bell-outline",
+    filament: "mdi:cash-multiple",
+    spoolman: "mdi:database-outline",
+    files: "mdi:folder-outline",
+    timelapse: "mdi:timelapse",
+    maintenance: "mdi:wrench-outline"
+  };
+  var SettingsMixin = (Base) => class extends Base {
+    _isAdmin() {
+      return !!(this._hass && this._hass.user && this._hass.user.is_admin);
+    }
+    _settingsButtonHtml() {
+      if (!this._isAdmin()) return "";
+      return `<button class="tonal" data-act="settings"><ha-icon icon="mdi:cog-outline"></ha-icon>${tr("Einstellungen")}</button>`;
+    }
+    _settingsDialog() {
+      const host = this.shadowRoot.getElementById("u1dlg");
+      let dlg = host.querySelector("dialog.u1settings");
+      if (!dlg) {
+        host.insertAdjacentHTML("beforeend", `<dialog class="u1dlg u1settings" aria-label="${tr("Einstellungen")}"></dialog>`);
+        dlg = host.querySelector("dialog.u1settings");
+        dlg.addEventListener("click", (e) => {
+          if (e.target === dlg) this._closeSettings();
+        });
+        dlg.addEventListener("cancel", (e) => {
+          if (this._set && this._set.dirty.size) {
+            e.preventDefault();
+            this._closeSettings();
+          }
+        });
+      }
+      return dlg;
+    }
+    _closeSettings() {
+      const dlg = this._settingsDialog();
+      if (this._set && this._set.dirty.size && !confirm(tr("Änderungen verwerfen?"))) return;
+      this._set = null;
+      dlg.close();
+    }
+    async _openSettings() {
+      if (!this._isAdmin()) return;
+      const dlg = this._settingsDialog();
+      dlg.innerHTML = `<div class="dlg"><div class="t-label">${tr("Lade Einstellungen …")}</div></div>`;
+      if (!dlg.open) {
+        if (typeof dlg.showModal === "function") dlg.showModal();
+        else dlg.setAttribute("open", "");
+      }
+      const entry = this._entryData().config_entry_id;
+      try {
+        const meta = await this._hass.callWS({
+          type: `${DOMAIN}/settings/get`,
+          language: LANG,
+          ...entry ? { entry_id: entry } : {}
+        });
+        this._set = { meta, entry, values: JSON.parse(JSON.stringify(meta.values || {})), dirty: /* @__PURE__ */ new Set(), open: /* @__PURE__ */ new Set() };
+        this._renderSettings();
+      } catch (err) {
+        dlg.innerHTML = `<div class="dlg"><div class="dlg-error">${esc(err && err.message || String(err))}</div>
+        <div class="dlg-actions"><button class="outline" data-close>${tr("Schließen")}</button></div></div>`;
+        dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+      }
+    }
+    _val(sec, key) {
+      const v = ((this._set.values || {})[sec] || {})[key];
+      return v === void 0 ? null : v;
+    }
+    /** Current value of the chosen entity, e.g. "85 W" or "an". */
+    _entityNow(id) {
+      const st = id && this._hass.states[id];
+      if (!st) return id ? tr("Entität nicht gefunden") : "";
+      const name = st.attributes && st.attributes.friendly_name || id;
+      const unit = st.attributes && st.attributes.unit_of_measurement || "";
+      const state = { on: tr("an"), off: tr("aus"), unavailable: tr("nicht verfügbar") }[st.state] || st.state;
+      return `${name}: ${state}${unit ? ` ${unit}` : ""}`;
+    }
+    _entityChoices(f) {
+      return Object.values(this._hass.states).filter((s) => {
+        const dom = s.entity_id.split(".")[0];
+        if (f.domains && f.domains.length && !f.domains.includes(dom)) return false;
+        return !f.device_class || (s.attributes && s.attributes.device_class) === f.device_class;
+      }).map((s) => s.entity_id).sort();
+    }
+    _sectionSummary(sec) {
+      const v = (k) => this._val(sec, k);
+      const m = this._set.meta;
+      if (sec === "power") {
+        const sw = v("power_switch");
+        return sw ? [this._entityNow(sw).split(":")[0], v("auto_off") ? tr("Auto-Aus") : "", v("auto_on") ? tr("Auto-Ein") : ""].filter(Boolean).join(" · ") : tr("kein Netzschalter");
+      }
+      if (sec === "notify") {
+        const n = (v("notify_targets") || []).length;
+        return n ? tr("{n} Ziel(e)", { n }) : tr("keine Benachrichtigungen");
+      }
+      if (sec === "filament") {
+        const own = m.fields.filter((f) => f.section === sec && v(f.key) !== null).map((f) => `${f.label} ${num(v(f.key), 2)}`);
+        const sm = Object.keys(m.spoolman_prices || {}).length;
+        return [sm ? tr("Spoolman: {n} Materialien", { n: sm }) : "", own.join(", ")].filter(Boolean).join(" · ") || tr("keine Preise");
+      }
+      if (sec === "spoolman") return v("spoolman_url") || tr("aus");
+      return "";
+    }
+    _fieldHtml(f) {
+      const id = `${f.section}.${f.key}`;
+      const val = this._val(f.section, f.key);
+      const cur = val === null && f.default !== void 0 ? f.default : val;
+      const attr = `data-set="${esc(id)}"`;
+      let control = "";
+      let extra = "";
+      if (f.type === "boolean") {
+        return `<label class="cfg-row cfg-bool"><span class="cfg-text"><span>${esc(f.label)}</span>
+          ${f.help ? `<small class="t-label">${esc(f.help)}</small>` : ""}</span>
+        <input type="checkbox" role="switch" ${attr} ${cur ? "checked" : ""} /></label>`;
+      }
+      if (f.type === "entity") {
+        const list = `dl-${f.key}`;
+        control = `<input type="text" ${attr} value="${esc(cur || "")}" list="${list}" placeholder="${tr("keine")}" autocomplete="off" />
+        <datalist id="${list}">${this._entityChoices(f).map((e) => `<option value="${esc(e)}">`).join("")}</datalist>`;
+        extra = cur ? `<small class="cfg-now" data-now="${esc(id)}">${esc(this._entityNow(cur))}</small>` : `<small class="cfg-now" data-now="${esc(id)}"></small>`;
+      } else if (f.type === "number") {
+        const sm = f.section === "filament" ? (this._set.meta.spoolman_prices || {})[f.key.replace(/^price_/, "").toUpperCase()] : null;
+        control = `<span class="cfg-num"><input type="number" ${attr} value="${cur === null || cur === void 0 ? "" : esc(cur)}"
+          ${f.min !== null && f.min !== void 0 ? `min="${f.min}"` : ""} ${f.max !== null && f.max !== void 0 ? `max="${f.max}"` : ""}
+          step="${f.step || "any"}" placeholder="${sm !== null && sm !== void 0 ? esc(num(sm, 2)) : f.required ? "" : tr("leer")}" />
+        ${f.unit ? `<span class="t-label">${esc(f.unit)}</span>` : ""}</span>`;
+        if (sm !== null && sm !== void 0) extra = `<small class="cfg-now">${esc(tr("Spoolman: {p} €/kg – hat Vorrang", { p: num(sm, 2) }))}</small>`;
+      } else if (f.type === "select" && f.multiple) {
+        const opts = [.../* @__PURE__ */ new Set([...f.options || [], ...Array.isArray(cur) ? cur : []])];
+        const lab = (o) => f.option_labels && f.option_labels[o] || o;
+        control = `<div class="cfg-multi" ${attr} data-multi>${opts.map((o) => `<label class="cfg-chk"><input type="checkbox" value="${esc(o)}" ${(cur || []).includes(o) ? "checked" : ""} />${esc(lab(o))}</label>`).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
+      } else if (f.type === "select") {
+        const lab = (o) => f.option_labels && f.option_labels[o] || o;
+        control = `<select ${attr}>${f.required ? "" : `<option value="">—</option>`}${(f.options || []).map((o) => `<option value="${esc(o)}" ${o === cur ? "selected" : ""}>${esc(lab(o))}</option>`).join("")}</select>`;
+      } else {
+        control = `<input type="text" ${attr} value="${esc(cur || "")}" />`;
+      }
+      return `<div class="cfg-row"><div class="cfg-text"><span>${esc(f.label)}</span>
+        ${f.help ? `<small class="t-label">${esc(f.help)}</small>` : ""}</div>
+      <div class="cfg-ctl">${control}${extra}</div></div>`;
+    }
+    /** Maintenance: one row per item with hours and months. */
+    _maintHtml(fields) {
+      const items = fields.filter((f) => f.key.startsWith("maint_") && !f.key.startsWith("maint_m_"));
+      const rows = items.map((f) => {
+        const k = f.key.slice("maint_".length);
+        const m = fields.find((x) => x.key === `maint_m_${k}`);
+        const inp = (fld) => {
+          const v = this._val(fld.section, fld.key);
+          const cur = v === null ? fld.default : v;
+          return `<span class="cfg-num"><input type="number" data-set="${esc(`${fld.section}.${fld.key}`)}" value="${esc(cur ?? "")}"
+          min="${fld.min ?? 0}" max="${fld.max ?? ""}" step="1" /><span class="t-label">${esc(fld.unit === "mo" ? tr("Mon.") : fld.unit || "")}</span></span>`;
+        };
+        return `<div class="cfg-maint"><span>${esc(f.label.replace(/\s*\([^)]*\)\s*$/, ""))}</span>${inp(f)}${m ? inp(m) : ""}</div>`;
+      }).join("");
+      return `<div class="cfg-maint cfg-maint-head t-label"><span></span><span>${tr("Stunden")}</span><span>${tr("Monate")}</span></div>${rows}
+      <small class="t-label">${tr("0 = aus. Fällig ist, was zuerst erreicht wird.")}</small>`;
+    }
+    _renderSettings() {
+      const dlg = this._settingsDialog();
+      const s = this._set;
+      if (!s) return;
+      const order = Object.keys(s.meta.sections);
+      const secs = order.map((sec) => {
+        const info = s.meta.sections[sec];
+        const fields = s.meta.fields.filter((f) => f.section === sec);
+        const body = sec === "maintenance" ? this._maintHtml(fields) : fields.map((f) => this._fieldHtml(f)).join("");
+        const sum = this._sectionSummary(sec);
+        return `<details class="cfg-sec" data-sec="${esc(sec)}" ${s.open.has(sec) ? "open" : ""}>
+          <summary><ha-icon icon="${SEC_ICONS[sec] || "mdi:cog-outline"}"></ha-icon>
+            <span class="cfg-sum"><span>${esc(info.name)}</span>${sum ? `<small class="t-label">${esc(sum)}</small>` : ""}</span>
+            ${s.dirty.has(sec) ? `<span class="cfg-dot" title="${tr("geändert")}"></span>` : ""}
+            <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+          <div class="cfg-body">${info.description ? `<div class="t-label">${esc(info.description)}</div>` : ""}${body}</div>
+        </details>`;
+      }).join("");
+      dlg.innerHTML = `<div class="dlg cfg-dlg">
+        <header class="dlg-head"><div style="min-width:0">
+          <div class="dlg-title">${tr("Einstellungen")}</div>
+          <div class="t-label">${esc(s.meta.title || "")}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        <div class="cfg-list">${secs}</div>
+        <div class="cfg-foot">
+          <div class="dlg-error" hidden></div>
+          <div class="dlg-actions">
+            <button type="button" class="outline" data-discard ${s.dirty.size ? "" : "disabled"}>${tr("Verwerfen")}</button>
+            <button type="button" class="filled" data-save ${s.dirty.size ? "" : "disabled"}><ha-icon icon="mdi:content-save-outline"></ha-icon>${tr("Speichern")}</button>
+          </div>
+          <small class="t-label">${tr("Gilt für die Integration (alle Dashboards). Nach dem Speichern lädt sie kurz neu.")}</small>
+        </div>
+      </div>`;
+      dlg.querySelector("[data-close]").addEventListener("click", () => this._closeSettings());
+      dlg.querySelectorAll("details.cfg-sec").forEach((d) => d.addEventListener("toggle", () => {
+        if (d.open) s.open.add(d.dataset.sec);
+        else s.open.delete(d.dataset.sec);
+      }));
+      dlg.querySelectorAll("[data-set]").forEach((el) => {
+        const [sec, key] = el.dataset.set.split(".");
+        const f = s.meta.fields.find((x) => x.section === sec && x.key === key) || {};
+        const read = () => {
+          if (el.dataset.multi !== void 0) return [...el.querySelectorAll("input:checked")].map((i) => i.value);
+          if (el.type === "checkbox") return el.checked;
+          if (el.type === "number") return el.value === "" ? null : Number(el.value);
+          return el.value.trim() === "" ? null : el.value.trim();
+        };
+        el.addEventListener("change", () => {
+          s.values[sec] = { ...s.values[sec] || {}, [key]: read() };
+          const first = !s.dirty.has(sec);
+          s.dirty.add(sec);
+          if (f.type === "entity") {
+            const now = dlg.querySelector(`[data-now="${CSS.escape(el.dataset.set)}"]`);
+            if (now) now.textContent = this._entityNow(read());
+          }
+          dlg.querySelector("[data-save]").disabled = false;
+          dlg.querySelector("[data-discard]").disabled = false;
+          if (first) {
+            const sum = dlg.querySelector(`details[data-sec="${sec}"] summary`);
+            if (sum && !sum.querySelector(".cfg-dot")) sum.querySelector(".caret").insertAdjacentHTML("beforebegin", `<span class="cfg-dot" title="${tr("geändert")}"></span>`);
+          }
+        });
+      });
+      dlg.querySelector("[data-discard]").addEventListener("click", () => {
+        s.values = JSON.parse(JSON.stringify(s.meta.values || {}));
+        s.dirty.clear();
+        this._renderSettings();
+      });
+      dlg.querySelector("[data-save]").addEventListener("click", () => this._saveSettings());
+    }
+    async _saveSettings() {
+      const s = this._set;
+      const dlg = this._settingsDialog();
+      const btn = dlg.querySelector("[data-save]");
+      const err = dlg.querySelector(".cfg-foot .dlg-error");
+      btn.disabled = true;
+      err.hidden = true;
+      const values = {};
+      s.dirty.forEach((sec) => {
+        values[sec] = s.values[sec] || {};
+      });
+      try {
+        const res = await this._hass.callWS({
+          type: `${DOMAIN}/settings/set`,
+          values,
+          language: LANG,
+          ...s.entry ? { entry_id: s.entry } : {}
+        });
+        this._set = null;
+        dlg.close();
+        this._toast(res && res.changed ? tr("Einstellungen gespeichert – die Integration lädt neu.") : tr("Keine Änderung."));
+      } catch (e) {
+        btn.disabled = false;
+        err.hidden = false;
+        err.textContent = e && e.message || String(e);
+      }
+    }
+  };
+
   // frontend/src/card/card.js
   var MIXINS = [
     StateMixin,
@@ -6583,7 +6910,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     HeadDialogMixin,
     SafetyMixin,
     MachineMixin,
-    WebrtcMixin
+    WebrtcMixin,
+    SettingsMixin
   ];
   var U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
   var SnapmakerU1Card = class extends U1Base {

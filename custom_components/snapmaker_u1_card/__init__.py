@@ -26,7 +26,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from . import blueprints, resource, whats_new
+from . import blueprints, resource, settings_ws, whats_new
 from .api import MoonrakerClient
 from .const import (
     CARD_FILENAME,
@@ -184,6 +184,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ]
     )
     hass.http.register_view(TimelapseView())
+    settings_ws.async_register(hass)
     hass.http.register_view(GcodeView())
     hass.http.register_view(UploadView())
     hass.http.register_view(LayerView())
