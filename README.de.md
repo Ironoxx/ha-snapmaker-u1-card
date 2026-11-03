@@ -6,7 +6,7 @@
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Kaffee%20spendieren-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
 
-Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapmaker U1**:
+Eine Home-Assistant-Integration mit eingebauter Dashboard-Karte für den **Snapmaker U1**. **Seit 2.0 reicht sie allein:** Sie spricht direkt mit dem Drucker – keine Moonraker-Integration nötig.
 
 - **Geladene Filamente live**: Material, Unterart, Hersteller, Farbe (auch mehrfarbig) und RFID-Erkennung je Druckkopf, direkt aus der Drucker-Firmware.
 - **Kopf-Details**: **Filament** am Kopf (oder ein Tipp auf die Spule) zeigt die RFID-Daten der Spule (Gewicht, Durchmesser, Düsen-/Bett-/Trocknungstemperatur, Herstelldatum, SKU). Dort lassen sich **Material, Hersteller und Farbe von Hand setzen**, etwa für Spulen ohne Chip.

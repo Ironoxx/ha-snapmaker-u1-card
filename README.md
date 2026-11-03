@@ -6,7 +6,7 @@
 
 [![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
 
-A Home Assistant integration with a built-in dashboard card for the **Snapmaker U1**:
+A Home Assistant integration with a built-in dashboard card for the **Snapmaker U1**. **Since 2.0 it is all you need:** it talks to the printer directly – no Moonraker integration required.
 
 - **Loaded filaments live**: material, sub type, vendor, colour (including multi-colour) and RFID detection per print head, straight from the printer firmware.
 - **Head details**: tap **Filament** on a head (or the spool itself) to see the spool's RFID data (weight, diameter, nozzle/bed/drying temperatures, manufacturing date, SKU) and to **set material, vendor and colour by hand** for spools without a tag.
