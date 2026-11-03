@@ -4,6 +4,37 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0b4
+
+**Fourth beta of 2.0 – fixes from testing b3.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b3 is included (details below).
+
+**Fixed**
+- Chamber temperature, part fan and speed stayed *unavailable*: these values only arrive once the printer's object list is known, and their entities were only created at the very first update. Each entity is now created as soon as its value shows up; existing entries are taken over.
+- Stepper temperatures (X/Y) never appeared in the card: Klipper only reports the driver temperature while the motors are on, and the rows were only built at the first render. They now appear after homing or during a print and disappear when the motors switch off.
+
+**Improved**
+- Settings in the card: long lists of notify services fold away (chosen ones first), long names wrap, correct singular ("1 target", "1 material").
+- Diagnostics include the printer values, the object list and the subscription.
+- README: screenshot of the settings in the card.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Vierte Beta von 2.0 – Korrekturen aus dem Test von b3.** Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist. Alles aus b1–b3 ist enthalten (Details unten).
+
+**Behoben**
+- Innenraumtemperatur, Bauteillüfter und Geschwindigkeit blieben *nicht verfügbar*: Diese Werte kommen erst, wenn die Objektliste des Druckers bekannt ist, und ihre Entitäten wurden nur beim allerersten Abruf angelegt. Jetzt entsteht jede Entität, sobald ihr Wert auftaucht; vorhandene Einträge werden übernommen.
+- Stepper-Temperaturen (X/Y) erschienen nie in der Karte: Klipper meldet die Treibertemperatur nur bei eingeschalteten Motoren, und die Zeilen wurden nur beim ersten Aufbau angelegt. Jetzt erscheinen sie nach der Referenzfahrt oder im Druck und verschwinden, wenn die Motoren abschalten.
+
+**Verbessert**
+- Einstellungen in der Karte: lange Listen von Benachrichtigungsdiensten werden eingeklappt (gewählte zuerst), lange Namen brechen um, richtige Einzahl („1 Ziel“, „1 Material“).
+- Die Diagnose enthält die Druckerwerte, die Objektliste und das Abo.
+- README: Screenshot der Einstellungen in der Karte.
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0b3
 
 **Third beta of 2.0 – the last one before 2.0.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1 and b2 is included: the card no longer needs the Moonraker integration (details below).
