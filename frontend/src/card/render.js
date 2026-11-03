@@ -49,6 +49,8 @@ export const RenderMixin = (Base) => class extends Base {
       d.chamber ? `ch${d.chamber.filter !== null && d.chamber.filter !== undefined}` : "noch",
       `f${this._ents.flow && d.flow !== null}`,
       d.headStates.join(","),
+      // stepper driver temperatures only exist while the motors are on (Klipper reports None otherwise)
+      `st${d.stepX !== null}${d.stepY !== null}`,
       `${this._ents.camera}${this._hasCamera2()}`,
       this._pendingKey(),
     ].join("~");

@@ -105,5 +105,18 @@ card.hass = hass();
 card._press("cancel_print");
 assert.deepStrictEqual(plain(last()), ["button", "press", { entity_id: "button.snapmaker_u1_cancel_print" }]);
 
+// 6. Stepper temperatures appear once the motors are on (null before): the row is added
+const sys = () => card.shadowRoot.querySelector("[data-su1=stepx]");
+card.setConfig({ type: "custom:snapmaker-u1-card", controls_lock: "off", layout: "stack" });
+card.hass = hass();
+assert.ok(!sys(), "keine Zeile ohne Wert");
+values.stepper_x_temp = 41;
+values.stepper_y_temp = 39;
+card.hass = hass();
+assert.ok(sys() && /41/.test(sys().textContent), "Zeile erscheint nach Referenzfahrt");
+delete values.stepper_x_temp; delete values.stepper_y_temp;
+card.hass = hass();
+assert.ok(!sys(), "Motoren aus: Zeile weg");
+
 console.log("STANDALONE OK – values from the integration, machine_command, priority, fallback");
 process.exit(0);
