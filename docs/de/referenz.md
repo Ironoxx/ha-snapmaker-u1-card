@@ -33,6 +33,7 @@
 | `number.…_flussrate` | Flussrate in % (M221, 50–150), auch während des Drucks |
 | `sensor.…_bettnivellierung_spanne` | höchster minus tiefster Messpunkt des geladenen Bed Mesh in mm; Attribute `matrix`, `min`, `max`, `mean`, `profile`, `mesh_min`, `mesh_max` |
 | `sensor.…_top_cover`, `number.…_top_cover_abluftlufter`, `number.…_top_cover_umluftlufter` | erst wenn eine Top Cover erkannt wird: Kammermodus (`idle`, `cool`, `preheat`, `hot`), Attribute `exhaust`, `inner`, `inner_rpm`, `filter_hours`, `desired_temp`; Lüfter in % |
+| `select.…_top_cover_modus`, `number.…_top_cover_kammer_soll` | Modus der Top Cover (`idle`, `cool`, `preheat`, `hot`) und ihr Kammer-Soll in °C |
 
 Das Attribut `head_states` von `sensor.…_filamente` sagt pro Kopf, ob er `parked` (im Dock) oder `active` (auf dem Schlitten) ist.
 

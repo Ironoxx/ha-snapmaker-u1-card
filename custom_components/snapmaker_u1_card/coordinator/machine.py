@@ -19,6 +19,7 @@ from ..machine import (
     park_gcode,
     pick_gcode,
     purifier_gcode,
+    purifier_mode_gcode,
 )
 from ..machine_status import HOME_AXES, CommandError, set_gcode, switch_gcode
 from ..parsing import ACTIVE_PRINT_STATES
@@ -48,6 +49,23 @@ class MachineMixin:
                 self.hass, "Keine Top Cover erkannt.", "No top cover detected."))
         try:
             script = purifier_gcode(fan, percent)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await self._run_gcode(script)
+
+    async def async_set_purifier_mode(self, mode: str, target: float | None = None) -> None:
+        """Top cover mode (idle, cool, preheat, hot); ``target`` = chamber temperature.
+
+        Without ``target`` the current chamber target is kept, so switching
+        between preheat and hot does not lose it.
+        """
+        purifier = (self.data or self._prev).purifier
+        if not purifier or not purifier.get("present"):
+            raise HomeAssistantError(tr(self.hass, "Keine Top Cover erkannt.", "No top cover detected."))
+        if target is None and mode != "idle":
+            target = purifier.get("desired_temp")
+        try:
+            script = purifier_mode_gcode(mode, target)
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
         await self._run_gcode(script)

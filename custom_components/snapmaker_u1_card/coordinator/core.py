@@ -187,6 +187,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._early_photo: dict[str, Any] | None = None  # photo after the last extrusion
         self._photo_task: Any = None  # task storing the current result photo
         self._cool_watch: float | None = None  # print ended "complete": watch the bed temperature
+        self._chamber_notified: tuple[str, float] | None = None  # (device, target) already reported warm
+        self._chamber_primed = False  # first look done (no message for a chamber already warm at start)
         self._idle_since: float | None = None  # idle shutdown
         self._unsub_action = None
         self._backup_task: asyncio.Task | None = None
@@ -654,6 +656,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                         data.layer, data.total_layers)
         self._webcam_check()
         self._check_bed_cool((status.get("heater_bed") or {}).get("temperature"), print_state)
+        self._check_chamber_ready(data.chamber, data.purifier, data.machine.get("cavity_temp"))
 
         now = time.monotonic()
         # During a print nothing changes in timelapses and history

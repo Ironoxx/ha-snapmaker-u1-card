@@ -80,6 +80,8 @@ TEMPS_URL = f"/api/{DOMAIN}/temps"
 TEMP_SERIES = ("extruder", "extruder1", "extruder2", "extruder3", "heater_bed")
 # 2.0: chamber air and the X/Y stepper drivers as extra lines (shown name -> store keys)
 EXTRA_SERIES = {"cavity": ("temperature_sensor cavity",),
+                # chamber heater (paxx12: Panda Breath / DragonBreath), with its target
+                "chamber_heater": ("heater_generic panda_breath", "heater_generic dragonbreath"),
                 "stepper_x": ("tmc2240 stepper_x", "tmc2209 stepper_x", "tmc5160 stepper_x"),
                 "stepper_y": ("tmc2240 stepper_y", "tmc2209 stepper_y", "tmc5160 stepper_y")}
 
@@ -116,7 +118,7 @@ def downsample(store: dict[str, Any], step: int = 5, cpu: list[float | None] | N
             continue
         temps = _avg(series.get("temperatures") or [], step)
         if any(v is not None for v in temps):
-            out[name] = {"temperatures": temps, "targets": []}
+            out[name] = {"temperatures": temps, "targets": _avg(series.get("targets") or [], step)}
     if cpu and any(v is not None for v in cpu):
         length = max((len(s.get("temperatures") or []) for s in store.values() if isinstance(s, dict)), default=0)
         values = list(cpu)[-length:] if length else list(cpu)

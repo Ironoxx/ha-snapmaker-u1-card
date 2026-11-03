@@ -72,11 +72,15 @@ class UpkeepMixin:
 
         The air filter item only appears once a top cover was seen (it has the filter).
         """
+        filter_hours = None
         if cover and cover.get("present"):
             self._cover_seen = True
+            filter_hours = cover.get("filter_hours")
+            if self.maintenance.baseline(None, time.time(), filter_hours):
+                self._save()
         items = self.maintenance.status(self._print_hours, self.options.get(CONF_MAINTENANCE) or {},
                                         self.options.get(CONF_MAINTENANCE_MONTHS) or {}, time.time(),
-                                        has_filter=getattr(self, "_cover_seen", False))
+                                        has_filter=getattr(self, "_cover_seen", False), filter_hours=filter_hours)
         if tool_changes:
             worst = max((h.get("since_maintenance") or 0 for h in tool_changes.get("heads") or []), default=0)
             limit = tool_changes.get("maintenance_threshold") or 0
@@ -112,7 +116,9 @@ class UpkeepMixin:
         """Service: mark a maintenance item as done now."""
         if key not in MAINTENANCE_ITEMS:
             raise HomeAssistantError(tr(self.hass, f"Unbekannter Wartungspunkt: {key}", f"Unknown maintenance item: {key}"))
-        self.maintenance.mark_done(key, self._print_hours, time.time())
+        cover = (self.data or self._prev).purifier or {}
+        self.maintenance.mark_done(key, self._print_hours, time.time(),
+                                   cover.get("filter_hours") if cover.get("present") else None)
         self._save()
         if self.data is not None:
             self.data.maintenance = self._maintenance_status(self.data.tool_changes, self.data.purifier)

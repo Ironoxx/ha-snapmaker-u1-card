@@ -45,7 +45,7 @@ export const RenderMixin = (Base) => class extends Base {
       this._ents.ownCamera ? (this._st(this._ents.ownCamera)?.attributes.mode || "") : "",
       (() => { const l = this._st(this._ents.liveNotify); return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : ""; })(),
       d.mesh ? `m${d.mesh.profile}${d.mesh.range}${d.mesh.mean}${d.mesh.cols}x${d.mesh.rows}` : "nomesh",
-      d.cover ? "cover" : "nocover",
+      d.cover ? `cover${d.cover.mode}` : "nocover",
       d.chamber ? `ch${d.chamber.filter !== null && d.chamber.filter !== undefined}` : "noch",
       `f${this._ents.flow && d.flow !== null}`,
       d.headStates.join(","),
@@ -206,6 +206,13 @@ export const RenderMixin = (Base) => class extends Base {
     r.querySelectorAll("[data-video]").forEach((b) =>
       b.addEventListener("click", () => this._openVideo(Number(b.dataset.video)))
     );
+
+    r.querySelectorAll("[data-covermode]").forEach((b) => b.addEventListener("click", () => {
+      this._touchLock();
+      if (b.getAttribute("aria-pressed") === "true" || !this._ents.coverMode) return;
+      b.classList.add("pending");
+      this._hass.callService("select", "select_option", { entity_id: this._ents.coverMode, option: b.dataset.covermode });
+    }));
 
     const tc = r.querySelector("[data-tchart]");
     if (tc) tc.addEventListener("click", (e) => {

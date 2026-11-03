@@ -91,6 +91,15 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   card.hass = hass();
   assert.ok(R().textContent.includes("Top Cover") && R().textContent.includes("Kammer kühlen"), "Top-Cover-Panel");
   assert.ok(R().querySelector('input[data-num="number.snapmaker_u1_card_top_cover_exhaust_fan"]'), "Abluftregler");
+  // mode chips and chamber target (select / number of the integration)
+  own("select.snapmaker_u1_card_top_cover_mode", "cool", { options: ["idle", "cool", "preheat", "hot"] }, "top_cover_mode");
+  own("number.snapmaker_u1_card_top_cover_chamber_target", "42", { min: 0, max: 70, step: 1 }, "top_cover_target");
+  card._renderKey = null; card._ents = null; card.hass = hass();
+  assert.strictEqual(R().querySelector('[data-covermode="cool"]').getAttribute("aria-pressed"), "true");
+  assert.ok(R().querySelector('input[data-num="number.snapmaker_u1_card_top_cover_chamber_target"]'), "Kammer-Soll-Regler");
+  R().querySelector('[data-covermode="preheat"]').click();
+  assert.deepStrictEqual(plain(calls.at(-1)), ["select", "select_option",
+    { entity_id: "select.snapmaker_u1_card_top_cover_mode", option: "preheat" }]);
   assert.ok(R().querySelector('[data-su1="cvfilter"]').textContent.includes("2,0") || R().querySelector('[data-su1="cvfilter"]').textContent.includes("2.0"));
   // Cover unplugged: panel disappears again
   states["sensor.snapmaker_u1_card_top_cover"].state = "unavailable";

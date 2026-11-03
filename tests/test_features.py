@@ -210,6 +210,13 @@ def test_maintenance_filter_only_with_top_cover() -> None:
     m.baseline(0.0, 0.0)
     assert "filter" not in {i["key"] for i in m.status(10.0, {"filter": 150}, None, 1.0)}
     assert "filter" in {i["key"] for i in m.status(10.0, {"filter": 150}, None, 1.0, has_filter=True)}
+    # real filter runtime of the cover once known: counted from the first value
+    m.baseline(None, 2.0, filter_hours=100.0)
+    item = {i["key"]: i for i in m.status(10.0, {"filter": 150}, None, 3.0, has_filter=True, filter_hours=130.0)}["filter"]
+    assert item["used_h"] == 30.0 and item["source"] == "filter"
+    m.mark_done("filter", 12.0, 4.0, filter_hours=200.0)
+    item = {i["key"]: i for i in m.status(12.0, {"filter": 150}, None, 5.0, has_filter=True, filter_hours=210.0)}["filter"]
+    assert item["used_h"] == 10.0
 
 
 # ── Upload ─────────────────────────────────────────────────────────────────

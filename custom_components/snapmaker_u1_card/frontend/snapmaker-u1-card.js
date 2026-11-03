@@ -443,7 +443,6 @@
     "Die Karte ist auf {c}, die Integration noch auf {v}. Home Assistant neu starten, damit das Update vollständig aktiv wird.": "The card is on {c}, the integration still on {v}. Restart Home Assistant to finish the update.",
     "Veraltete Karte im Browser-Cache": "Outdated card in the browser cache",
     "Neustart von Home Assistant nötig": "Home Assistant restart required",
-    "Neu laden": "Reload",
     "G-Code herunterladen": "Download G-code",
     "Download fehlgeschlagen": "Download failed",
     "Benachrichtigungen": "Notifications",
@@ -576,6 +575,9 @@
     "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
     "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
     "Spule für {head}": "Spool for {head}",
+    "Filter": "Filter",
+    "Kühlen: Abluft, bis die Kammer unter dem Sollwert liegt. Vorheizen/Heiß: Umluft hält die Wärme. Während eines Drucks regelt die Firmware die Lüfter je nach Material selbst nach.": "Cool: exhaust until the chamber is below the target. Preheat/hot: circulation keeps the heat. During a print the firmware adjusts the fans to the material itself.",
+    "Kammer-Soll (Top Cover)": "Chamber target (top cover)",
     "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).": "Empty = automatic: when there is no direct connection to the printer (e.g. Nabu Casa), Home Assistant plays the RTSP stream – smoother and far less data than MJPEG. Only with RTSP (paxx12).",
     "Unterwegs: RTSP über Home Assistant": "Away: RTSP through Home Assistant",
     "CPU": "CPU",
@@ -2364,7 +2366,7 @@
 
   // frontend/src/card/control-tab.js
   var TEMP_HIDDEN = "snapmaker-u1-card.temp-hidden";
-  var KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y", "cpu"];
+  var KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "chamber_heater", "stepper_x", "stepper_y", "cpu"];
   var EXTRA_COLORS = ["#fdd835", "#d81b60", "#5e35b1", "#00897b", "#c0ca33"];
   var ControlTabMixin = (Base) => class extends Base {
     _sectionClimate() {
@@ -2473,6 +2475,7 @@
         })),
         { key: "heater_bed", color: "#8e24aa", label: tr("Bett"), heater: true, always: true },
         { key: "cavity", color: "#00acc1", label: tr("Innenraum") },
+        { key: "chamber_heater", color: "#ff7043", label: this._d && this._d.chamber && this._d.chamber.label || tr("Kammerheizung"), heater: true, always: true },
         { key: "stepper_x", color: "#8d6e63", label: tr("Stepper X") },
         { key: "stepper_y", color: "#9e9e9e", label: tr("Stepper Y") },
         { key: "cpu", color: "#78909c", label: tr("CPU") },
@@ -2732,7 +2735,7 @@
       const rows = items.map((m) => {
         const pct = Math.min(100, m.progress || 0);
         const tone = m.due ? "error" : pct >= 80 ? "warn" : "";
-        const hours = m.interval_h ? m.used_h === null || m.used_h === void 0 ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h` : "";
+        const hours = m.interval_h ? m.used_h === null || m.used_h === void 0 ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h${m.source === "filter" ? ` ${tr("Filter")}` : ""}` : "";
         const months = m.interval_m ? tr(m.interval_m === 1 ? "monatlich" : "alle {n} Monate", { n: m.interval_m }) : "";
         const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}` : [hours, months].filter(Boolean).join(" · ") || "—";
         const leftH = m.interval_h && m.remaining_h !== null && m.remaining_h !== void 0 ? m.remaining_h : null;
@@ -4795,7 +4798,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : "";
         })(),
         d.mesh ? `m${d.mesh.profile}${d.mesh.range}${d.mesh.mean}${d.mesh.cols}x${d.mesh.rows}` : "nomesh",
-        d.cover ? "cover" : "nocover",
+        d.cover ? `cover${d.cover.mode}` : "nocover",
         d.chamber ? `ch${d.chamber.filter !== null && d.chamber.filter !== void 0}` : "noch",
         `f${this._ents.flow && d.flow !== null}`,
         d.headStates.join(","),
@@ -4980,6 +4983,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       r.querySelectorAll("[data-video]").forEach(
         (b) => b.addEventListener("click", () => this._openVideo(Number(b.dataset.video)))
       );
+      r.querySelectorAll("[data-covermode]").forEach((b) => b.addEventListener("click", () => {
+        this._touchLock();
+        if (b.getAttribute("aria-pressed") === "true" || !this._ents.coverMode) return;
+        b.classList.add("pending");
+        this._hass.callService("select", "select_option", { entity_id: this._ents.coverMode, option: b.dataset.covermode });
+      }));
       const tc = r.querySelector("[data-tchart]");
       if (tc) tc.addEventListener("click", (e) => {
         const b = e.target.closest("[data-tser]");
@@ -6351,6 +6360,16 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         tr("Betriebsstunden des Umluftlüfters (Filter)")
       )}
         </div>
+        ${this._ents.coverMode ? `<div class="chip-row cover-modes" data-lockable role="group" aria-label="${tr("Modus")}">
+          ${["idle", "cool", "preheat", "hot"].map((m) => `<button type="button" class="chip" data-covermode="${m}"
+            aria-pressed="${c.mode === m}">${esc(this._coverMode(m))}</button>`).join("")}</div>` : ""}
+        ${this._ents.coverTarget && ["cool", "preheat", "hot"].includes(c.mode) ? this._slider({
+        entity: this._ents.coverTarget,
+        label: tr("Kammer-Soll (Top Cover)"),
+        value: c.desired_temp || 0,
+        unit: "°C",
+        presets: [35, 45, 55]
+      }) : ""}
         ${this._ents.coverExhaust ? this._slider({
         entity: this._ents.coverExhaust,
         label: tr("Abluftlüfter"),
@@ -6365,7 +6384,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         unit: "%",
         presets: [0, 50, 100]
       }) : ""}
-        <div class="t-label">${tr("Während eines Drucks regelt die Firmware die Lüfter je nach Material selbst nach.")}</div>
+        <div class="t-label">${tr("Kühlen: Abluft, bis die Kammer unter dem Sollwert liegt. Vorheizen/Heiß: Umluft hält die Wärme. Während eines Drucks regelt die Firmware die Lüfter je nach Material selbst nach.")}</div>
       </section>`;
     }
     // ── Chamber heater ───────────────────────────────────────────────────────
@@ -7317,6 +7336,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         topCover: ownKey("top_cover"),
         coverExhaust: ownKey("top_cover_exhaust"),
         coverInner: ownKey("top_cover_inner"),
+        coverMode: ownKey("top_cover_mode"),
+        coverTarget: ownKey("top_cover_target"),
         chamber: ownKey("chamber_heater"),
         chamberTarget: ownKey("chamber_target"),
         chamberFilter: ownKey("chamber_filter")

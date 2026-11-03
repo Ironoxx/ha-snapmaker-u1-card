@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import U1ConfigEntry
 from .coordinator import U1Coordinator
-from .machine import FLOW_MAX, FLOW_MIN
+from .machine import FLOW_MAX, FLOW_MIN, PURIFIER_TEMP_MAX
 from .sensor import U1Entity, add_machine, add_when_chamber, add_when_top_cover
 
 
@@ -26,7 +26,8 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities([FlowNumber(coordinator)])
     add_when_top_cover(entry, lambda: async_add_entities(
-        [TopCoverFanNumber(coordinator, "exhaust"), TopCoverFanNumber(coordinator, "inner")]))
+        [TopCoverFanNumber(coordinator, "exhaust"), TopCoverFanNumber(coordinator, "inner"),
+         TopCoverTargetNumber(coordinator)]))
     add_when_chamber(entry, lambda: async_add_entities([ChamberTargetNumber(coordinator)]))
     # 2.0: target temperatures, part fan and speed factor without the Moonraker integration
     from .machine_entities import (
@@ -93,6 +94,34 @@ class TopCoverFanNumber(U1Entity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         await self.coordinator.async_set_purifier_fan(self._fan, value)
+
+
+class TopCoverTargetNumber(U1Entity, NumberEntity):
+    """Chamber target of the top cover modes in °C (DESIRE_TEMP); applied with the current mode."""
+
+    _attr_translation_key = "top_cover_target"
+    _attr_icon = "mdi:thermometer-chevron-up"
+    _attr_native_unit_of_measurement = "°C"
+    _attr_native_min_value = 0
+    _attr_native_max_value = PURIFIER_TEMP_MAX
+    _attr_native_step = 1
+    _attr_mode = NumberMode.BOX
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "top_cover_target")
+
+    @property
+    def available(self) -> bool:
+        p = self.coordinator.data.purifier if self.coordinator.data else None
+        return super().available and bool(p and p.get("present") and p.get("mode") not in (None, "idle", "unknown"))
+
+    @property
+    def native_value(self) -> float | None:
+        return (self.coordinator.data.purifier or {}).get("desired_temp")
+
+    async def async_set_native_value(self, value: float) -> None:
+        mode = (self.coordinator.data.purifier or {}).get("mode")
+        await self.coordinator.async_set_purifier_mode(mode, value)
 
 
 class ChamberTargetNumber(U1Entity, NumberEntity):

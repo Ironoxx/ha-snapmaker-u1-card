@@ -269,6 +269,8 @@ export class SnapmakerU1Card extends U1Base {
       topCover: ownKey("top_cover"),
       coverExhaust: ownKey("top_cover_exhaust"),
       coverInner: ownKey("top_cover_inner"),
+      coverMode: ownKey("top_cover_mode"),
+      coverTarget: ownKey("top_cover_target"),
       chamber: ownKey("chamber_heater"),
       chamberTarget: ownKey("chamber_target"),
       chamberFilter: ownKey("chamber_filter"),

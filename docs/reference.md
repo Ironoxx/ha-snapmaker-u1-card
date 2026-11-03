@@ -38,6 +38,7 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 | `number.…_flow` | flow in % (M221, 50–150), also during a print |
 | `sensor.…_bed_mesh_spread` | highest minus lowest probed point of the loaded bed mesh in mm; attributes `matrix`, `min`, `max`, `mean`, `profile`, `mesh_min`, `mesh_max` |
 | `sensor.…_top_cover`, `number.…_top_cover_exhaust_fan`, `number.…_top_cover_circulation_fan` | only once a top cover is detected: chamber mode (`idle`, `cool`, `preheat`, `hot`), attributes `exhaust`, `inner`, `inner_rpm`, `filter_hours`, `desired_temp`; fans in % |
+| `select.…_top_cover_mode`, `number.…_top_cover_chamber_target` | top cover mode (`idle`, `cool`, `preheat`, `hot`) and its chamber target in °C |
 
 The attribute `head_states` of `sensor.…_filaments` says per head whether it is `parked` or `active` (on the carriage).
 

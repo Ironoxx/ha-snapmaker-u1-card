@@ -43,7 +43,7 @@ DEFAULT_AUTO_OFF_TEMP = 50
 DEFAULT_AUTO_OFF_DELAY = 5  # minutes
 DEFAULT_AUTO_ON = False
 NOTIFY_EVENTS = ("complete", "cancelled", "error", "paused", "alert", "first_layer", "almost_done",
-                 "spool_low", "spool_runout", "bed_cool", "maintenance")
+                 "spool_low", "spool_runout", "bed_cool", "maintenance", "chamber_ready")
 DEFAULT_NOTIFY_EVENTS = ["complete", "error", "paused", "alert", "spool_low", "spool_runout", "maintenance"]
 CONF_BED_COOL = "bed_cool_temp"
 DEFAULT_BED_COOL = 35  # °C: the PEI plate releases the part

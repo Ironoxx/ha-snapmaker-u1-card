@@ -17,6 +17,7 @@ from custom_components.snapmaker_u1_card.machine import (
     parse_purifier,
     pick_gcode,
     purifier_gcode,
+    purifier_mode_gcode,
 )
 
 # Shapes as reported by u1-klipper (bed_mesh.get_status, purifier.get_status, extruder park detector)
@@ -166,6 +167,46 @@ async def test_top_cover_added_when_detected(hass: HomeAssistant, mock_client, n
     st["purifier"] = {**PURIFIER, "power_detected": False}
     await _refresh(hass, entry)
     assert hass.states.get("sensor.snapmaker_u1_card_top_cover").state == "unavailable"
+
+
+def test_purifier_mode_gcode() -> None:
+    assert purifier_mode_gcode("idle", 50) == "SET_PURIFIER_MODE MODE=0"
+    assert purifier_mode_gcode("cool") == "SET_PURIFIER_MODE MODE=1"
+    assert purifier_mode_gcode("preheat", 45.4) == "SET_PURIFIER_MODE MODE=2 DESIRE_TEMP=45"
+    assert purifier_mode_gcode("hot", 60) == "SET_PURIFIER_MODE MODE=3 DESIRE_TEMP=60"
+    for bad in (("boost", None), ("hot", 90), ("hot", "x"), ("cool", float("nan"))):
+        with pytest.raises(ValueError):
+            purifier_mode_gcode(*bad)
+
+
+async def test_top_cover_mode_and_chamber_ready(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Mode select and chamber target; push once the chamber is warm (top cover in preheat)."""
+    st = _machine(mock_client, PURIFIER)
+    st["temperature_sensor cavity"] = {"temperature": 30.0}
+    mock_client["objects"].return_value = [*mock_client["objects"].return_value, "temperature_sensor cavity"]
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"],
+                         notify_events=["complete", "chamber_ready"])
+    coord = entry.runtime_data
+    coord._objects = mock_client["objects"].return_value
+    await _refresh(hass, entry)
+    mode = hass.states.get("select.snapmaker_u1_card_top_cover_mode")
+    assert mode.state == "cool" and "preheat" in mode.attributes["options"]
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await hass.services.async_call("select", "select_option", {"entity_id": mode.entity_id, "option": "preheat"},
+                                       blocking=True)
+        gcode.assert_awaited_with("SET_PURIFIER_MODE MODE=2 DESIRE_TEMP=42")  # keeps the current target
+        target = hass.states.get("number.snapmaker_u1_card_top_cover_chamber_target")
+        await hass.services.async_call("number", "set_value", {"entity_id": target.entity_id, "value": 50},
+                                       blocking=True)
+        gcode.assert_awaited_with("SET_PURIFIER_MODE MODE=1 DESIRE_TEMP=50")
+    # preheating to 45 °C: cold first, then warm -> one push
+    st["purifier"] = {**PURIFIER, "mode": 2, "desired_chamber_temp": 45.0}
+    await _refresh(hass, entry)
+    st["temperature_sensor cavity"] = {"temperature": 44.5}
+    await _refresh(hass, entry)
+    await _refresh(hass, entry)
+    sent = [c for c in notifications if "Kammer" in c.data["title"] or "Chamber" in c.data["title"]]
+    assert len(sent) == 1 and "45" in sent[0].data["message"]
 
 
 async def test_tool_change(hass: HomeAssistant, mock_client, notifications) -> None:

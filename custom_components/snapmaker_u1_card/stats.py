@@ -289,36 +289,44 @@ class Maintenance:
     def as_stored(self) -> dict[str, Any]:
         return self.done
 
-    def baseline(self, hours: float | None, now: float) -> bool:
+    def baseline(self, hours: float | None, now: float, filter_hours: float | None = None) -> bool:
         """On first use, mark the current state as 'done'.
 
         Otherwise everything would be due right away on a printer that has
         been in use for a while. New items (added in an update) start now too.
+        The air filter also remembers the top cover's filter runtime the first
+        time it is known, so it counts real filter hours from then on.
         """
-        if hours is None:
-            return False
         changed = False
-        for key in MAINTENANCE_ITEMS:
-            if key not in self.done:
-                self.done[key] = {"hours": round(hours, 2), "at": now}
-                changed = True
+        if hours is not None:
+            for key in MAINTENANCE_ITEMS:
+                if key not in self.done:
+                    self.done[key] = {"hours": round(hours, 2), "at": now}
+                    changed = True
+        flt = self.done.get("filter")
+        if flt is not None and filter_hours is not None and "filter_hours" not in flt:
+            flt["filter_hours"] = round(filter_hours, 2)
+            changed = True
         return changed
 
-    def mark_done(self, key: str, hours: float | None, now: float) -> None:
+    def mark_done(self, key: str, hours: float | None, now: float, filter_hours: float | None = None) -> None:
         if key not in MAINTENANCE_ITEMS:
             raise KeyError(key)
         prev = self.done.get(key, {})
         self.done[key] = {"hours": round(hours if hours is not None else prev.get("hours", 0.0), 2), "at": now}
+        if key == "filter" and filter_hours is not None:
+            self.done[key]["filter_hours"] = round(filter_hours, 2)
 
     def status(self, hours: float | None, intervals: dict[str, int],
                months: dict[str, int] | None = None, now: float | None = None,
-               has_filter: bool = False) -> list[dict[str, Any]]:
+               has_filter: bool = False, filter_hours: float | None = None) -> list[dict[str, Any]]:
         """Status of every enabled maintenance item at ``hours`` print hours and time ``now``.
 
         An item counts in print hours, in months since it was last done, or both;
         the more advanced of the two decides progress, "due" and which remaining
         value is shown (``by``: "hours" or "months"). The air filter only exists
-        with the top cover (``has_filter``).
+        with the top cover (``has_filter``); its hours are the cover's real filter
+        runtime (``filter_hours``, circulation fan) once known, else print hours.
         """
         months = months or {}
         items = []
@@ -333,8 +341,12 @@ class Maintenance:
             item: dict[str, Any] = {"key": key, "done_at": done.get("at")}
             progress: dict[str, float] = {}
             due = False
+            counter, start = hours, done.get("hours", hours)
+            if key == "filter" and filter_hours is not None and "filter_hours" in done:
+                counter, start = filter_hours, done["filter_hours"]
+                item["source"] = "filter"
             if interval > 0:
-                used = None if hours is None else max(0.0, hours - float(done.get("hours", hours)))
+                used = None if counter is None else max(0.0, counter - float(start))
                 item.update(
                     interval_h=interval,
                     used_h=None if used is None else round(used, 1),

@@ -184,9 +184,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
     cavity: { temperatures: [26, 27, 28, 29], targets: [] },
     stepper_x: { temperatures: [null, 38, 40, 41], targets: [] },
     stepper_y: { temperatures: [null, null, null, null], targets: [] },
-    cpu: { temperatures: [50, 51, 52, 52], targets: [] } } };
+    cpu: { temperatures: [50, 51, 52, 52], targets: [] },
+    chamber_heater: { temperatures: [30, 38, 45, 49], targets: [50, 50, 50, 50] } } };
   tc.innerHTML = card._tempSvg();
   assert.match(text(tc.querySelector(".tlegend")), /CPU 52 °C/);
+  assert.match(text(tc.querySelector(".tlegend")), /Kammerheizung 49 °C/);
+  tc.querySelector('[data-tser="chamber_heater"]').click();
   tc.querySelector('[data-tser="cpu"]').click();
   assert.strictEqual(tc.querySelectorAll("polyline").length, 6, "Kopf + Bett je 2, Innenraum, Stepper X (CPU aus)");
   assert.match(text(tc.querySelector(".tlegend")), /Innenraum 29 °C.*Stepper X 41 °C/);

@@ -90,13 +90,20 @@ export const MachineMixin = (Base) => class extends Base {
           ${this._stat(tr("Filter-Laufzeit"), `<span data-su1="cvfilter">${num(c.filter_hours, 1, "h")}</span>`, "",
             tr("Betriebsstunden des Umluftlüfters (Filter)"))}
         </div>
+        ${this._ents.coverMode ? `<div class="chip-row cover-modes" data-lockable role="group" aria-label="${tr("Modus")}">
+          ${["idle", "cool", "preheat", "hot"].map((m) => `<button type="button" class="chip" data-covermode="${m}"
+            aria-pressed="${c.mode === m}">${esc(this._coverMode(m))}</button>`).join("")}</div>` : ""}
+        ${this._ents.coverTarget && ["cool", "preheat", "hot"].includes(c.mode) ? this._slider({
+          entity: this._ents.coverTarget, label: tr("Kammer-Soll (Top Cover)"), value: c.desired_temp || 0, unit: "°C",
+          presets: [35, 45, 55],
+        }) : ""}
         ${this._ents.coverExhaust ? this._slider({
           entity: this._ents.coverExhaust, label: tr("Abluftlüfter"), value: c.exhaust, unit: "%", presets: [0, 50, 100],
         }) : ""}
         ${this._ents.coverInner ? this._slider({
           entity: this._ents.coverInner, label: tr("Umluftlüfter"), value: c.inner, unit: "%", presets: [0, 50, 100],
         }) : ""}
-        <div class="t-label">${tr("Während eines Drucks regelt die Firmware die Lüfter je nach Material selbst nach.")}</div>
+        <div class="t-label">${tr("Kühlen: Abluft, bis die Kammer unter dem Sollwert liegt. Vorheizen/Heiß: Umluft hält die Wärme. Während eines Drucks regelt die Firmware die Lüfter je nach Material selbst nach.")}</div>
       </section>`;
   }
 

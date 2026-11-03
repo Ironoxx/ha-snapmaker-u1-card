@@ -167,7 +167,9 @@ export const SystemMixin = (Base) => class extends Base {
     const rows = items.map((m) => {
       const pct = Math.min(100, m.progress || 0);
       const tone = m.due ? "error" : pct >= 80 ? "warn" : "";
-      const hours = m.interval_h ? (m.used_h === null || m.used_h === undefined ? "—" : `${num(m.used_h, 0)} / ${m.interval_h} h`) : "";
+      // the air filter counts the top cover's real filter runtime (source "filter")
+      const hours = m.interval_h ? (m.used_h === null || m.used_h === undefined ? "—"
+        : `${num(m.used_h, 0)} / ${m.interval_h} h${m.source === "filter" ? ` ${tr("Filter")}` : ""}`) : "";
       const months = m.interval_m ? tr(m.interval_m === 1 ? "monatlich" : "alle {n} Monate", { n: m.interval_m }) : "";
       const used = m.firmware ? `${fmtInt(m.used)} / ${fmtInt(m.interval)} ${tr("Wechsel")}` : [hours, months].filter(Boolean).join(" · ") || "—";
       // The more advanced measure decides (integration: by = hours | months), like the bar

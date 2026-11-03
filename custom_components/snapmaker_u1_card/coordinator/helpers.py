@@ -33,6 +33,7 @@ RESULT_TEXT = {
     "spool_low": "Filament reicht nicht",
     "spool_runout": "Spule läuft gleich leer",
     "bed_cool": "Teil entnehmbar",
+    "chamber_ready": "Kammer ist warm",
     "cancel_confirm": "Druck abbrechen?",
     "maintenance": "Wartung fällig",
 }
@@ -48,6 +49,7 @@ RESULT_TEXT_EN = {
     "spool_low": "Not enough filament",
     "spool_runout": "Spool about to run out",
     "bed_cool": "Part ready to remove",
+    "chamber_ready": "Chamber is warm",
     "cancel_confirm": "Cancel print?",
     "maintenance": "Maintenance due",
 }
@@ -154,6 +156,10 @@ def notify_message(info: dict[str, Any], de: bool = True) -> str:
     if info.get("bed") is not None:
         return (f"{name} – Bett {info['bed']} °C, Teil kann runter." if de
                 else f"{name} – bed {info['bed']} °C, part can be removed.")
+    if info.get("chamber") is not None:
+        c = info["chamber"]
+        return (f"{c['device']}: {c['temp']} °C erreicht (Soll {c['target']} °C)." if de
+                else f"{c['device']}: {c['temp']} °C reached (target {c['target']} °C).")
     if info.get("left_min"):
         return f"{name} – {'noch etwa' if de else 'about'} {info['left_min']} min"
     if info.get("short"):

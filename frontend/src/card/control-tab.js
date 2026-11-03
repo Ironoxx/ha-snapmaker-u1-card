@@ -5,7 +5,7 @@ import { esc, num } from "../format.js";
 import { tr } from "../i18n.js";
 
 const TEMP_HIDDEN = "snapmaker-u1-card.temp-hidden";
-const KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y", "cpu"];
+const KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "chamber_heater", "stepper_x", "stepper_y", "cpu"];
 const EXTRA_COLORS = ["#fdd835", "#d81b60", "#5e35b1", "#00897b", "#c0ca33"];
 
 export const ControlTabMixin = (Base) => class extends Base {
@@ -97,6 +97,7 @@ export const ControlTabMixin = (Base) => class extends Base {
         label: (heads[i] && heads[i].name) || tr("Kopf {n}", { n: i + 1 }), heater: true })),
       { key: "heater_bed", color: "#8e24aa", label: tr("Bett"), heater: true, always: true },
       { key: "cavity", color: "#00acc1", label: tr("Innenraum") },
+      { key: "chamber_heater", color: "#ff7043", label: (this._d && this._d.chamber && this._d.chamber.label) || tr("Kammerheizung"), heater: true, always: true },
       { key: "stepper_x", color: "#8d6e63", label: tr("Stepper X") },
       { key: "stepper_y", color: "#9e9e9e", label: tr("Stepper Y") },
       { key: "cpu", color: "#78909c", label: tr("CPU") },

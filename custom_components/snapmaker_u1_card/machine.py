@@ -148,6 +148,30 @@ def purifier_gcode(fan: str, percent: float) -> str:
     return f"SET_PURIFIER FAN={fan} SPEED={value / 100:.2f}"
 
 
+PURIFIER_MODE_IDS = {name: mode for mode, name in PURIFIER_MODES.items()}
+PURIFIER_TEMP_MAX = 70  # chamber target of the top cover modes (firmware default for "cool": 42 °C)
+
+
+def purifier_mode_gcode(mode: str, target: float | None = None) -> str:
+    """SET_PURIFIER_MODE for idle, cool, preheat or hot; ``target`` = chamber temperature (DESIRE_TEMP).
+
+    Idle takes no temperature. Without ``target`` the firmware uses its default
+    (42 °C for cool, none for preheat/hot).
+    """
+    if mode not in PURIFIER_MODE_IDS:
+        raise ValueError(f"Unknown top cover mode {mode!r}")
+    script = f"SET_PURIFIER_MODE MODE={PURIFIER_MODE_IDS[mode]}"
+    if mode == "idle" or target is None:
+        return script
+    try:
+        value = float(target)
+    except (TypeError, ValueError) as err:
+        raise ValueError(f"Invalid temperature {target!r}") from err
+    if not math.isfinite(value) or not 0 <= value <= PURIFIER_TEMP_MAX:
+        raise ValueError(f"Chamber temperature: 0-{PURIFIER_TEMP_MAX} °C")
+    return f"{script} DESIRE_TEMP={round(value)}"
+
+
 # ── Chamber heater (paxx12: BIQU Panda Breath / DragonBreath firmware) ─────
 # Both are a Klipper ``heater_generic`` (standard status: temperature, target,
 # power); DragonBreath adds ``output_pin dragonbreath_filter``. Limits from

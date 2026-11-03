@@ -266,6 +266,34 @@ class PrintMonitorMixin:
             self._notify("bed_cool", {"name": last.get("name"), "file": last.get("file"),
                                       "bed": round(bed)})
 
+    def _check_chamber_ready(self, chamber: dict[str, Any] | None, cover: dict[str, Any] | None,
+                             cavity: Any) -> None:
+        """Notify once when the chamber has reached its target (e.g. preheating for ABS).
+
+        Chamber heater (Panda Breath / DragonBreath): its own sensor against its target.
+        Top cover in preheat or hot mode: the chamber sensor against the mode's target.
+        A new target arms the message again; no target disarms it. A chamber that is
+        already warm at the first look after a restart is not reported.
+        """
+        source: tuple[str, float, float] | None = None   # device, temperature, target
+        if chamber and chamber.get("target") and isinstance(chamber.get("temperature"), (int, float)):
+            source = (chamber.get("label") or "Chamber heater", chamber["temperature"], chamber["target"])
+        elif (cover and cover.get("present") and cover.get("mode") in ("preheat", "hot")
+              and cover.get("desired_temp") and isinstance(cavity, (int, float))):
+            source = ("Top Cover", cavity, cover["desired_temp"])
+        first_look = not self._chamber_primed
+        self._chamber_primed = True
+        if source is None:
+            self._chamber_notified = None
+            return
+        device, temp, target = source
+        if temp < target - 1 or self._chamber_notified == (device, target):
+            return
+        self._chamber_notified = (device, target)
+        if not first_look:
+            self._notify("chamber_ready", {"chamber": {"device": device, "temp": round(temp), "target": round(target)},
+                                           "no_image": True})
+
     def _check_spools(self, active: dict[str, Any], table: list[int]) -> None:
         """At print start: is the spool per head (Spoolman remainder) enough for the file?"""
         if not self.spools.enabled:
