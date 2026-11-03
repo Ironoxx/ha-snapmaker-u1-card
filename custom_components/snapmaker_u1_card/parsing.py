@@ -731,8 +731,12 @@ def estimate_cost(
     return out
 
 
-def summarize_print(record: dict[str, Any], prices: dict[str, float | None]) -> dict[str, Any]:
+def summarize_print(record: dict[str, Any], prices: dict[str, float | None],
+                    slot_prices: dict[int, float] | None = None) -> dict[str, Any]:
     """Add weight, filament cost and total cost to a finished print.
+
+    ``slot_prices``: price per kg of the spool in each head (Spoolman); beats the
+    price per material for the filaments printed from that head.
 
     The weight comes from the slicer. For cancelled prints it is reduced by
     the ratio of actually extruded to planned length
@@ -747,7 +751,15 @@ def summarize_print(record: dict[str, Any], prices: dict[str, float | None]) -> 
     if fils:
         grams = sum(f["weight"] for f in fils) * scale
         out["filament_g"] = round(grams, 1)
-        costs = [filament_price_for(f.get("type"), prices) for f in fils]
+        table = record.get("map_table") or []
+
+        def price(pos: int, f: dict[str, Any]) -> float | None:
+            logical = f.get("index", pos)
+            slot = table[logical] if isinstance(logical, int) and 0 <= logical < len(table) else logical
+            own = (slot_prices or {}).get(slot) if isinstance(slot, int) else None
+            return own if own is not None else filament_price_for(f.get("type"), prices)
+
+        costs = [price(pos, f) for pos, f in enumerate(fils)]
         if all(c is not None for c in costs):
             out["filament_cost"] = round(
                 sum(f["weight"] * scale * c / 1000 for f, c in zip(fils, costs, strict=True)), 2
@@ -932,7 +944,30 @@ def compact_spool(spool: dict[str, Any]) -> dict[str, Any]:
         "last_used": spool.get("last_used"),
         "used_weight": _round(spool.get("used_weight")),
         "archived": bool(spool.get("archived")),
+        "price_kg": _price_kg(spool),
     }
+
+
+def _price_kg(spool: dict[str, Any]) -> float | None:
+    """Price per kg of a Spoolman spool: spool price, else filament price, per its net weight."""
+    fil = spool.get("filament") or {}
+    price = spool.get("price")
+    if not isinstance(price, (int, float)) or isinstance(price, bool) or price <= 0:
+        price = fil.get("price")
+    weight = spool.get("initial_weight") or fil.get("weight")
+    if not isinstance(price, (int, float)) or price <= 0 or not isinstance(weight, (int, float)) or weight <= 0:
+        return None
+    return round(price / weight * 1000, 2)
+
+
+def material_prices(spools: list[dict[str, Any]]) -> dict[str, float]:
+    """Average price per kg per material over the Spoolman spools with a price."""
+    sums: dict[str, list[float]] = {}
+    for s in spools:
+        mat = str(s.get("material") or "").strip().upper()
+        if mat and isinstance(s.get("price_kg"), (int, float)):
+            sums.setdefault(mat, []).append(s["price_kg"])
+    return {m: round(sum(v) / len(v), 2) for m, v in sums.items()}
 
 
 # Typical densities (g/cm³) for new Spoolman filaments; Spoolman requires one.

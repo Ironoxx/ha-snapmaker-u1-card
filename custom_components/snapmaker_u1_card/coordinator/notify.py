@@ -68,7 +68,7 @@ class NotifyMixin:
             self.hass.async_create_task(self._delete_copy(copy), f"{DOMAIN} delete pause copy")
         if record.get("result") == "error" and self._errors:
             record = {**record, "error": error_text(self._errors[0], self.hass.config.language)}
-        summary = summarize_print(record, self.filament_prices)
+        summary = summarize_print(record, self.filament_prices, self.spool_prices())
         # Learn for the next remaining-time estimate: start duration and
         # actual / slicer time of the print itself (from the first layer on)
         begin, slicer_s = record.get("begin_s"), record.get("slicer_print_s")

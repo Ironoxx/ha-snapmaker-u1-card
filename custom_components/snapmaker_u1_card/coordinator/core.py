@@ -61,6 +61,7 @@ from ..parsing import (
     EXTRUDER_OBJECTS,
     SWITCH_FIELDS,
     energy_kwh,
+    material_prices,
     migrate_print_state,
     parse_preferences,
     parse_slots,
@@ -234,7 +235,20 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
 
     @property
     def filament_prices(self) -> dict[str, float | None]:
-        return dict(self.options.get(CONF_FILAMENT_PRICES) or {})
+        """Price per kg per material: own setting first, else the Spoolman average."""
+        own = {k: v for k, v in (self.options.get(CONF_FILAMENT_PRICES) or {}).items() if v is not None}
+        return {**material_prices(self.spools.spools if self.spools.enabled else []), **own}
+
+    def spool_prices(self) -> dict[int, float]:
+        """Price per kg of the Spoolman spool in each head (if it has a price)."""
+        if not self.spools.enabled:
+            return {}
+        out: dict[int, float] = {}
+        for idx, sid in self.spools.assigned().items():
+            sp = self.spools.spool(sid) if sid else None
+            if sp and isinstance(sp.get("price_kg"), (int, float)):
+                out[idx] = sp["price_kg"]
+        return out
 
     def power_is_off(self) -> bool:
         if not self.power_switch:

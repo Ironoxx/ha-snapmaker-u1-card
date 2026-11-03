@@ -79,7 +79,7 @@
           },
           "filament": {
             "name": "Filament prices",
-            "description": "Price per kg by material, used for the filament cost of each print. Leave empty to skip.",
+            "description": "Price per kg by material, used for the filament cost of each print. With Spoolman, empty fields take the average price of your spools there, and a print uses the price of the spool in each head. Leave empty to skip.",
             "data": {
               "price_pla": "PLA",
               "price_petg": "PETG",
@@ -220,7 +220,7 @@
           },
           "filament": {
             "name": "Filament prices",
-            "description": "Price per kg by material, used for the filament cost of each print. Leave empty to skip.",
+            "description": "Price per kg by material, used for the filament cost of each print. With Spoolman, empty fields take the average price of your spools there, and a print uses the price of the spool in each head. Leave empty to skip.",
             "data": {
               "price_pla": "PLA",
               "price_petg": "PETG",

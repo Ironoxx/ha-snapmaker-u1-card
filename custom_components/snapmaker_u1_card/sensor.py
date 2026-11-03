@@ -28,6 +28,7 @@ from .const import (
     CONF_ENERGY_PRICE,
     CONF_ENERGY_SENSOR,
     CONF_FILAMENT_PRICES,
+    CONF_SPOOLMAN_URL,
     DOMAIN,
     VERSION,
     VIDEO_URL,
@@ -51,7 +52,8 @@ async def async_setup_entry(
                  BedMeshSensor(coordinator)]
     if entry.options.get(CONF_ENERGY_SENSOR):
         entities.append(PrintEnergySensor(coordinator))
-    if entry.options.get(CONF_ENERGY_PRICE) or entry.options.get(CONF_FILAMENT_PRICES):
+    if (entry.options.get(CONF_ENERGY_PRICE) or entry.options.get(CONF_FILAMENT_PRICES)
+            or entry.options.get(CONF_SPOOLMAN_URL)):
         entities.append(PrintCostSensor(coordinator))
     async_add_entities(entities)
     add_when_top_cover(entry, lambda: async_add_entities([TopCoverSensor(coordinator)]))

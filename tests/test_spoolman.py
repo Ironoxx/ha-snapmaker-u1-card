@@ -628,3 +628,33 @@ async def test_create_spool(hass: HomeAssistant, mock_client, spoolman) -> None:
         assert created[2][1] == {"filament_id": 101, "initial_weight": 1000.0, "spool_weight": 150.0,
                                  "remaining_weight": 1000.0}
         assert res["new_filament"] is True
+
+
+def test_spoolman_prices():
+    sp = {**SPOOLS[0], "price": 25.0}
+    assert p.compact_spool(sp)["price_kg"] == 25.0
+    # filament price, 750 g spool
+    sp2 = {**SPOOLS[5], "initial_weight": 750.0, "filament": {**SPOOLS[5]["filament"], "price": 21.0}}
+    assert p.compact_spool(sp2)["price_kg"] == 28.0
+    assert p.compact_spool(SPOOLS[1])["price_kg"] is None
+    spools = [p.compact_spool(s) for s in (sp, sp2, {**SPOOLS[1], "price": 15.0}, SPOOLS[2])]
+    assert p.material_prices(spools) == {"PLA": 20.0, "PETG": 28.0}
+    # the spool in the head beats the material price; logical filament 1 printed from head 2
+    rec = {"result": "complete", "map_table": [0, 2],
+           "filaments": [{"index": 0, "type": "PLA", "weight": 100.0}, {"index": 1, "type": "PLA", "weight": 50.0}]}
+    assert p.summarize_print(rec, {"PLA": 20.0}, {2: 40.0})["filament_cost"] == 4.0  # 2.0 + 2.0
+    # head 2 without spool price and no material price: no cost rather than half of it
+    assert "filament_cost" not in p.summarize_print(rec, {}, {0: 10.0})
+
+
+async def test_prices_from_spoolman(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """Without own prices: the Spoolman average per material, cost sensor exists."""
+    _real_slots(mock_client)
+    for s in spoolman["spools"]:
+        s["price"] = 18.0 if s["filament"]["material"] == "PLA" else None
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912", filament_prices={"PETG": 25.0})
+    await _refresh(hass, entry)
+    coord = entry.runtime_data
+    assert coord.filament_prices == {"PLA": 18.0, "PETG": 25.0}, "Spoolman average fills the gap, own price wins"
+    assert coord.spool_prices()[0] == 18.0
+    assert any(s.entity_id.endswith("cost_print") or "kosten" in s.entity_id for s in hass.states.async_all("sensor"))
