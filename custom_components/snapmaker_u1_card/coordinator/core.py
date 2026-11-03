@@ -235,9 +235,9 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
 
     @property
     def filament_prices(self) -> dict[str, float | None]:
-        """Price per kg per material: own setting first, else the Spoolman average."""
+        """Price per kg per material: Spoolman average first, own setting for materials without one."""
         own = {k: v for k, v in (self.options.get(CONF_FILAMENT_PRICES) or {}).items() if v is not None}
-        return {**material_prices(self.spools.spools if self.spools.enabled else []), **own}
+        return {**own, **material_prices(self.spools.spools if self.spools.enabled else [])}
 
     def spool_prices(self) -> dict[int, float]:
         """Price per kg of the Spoolman spool in each head (if it has a price)."""

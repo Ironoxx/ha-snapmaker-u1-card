@@ -648,13 +648,13 @@ def test_spoolman_prices():
 
 
 async def test_prices_from_spoolman(hass: HomeAssistant, mock_client, spoolman) -> None:
-    """Without own prices: the Spoolman average per material, cost sensor exists."""
+    """Spoolman average per material first, own price only where Spoolman has none."""
     _real_slots(mock_client)
     for s in spoolman["spools"]:
         s["price"] = 18.0 if s["filament"]["material"] == "PLA" else None
-    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912", filament_prices={"PETG": 25.0})
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912", filament_prices={"PLA": 30.0, "PETG": 25.0})
     await _refresh(hass, entry)
     coord = entry.runtime_data
-    assert coord.filament_prices == {"PLA": 18.0, "PETG": 25.0}, "Spoolman average fills the gap, own price wins"
+    assert coord.filament_prices == {"PLA": 18.0, "PETG": 25.0}, "Spoolman beats own PLA price, own PETG fills the gap"
     assert coord.spool_prices()[0] == 18.0
     assert any(s.entity_id.endswith("cost_print") or "kosten" in s.entity_id for s in hass.states.async_all("sensor"))

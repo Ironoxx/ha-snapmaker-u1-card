@@ -79,7 +79,7 @@
           },
           "filament": {
             "name": "Filamentpreise",
-            "description": "Preis je kg nach Material für die Filamentkosten je Druck. Mit Spoolman gilt für leere Felder der Durchschnittspreis deiner Spulen dort, und ein Druck rechnet mit dem Preis der Spule im jeweiligen Kopf. Leer lassen = keine Filamentkosten (ohne Spoolman).",
+            "description": "Preis je kg nach Material für die Filamentkosten je Druck. Mit Spoolman haben dessen Preise Vorrang (die Spule im jeweiligen Kopf, sonst der Durchschnitt deiner Spulen dieses Materials); diese Felder gelten nur für Materialien ohne Preis dort. Leer lassen = keine Filamentkosten.",
             "data": {
               "price_pla": "PLA",
               "price_petg": "PETG",
@@ -220,7 +220,7 @@
           },
           "filament": {
             "name": "Filamentpreise",
-            "description": "Preis je kg nach Material für die Filamentkosten je Druck. Mit Spoolman gilt für leere Felder der Durchschnittspreis deiner Spulen dort, und ein Druck rechnet mit dem Preis der Spule im jeweiligen Kopf. Leer lassen = keine Filamentkosten (ohne Spoolman).",
+            "description": "Preis je kg nach Material für die Filamentkosten je Druck. Mit Spoolman haben dessen Preise Vorrang (die Spule im jeweiligen Kopf, sonst der Durchschnitt deiner Spulen dieses Materials); diese Felder gelten nur für Materialien ohne Preis dort. Leer lassen = keine Filamentkosten.",
             "data": {
               "price_pla": "PLA",
               "price_petg": "PETG",
