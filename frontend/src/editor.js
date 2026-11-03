@@ -30,6 +30,7 @@ export const FORM_LABELS = {
   camera_direct: "Direktstream vom Drucker",
   camera_direct_url: "Adresse des Direktstreams",
   camera_webrtc: "WebRTC (paxx12-Firmware)",
+  camera_zoom_reset: "Zoom zurücksetzen nach (s)",
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -44,6 +45,7 @@ export const FORM_HELPERS = {
   camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
   camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
   camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
+  camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
@@ -110,6 +112,7 @@ export function configForm(mini) {
           { name: "camera_height", selector: { number: { min: 120, max: 900, step: 10, mode: "box" } } },
           { name: "refresh", selector: { number: { min: 1, max: 60, mode: "box" } } },
           { name: "stale_after", selector: { number: { min: 10, max: 3600, mode: "box" } } },
+          { name: "camera_zoom_reset", selector: { number: { min: 0, max: 3600, mode: "box" } } },
         ] },
         { name: "hide_overlay", selector: { boolean: {} } },
         { name: "camera_wake", selector: { boolean: {} } },

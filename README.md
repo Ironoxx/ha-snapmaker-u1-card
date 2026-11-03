@@ -187,6 +187,7 @@ All options are optional; except head names and presets they can also be set in 
 | `camera_direct` | `auto` | `auto` = stream straight from the printer (`camera_direct_url`, default `http://<printer>/webcam/?action=stream`): less delay, no load on HA. Not used on https pages (the browser blocks http streams there); if no frame arrives within 4 s (e.g. away from home) the card uses the HA proxy for 10 min. `off` = always through HA |
 | `camera_direct_url` | – | own URL for the direct stream |
 | `camera_webrtc` | `auto` | paxx12 Extended Firmware: show the camera over WebRTC (less delay, far less data than MJPEG). The few signalling messages go through Home Assistant, the video directly between browser and printer – works at home and over VPN; if no direct connection comes up within 8 s, MJPEG stays for 10 min. `off` = MJPEG only |
+| `camera_zoom_reset` | `60` | seconds without interaction until the camera zoom goes back to 1×; `0` = never. Leaving the page, switching the app or scrolling the card away always resets it |
 | `accent_color` | – | own accent colour for buttons, sliders and highlights (`[255, 152, 0]` or `"#ff9800"`); empty = your theme's primary colour. Also for the mini card |
 | `camera_wake` | `true` | while the card is visible and the image stops (no stream, frozen frame), it asks the integration to send `camera.start_monitor` once (at most every 10 s) |
 | `camera_overlay` | `true` | progress on the camera image; the printer state is always shown in the top-left corner (`hide_overlay: true` also turns it off) |

@@ -185,6 +185,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `camera_direct` | `auto` | `auto` = Stream direkt vom Drucker (`camera_direct_url`, Standard `http://<Drucker>/webcam/?action=stream`): weniger Verzögerung, keine Last auf HA. Nicht auf https-Seiten (der Browser blockiert dort http-Streams); kommt binnen 4 s kein Bild (z. B. unterwegs), nimmt die Karte 10 min den HA-Proxy. `off` = immer über HA |
 | `camera_direct_url` | – | eigene Adresse für den Direktstream |
 | `camera_webrtc` | `auto` | paxx12 Extended Firmware: Kamera per WebRTC (weniger Verzögerung, viel weniger Daten als MJPEG). Die wenigen Signalisierungs-Nachrichten laufen über Home Assistant, das Video direkt zwischen Browser und Drucker – klappt zu Hause und per VPN; kommt in 8 s keine direkte Verbindung zustande, bleibt 10 min MJPEG. `off` = nur MJPEG |
+| `camera_zoom_reset` | `60` | Sekunden ohne Bedienung, bis der Kamera-Zoom auf 1× zurückgeht; `0` = nie. Seite verlassen, App wechseln oder Karte wegscrollen setzt ihn immer zurück |
 | `accent_color` | – | eigene Akzentfarbe für Knöpfe, Regler und Hervorhebungen (`[255, 152, 0]` oder `"#ff9800"`); leer = Hauptfarbe deines Designs. Auch für die Mini-Karte |
 | `camera_wake` | `true` | Solange die Karte sichtbar ist und das Bild steht (kein Stream, eingefrorenes Bild), lässt sie die Integration einmal `camera.start_monitor` senden (höchstens alle 10 s) |
 | `camera_overlay` | `true` | Fortschritt auf dem Kamerabild; der Druckerstatus steht immer oben links (`hide_overlay: true` schaltet es ebenfalls ab) |

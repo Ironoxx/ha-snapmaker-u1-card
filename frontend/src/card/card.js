@@ -24,6 +24,7 @@
  *   camera_mode       auto | stream | still                  (auto: the camera entity decides)
  *   accent_color      [r, g, b] or "#rrggbb"                 (own accent colour; empty = theme)
  *   camera_webrtc     auto | off                             (paxx12: WebRTC, falls back to MJPEG)
+ *   camera_zoom_reset seconds until the zoom goes back to 1x (60; 0 = never; always when the page is left)
  *   refresh           still image rate in seconds            (2)
  *   stream_check      stream check interval in seconds       (10)
  *   stale_after       "image outdated" after x seconds       (90)
@@ -111,7 +112,7 @@ export class SnapmakerU1Card extends U1Base {
     this._entsSource = null;  // hass.entities the IDs were resolved from
     this._dlg = null;         // open print dialog
     this._onVis = () => {
-      if (document.hidden) { this._stopStream(); this._stopRtc(); }
+      if (document.hidden) { this._stopStream(); this._stopRtc(); this._resetZoom(); }
       else this._tickCamera();
     };
     this._preview = false;   // edit mode or preview in the editor
@@ -280,7 +281,7 @@ export class SnapmakerU1Card extends U1Base {
         const vis = entries.some((e) => e.isIntersecting);
         if (vis === this._onScreen) return;
         this._onScreen = vis;
-        if (!vis) this._stopStream();
+        if (!vis) { this._stopStream(); this._resetZoom(); }
         else this._tickCamera();
       });
     }
@@ -300,6 +301,7 @@ export class SnapmakerU1Card extends U1Base {
 
   disconnectedCallback() {
     document.removeEventListener("visibilitychange", this._onVis);
+    this._resetZoom();
     if (this._io) this._io.disconnect();
     if (this._camTimer) clearInterval(this._camTimer);
     this._camTimer = null;

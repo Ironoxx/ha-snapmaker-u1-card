@@ -58,4 +58,31 @@ assert.ok(wheel(-100, true), "Strg+Rad zoomt");
 // Edge: do not pan beyond the image
 card._zoom.x = 500; card._applyZoom();
 assert.match(img().style.transform, /translate\(0px/);
-console.log("ZOOM OK");
+// Back to 1x after the idle time (default 60 s) and when the page is left
+const timers = [];
+w.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+w.clearTimeout = () => {};
+card._zoom.x = 0; frame().querySelector('[data-zoom="in"]').click();
+assert.ok(frame().classList.contains("zoomed"));
+const t1 = timers[timers.length - 1];
+assert.strictEqual(t1.ms, 60000, "60 s Standard");
+t1.fn();
+assert.ok(!frame().classList.contains("zoomed"), "nach Zeit zurueck");
+frame().querySelector('[data-zoom="in"]').click();
+Object.defineProperty(w.document, "hidden", { value: true, configurable: true });
+w.document.dispatchEvent(new w.Event("visibilitychange"));
+assert.ok(!frame().classList.contains("zoomed"), "Seite verlassen -> zurueck");
+Object.defineProperty(w.document, "hidden", { value: false, configurable: true });
+// option: 0 = never, other value in seconds
+card.setConfig({ type: "custom:snapmaker-u1-card", layout: "scroll", camera_zoom_reset: 0 });
+card.hass = hass();
+timers.length = 0;
+frame().querySelector('[data-zoom="in"]').click();
+assert.strictEqual(timers.filter((t) => t.ms >= 1000).length, 0, "0 = nie");
+card.setConfig({ type: "custom:snapmaker-u1-card", layout: "scroll", camera_zoom_reset: 15 });
+card.hass = hass();
+frame().querySelector('[data-zoom="in"]').click();
+assert.ok(timers.some((t) => t.ms === 15000), "eigene Zeit");
+assert.match(JSON.stringify(w.customElements.get("snapmaker-u1-card").getConfigForm().schema), /camera_zoom_reset/);
+console.log("ZOOM OK – incl. reset after idle time and on leaving");
+process.exit(0);

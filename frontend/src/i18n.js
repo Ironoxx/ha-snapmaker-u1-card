@@ -454,6 +454,8 @@ export const EN = {
   "{n} Wände": "{n} walls",
   "Akzentfarbe": "Accent colour",
   "WebRTC (paxx12-Firmware)": "WebRTC (paxx12 firmware)",
+  "Zoom zurücksetzen nach (s)": "Reset zoom after (s)",
+  "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Empty = 60 s without interaction, 0 = never. Leaving the page or scrolling away always resets the zoom.",
   "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Empty = automatic: WebRTC when the printer offers it (less delay and data). If no direct connection works (away without VPN), MJPEG stays.",
   "Aus (MJPEG)": "Off (MJPEG)",
   "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Empty = your Home Assistant theme's primary colour. Colours the card's buttons, sliders and highlights.",

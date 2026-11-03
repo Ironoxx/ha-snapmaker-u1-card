@@ -545,6 +545,8 @@
     "{n} Wände": "{n} walls",
     "Akzentfarbe": "Accent colour",
     "WebRTC (paxx12-Firmware)": "WebRTC (paxx12 firmware)",
+    "Zoom zurücksetzen nach (s)": "Reset zoom after (s)",
+    "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Empty = 60 s without interaction, 0 = never. Leaving the page or scrolling away always resets the zoom.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Empty = automatic: WebRTC when the printer offers it (less delay and data). If no direct connection works (away without VPN), MJPEG stays.",
     "Aus (MJPEG)": "Off (MJPEG)",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Empty = your Home Assistant theme's primary colour. Colours the card's buttons, sliders and highlights.",
@@ -699,7 +701,8 @@
     camera_wake: "Kamera bei stehendem Bild wecken",
     camera_direct: "Direktstream vom Drucker",
     camera_direct_url: "Adresse des Direktstreams",
-    camera_webrtc: "WebRTC (paxx12-Firmware)"
+    camera_webrtc: "WebRTC (paxx12-Firmware)",
+    camera_zoom_reset: "Zoom zurücksetzen nach (s)"
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -714,6 +717,7 @@
     camera_direct: "Leer = automatisch: im Heimnetz direkt vom Drucker (weniger Verzögerung), bei https oder unterwegs über Home Assistant",
     camera_direct_url: "Leer = http://<Drucker>/webcam/?action=stream",
     camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
+    camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
@@ -805,7 +809,8 @@
             { name: "camera_fit", selector: { select: { mode: "dropdown", options: opts([["contain", "Einpassen"], ["cover", "Füllen"], ["fill", "Strecken"]]) } } },
             { name: "camera_height", selector: { number: { min: 120, max: 900, step: 10, mode: "box" } } },
             { name: "refresh", selector: { number: { min: 1, max: 60, mode: "box" } } },
-            { name: "stale_after", selector: { number: { min: 10, max: 3600, mode: "box" } } }
+            { name: "stale_after", selector: { number: { min: 10, max: 3600, mode: "box" } } },
+            { name: "camera_zoom_reset", selector: { number: { min: 0, max: 3600, mode: "box" } } }
           ] },
           { name: "hide_overlay", selector: { boolean: {} } },
           { name: "camera_wake", selector: { boolean: {} } },
@@ -4918,6 +4923,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const z = this._zoom || (this._zoom = { s: 1, x: 0, y: 0 });
       const img = () => frame.querySelector("img");
       const apply = () => {
+        this._armZoomReset();
         const w = frame.clientWidth || 1, h = frame.clientHeight || 1;
         z.s = clamp(z.s, 1, 6);
         z.x = clamp(z.x, w * (1 - z.s), 0);
@@ -5046,6 +5052,33 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       };
       frame.addEventListener("pointerup", end);
       frame.addEventListener("pointercancel", end);
+    }
+    /** Seconds without zoom interaction until the zoom goes back to 1x (0 = never). */
+    _zoomResetS() {
+      const v = Number(this._cfg && this._cfg.camera_zoom_reset);
+      return this._cfg && this._cfg.camera_zoom_reset !== void 0 && this._cfg.camera_zoom_reset !== "" && Number.isFinite(v) ? Math.max(0, v) : 60;
+    }
+    _armZoomReset() {
+      if (this._zoomTimer) clearTimeout(this._zoomTimer);
+      this._zoomTimer = null;
+      const s = this._zoomResetS();
+      if (s > 0 && this._zoom && this._zoom.s > 1) {
+        this._zoomTimer = setTimeout(() => {
+          this._zoomTimer = null;
+          this._resetZoom();
+        }, s * 1e3);
+      }
+    }
+    /** Back to 1x, e.g. when the page is left or after the idle time. */
+    _resetZoom() {
+      if (this._zoomTimer) clearTimeout(this._zoomTimer);
+      this._zoomTimer = null;
+      const z = this._zoom;
+      if (!z || z.s === 1 && !z.x && !z.y) return;
+      z.s = 1;
+      z.x = 0;
+      z.y = 0;
+      if (this._applyZoom) this._applyZoom();
     }
     _fullscreen(el) {
       const doc = document;
@@ -6502,6 +6535,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (document.hidden) {
           this._stopStream();
           this._stopRtc();
+          this._resetZoom();
         } else this._tickCamera();
       };
       this._preview = false;
@@ -6665,8 +6699,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           const vis = entries.some((e) => e.isIntersecting);
           if (vis === this._onScreen) return;
           this._onScreen = vis;
-          if (!vis) this._stopStream();
-          else this._tickCamera();
+          if (!vis) {
+            this._stopStream();
+            this._resetZoom();
+          } else this._tickCamera();
         });
       }
       if (this._io) this._io.observe(this);
@@ -6685,6 +6721,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     disconnectedCallback() {
       document.removeEventListener("visibilitychange", this._onVis);
+      this._resetZoom();
       if (this._io) this._io.disconnect();
       if (this._camTimer) clearInterval(this._camTimer);
       this._camTimer = null;

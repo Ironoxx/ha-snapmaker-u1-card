@@ -12,6 +12,7 @@ export const ZoomMixin = (Base) => class extends Base {
     const z = this._zoom || (this._zoom = { s: 1, x: 0, y: 0 });
     const img = () => frame.querySelector("img");
     const apply = () => {
+      this._armZoomReset();
       const w = frame.clientWidth || 1, h = frame.clientHeight || 1;
       z.s = clamp(z.s, 1, 6);
       z.x = clamp(z.x, w * (1 - z.s), 0);
@@ -116,6 +117,32 @@ export const ZoomMixin = (Base) => class extends Base {
     };
     frame.addEventListener("pointerup", end);
     frame.addEventListener("pointercancel", end);
+  }
+
+  /** Seconds without zoom interaction until the zoom goes back to 1x (0 = never). */
+  _zoomResetS() {
+    const v = Number(this._cfg && this._cfg.camera_zoom_reset);
+    return this._cfg && this._cfg.camera_zoom_reset !== undefined && this._cfg.camera_zoom_reset !== ""
+      && Number.isFinite(v) ? Math.max(0, v) : 60;
+  }
+
+  _armZoomReset() {
+    if (this._zoomTimer) clearTimeout(this._zoomTimer);
+    this._zoomTimer = null;
+    const s = this._zoomResetS();
+    if (s > 0 && this._zoom && this._zoom.s > 1) {
+      this._zoomTimer = setTimeout(() => { this._zoomTimer = null; this._resetZoom(); }, s * 1000);
+    }
+  }
+
+  /** Back to 1x, e.g. when the page is left or after the idle time. */
+  _resetZoom() {
+    if (this._zoomTimer) clearTimeout(this._zoomTimer);
+    this._zoomTimer = null;
+    const z = this._zoom;
+    if (!z || (z.s === 1 && !z.x && !z.y)) return;
+    z.s = 1; z.x = 0; z.y = 0;
+    if (this._applyZoom) this._applyZoom();
   }
 
   _fullscreen(el) {
