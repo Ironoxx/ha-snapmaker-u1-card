@@ -80,6 +80,10 @@ Alles läuft über die Home-Assistant-Verbindung. Das funktioniert lokal, über 
 | **Druckstart mit Filamentzuordnung** | **Selbsttest** |
 | ![Druckstart](docs/screenshots/druckstart.png) | ![Selbsttest](docs/screenshots/selbsttest.png) |
 
+**Einstellungen direkt in der Karte** (System → Einstellungen, Admins): alle Einstellungen der Integration gegliedert, mit aktuellen Werten; Wartung als Tabelle.
+
+![Einstellungen](docs/screenshots/einstellungen.png)
+
 **Benachrichtigungen (Android):** erste Schicht fertig mit Pause- und Licht-Knopf, Druck fertig mit Ergebnisfoto und die laufende Fortschritts-Benachrichtigung.
 
 ![Benachrichtigungen](docs/screenshots/benachrichtigungen.png)

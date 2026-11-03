@@ -90,7 +90,7 @@ card.addEventListener("hass-notification", (e) => toasts.push(e.detail.message))
   assert.deepStrictEqual(secs, ["power", "filament", "notify", "maintenance"]);
   // summaries
   assert.match(D().querySelector('[data-sec="power"] summary').textContent, /Drucker-Steckdose · Auto-Aus/);
-  assert.match(D().querySelector('[data-sec="filament"] summary').textContent, /Spoolman: 1 Materialien · PETG 25,00/);
+  assert.match(D().querySelector('[data-sec="filament"] summary').textContent, /Spoolman: 1 Material · PETG 25,00/);
   // entity with current value, datalist filtered by device class
   assert.match(D().querySelector('[data-now="power.power_switch"]').textContent, /Drucker-Steckdose: an/);
   const dl = [...D().querySelectorAll("#dl-power_sensor option")].map((o) => o.value);

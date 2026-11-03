@@ -96,12 +96,12 @@ export const SettingsMixin = (Base) => class extends Base {
     }
     if (sec === "notify") {
       const n = (v("notify_targets") || []).length;
-      return n ? tr("{n} Ziel(e)", { n }) : tr("keine Benachrichtigungen");
+      return n ? (n === 1 ? tr("1 Ziel") : tr("{n} Ziele", { n })) : tr("keine Benachrichtigungen");
     }
     if (sec === "filament") {
       const own = m.fields.filter((f) => f.section === sec && v(f.key) !== null).map((f) => `${f.label} ${num(v(f.key), 2)}`);
       const sm = Object.keys(m.spoolman_prices || {}).length;
-      return [sm ? tr("Spoolman: {n} Materialien", { n: sm }) : "", own.join(", ")].filter(Boolean).join(" · ") || tr("keine Preise");
+      return [sm ? (sm === 1 ? tr("Spoolman: 1 Material") : tr("Spoolman: {n} Materialien", { n: sm })) : "", own.join(", ")].filter(Boolean).join(" · ") || tr("keine Preise");
     }
     if (sec === "spoolman") return v("spoolman_url") || tr("aus");
     return "";
@@ -134,9 +134,14 @@ export const SettingsMixin = (Base) => class extends Base {
     } else if (f.type === "select" && f.multiple) {
       const opts = [...new Set([...(f.options || []), ...((Array.isArray(cur) ? cur : []))])];
       const lab = (o) => (f.option_labels && f.option_labels[o]) || o;
-      control = `<div class="cfg-multi" ${attr} data-multi>${opts.map((o) =>
-        `<label class="cfg-chk"><input type="checkbox" value="${esc(o)}" ${(cur || []).includes(o) ? "checked" : ""} />${esc(lab(o))}</label>`).join("")
-        || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
+      const chk = (o) => `<label class="cfg-chk"><input type="checkbox" value="${esc(o)}" ${(cur || []).includes(o) ? "checked" : ""} /><span>${esc(lab(o))}</span></label>`;
+      // long lists (notify services): chosen ones first, the rest folded away
+      const chosen = opts.filter((o) => (cur || []).includes(o));
+      const rest = opts.filter((o) => !(cur || []).includes(o));
+      const fold = !f.option_labels && opts.length > 6 && chosen.length;
+      control = `<div class="cfg-multi" ${attr} data-multi>${fold
+        ? `${chosen.map(chk).join("")}<details class="cfg-more"><summary>${tr("Weitere anzeigen ({n})", { n: rest.length })}</summary>${rest.map(chk).join("")}</details>`
+        : opts.map(chk).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
     } else if (f.type === "select") {
       const lab = (o) => (f.option_labels && f.option_labels[o]) || o;
       control = `<select ${attr}>${f.required ? "" : `<option value="">—</option>`}${(f.options || []).map((o) =>
@@ -163,8 +168,7 @@ export const SettingsMixin = (Base) => class extends Base {
       };
       return `<div class="cfg-maint"><span>${esc(f.label.replace(/\s*\([^)]*\)\s*$/, ""))}</span>${inp(f)}${m ? inp(m) : ""}</div>`;
     }).join("");
-    return `<div class="cfg-maint cfg-maint-head t-label"><span></span><span>${tr("Stunden")}</span><span>${tr("Monate")}</span></div>${rows}
-      <small class="t-label">${tr("0 = aus. Fällig ist, was zuerst erreicht wird.")}</small>`;
+    return `<div class="cfg-maint cfg-maint-head t-label"><span></span><span>${tr("Stunden")}</span><span>${tr("Monate")}</span></div>${rows}`;
   }
 
   _renderSettings() {

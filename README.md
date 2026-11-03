@@ -82,6 +82,10 @@ The screenshots show the German UI; with Home Assistant set to English the card 
 | **Print start with filament mapping** | **Self test** |
 | ![Print start](docs/screenshots/druckstart.png) | ![Self test](docs/screenshots/selbsttest.png) |
 
+**Settings right in the card** (System → Settings, admins): all integration settings grouped, with current values; maintenance as a table.
+
+![Settings](docs/screenshots/einstellungen.png)
+
 **Notifications (Android):** first layer done with pause and light buttons, print finished with the result photo, and the live progress notification.
 
 ![Notifications](docs/screenshots/benachrichtigungen.png)

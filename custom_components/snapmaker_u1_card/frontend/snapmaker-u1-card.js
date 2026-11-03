@@ -584,7 +584,10 @@
     "Auto-Aus": "Auto-off",
     "Auto-Ein": "Auto-on",
     "kein Netzschalter": "no power switch",
-    "{n} Ziel(e)": "{n} target(s)",
+    "1 Ziel": "1 target",
+    "{n} Ziele": "{n} targets",
+    "Spoolman: 1 Material": "Spoolman: 1 material",
+    "Weitere anzeigen ({n})": "Show more ({n})",
     "keine Benachrichtigungen": "no notifications",
     "Spoolman: {n} Materialien": "Spoolman: {n} materials",
     "keine Preise": "no prices",
@@ -593,7 +596,6 @@
     "keine verfügbar": "none available",
     "Mon.": "mo.",
     "Monate": "Months",
-    "0 = aus. Fällig ist, was zuerst erreicht wird.": "0 = off. Due is whichever comes first.",
     "geändert": "changed",
     "Verwerfen": "Discard",
     "Speichern": "Save",
@@ -4334,7 +4336,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .cfg-bool { grid-template-columns: minmax(0, 1fr) auto; cursor: pointer; }
   .cfg-bool input { width: 20px; height: 20px; accent-color: var(--u1-primary); margin-top: 2px; }
   .cfg-multi { display: flex; flex-direction: column; gap: 6px; }
-  .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; min-width: 0; }
+  .cfg-chk span { min-width: 0; overflow-wrap: anywhere; }
+  .cfg-more > summary { cursor: pointer; color: var(--u1-primary); font-size: 13px; padding: 4px 0; }
+  .cfg-more[open] { display: flex; flex-direction: column; gap: 6px; }
   .cfg-chk input { accent-color: var(--u1-primary); width: 18px; height: 18px; }
   .cfg-maint { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
   .cfg-maint-head { padding-top: 8px; font-size: 12px; }
@@ -6726,12 +6731,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       if (sec === "notify") {
         const n = (v("notify_targets") || []).length;
-        return n ? tr("{n} Ziel(e)", { n }) : tr("keine Benachrichtigungen");
+        return n ? n === 1 ? tr("1 Ziel") : tr("{n} Ziele", { n }) : tr("keine Benachrichtigungen");
       }
       if (sec === "filament") {
         const own = m.fields.filter((f) => f.section === sec && v(f.key) !== null).map((f) => `${f.label} ${num(v(f.key), 2)}`);
         const sm = Object.keys(m.spoolman_prices || {}).length;
-        return [sm ? tr("Spoolman: {n} Materialien", { n: sm }) : "", own.join(", ")].filter(Boolean).join(" · ") || tr("keine Preise");
+        return [sm ? sm === 1 ? tr("Spoolman: 1 Material") : tr("Spoolman: {n} Materialien", { n: sm }) : "", own.join(", ")].filter(Boolean).join(" · ") || tr("keine Preise");
       }
       if (sec === "spoolman") return v("spoolman_url") || tr("aus");
       return "";
@@ -6763,7 +6768,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       } else if (f.type === "select" && f.multiple) {
         const opts = [.../* @__PURE__ */ new Set([...f.options || [], ...Array.isArray(cur) ? cur : []])];
         const lab = (o) => f.option_labels && f.option_labels[o] || o;
-        control = `<div class="cfg-multi" ${attr} data-multi>${opts.map((o) => `<label class="cfg-chk"><input type="checkbox" value="${esc(o)}" ${(cur || []).includes(o) ? "checked" : ""} />${esc(lab(o))}</label>`).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
+        const chk = (o) => `<label class="cfg-chk"><input type="checkbox" value="${esc(o)}" ${(cur || []).includes(o) ? "checked" : ""} /><span>${esc(lab(o))}</span></label>`;
+        const chosen = opts.filter((o) => (cur || []).includes(o));
+        const rest = opts.filter((o) => !(cur || []).includes(o));
+        const fold = !f.option_labels && opts.length > 6 && chosen.length;
+        control = `<div class="cfg-multi" ${attr} data-multi>${fold ? `${chosen.map(chk).join("")}<details class="cfg-more"><summary>${tr("Weitere anzeigen ({n})", { n: rest.length })}</summary>${rest.map(chk).join("")}</details>` : opts.map(chk).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
       } else if (f.type === "select") {
         const lab = (o) => f.option_labels && f.option_labels[o] || o;
         control = `<select ${attr}>${f.required ? "" : `<option value="">—</option>`}${(f.options || []).map((o) => `<option value="${esc(o)}" ${o === cur ? "selected" : ""}>${esc(lab(o))}</option>`).join("")}</select>`;
@@ -6788,8 +6797,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         };
         return `<div class="cfg-maint"><span>${esc(f.label.replace(/\s*\([^)]*\)\s*$/, ""))}</span>${inp(f)}${m ? inp(m) : ""}</div>`;
       }).join("");
-      return `<div class="cfg-maint cfg-maint-head t-label"><span></span><span>${tr("Stunden")}</span><span>${tr("Monate")}</span></div>${rows}
-      <small class="t-label">${tr("0 = aus. Fällig ist, was zuerst erreicht wird.")}</small>`;
+      return `<div class="cfg-maint cfg-maint-head t-label"><span></span><span>${tr("Stunden")}</span><span>${tr("Monate")}</span></div>${rows}`;
     }
     _renderSettings() {
       const dlg = this._settingsDialog();

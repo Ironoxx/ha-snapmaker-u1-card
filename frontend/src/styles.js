@@ -710,7 +710,10 @@ export const STYLES = `
   .cfg-bool { grid-template-columns: minmax(0, 1fr) auto; cursor: pointer; }
   .cfg-bool input { width: 20px; height: 20px; accent-color: var(--u1-primary); margin-top: 2px; }
   .cfg-multi { display: flex; flex-direction: column; gap: 6px; }
-  .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+  .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; min-width: 0; }
+  .cfg-chk span { min-width: 0; overflow-wrap: anywhere; }
+  .cfg-more > summary { cursor: pointer; color: var(--u1-primary); font-size: 13px; padding: 4px 0; }
+  .cfg-more[open] { display: flex; flex-direction: column; gap: 6px; }
   .cfg-chk input { accent-color: var(--u1-primary); width: 18px; height: 18px; }
   .cfg-maint { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
   .cfg-maint-head { padding-top: 8px; font-size: 12px; }
