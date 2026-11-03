@@ -167,10 +167,10 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         # 2.0: Klipper objects of this printer and the last polled status (machine values)
         self._objects: list[str] | None = None
         self._poll_status: dict[str, Any] = {}
-        self._machine_extras: dict[str, Any] = {}
-        self._machine_slow: dict[str, Any] = {}
+        self._machine_extras: dict[str, Any] = {}      # values outside Klipper's objects (totals, file data)
+        self._machine_slow: dict[str, Any] = {}        # memory, job queue, CPU: refreshed once a minute
         self._machine_slow_at = -1e9
-        self._machine_timer: Any = None
+        self._machine_timer: Any = None                # throttles live publishing to once a second
         self._job_totals: dict[str, Any] = {}
         # Firmware: installed (from the printer), latest (GitHub, daily)
         self.firmware: dict[str, Any] = {"installed": None, "latest": None}

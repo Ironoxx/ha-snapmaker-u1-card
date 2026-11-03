@@ -1,7 +1,7 @@
 # Architecture
 
 This document explains how the integration and the card fit together. It is
-meant for contributors; user documentation lives in the [README](../README.md).
+meant for contributors; user documentation lives in the [README](../README.md) and the other files in this folder.
 
 ## Overview
 
@@ -32,7 +32,10 @@ Nabu Casa.
 |---|---|
 | `__init__.py` | Entry setup, static paths and views, service registration |
 | `api.py` | `MoonrakerClient` (HTTP + JSON-RPC over WebSocket) and `SpoolmanClient` |
-| `live.py` | WebSocket subscription to `print_stats`, `toolhead`, `virtual_sdcard`, `exception_manager` |
+| `live.py` | WebSocket subscription to `print_stats`, `toolhead`, `virtual_sdcard`, `exception_manager` plus every object of `machine_status.subscription()`; CPU temperature from `notify_proc_stat_update` |
+| `machine_status.py` | 2.0, HA-free: which printer objects to subscribe to, turning their status into the card's values (named like the Moonraker integration's entities) and the G-code for the controls |
+| `machine_entities.py`, `button.py`, `light.py` | 2.0: entities for those values (temperatures, targets, fans, speed, light, buttons); `add_machine()` in `sensor.py` adds each one when its value first appears |
+| `settings_ws.py` | 2.0: websocket commands `snapmaker_u1_card/settings/get` and `/set` for the settings in the card; fields, labels and validation come from the options flow |
 | `coordinator/` | Polling, print tracking and all feature logic (see below) |
 | `parsing.py` | Pure data processing (no HA imports): slots, files, mapping, cost, print tracking |
 | `layers.py` | G-code parser: layer paths for the layer view and a time profile for remaining time |
@@ -71,7 +74,7 @@ poll loop. Feature logic lives in mixins that only add methods:
 | `PowerMixin` (`power.py`) | Power switch, clean shutdown, auto-off, idle-off |
 | `PrinterSettingsMixin` (`printer.py`) | Firmware preferences, setting a slot's filament, camera wake-up |
 | `ProgressNotifyMixin` (`progress.py`) | Ongoing Android progress notification with push budget |
-| `MachineMixin` (`machine.py`) | Flow, top cover fans, picking/parking heads, G-code console |
+| `MachineMixin` (`machine.py`) | Flow, top cover fans, picking/parking heads, G-code console, `machine_command` (pause, homing, setpoints, switches) |
 
 `data.py` holds the `U1Data` snapshot handed to entities; `helpers.py` holds
 constants and pure helper functions.
@@ -105,7 +108,8 @@ bundled by esbuild into the single file the integration ships:
 | `index.js` | Entry point: registers both cards and the card picker entries |
 | `const.js`, `i18n.js`, `format.js`, `color.js`, `styles.js`, `editor.js` | Shared constants, translations, formatting, colour helpers, CSS, visual editor |
 | `card/card.js` | `SnapmakerU1Card`: lifecycle (config, hass, timers), composed from mixins |
-| `card/*.js` | One mixin per topic: state, controls, tabs (overview, files, control, system, history, timelapse), layer view, layout, rendering, zoom, print dialog, camera, machine controls (bed mesh, top cover, console, head change) |
+| `card/*.js` | One mixin per topic: state, controls, tabs (overview, files, control, system, history, timelapse), layer view, layout, rendering, zoom, print dialog, camera, machine controls (bed mesh, top cover, console, head change), settings dialog, WebRTC and the RTSP stream through HA |
+| `card/state.js` `_st()` | 2.0: answers `<domain>.<prefix>_<key>` from the integration's printer values first; real HA states (Moonraker integration) are only the fallback |
 | `card/mini.js` | `SnapmakerU1MiniCard`, a subclass without camera |
 
 Rendering rules that matter:

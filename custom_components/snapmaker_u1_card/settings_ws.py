@@ -88,10 +88,11 @@ def _labels(trans: dict[str, str], fields: list[dict[str, Any]]) -> dict[str, An
 
 
 def _entry(hass: HomeAssistant, entry_id: str | None) -> Any:
+    """The printer's config entry: by ID, or the only one if no ID is given."""
     entries = hass.config_entries.async_loaded_entries(DOMAIN)
     if entry_id:
-        entries = [e for e in entries if e.entry_id == entry_id]
-    return entries[0] if len(entries) == 1 or (entries and entry_id) else None
+        return next((e for e in entries if e.entry_id == entry_id), None)
+    return entries[0] if len(entries) == 1 else None
 
 
 @websocket_api.require_admin
@@ -139,13 +140,14 @@ async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     if entry is None:
         connection.send_error(msg["id"], "not_found", "No configured Snapmaker U1 found")
         return
-    current = nest_options(entry.options)
-    nested = {sec: {**current.get(sec, {}), **(vals if isinstance(vals, dict) else {})}
-              for sec, vals in msg["values"].items()}
-    nested = {**current, **nested}
-    # cleared fields (None / "") are removed, so an entity or price can be taken out again
-    for sec, vals in nested.items():
-        nested[sec] = {k: v for k, v in vals.items() if v not in (None, "")}
+    # The card sends only the sections it changed; the others keep their stored values.
+    nested = nest_options(entry.options)
+    for sec, vals in msg["values"].items():
+        if isinstance(vals, dict):
+            nested[sec] = {**nested.get(sec, {}), **vals}
+    # Cleared fields (None / "") are dropped, so an entity or a price can be removed again;
+    # required fields then get their default from the schema.
+    nested = {sec: {k: v for k, v in vals.items() if v not in (None, "")} for sec, vals in nested.items()}
     try:
         validated = _options_schema(_notify_services(hass))(nested)
     except vol.Invalid as err:

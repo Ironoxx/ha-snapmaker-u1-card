@@ -59,7 +59,7 @@ def subscription(objects: list[str] | None) -> dict[str, list[str] | None]:
         kind, name = _split(obj)
         if obj in HEATERS:
             out[obj] = ["temperature", "target", "power"]
-        elif kind == "temperature_sensor" and name or kind.startswith(TMC_PREFIX) and name:
+        elif name and (kind == "temperature_sensor" or kind.startswith(TMC_PREFIX)):
             out[obj] = ["temperature"]
         elif kind in FAN_TYPES and name:
             out[obj] = ["speed", "rpm"] if kind != "temperature_fan" else ["speed", "temperature", "target"]

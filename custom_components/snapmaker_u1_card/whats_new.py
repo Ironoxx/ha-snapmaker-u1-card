@@ -58,6 +58,7 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 - **Neue Entitäten** für Temperaturen, Fortschritt, Druckstatus, Schicht, Solltemperaturen, Knöpfe und Licht – plus Dienst `machine_command` für Automationen
 - **Einstellungen direkt in der Karte** (System → Einstellungen), übersichtlich mit aktuellen Werten
 - **Spoolman:** neue Spule direkt aus der Karte anlegen, Filamentpreise aus Spoolman
+- **Kamera unterwegs flüssig** über Home Assistant (RTSP), **Temperaturverlauf** mit Innenraum, Schrittmotortreibern und CPU
 - **Kamera-Zoom** geht nach 60 s oder beim Verlassen der Seite zurück
 - Die Moonraker-Integration kann deaktiviert werden; wenn sie bleibt, ist sie nur noch Rückfall
 
@@ -71,6 +72,7 @@ Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/
 - **New entities** for temperatures, progress, print state, layer, targets, buttons and light – plus the service `machine_command` for automations
 - **Settings right in the card** (System → Settings), clearly laid out with current values
 - **Spoolman:** create a new spool right from the card, filament prices from Spoolman
+- **Smooth camera away from home** through Home Assistant (RTSP), **temperature chart** with chamber, stepper drivers and CPU
 - **Camera zoom** goes back after 60 s or when you leave the page
 - The Moonraker integration can be disabled; if it stays, it is only a fallback
 

@@ -4,6 +4,77 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0
+
+**No Moonraker integration needed any more.** The card used to need a second integration for temperatures, fans, light, axes, layer and most controls. Since 2.0 the Snapmaker U1 Card integration talks to the printer itself for all of it. One integration, one setup, and everything reacts faster: values arrive over the live connection within about a second instead of every 30 s. Thanks to everyone who tested the seven betas!
+
+**Straight from the printer**
+- All printer values: temperatures (bed, four nozzles, chamber, stepper drivers), targets and heater power, fans, light, outputs, filament sensors, axis position, speed, layer, progress, MCU load, CPU temperature and load, memory, job queue and print totals. The objects come from the printer's object list, so modified configurations work too.
+- All controls: pause, resume, cancel, emergency stop, homing (locked during a print), target temperatures, part and chamber fan, speed, chamber light and switches. New service `machine_command` for automations; only objects the printer reports are accepted and values are clamped.
+- New entities: temperatures, progress, print state, layer, targets, part fan, speed, buttons, chamber light and the diagnostic sensors *Printer values* and *CPU temperature*.
+- An existing Moonraker integration may stay as a fallback, or be disabled or removed.
+
+**Settings in the card**
+- *System → Settings* (admins): the same settings as *Configure* in Home Assistant, grouped, with the current value next to each chosen entity and the Spoolman price next to each filament price. Same checks as in Home Assistant; only changed sections are saved.
+
+**Camera**
+- Away from home (Nabu Casa) the card plays the RTSP stream through Home Assistant instead of MJPEG through the proxy: H.264, far less data, smooth. At home the direct WebRTC stays. Without RTSP (stock firmware) nothing changes. Option `camera_ha_stream`.
+- The zoom goes back after 60 s without interaction and whenever you leave the page (option `camera_zoom_reset`).
+
+**Temperature chart**
+- Besides heads and bed: chamber, X/Y stepper drivers (while the motors run), CPU and any further temperature sensor of the printer configuration. Tap an entry in the legend to hide or show its line.
+
+**Spoolman**
+- Create a spool right from the card, prefilled with the head's filament; vendor and filament are reused or created. Service `create_spool`.
+- Filament prices from Spoolman: the spool in each head counts at the end of a print, otherwise the Spoolman average per material; your own prices fill the gaps.
+
+**Fixes since 1.6.3**
+- "Second camera found" without a USB camera (paxx12 lists the built-in camera twice).
+- Stepper temperatures now appear in the card once the motors are on.
+
+**Good to know when updating**
+- Restart Home Assistant and reload the dashboard.
+- To try without the Moonraker integration: *Settings → Devices & services → Moonraker → ⋮ → Disable*. Your own automations with its entities need the new entities instead.
+- The README is shorter now; details moved to the [docs](https://github.com/Ironoxx/ha-snapmaker-u1-card/tree/main/docs).
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Keine Moonraker-Integration mehr nötig.** Bisher brauchte die Karte für Temperaturen, Lüfter, Licht, Achsen, Schicht und die meisten Steuerungen eine zweite Integration. Seit 2.0 spricht die Integration Snapmaker U1 Card dafür selbst mit dem Drucker. Eine Integration, eine Einrichtung, und alles reagiert schneller: Werte kommen über die Live-Verbindung innerhalb etwa einer Sekunde statt alle 30 s. Danke an alle, die die sieben Betas getestet haben!
+
+**Direkt vom Drucker**
+- Alle Druckerwerte: Temperaturen (Bett, vier Düsen, Innenraum, Schrittmotortreiber), Sollwerte und Heizleistung, Lüfter, Licht, Ausgänge, Filamentsensoren, Achsposition, Geschwindigkeit, Schicht, Fortschritt, MCU-Last, CPU-Temperatur und -Last, Speicher, Warteschlange und Druckstatistik. Die Objekte kommen aus der Objektliste des Druckers, geänderte Konfigurationen funktionieren also auch.
+- Alle Steuerungen: Pause, Fortsetzen, Abbrechen, Not-Halt, Referenzfahrt (im Druck gesperrt), Solltemperaturen, Bauteil- und Innenraumlüfter, Geschwindigkeit, Innenraumlicht und Schalter. Neuer Dienst `machine_command` für Automationen; nur Objekte, die der Drucker meldet, Werte werden begrenzt.
+- Neue Entitäten: Temperaturen, Fortschritt, Druckstatus, Schicht, Sollwerte, Bauteillüfter, Geschwindigkeit, Knöpfe, Innenraumlicht und die Diagnose-Sensoren *Druckerwerte* und *CPU-Temperatur*.
+- Eine vorhandene Moonraker-Integration darf als Rückfall bleiben oder deaktiviert bzw. entfernt werden.
+
+**Einstellungen in der Karte**
+- *System → Einstellungen* (Admins): dieselben Einstellungen wie *Konfigurieren* in Home Assistant, gegliedert, mit dem aktuellen Wert neben jeder gewählten Entität und dem Spoolman-Preis neben jedem Filamentpreis. Dieselben Prüfungen wie in Home Assistant; gespeichert werden nur geänderte Bereiche.
+
+**Kamera**
+- Unterwegs (Nabu Casa) spielt die Karte den RTSP-Stream über Home Assistant ab statt MJPEG über den Proxy: H.264, viel weniger Daten, flüssig. Zu Hause bleibt das direkte WebRTC. Ohne RTSP (Stock-Firmware) ändert sich nichts. Option `camera_ha_stream`.
+- Der Zoom geht nach 60 s ohne Bedienung und beim Verlassen der Seite zurück (Option `camera_zoom_reset`).
+
+**Temperaturverlauf**
+- Neben Köpfen und Bett: Innenraum, Schrittmotortreiber X/Y (solange die Motoren laufen), CPU und jeder weitere Temperatursensor der Druckerkonfiguration. Ein Tipp auf einen Eintrag der Legende blendet die Linie aus oder ein.
+
+**Spoolman**
+- Neue Spule direkt aus der Karte anlegen, vorausgefüllt mit dem Filament des Kopfs; Hersteller und Filament werden wiederverwendet oder angelegt. Dienst `create_spool`.
+- Filamentpreise aus Spoolman: Am Druckende zählt die Spule im jeweiligen Kopf, sonst der Spoolman-Durchschnitt je Material; eigene Preise füllen die Lücken.
+
+**Behoben seit 1.6.3**
+- „Zweite Kamera gefunden“ ohne USB-Kamera (paxx12 listet die eingebaute Kamera doppelt).
+- Stepper-Temperaturen erscheinen jetzt in der Karte, sobald die Motoren laufen.
+
+**Gut zu wissen beim Update**
+- Home Assistant neu starten und das Dashboard neu laden.
+- Zum Ausprobieren ohne Moonraker-Integration: *Einstellungen → Geräte & Dienste → Moonraker → ⋮ → Deaktivieren*. Eigene Automationen mit deren Entitäten brauchen dann die neuen Entitäten.
+- Das README ist jetzt kürzer; die Details stehen in den [Docs](https://github.com/Ironoxx/ha-snapmaker-u1-card/tree/main/docs/de).
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0b7
 
 **Seventh beta of 2.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b6 is included (details below).
