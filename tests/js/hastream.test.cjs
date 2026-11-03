@@ -14,7 +14,9 @@ w.setInterval = () => 0;
 let pcs = 0;
 w.RTCPeerConnection = class { constructor() { pcs++; } };
 // HA's stream element (normally loaded by the frontend)
-w.eval(`customElements.define("ha-camera-stream", class extends HTMLElement {})`);
+// counts detaches: HA's real player closes its stream session on disconnect
+w.eval(`customElements.define("ha-camera-stream", class extends HTMLElement {
+  disconnectedCallback() { window.__hsGone = (window.__hsGone || 0) + 1; } })`);
 w.eval(src);
 
 const reg = {}, states = {};
@@ -63,6 +65,15 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card._renderKey = null; card._render();
   card._tickCamera();
   assert.strictEqual(frame().querySelector("[data-hastream]"), el, "gleiches Element nach Neuaufbau");
+  assert.ok(!w.__hsGone, "Stream-Element bleibt beim Neuaufbau im Dokument (keine neue Sitzung)");
+  assert.ok(frame().classList.contains("rtc-on"), "rtc-on bleibt");
+  assert.ok(frame().querySelector('[data-zoom="in"]'), "Zoom-Knöpfe neu aufgebaut");
+  // a structural change around the camera (pause overlay) also keeps it
+  states["sensor.snapmaker_u1_current_print_state"].state = "paused"; card.hass = hass();
+  assert.strictEqual(frame().querySelector("[data-hastream]"), el);
+  assert.ok(frame().querySelector(".overlay"), "Pause-Overlay im alten Rahmen");
+  assert.ok(!w.__hsGone, "auch bei Pause kein Abbau");
+  states["sensor.snapmaker_u1_current_print_state"].state = "standby"; card.hass = hass();
   // hidden page stops it
   card._onScreen = false; card._tickCamera();
   assert.ok(!card._hs && !frame().querySelector("[data-hastream]"), "aus bei verdeckter Karte");

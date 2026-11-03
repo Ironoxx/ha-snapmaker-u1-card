@@ -38,16 +38,21 @@ export const ZoomMixin = (Base) => class extends Base {
     };
     this._applyZoom = apply;
     apply();
+    // The buttons are new after every rebuild; the frame itself can stay (stream running).
+    frame.querySelectorAll("[data-zoom]").forEach((b) => {
+      if (b._zoomWired) return;
+      b._zoomWired = true;
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const w = frame.clientWidth, h = frame.clientHeight;
+        if (b.dataset.zoom === "in") zoomAt(1.6, w / 2, h / 2);
+        else if (b.dataset.zoom === "out") zoomAt(1 / 1.6, w / 2, h / 2);
+        else this._fullscreen(frame);
+      });
+    });
     if (frame._zoomWired) return;
     frame._zoomWired = true;
     const local = (e) => { const b = frame.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-    frame.querySelectorAll("[data-zoom]").forEach((b) => b.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const w = frame.clientWidth, h = frame.clientHeight;
-      if (b.dataset.zoom === "in") zoomAt(1.6, w / 2, h / 2);
-      else if (b.dataset.zoom === "out") zoomAt(1 / 1.6, w / 2, h / 2);
-      else this._fullscreen(frame);
-    }));
     let lastType = "mouse";
     frame.addEventListener("dblclick", (e) => {
       if (lastType === "touch") return; // touch: own double tap below

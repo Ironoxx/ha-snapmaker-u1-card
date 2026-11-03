@@ -56,25 +56,94 @@ export const RenderMixin = (Base) => class extends Base {
     ].join("~");
 
     if (key === this._renderKey && this._root()) { this._patch(); this._accent(); return; }
+    if (this._cfg.debug_camera && this._renderKey) {
+      const was = this._renderKey.split("~"), now = key.split("~");
+      console.info("snapmaker-u1-card: rebuild, key parts changed:",
+        now.map((v, i) => (v !== was[i] ? i : -1)).filter((i) => i >= 0).join(","));
+    }
     this._renderKey = key;
 
     const card = this._root(true);
-    // Move the running camera image into the new build instead of
-    // reconnecting: no black frame, no second connection.
-    const old = card.querySelector("img[data-live]");
-    card.innerHTML = this._body();
-    const fresh = card.querySelector("img[data-live]");
-    if (old && fresh && old.getAttribute("src")) {
-      old.className = fresh.className;
-      old.style.cssText = fresh.style.cssText;
-      fresh.replaceWith(old);
-    } else if (old) {
-      if (this._streamImg === old) this._stopStream();
-      else { old.onload = null; old.onerror = null; old.src = BLANK; }
+    const html = this._body();
+    if (!this._rebuildAroundCamera(card, html)) {
+      // Move the running camera image into the new build instead of
+      // reconnecting: no black frame, no second connection.
+      const old = card.querySelector("img[data-live]");
+      card.innerHTML = html;
+      const fresh = card.querySelector("img[data-live]");
+      if (old && fresh && old.getAttribute("src")) {
+        old.className = fresh.className;
+        old.style.cssText = fresh.style.cssText;
+        fresh.replaceWith(old);
+      } else if (old) {
+        if (this._streamImg === old) this._stopStream();
+        else { old.onload = null; old.onerror = null; old.src = BLANK; }
+      }
     }
     this._wire();
     this._patch();
     this._accent();
+  }
+
+  /**
+   * Rebuild while a video stream plays, without taking the camera frame out of
+   * the page. HA's <ha-camera-stream> closes its WebRTC/HLS session as soon as
+   * it is detached and needs seconds to reconnect, so moving it into the new
+   * build made the picture stall on every rebuild. Here the frame and its
+   * ancestors stay where they are: their attributes are synced and everything
+   * around them is replaced by the new build. Returns false (plain rebuild)
+   * when there is no stream or the structure around the camera differs.
+   */
+  _rebuildAroundCamera(card, html) {
+    const player = (this._hs && this._hs.el) || (this._rtc && this._rtc.video);
+    const oldFrame = card.querySelector(".stage .frame");
+    if (!player || !oldFrame || player.parentNode !== oldFrame) return false;
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    const newFrame = tmp.querySelector(".stage .frame");
+    const oldImg = oldFrame.querySelector(":scope > img[data-live]");
+    const freshImg = newFrame && newFrame.querySelector(":scope > img[data-live]");
+    if (!freshImg || !oldImg) return false;
+    const path = (node, top) => {
+      const out = [];
+      for (let n = node; n && n !== top; n = n.parentElement) out.unshift(n);
+      return out;
+    };
+    const oldPath = path(oldFrame, card), newPath = path(newFrame, tmp);
+    if (oldPath.length !== newPath.length || oldPath[0].parentElement !== card
+      || oldPath.some((n, i) => n.tagName !== newPath[i].tagName)) return false;
+
+    // Replace all children of parent except keep with the new build's, in order.
+    const around = (parent, keep, from, fresh) => {
+      [...parent.childNodes].forEach((n) => { if (n !== keep) n.remove(); });
+      let before = true;
+      [...from.childNodes].forEach((n) => {
+        if (n === fresh) { before = false; return; }
+        if (before) parent.insertBefore(n, keep); else parent.appendChild(n);
+      });
+    };
+    const sync = (el, from, keepClasses) => {
+      const kept = keepClasses.filter((c) => el.classList.contains(c));
+      [...el.attributes].forEach((a) => { if (!from.hasAttribute(a.name)) el.removeAttribute(a.name); });
+      [...from.attributes].forEach((a) => { if (el.getAttribute(a.name) !== a.value) el.setAttribute(a.name, a.value); });
+      kept.forEach((c) => el.classList.add(c));
+    };
+    let parent = card, from = tmp;
+    oldPath.forEach((keep, i) => {
+      around(parent, keep, from, newPath[i]);
+      sync(keep, newPath[i], keep === oldFrame ? ["rtc-on", "zoomed"] : []);
+      parent = keep; from = newPath[i];
+    });
+    // Inside the frame: keep the live image and the player, the rest is new.
+    oldImg.className = freshImg.className;
+    oldImg.style.cssText = freshImg.style.cssText;
+    [...oldFrame.childNodes].forEach((n) => { if (n !== oldImg && n !== player) n.remove(); });
+    let before = true;
+    [...newFrame.childNodes].forEach((n) => {
+      if (n === freshImg) { before = false; return; }
+      if (before) oldFrame.insertBefore(n, oldImg); else oldFrame.appendChild(n);
+    });
+    return true;
   }
 
   /** Thin frame in the theme colour of the state (printing, paused, error, done); option state_accent. */
