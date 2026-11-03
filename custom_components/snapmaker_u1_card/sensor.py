@@ -67,11 +67,17 @@ async def async_setup_entry(
         TemperatureSensor,
         heater_keys,
     )
-    add_when(entry, lambda d: bool(d.machine), lambda: async_add_entities(
-        [MachineSensor(coordinator), ProgressSensor(coordinator), PrintStateSensor(coordinator),
-         LayerSensor(coordinator)]
-        + [TemperatureSensor(coordinator, k) for k in heater_keys(coordinator.data.machine)]
-        + ([TemperatureSensor(coordinator, "cavity")] if "cavity_temp" in coordinator.data.machine else [])))
+    def wanted(m: dict[str, Any]) -> dict[str, Callable[[], Any]]:
+        out: dict[str, Callable[[], Any]] = {
+            "machine": lambda: MachineSensor(coordinator), "progress": lambda: ProgressSensor(coordinator),
+            "print_state": lambda: PrintStateSensor(coordinator), "layer": lambda: LayerSensor(coordinator)}
+        for k in heater_keys(m):
+            out[f"temp_{k}"] = lambda k=k: TemperatureSensor(coordinator, k)
+        if "cavity_temp" in m:
+            out["temp_cavity"] = lambda: TemperatureSensor(coordinator, "cavity")
+        return out
+
+    add_machine(entry, wanted, async_add_entities)
 
 
 def add_when_top_cover(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
@@ -86,6 +92,31 @@ def add_when_top_cover(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
 def add_when_chamber(entry: U1ConfigEntry, add: Callable[[], None]) -> None:
     """Call ``add`` once a chamber heater (Panda Breath / DragonBreath) shows up."""
     add_when(entry, lambda d: d.chamber is not None, add)
+
+
+def add_machine(entry: U1ConfigEntry, wanted: Callable[[dict[str, Any]], dict[str, Callable[[], Any]]],
+                async_add: Callable[[list[Any]], None]) -> None:
+    """Add machine entities as their values appear (2.0).
+
+    ``wanted(machine)`` returns key -> entity factory for the values present now.
+    Some values only come after the printer's object list is known (chamber
+    temperature, fans), so this runs on every update, adding each key once.
+    """
+    coordinator = entry.runtime_data
+    added: set[str] = set()
+
+    @callback
+    def check() -> None:
+        data = coordinator.data
+        if not data or not data.machine:
+            return
+        new = {k: f for k, f in wanted(data.machine).items() if k not in added}
+        if new:
+            added.update(new)
+            async_add([f() for f in new.values()])
+
+    check()
+    entry.async_on_unload(coordinator.async_add_listener(check))
 
 
 def add_when(entry: U1ConfigEntry, test: Callable[[Any], bool], add: Callable[[], None]) -> None:

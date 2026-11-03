@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import U1ConfigEntry
 from .coordinator import U1Coordinator
 from .machine import FLOW_MAX, FLOW_MIN
-from .sensor import U1Entity, add_when, add_when_chamber, add_when_top_cover
+from .sensor import U1Entity, add_machine, add_when_chamber, add_when_top_cover
 
 
 async def async_setup_entry(
@@ -34,9 +34,10 @@ async def async_setup_entry(
         TargetNumber,
         heater_keys,
     )
-    add_when(entry, lambda d: bool(d.machine), lambda: async_add_entities(
-        [TargetNumber(coordinator, k) for k in heater_keys(coordinator.data.machine)]
-        + [PercentNumber(coordinator, k) for k in ("fan_speed", "speed_factor") if k in coordinator.data.machine]))
+    add_machine(entry, lambda m: {
+        **{f"target_{k}": (lambda k=k: TargetNumber(coordinator, k)) for k in heater_keys(m)},
+        **{k: (lambda k=k: PercentNumber(coordinator, k)) for k in ("fan_speed", "speed_factor") if k in m},
+    }, async_add_entities)
 
 
 class FlowNumber(U1Entity, NumberEntity):

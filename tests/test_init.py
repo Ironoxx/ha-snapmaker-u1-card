@@ -314,3 +314,35 @@ async def test_machine_values_and_commands(hass: HomeAssistant, mock_client) -> 
         assert gcode.await_args.args[0] == "SET_HEATER_TEMPERATURE HEATER=extruder TARGET=200"
         await hass.services.async_call("button", "press", {"entity_id": mine["resume_print"]}, blocking=True)
         action.assert_awaited_with("resume")
+
+
+async def test_machine_entities_added_when_values_appear(hass: HomeAssistant, mock_client) -> None:
+    """Chamber temperature and fans only come after the object list: their entities follow (b3 bug)."""
+    from homeassistant.helpers import entity_registry as er
+
+    status = mock_client["query"].return_value
+    status["webhooks"] = {"state": "ready"}
+    status["heater_bed"] = {"temperature": 22.0, "target": 0.0, "power": 0.0}
+    entry = await _setup(hass)
+    ent = er.async_get(hass)
+
+    def mine():
+        return {e.translation_key for e in ent.entities.values() if e.platform == DOMAIN}
+
+    assert "machine" in mine() and "cavity_temperature" not in mine() and "part_fan" not in mine()
+    # later the printer reports the chamber sensor and the part fan
+    status["temperature_sensor cavity"] = {"temperature": 26.0}
+    status["fan"] = {"speed": 0.0}
+    mock_client["objects"].return_value = [*mock_client["objects"].return_value, "temperature_sensor cavity", "fan"]
+    coord = entry.runtime_data
+    coord._objects = mock_client["objects"].return_value
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    assert {"cavity_temperature", "part_fan"} <= mine()
+    cavity = next(e.entity_id for e in ent.entities.values() if e.translation_key == "cavity_temperature")
+    assert hass.states.get(cavity).state == "26.0"
+    # no duplicates on further updates
+    n = len(mine())
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    assert len(mine()) == n
