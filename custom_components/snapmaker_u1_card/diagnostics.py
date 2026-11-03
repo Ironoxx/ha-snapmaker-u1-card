@@ -75,4 +75,8 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
                     "chamber": data.chamber,
                     "bed_mesh": {k: v for k, v in (data.bed_mesh or {}).items() if k != "matrix"} or None},
         "printer": raw,
+        # 2.0: values straight from the printer (instead of the Moonraker integration)
+        "printer_values": {"objects": list(coord._objects or []),
+                           "subscribed": sorted(coord.live.objects()),
+                           "values": data.machine, "attrs": data.machine_attrs},
     }, TO_REDACT)

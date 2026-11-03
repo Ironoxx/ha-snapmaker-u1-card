@@ -166,3 +166,6 @@ async def test_diagnostics_redacts(hass: HomeAssistant, mock_client, notificatio
     assert "installed" in diag["firmware"]
     if diag["spoolman"]:
         assert diag["spoolman"].get("url") in (None, "**REDACTED**")
+    pv = diag["printer_values"]
+    assert "extruder" in pv["objects"] and "webhooks" in pv["subscribed"]
+    assert isinstance(pv["values"], dict) and isinstance(pv["attrs"], dict)
