@@ -935,6 +935,42 @@ def compact_spool(spool: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# Typical densities (g/cm³) for new Spoolman filaments; Spoolman requires one.
+DENSITY = {"PLA": 1.24, "PLA-CF": 1.29, "PETG": 1.27, "PETG-CF": 1.30, "ABS": 1.04, "ASA": 1.07,
+           "TPU": 1.21, "PA": 1.14, "PA-CF": 1.20, "PC": 1.20, "PVA": 1.23, "HIPS": 1.04}
+
+
+def find_or_build_filament(filaments: list[dict[str, Any]], vendor_id: int, material: str, name: str,
+                           color: str | None, weight: float, spool_weight: float | None,
+                           temps: tuple[int | None, int | None] = (None, None)) -> tuple[int | None, dict[str, Any]]:
+    """Existing Spoolman filament (same vendor, material, name and colour) or the body for a new one.
+
+    Returns ``(id, {})`` for a match, ``(None, body)`` otherwise.
+    """
+    hexcol = (normalize_color(color) or "").lstrip("#").lower() or None
+    mat = material.strip().upper()
+    for f in filaments:
+        if ((f.get("vendor") or {}).get("id") == vendor_id
+                and str(f.get("material") or "").strip().upper() == mat
+                and str(f.get("name") or "").strip().casefold() == name.strip().casefold()
+                and (str(f.get("color_hex") or "").lower() or None) == hexcol):
+            return f["id"], {}
+    body: dict[str, Any] = {
+        "name": name.strip(), "vendor_id": vendor_id, "material": mat,
+        "density": DENSITY.get(mat, DENSITY.get(mat.split("-")[0], 1.24)), "diameter": 1.75,
+        "weight": round(float(weight), 1),
+    }
+    if hexcol:
+        body["color_hex"] = hexcol
+    if spool_weight:
+        body["spool_weight"] = round(float(spool_weight), 1)
+    if temps[0]:
+        body["settings_extruder_temp"] = int(temps[0])
+    if temps[1]:
+        body["settings_bed_temp"] = int(temps[1])
+    return None, body
+
+
 # Sub types the firmware/Snapmaker Orca know, found in a Spoolman filament name or material.
 SPOOL_SUBTYPES = ("Matte", "Silk", "HF", "Basic", "Glow", "Marble", "Wood", "Sparkle", "Galaxy", "Metal",
                   "Translucent", "Tough", "Rapid")

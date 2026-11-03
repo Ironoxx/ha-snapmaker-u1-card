@@ -977,6 +977,52 @@
           "description": "Only needed with several printers."
         }
       }
+    },
+    "create_spool": {
+      "name": "Create spool",
+      "description": "Creates a spool in Spoolman (vendor and filament are reused if they exist, otherwise created) and assigns it to a head.",
+      "fields": {
+        "slot": {
+          "name": "Head",
+          "description": "1-4; the new spool is assigned to this head. Empty = only create."
+        },
+        "material": {
+          "name": "Material",
+          "description": "e.g. PLA, PETG, TPU."
+        },
+        "vendor": {
+          "name": "Vendor",
+          "description": "Created in Spoolman if missing."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Filament name, e.g. PLA Matte Black. Empty = material."
+        },
+        "color": {
+          "name": "Colour",
+          "description": "Hex, e.g. #1a1a1a."
+        },
+        "weight": {
+          "name": "Net weight",
+          "description": "Filament on a full spool in g."
+        },
+        "spool_weight": {
+          "name": "Empty spool",
+          "description": "Weight of the empty spool in g (for weighing)."
+        },
+        "price": {
+          "name": "Price",
+          "description": "Price of the spool."
+        },
+        "remaining": {
+          "name": "Remaining",
+          "description": "Filament left in g; empty = full."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {

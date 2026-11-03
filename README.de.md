@@ -489,6 +489,8 @@ Einmal am Tag, nie während eines Drucks, holt die Integration alle Dateien aus 
 
 Optional. Ohne Spoolman-Adresse erscheint in Karte und Integration nichts davon.
 
+**Neue Spule.** Eine Spule, die noch nicht in Spoolman steht, lässt sich direkt aus der Karte anlegen: in der Spulenauswahl *Neue Spule anlegen*, vorausgefüllt mit Material, Hersteller und Farbe des Kopfs (vom RFID-Tag, falls vorhanden). Hersteller und Filament werden in Spoolman wiederverwendet, wenn es sie schon gibt (gleicher Name, Material und Farbe), sonst angelegt (Dichte nach Material, 1,75 mm); die neue Spule wird dem Kopf zugeordnet (mit SpoolLink per `SET_SPOOL_ID`). Dienst: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`), liefert `spool_id`.
+
 **Zuordnung Spule → Kopf.** Moonraker kennt für Spoolman nur *eine* aktive Spule; bei vier Köpfen übernimmt das die Integration selbst. Je geladenem Kopf wird eine aktive (nicht archivierte) Spule gesucht:
 
 1. gleiches Material (`PLA-CF` passt zu `PLA`),

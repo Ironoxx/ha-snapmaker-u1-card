@@ -494,6 +494,8 @@ Once a day, never during a print, the integration fetches all files from Moonrak
 
 Optional. Without a Spoolman address none of this appears in the card or the integration.
 
+**New spool.** A spool that is not in Spoolman yet can be created right from the card: in the spool picker *Create new spool*, prefilled with the head's material, vendor and colour (from the RFID tag, if there is one). Vendor and filament are reused in Spoolman if they exist (same name, material and colour), otherwise created (density by material, 1.75 mm); the new spool is assigned to the head (with SpoolLink via `SET_SPOOL_ID`). Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`), returns `spool_id`.
+
 **Assigning spools to heads.** Moonraker only knows *one* active spool for Spoolman; with four heads the integration handles this itself. For each loaded head an active (not archived) spool is chosen by:
 
 1. same material (`PLA-CF` matches `PLA`),

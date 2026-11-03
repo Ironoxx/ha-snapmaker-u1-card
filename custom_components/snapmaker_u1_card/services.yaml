@@ -389,6 +389,66 @@ weigh_spool:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+create_spool:
+  fields:
+    slot:
+      example: 2
+      selector:
+        number:
+          min: 1
+          max: 4
+          mode: box
+    material:
+      required: true
+      example: PLA
+      selector:
+        text:
+    vendor:
+      example: Snapmaker
+      default: Generic
+      selector:
+        text:
+    name:
+      example: PLA Matte Black
+      selector:
+        text:
+    color:
+      example: "#1a1a1a"
+      selector:
+        text:
+    weight:
+      default: 1000
+      selector:
+        number:
+          min: 1
+          max: 10000
+          unit_of_measurement: g
+          mode: box
+    spool_weight:
+      selector:
+        number:
+          min: 0
+          max: 2000
+          unit_of_measurement: g
+          mode: box
+    price:
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 0.01
+          mode: box
+    remaining:
+      selector:
+        number:
+          min: 0
+          max: 10000
+          unit_of_measurement: g
+          mode: box
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
 machine_command:
   fields:
     action:

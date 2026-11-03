@@ -977,6 +977,52 @@
           "description": "Nur bei mehreren Druckern nötig."
         }
       }
+    },
+    "create_spool": {
+      "name": "Spule anlegen",
+      "description": "Legt eine Spule in Spoolman an (Hersteller und Filament werden wiederverwendet, sonst angelegt) und ordnet sie einem Kopf zu.",
+      "fields": {
+        "slot": {
+          "name": "Kopf",
+          "description": "1-4; die neue Spule wird diesem Kopf zugeordnet. Leer = nur anlegen."
+        },
+        "material": {
+          "name": "Material",
+          "description": "z. B. PLA, PETG, TPU."
+        },
+        "vendor": {
+          "name": "Hersteller",
+          "description": "Wird in Spoolman angelegt, falls er fehlt."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Filamentname, z. B. PLA Matte Schwarz. Leer = Material."
+        },
+        "color": {
+          "name": "Farbe",
+          "description": "Hex, z. B. #1a1a1a."
+        },
+        "weight": {
+          "name": "Nettogewicht",
+          "description": "Filament einer vollen Spule in g."
+        },
+        "spool_weight": {
+          "name": "Leerspule",
+          "description": "Gewicht der leeren Spule in g (zum Wiegen)."
+        },
+        "price": {
+          "name": "Preis",
+          "description": "Preis der Spule."
+        },
+        "remaining": {
+          "name": "Rest",
+          "description": "Verbleibendes Filament in g; leer = voll."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {

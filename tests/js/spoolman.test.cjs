@@ -82,6 +82,29 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   dlg().querySelector('[data-pick="0"]').click(); await tick();
   assert.deepStrictEqual(calls.at(-1)[2], { slot: 2, spool_id: 0, config_entry_id: "E1" });
 
+  // 2b. Unknown spool: create one in Spoolman, prefilled from the head
+  root().querySelectorAll(".spool-line")[0].click();
+  dlg().querySelector("[data-newspool]").click();
+  const nf = dlg().querySelector("[data-newspoolform]");
+  assert.ok(nf, "Formular");
+  assert.strictEqual(nf.elements.material.value, "PLA");
+  assert.strictEqual(nf.elements.weight.value, "1000");
+  nf.elements.vendor.value = "Sunlu";
+  nf.elements.price.value = "18.5";
+  nf.dispatchEvent(new w.Event("submit", { cancelable: true }));
+  await tick();
+  const cs = calls.at(-1);
+  assert.strictEqual(cs[1], "create_spool");
+  assert.strictEqual(cs[5], true, "mit Antwort");
+  assert.deepStrictEqual(cs[2], { slot: 1, vendor: "Sunlu", material: "PLA", name: "PLA", color: "#000000",
+    weight: 1000, price: 18.5, config_entry_id: "E1" });
+  // back to the list
+  root().querySelectorAll(".spool-line")[0].click();
+  dlg().querySelector("[data-newspool]").click();
+  dlg().querySelector("[data-back]").click();
+  assert.ok(dlg().querySelector("[data-pick]"), "zurueck zur Liste");
+  dlg().close();
+
   // 3. Print dialog: white PLA (80 g) on head 2 with 60 g -> warning, remainder on the button
   root().querySelector('[data-print="teil.gcode"]').click();
   const pd = card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)");

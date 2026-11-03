@@ -24,6 +24,7 @@ from ..jobs import (
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     describe_file,
+    find_or_build_filament,
     parse_file_filaments,
     spool_filament,
 )
@@ -260,6 +261,55 @@ class SpoolMixin:
             self.async_update_listeners()
         _LOGGER.info("Spool %s weighed: %s g left (was %s g)", spool_id, rest, before)
         return {"spool_id": spool_id, "remaining_weight": rest, "before": before}
+
+    async def async_create_spool(self, slot_index: int | None, material: str, vendor: str, name: str | None,
+                                 color: str | None, weight: float, spool_weight: float | None = None,
+                                 price: float | None = None, remaining: float | None = None) -> dict[str, Any]:
+        """Create a spool in Spoolman (vendor and filament reused or created) and assign it to a head."""
+        mgr = self.spools
+        if not mgr.enabled or mgr.client is None:
+            raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
+        vendor = (vendor or "").strip() or "Generic"
+        material = (material or "").strip().upper()
+        if not material:
+            raise HomeAssistantError(tr(self.hass, "Material fehlt.", "Material missing."))
+        name = (name or "").strip() or material
+        slot = None
+        if slot_index is not None:
+            slot = next((s for s in (self.data or self._prev).slots if s["index"] == slot_index), None)
+        rfid = (slot or {}).get("rfid") or {}
+        temps = ((rfid.get("nozzle_temp") or [None])[0] if isinstance(rfid.get("nozzle_temp"), list) else None,
+                 rfid.get("bed_temp"))
+        client = mgr.client
+        try:
+            v = next((x for x in await client.vendors()
+                      if str(x.get("name") or "").strip().casefold() == vendor.casefold()), None)
+            vendor_id = v["id"] if v else (await client.create("vendor", {"name": vendor}))["id"]
+            fil_id, body = find_or_build_filament(await client.filaments(), vendor_id, material, name,
+                                                  color, weight, spool_weight, temps)
+            new_filament = fil_id is None
+            if new_filament:
+                fil_id = (await client.create("filament", body))["id"]
+            spool_body: dict[str, Any] = {"filament_id": fil_id, "initial_weight": round(float(weight), 1)}
+            if spool_weight:
+                spool_body["spool_weight"] = round(float(spool_weight), 1)
+            if price is not None:
+                spool_body["price"] = round(float(price), 2)
+            if remaining is not None:
+                spool_body["remaining_weight"] = round(min(float(remaining), float(weight)), 1)
+            spool = await client.create("spool", spool_body)
+        except MoonrakerError as err:
+            raise HomeAssistantError(tr(self.hass, f"Spoolman lehnt ab: {err}", f"Spoolman refused: {err}")) from err
+        _LOGGER.info("Spoolman: spool %s created (%s %s %s, filament %s%s)", spool["id"], vendor, material,
+                     name, fil_id, " new" if new_filament else "")
+        mgr.force()
+        await mgr.async_refresh()
+        if slot_index is not None:
+            await self.async_set_spool(slot_index, spool["id"], False)
+        elif self.data is not None:
+            self.data.spoolman = self._spoolman_data(self.data.slots)
+            self.async_update_listeners()
+        return {"spool_id": spool["id"], "filament_id": fil_id, "vendor_id": vendor_id, "new_filament": new_filament}
 
     async def _load_spool_filament(self, slot: dict[str, Any], spool: dict[str, Any] | None) -> None:
         """Write material, vendor and colour of a chosen Spoolman spool into the printer's slot.

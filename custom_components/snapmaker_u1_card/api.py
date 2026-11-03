@@ -541,6 +541,23 @@ class SpoolmanClient:
     async def use_weight(self, spool_id: int, grams: float) -> dict[str, Any]:
         return await self._request("PUT", f"/spool/{int(spool_id)}/use", json={"use_weight": round(grams, 2)})
 
+    async def vendors(self) -> list[dict[str, Any]]:
+        result = await self._request("GET", "/vendor")
+        return result if isinstance(result, list) else []
+
+    async def filaments(self) -> list[dict[str, Any]]:
+        result = await self._request("GET", "/filament")
+        return result if isinstance(result, list) else []
+
+    async def create(self, kind: str, data: dict[str, Any]) -> dict[str, Any]:
+        """POST /vendor, /filament or /spool; returns the created object."""
+        if kind not in ("vendor", "filament", "spool"):
+            raise ValueError(kind)
+        result = await self._request("POST", f"/{kind}", json=data)
+        if not isinstance(result, dict) or not isinstance(result.get("id"), int):
+            raise MoonrakerError(f"Spoolman did not return the new {kind}")
+        return result
+
     async def set_remaining(self, spool_id: int, grams: float) -> dict[str, Any]:
         """Set the remaining filament weight of a spool (after weighing it)."""
         return await self._request("PATCH", f"/spool/{int(spool_id)}", json={"remaining_weight": round(grams, 1)})

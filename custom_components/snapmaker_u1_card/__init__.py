@@ -145,6 +145,18 @@ WEIGH_SPOOL_SCHEMA = vol.All(vol.Schema({
     vol.Optional("gross", default=True): cv.boolean,
     vol.Optional(ATTR_ENTRY): cv.string,
 }), cv.has_at_least_one_key("slot", "spool_id"))
+CREATE_SPOOL_SCHEMA = vol.Schema({
+    vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Required("material"): vol.All(cv.string, vol.Length(min=1, max=32)),
+    vol.Optional("vendor", default="Generic"): vol.All(cv.string, vol.Length(max=64)),
+    vol.Optional("name"): vol.All(cv.string, vol.Length(max=64)),
+    vol.Optional("color"): vol.Match(r"^#?[0-9a-fA-F]{6}$"),
+    vol.Optional("weight", default=1000): vol.All(vol.Coerce(float), vol.Range(min=1, max=10000)),
+    vol.Optional("spool_weight"): vol.All(vol.Coerce(float), vol.Range(min=0, max=2000)),
+    vol.Optional("price"): vol.All(vol.Coerce(float), vol.Range(min=0, max=10000)),
+    vol.Optional("remaining"): vol.All(vol.Coerce(float), vol.Range(min=0, max=10000)),
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
 SEND_GCODE_SCHEMA = vol.Schema({vol.Required("script"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
 TOOL_CHANGE_SCHEMA = vol.Schema({
     vol.Required("head"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
@@ -225,6 +237,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             slot - 1 if slot else None, call.data.get("spool_id"), call.data["weight"], call.data["gross"])
 
     hass.services.async_register(DOMAIN, "weigh_spool", weigh_spool, schema=WEIGH_SPOOL_SCHEMA,
+                                 supports_response=SupportsResponse.OPTIONAL)
+
+    async def create_spool(call: ServiceCall) -> ServiceResponse:
+        d = call.data
+        slot = d.get("slot")
+        return await _coordinator(hass, d.get(ATTR_ENTRY)).async_create_spool(
+            slot - 1 if slot else None, d["material"], d.get("vendor", "Generic"), d.get("name"),
+            d.get("color"), d["weight"], d.get("spool_weight"), d.get("price"), d.get("remaining"))
+
+    hass.services.async_register(DOMAIN, "create_spool", create_spool, schema=CREATE_SPOOL_SCHEMA,
                                  supports_response=SupportsResponse.OPTIONAL)
 
     async def set_preference(call: ServiceCall) -> None:

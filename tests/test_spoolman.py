@@ -574,3 +574,57 @@ async def test_spool_restore_off(hass: HomeAssistant, mock_client, spoolman) -> 
     ptc["filament_exist"][0] = True
     await _refresh(hass, entry)
     assert hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]["restore"] == {}
+
+
+def test_find_or_build_filament():
+    fils = [{"id": 4, "name": "PLA Matte", "material": "PLA", "color_hex": "1a1a1a", "vendor": {"id": 2}}]
+    assert p.find_or_build_filament(fils, 2, "pla", "pla matte", "#1A1A1A", 1000, None) == (4, {})
+    fid, body = p.find_or_build_filament(fils, 3, "PETG-CF", "PETG CF", "#ff0000", 750, 180, (250, 80))
+    assert fid is None
+    assert body == {"name": "PETG CF", "vendor_id": 3, "material": "PETG-CF", "density": 1.30, "diameter": 1.75,
+                    "weight": 750.0, "color_hex": "ff0000", "spool_weight": 180.0,
+                    "settings_extruder_temp": 250, "settings_bed_temp": 80}
+    assert p.find_or_build_filament([], 1, "XYZ", "X", None, 1000, None)[1]["density"] == 1.24
+
+
+async def test_create_spool(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """Unknown spool: vendor and filament reused or created, spool created and assigned to the head."""
+    _real_slots(mock_client)
+    created = []
+    vendors = [{"id": 1, "name": "Generic"}]
+    filaments = [{"id": 9, "name": "PLA Silk", "material": "PLA", "color_hex": "6f4c2f", "vendor": {"id": 1}}]
+
+    async def create(self, kind, data):
+        new_id = 100 + len(created)
+        created.append((kind, data))
+        if kind == "spool":
+            spoolman["spools"].append({"id": new_id, "archived": False, "remaining_weight": data["initial_weight"],
+                                       "initial_weight": data["initial_weight"], "filament": {
+                                           "id": data["filament_id"], "name": "PLA Silk", "material": "PLA",
+                                           "color_hex": "6f4c2f", "vendor": {"id": 1, "name": "Generic"}}})
+        return {"id": new_id}
+
+    with patch(f"{SM}.vendors", AsyncMock(return_value=vendors)), \
+         patch(f"{SM}.filaments", AsyncMock(return_value=filaments)), \
+         patch(f"{SM}.create", create):
+        entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+        await _refresh(hass, entry)
+        # existing vendor and filament: only the spool is created
+        res = await hass.services.async_call(DOMAIN, "create_spool", {
+            "slot": 3, "material": "pla", "vendor": "generic", "name": "PLA Silk", "color": "#6F4C2F",
+            "weight": 1000, "price": 19.99}, blocking=True, return_response=True)
+        assert res == {"spool_id": 100, "filament_id": 9, "vendor_id": 1, "new_filament": False}
+        assert created == [("spool", {"filament_id": 9, "initial_weight": 1000.0, "price": 19.99})]
+        sm = hass.states.get("sensor.snapmaker_u1_card_filaments").attributes["spoolman"]
+        assert sm["slots"]["2"]["id"] == 100, "assigned to head 3"
+        # new vendor and filament
+        created.clear()
+        res = await hass.services.async_call(DOMAIN, "create_spool", {
+            "material": "PETG", "vendor": "Sunlu", "color": "00ff00", "weight": 1000, "spool_weight": 150,
+            "remaining": 1200}, blocking=True, return_response=True)
+        assert [k for k, _ in created] == ["vendor", "filament", "spool"]
+        assert created[0][1] == {"name": "Sunlu"}
+        assert created[1][1]["name"] == "PETG" and created[1][1]["vendor_id"] == 100
+        assert created[2][1] == {"filament_id": 101, "initial_weight": 1000.0, "spool_weight": 150.0,
+                                 "remaining_weight": 1000.0}
+        assert res["new_filament"] is True
