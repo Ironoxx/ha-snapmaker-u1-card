@@ -4,6 +4,35 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0b2
+
+**Second beta of 2.0** – thanks for testing b1! Installs only with *Show beta versions* turned on for this repository in HACS. Everything from 2.0.0b1 is included: the card no longer needs the Moonraker integration (details below at 2.0.0b1).
+
+**New**
+- **Create a spool in Spoolman from the card:** the spool picker has *Create new spool*, prefilled with the head's material, vendor and colour (RFID data if there is a tag). Vendor and filament are reused if they exist, otherwise created; the new spool is assigned to the head right away (with SpoolLink via `SET_SPOOL_ID`). Also as service `snapmaker_u1_card.create_spool`.
+- **Camera zoom goes back by itself:** after 60 s without interaction and always when you leave the page, switch apps or scroll the card away. Card option `camera_zoom_reset` (seconds, `0` = never).
+
+**Fixed**
+- "Second camera (USB) found" without a USB camera: paxx12 lists the built-in camera twice (MJPEG and WebRTC). Only a webcam in another folder (`/webcam2/`) now counts as a second camera. The entity *Camera 2* then becomes unavailable and can be deleted.
+- Self test: disabled Moonraker integration entities are no longer counted.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Zweite Beta von 2.0** – danke fürs Testen von b1! Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist. Alles aus 2.0.0b1 ist enthalten: Die Karte braucht keine Moonraker-Integration mehr (Details unten bei 2.0.0b1).
+
+**Neu**
+- **Spule in Spoolman direkt aus der Karte anlegen:** In der Spulenauswahl gibt es *Neue Spule anlegen*, vorausgefüllt mit Material, Hersteller und Farbe des Kopfs (RFID-Daten, wenn ein Tag da ist). Hersteller und Filament werden wiederverwendet, wenn es sie gibt, sonst angelegt; die neue Spule wird dem Kopf sofort zugeordnet (mit SpoolLink per `SET_SPOOL_ID`). Auch als Dienst `snapmaker_u1_card.create_spool`.
+- **Kamera-Zoom geht von selbst zurück:** nach 60 s ohne Bedienung und immer, wenn man die Seite verlässt, die App wechselt oder die Karte wegscrollt. Kartenoption `camera_zoom_reset` (Sekunden, `0` = nie).
+
+**Behoben**
+- „Zweite Kamera (USB) gefunden“ ohne USB-Kamera: paxx12 listet die eingebaute Kamera doppelt (MJPEG und WebRTC). Als zweite Kamera zählt jetzt nur eine Webcam in einem anderen Ordner (`/webcam2/`). Die Entität *Kamera 2* wird dann nicht verfügbar und kann gelöscht werden.
+- Selbsttest: Deaktivierte Entitäten der Moonraker-Integration werden nicht mehr mitgezählt.
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0b1
 
 **Beta of 2.0 – please test and report back.** Installs only if you turn on *Show beta versions* for this repository in HACS (in the redownload dialog). Everything from 1.6.3 is included.
