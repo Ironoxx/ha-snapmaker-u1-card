@@ -34,7 +34,7 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 
 **Good to know when updating**
 - Restart Home Assistant and reload the dashboard.
-- To try without the Moonraker integration: *Settings → Devices & services → Moonraker → ⋮ → Disable*. Your own automations with its entities need the new entities instead.
+- Best do without the Moonraker integration now: it queries the printer a second time and only adds load. *Settings → Devices & services → Moonraker → ⋮ → Disable* (or remove it). Your own automations with its entities need the new entities instead.
 - The README is shorter now; details moved to the [docs](https://github.com/Ironoxx/ha-snapmaker-u1-card/tree/main/docs).
 
 ⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
@@ -70,7 +70,7 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 
 **Gut zu wissen beim Update**
 - Home Assistant neu starten und das Dashboard neu laden.
-- Zum Ausprobieren ohne Moonraker-Integration: *Einstellungen → Geräte & Dienste → Moonraker → ⋮ → Deaktivieren*. Eigene Automationen mit deren Entitäten brauchen dann die neuen Entitäten.
+- Am besten verzichtest du jetzt auf die Moonraker-Integration: Sie fragt den Drucker ein zweites Mal ab und belastet ihn nur zusätzlich. *Einstellungen → Geräte & Dienste → Moonraker → ⋮ → Deaktivieren* (oder entfernen). Eigene Automationen mit deren Entitäten brauchen dann die neuen Entitäten.
 - Das README ist jetzt kürzer; die Details stehen in den [Docs](https://github.com/Ironoxx/ha-snapmaker-u1-card/tree/main/docs/de).
 
 ⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)

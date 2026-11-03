@@ -89,7 +89,7 @@ The integration talks to Moonraker on the printer (port 80); the stock firmware 
 
 **Updating:** update in HACS and restart Home Assistant. Settings, history and spool assignments are kept. Do not delete and re-add the integration, that starts a new entry without your history.
 
-**Moonraker integration:** not needed since 2.0. An existing one can stay; the card only falls back to it when its own values are missing. You can also disable or remove it.
+**Moonraker integration:** not needed since 2.0, and best left out. It queries the printer on top of this integration, which only adds load on the printer for values the card already has. If you have it installed, disable or remove it; it is not required, and the card only falls back to it when its own values are missing.
 
 ## Documentation
 

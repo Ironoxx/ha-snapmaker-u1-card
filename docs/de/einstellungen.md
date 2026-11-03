@@ -101,4 +101,4 @@ Der zweite Weg ist nötig, weil Home Assistant Seiten schon ausliefert, bevor ei
 
 ## Moonraker-Integration (optional)
 
-Seit 2.0 nicht mehr nötig: Die Karte bekommt alle Werte und Steuerungen von dieser Integration. Eine vorhandene [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) kann bleiben; die Karte nimmt bevorzugt die eigenen Werte und greift nur auf die Moonraker-Entitäten zurück, wenn sie fehlen. Bei mehreren Druckern `prefix` in der Karte setzen.
+Seit 2.0 nicht mehr nötig: Die Karte bekommt alle Werte und Steuerungen von dieser Integration. Am besten verzichtest du auf die [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) daneben: Sie fragt den Drucker ein zweites Mal ab und belastet ihn nur zusätzlich. Behältst du sie, nimmt die Karte bevorzugt die eigenen Werte und greift nur auf die Moonraker-Entitäten zurück, wenn diese fehlen. Bei mehreren Druckern `prefix` in der Karte setzen.

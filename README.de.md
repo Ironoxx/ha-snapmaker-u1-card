@@ -87,7 +87,7 @@ Die Integration spricht mit Moonraker auf dem Drucker (Port 80); die Stock-Firmw
 
 **Update:** in HACS aktualisieren und Home Assistant neu starten. Einstellungen, Verlauf und Spulenzuordnung bleiben erhalten. Die Integration nicht löschen und neu hinzufügen, das legt einen neuen Eintrag ohne deinen Verlauf an.
 
-**Moonraker-Integration:** seit 2.0 nicht mehr nötig. Eine vorhandene kann bleiben; die Karte greift nur darauf zurück, wenn eigene Werte fehlen. Du kannst sie auch deaktivieren oder entfernen.
+**Moonraker-Integration:** seit 2.0 nicht mehr nötig, und am besten verzichtest du darauf. Sie fragt den Drucker zusätzlich zu dieser Integration ab und belastet ihn damit nur für Werte, die die Karte ohnehin schon hat. Ist sie installiert, deaktiviere oder entferne sie; ein Muss ist das nicht, die Karte greift nur darauf zurück, wenn eigene Werte fehlen.
 
 ## Dokumentation
 

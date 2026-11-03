@@ -101,4 +101,4 @@ The second path is needed because Home Assistant serves pages before custom inte
 
 ## Moonraker integration (optional)
 
-Not needed since 2.0: the card gets all values and controls from this integration. An existing [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) can stay; the card prefers its own values and only falls back to the Moonraker entities when they are missing. With several printers set `prefix` in the card.
+Not needed since 2.0: the card gets all values and controls from this integration. We recommend not using the [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) next to it: it queries the printer a second time and only adds load. If you keep it, the card prefers its own values and only falls back to the Moonraker entities when they are missing. With several printers set `prefix` in the card.
