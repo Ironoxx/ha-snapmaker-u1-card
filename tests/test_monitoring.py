@@ -96,6 +96,16 @@ def test_downsample() -> None:
     out = downsample(store, step=5)
     assert out["series"]["extruder"] == {"temperatures": [3.0, 6.0], "targets": [0.0, 0.0]}
     assert "fan" not in out["series"]
+    # chamber and stepper drivers (monitors, None while the motor is off) keep the time axis
+    store = {"temperature_sensor cavity": {"temperatures": [26, 26, 27, 27, 27, 28]},
+             "tmc2240 stepper_x": {"temperatures": [None] * 5 + [40]},
+             "tmc2240 stepper_y": {"temperatures": [None] * 6}}
+    out = downsample(store, step=5)["series"]
+    assert out["cavity"] == {"temperatures": [26.6, 28.0], "targets": []}
+    assert out["stepper_x"]["temperatures"] == [None, 40.0]
+    assert "stepper_y" not in out, "never on: no line"
+    out = downsample({"temperature_sensor mcu_temp": {"temperatures": [40] * 5}}, step=5)["series"]
+    assert out == {"mcu_temp": {"temperatures": [40.0], "targets": []}}, "further sensors of the config"
 
 
 # ── Integration ─────────────────────────────────────────────────────────────

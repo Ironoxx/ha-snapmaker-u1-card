@@ -207,6 +207,12 @@ export const RenderMixin = (Base) => class extends Base {
       b.addEventListener("click", () => this._openVideo(Number(b.dataset.video)))
     );
 
+    const tc = r.querySelector("[data-tchart]");
+    if (tc) tc.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-tser]");
+      if (b) this._toggleTempSeries(b.dataset.tser);
+    });
+
     r.querySelectorAll("[data-more]").forEach((el) =>
       el.addEventListener("click", () => this._more(el.dataset.more))
     );

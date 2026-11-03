@@ -78,6 +78,19 @@ class LayerView(HomeAssistantView):
 
 TEMPS_URL = f"/api/{DOMAIN}/temps"
 TEMP_SERIES = ("extruder", "extruder1", "extruder2", "extruder3", "heater_bed")
+# 2.0: chamber air and the X/Y stepper drivers as extra lines (shown name -> store keys)
+EXTRA_SERIES = {"cavity": ("temperature_sensor cavity",),
+                "stepper_x": ("tmc2240 stepper_x", "tmc2209 stepper_x", "tmc5160 stepper_x"),
+                "stepper_y": ("tmc2240 stepper_y", "tmc2209 stepper_y", "tmc5160 stepper_y")}
+
+
+def _avg(values: list[Any], step: int) -> list[float | None]:
+    """Mean per ``step`` values; None where a chunk has no number (driver off) – keeps the time axis."""
+    out: list[float | None] = []
+    for i in range(0, len(values), step):
+        nums = [v for v in values[i:i + step] if isinstance(v, (int, float)) and not isinstance(v, bool)]
+        out.append(round(sum(nums) / len(nums), 1) if nums else None)
+    return out
 
 
 def downsample(store: dict[str, Any], step: int = 5) -> dict[str, Any]:
@@ -87,12 +100,20 @@ def downsample(store: dict[str, Any], step: int = 5) -> dict[str, Any]:
         series = store.get(name)
         if not isinstance(series, dict):
             continue
-        row: dict[str, list[float | None]] = {}
-        for key in ("temperatures", "targets"):
-            values = [v for v in series.get(key) or [] if isinstance(v, (int, float))]
-            row[key] = [round(sum(chunk) / len(chunk), 1)
-                        for chunk in (values[i:i + step] for i in range(0, len(values), step)) if chunk]
-        out[name] = row
+        out[name] = {key: _avg(series.get(key) or [], step) for key in ("temperatures", "targets")}
+    extra = dict(EXTRA_SERIES)
+    # any further sensor the printer config has (e.g. MCU or board sensors added by a mod)
+    for key in store:
+        kind, _, sensor = key.partition(" ")
+        if kind in ("temperature_sensor", "temperature_fan") and sensor and sensor != "cavity":
+            extra.setdefault(sensor, (key,))
+    for name, keys in extra.items():
+        series = next((store[k] for k in keys if isinstance(store.get(k), dict)), None)
+        if series is None:
+            continue
+        temps = _avg(series.get("temperatures") or [], step)
+        if any(v is not None for v in temps):
+            out[name] = {"temperatures": temps, "targets": []}
     return {"step": step, "series": out}
 
 

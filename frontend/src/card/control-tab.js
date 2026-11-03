@@ -4,6 +4,10 @@ import { DOMAIN } from "../const.js";
 import { esc, num } from "../format.js";
 import { tr } from "../i18n.js";
 
+const TEMP_HIDDEN = "snapmaker-u1-card.temp-hidden";
+const KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y"];
+const EXTRA_COLORS = ["#fdd835", "#d81b60", "#5e35b1", "#00897b", "#c0ca33"];
+
 export const ControlTabMixin = (Base) => class extends Base {
   _sectionClimate() {
     const d = this._d;
@@ -61,6 +65,22 @@ export const ControlTabMixin = (Base) => class extends Base {
     } catch (e) { /* next attempt */ } finally { this._tBusy = false; }
   }
 
+  /** Lines hidden by a tap on the legend (per browser). */
+  _tempHidden() {
+    if (!this._tHidden) {
+      try { this._tHidden = new Set(JSON.parse(window.localStorage.getItem(TEMP_HIDDEN) || "[]")); } catch (e) { this._tHidden = new Set(); }
+    }
+    return this._tHidden;
+  }
+
+  _toggleTempSeries(key) {
+    const h = this._tempHidden();
+    if (h.has(key)) h.delete(key); else h.add(key);
+    try { window.localStorage.setItem(TEMP_HIDDEN, JSON.stringify([...h])); } catch (e) { /* no storage */ }
+    const box = this.shadowRoot && this.shadowRoot.querySelector("[data-tchart]");
+    if (box) box.innerHTML = this._tempSvg();
+  }
+
   _tempSvg() {
     const t = this._temps;
     if (!t) return `<div class="t-label">${tr("Lädt …")}</div>`;
@@ -68,38 +88,62 @@ export const ControlTabMixin = (Base) => class extends Base {
     const series = t.series || null;
     if (!series || !Object.keys(series).length) return `<div class="t-label">${tr("Noch keine Daten.")}</div>`;
     const heads = this._d ? this._d.heads : [];
-    const names = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed"];
-    const colors = ["#e53935", "#1e88e5", "#43a047", "#fb8c00", "#8e24aa"];
+    const hidden = this._tempHidden();
+    const isNum = (v) => typeof v === "number" && Number.isFinite(v);
+    // heads and bed (actual + target), then chamber and stepper drivers (actual only)
+    const defs = [
+      ...["extruder", "extruder1", "extruder2", "extruder3"].map((k, i) => ({
+        key: k, color: ["#e53935", "#1e88e5", "#43a047", "#fb8c00"][i],
+        label: (heads[i] && heads[i].name) || tr("Kopf {n}", { n: i + 1 }), heater: true })),
+      { key: "heater_bed", color: "#8e24aa", label: tr("Bett"), heater: true, always: true },
+      { key: "cavity", color: "#00acc1", label: tr("Innenraum") },
+      { key: "stepper_x", color: "#8d6e63", label: tr("Stepper X") },
+      { key: "stepper_y", color: "#9e9e9e", label: tr("Stepper Y") },
+      // further sensors of the printer config (mods): own colours, name from Klipper
+      ...Object.keys(series).filter((k) => !KNOWN_SERIES.includes(k)).map((k, i) => ({
+        key: k, color: EXTRA_COLORS[i % EXTRA_COLORS.length], label: k.replace(/_/g, " ") })),
+    ].filter((s) => {
+      const d = series[s.key];
+      if (!d || !(d.temperatures || []).some(isNum)) return false;
+      // cold, unused heads stay out of the chart and the legend
+      return !s.heater || s.always || d.temperatures.some((v) => v > 45) || (d.targets || []).some((v) => v > 0);
+    });
+    if (!defs.length) return `<div class="t-label">${tr("Noch keine Daten.")}</div>`;
+    const shown = defs.filter((s) => !hidden.has(s.key));
     const W = 300, H = 120, PAD = 22;
     let max = 60, n = 0;
-    names.forEach((k) => { const s = series[k]; if (!s) return;
-      n = Math.max(n, s.temperatures.length);
-      [...s.temperatures, ...s.targets].forEach((v) => { if (v > max) max = v; }); });
+    defs.forEach((s) => { n = Math.max(n, series[s.key].temperatures.length); });
+    shown.forEach((s) => { [...series[s.key].temperatures, ...(series[s.key].targets || [])].forEach((v) => { if (isNum(v) && v > max) max = v; }); });
     max = Math.ceil((max + 10) / 50) * 50;
     if (n < 2) return `<div class="t-label">${tr("Noch keine Daten.")}</div>`;
     const x = (i) => PAD + (i / (n - 1)) * (W - PAD - 4);
     const y = (v) => H - 14 - (v / max) * (H - 22);
+    // gaps (stepper off) split the line
     const line = (vals, color, dash, width) => {
       const off = n - vals.length;
-      const pts = vals.map((v, i) => `${x(i + off).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${width}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linejoin="round"/>`;
+      const runs = [];
+      let cur = [];
+      vals.forEach((v, i) => {
+        if (isNum(v)) cur.push(`${x(i + off).toFixed(1)},${y(v).toFixed(1)}`);
+        else if (cur.length) { runs.push(cur); cur = []; }
+      });
+      if (cur.length) runs.push(cur);
+      return runs.filter((r) => r.length > 1).map((r) => `<polyline points="${r.join(" ")}" fill="none" stroke="${color}" stroke-width="${width}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linejoin="round"/>`).join("");
     };
     const grid = [0, max / 2, max].map((v) => `<line x1="${PAD}" x2="${W - 4}" y1="${y(v)}" y2="${y(v)}" class="tgrid"/><text x="${PAD - 3}" y="${y(v) + 3}" class="tax" text-anchor="end">${Math.round(v)}</text>`).join("");
     const mins = Math.round((n * (t.step || 5)) / 60);
     const xlab = `<text x="${PAD}" y="${H - 2}" class="tax">−${mins} min</text><text x="${W - 4}" y="${H - 2}" class="tax" text-anchor="end">${tr("jetzt")}</text>`;
-    const legend = [];
-    const paths = names.map((k, i) => {
-      const s = series[k];
-      if (!s || !s.temperatures.length) return "";
-      const cur = s.temperatures[s.temperatures.length - 1];
-      const active = s.temperatures.some((v) => v > 45) || s.targets.some((v) => v > 0);
-      if (!active && k !== "heater_bed") return "";
-      const label = k === "heater_bed" ? tr("Bett") : (heads[i] && heads[i].name) || tr("Kopf {n}", { n: i + 1 });
-      legend.push(`<span><i style="background:${colors[i]}"></i>${esc(label)} ${num(cur, 0, "°C")}</span>`);
-      return line(s.targets, colors[i], "3 3", 0.8) + line(s.temperatures, colors[i], "", 1.6);
+    const paths = shown.map((s) => {
+      const d = series[s.key];
+      return (s.heater ? line(d.targets || [], s.color, "3 3", 0.8) : "") + line(d.temperatures, s.color, "", s.heater ? 1.6 : 1.2);
+    }).join("");
+    const legend = defs.map((s) => {
+      const vals = series[s.key].temperatures.filter(isNum);
+      const off = hidden.has(s.key);
+      return `<button type="button" class="tleg" data-tser="${s.key}" aria-pressed="${!off}" title="${esc(off ? tr("Einblenden") : tr("Ausblenden"))}"><i style="background:${s.color}"></i>${esc(s.label)} ${num(vals[vals.length - 1], 0, "°C")}</button>`;
     }).join("");
     return `<svg viewBox="0 0 ${W} ${H}" class="tsvg" role="img" aria-label="${tr("Temperaturverlauf")}">${grid}${paths}${xlab}</svg>
-      <div class="tlegend">${legend.join("")}</div>`;
+      <div class="tlegend">${legend}</div>`;
   }
 
   async _fetchJson(url) {

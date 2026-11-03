@@ -177,6 +177,23 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   tc.innerHTML = card._tempSvg();
   assert.strictEqual(tc.querySelectorAll("polyline").length, 4, "Kopf 1 + Bett, je Ist und Soll; kalter Kopf 2 ausgelassen");
   assert.match(text(tc.querySelector(".tlegend")), /Kopf 1 219 °C.*Bett 60 °C/);
+  // chamber and stepper lines (gaps while the motor is off), legend hides a line
+  card._temps = { step: 5, series: {
+    extruder: { temperatures: [30, 120, 210, 219], targets: [220, 220, 220, 220] },
+    heater_bed: { temperatures: [25, 40, 58, 60], targets: [60, 60, 60, 60] },
+    cavity: { temperatures: [26, 27, 28, 29], targets: [] },
+    stepper_x: { temperatures: [null, 38, 40, 41], targets: [] },
+    stepper_y: { temperatures: [null, null, null, null], targets: [] } } };
+  tc.innerHTML = card._tempSvg();
+  assert.strictEqual(tc.querySelectorAll("polyline").length, 6, "Kopf + Bett je 2, Innenraum, Stepper X");
+  assert.match(text(tc.querySelector(".tlegend")), /Innenraum 29 °C.*Stepper X 41 °C/);
+  assert.ok(!/Stepper Y/.test(text(tc)), "nie an: keine Legende");
+  tc.querySelector('[data-tser="stepper_x"]').click();
+  assert.strictEqual(tc.querySelectorAll("polyline").length, 5, "ausgeblendet");
+  assert.strictEqual(tc.querySelector('[data-tser="stepper_x"]').getAttribute("aria-pressed"), "false");
+  assert.match(w.localStorage.getItem("snapmaker-u1-card.temp-hidden"), /stepper_x/);
+  tc.querySelector('[data-tser="stepper_x"]').click();
+  assert.strictEqual(tc.querySelectorAll("polyline").length, 6, "wieder da");
   card._temps = null;
   assert.match(card._tempSvg(), /Lädt/);
   card._temps = { step: 5, series: {} };

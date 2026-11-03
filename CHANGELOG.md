@@ -4,6 +4,25 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0b5
+
+**Fifth beta of 2.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b4 is included (details below).
+
+**New**
+- **Temperature chart with chamber and stepper drivers:** besides the heads and the bed, the chart in the *Control* tab now shows the chamber air and the X/Y stepper drivers (while the motors are on – gaps when they are off). Further temperature sensors in the printer configuration (e.g. added by a mod) show up automatically. Tap an entry in the legend to hide or show its line; the choice is remembered per browser.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Fünfte Beta von 2.0.** Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist. Alles aus b1–b4 ist enthalten (Details unten).
+
+**Neu**
+- **Temperaturverlauf mit Innenraum und Schrittmotortreibern:** Neben Köpfen und Bett zeigt das Diagramm im Reiter *Steuerung* jetzt auch die Innenraumluft und die Treiber X/Y (solange die Motoren an sind – Lücken, wenn sie aus sind). Weitere Temperatursensoren aus der Druckerkonfiguration (z. B. durch einen Mod) erscheinen automatisch. Ein Tipp auf einen Eintrag der Legende blendet die Linie aus oder ein; die Wahl merkt sich der Browser.
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0b4
 
 **Fourth beta of 2.0 – fixes from testing b3.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b3 is included (details below).

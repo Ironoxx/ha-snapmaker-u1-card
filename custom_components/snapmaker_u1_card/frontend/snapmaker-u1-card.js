@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.0.0b4";
+  var CARD_VERSION = "2.0.0b5";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -576,6 +576,7 @@
     "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
     "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
     "Spule für {head}": "Spool for {head}",
+    "Einblenden": "Show",
     "Einstellungen": "Settings",
     "Änderungen verwerfen?": "Discard changes?",
     "Lade Einstellungen …": "Loading settings …",
@@ -2353,6 +2354,9 @@
   };
 
   // frontend/src/card/control-tab.js
+  var TEMP_HIDDEN = "snapmaker-u1-card.temp-hidden";
+  var KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y"];
+  var EXTRA_COLORS = ["#fdd835", "#d81b60", "#5e35b1", "#00897b", "#c0ca33"];
   var ControlTabMixin = (Base) => class extends Base {
     _sectionClimate() {
       const d = this._d;
@@ -2420,6 +2424,28 @@
         this._tBusy = false;
       }
     }
+    /** Lines hidden by a tap on the legend (per browser). */
+    _tempHidden() {
+      if (!this._tHidden) {
+        try {
+          this._tHidden = new Set(JSON.parse(window.localStorage.getItem(TEMP_HIDDEN) || "[]"));
+        } catch (e) {
+          this._tHidden = /* @__PURE__ */ new Set();
+        }
+      }
+      return this._tHidden;
+    }
+    _toggleTempSeries(key) {
+      const h = this._tempHidden();
+      if (h.has(key)) h.delete(key);
+      else h.add(key);
+      try {
+        window.localStorage.setItem(TEMP_HIDDEN, JSON.stringify([...h]));
+      } catch (e) {
+      }
+      const box = this.shadowRoot && this.shadowRoot.querySelector("[data-tchart]");
+      if (box) box.innerHTML = this._tempSvg();
+    }
     _tempSvg() {
       const t = this._temps;
       if (!t) return `<div class="t-label">${tr("Lädt …")}</div>`;
@@ -2427,16 +2453,40 @@
       const series = t.series || null;
       if (!series || !Object.keys(series).length) return `<div class="t-label">${tr("Noch keine Daten.")}</div>`;
       const heads = this._d ? this._d.heads : [];
-      const names = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed"];
-      const colors = ["#e53935", "#1e88e5", "#43a047", "#fb8c00", "#8e24aa"];
+      const hidden = this._tempHidden();
+      const isNum = (v) => typeof v === "number" && Number.isFinite(v);
+      const defs = [
+        ...["extruder", "extruder1", "extruder2", "extruder3"].map((k, i) => ({
+          key: k,
+          color: ["#e53935", "#1e88e5", "#43a047", "#fb8c00"][i],
+          label: heads[i] && heads[i].name || tr("Kopf {n}", { n: i + 1 }),
+          heater: true
+        })),
+        { key: "heater_bed", color: "#8e24aa", label: tr("Bett"), heater: true, always: true },
+        { key: "cavity", color: "#00acc1", label: tr("Innenraum") },
+        { key: "stepper_x", color: "#8d6e63", label: tr("Stepper X") },
+        { key: "stepper_y", color: "#9e9e9e", label: tr("Stepper Y") },
+        // further sensors of the printer config (mods): own colours, name from Klipper
+        ...Object.keys(series).filter((k) => !KNOWN_SERIES.includes(k)).map((k, i) => ({
+          key: k,
+          color: EXTRA_COLORS[i % EXTRA_COLORS.length],
+          label: k.replace(/_/g, " ")
+        }))
+      ].filter((s) => {
+        const d = series[s.key];
+        if (!d || !(d.temperatures || []).some(isNum)) return false;
+        return !s.heater || s.always || d.temperatures.some((v) => v > 45) || (d.targets || []).some((v) => v > 0);
+      });
+      if (!defs.length) return `<div class="t-label">${tr("Noch keine Daten.")}</div>`;
+      const shown = defs.filter((s) => !hidden.has(s.key));
       const W = 300, H = 120, PAD = 22;
       let max = 60, n = 0;
-      names.forEach((k) => {
-        const s = series[k];
-        if (!s) return;
-        n = Math.max(n, s.temperatures.length);
-        [...s.temperatures, ...s.targets].forEach((v) => {
-          if (v > max) max = v;
+      defs.forEach((s) => {
+        n = Math.max(n, series[s.key].temperatures.length);
+      });
+      shown.forEach((s) => {
+        [...series[s.key].temperatures, ...series[s.key].targets || []].forEach((v) => {
+          if (isNum(v) && v > max) max = v;
         });
       });
       max = Math.ceil((max + 10) / 50) * 50;
@@ -2445,25 +2495,32 @@
       const y = (v) => H - 14 - v / max * (H - 22);
       const line = (vals, color, dash, width) => {
         const off = n - vals.length;
-        const pts = vals.map((v, i) => `${x(i + off).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-        return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${width}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linejoin="round"/>`;
+        const runs = [];
+        let cur = [];
+        vals.forEach((v, i) => {
+          if (isNum(v)) cur.push(`${x(i + off).toFixed(1)},${y(v).toFixed(1)}`);
+          else if (cur.length) {
+            runs.push(cur);
+            cur = [];
+          }
+        });
+        if (cur.length) runs.push(cur);
+        return runs.filter((r) => r.length > 1).map((r) => `<polyline points="${r.join(" ")}" fill="none" stroke="${color}" stroke-width="${width}" ${dash ? `stroke-dasharray="${dash}"` : ""} stroke-linejoin="round"/>`).join("");
       };
       const grid = [0, max / 2, max].map((v) => `<line x1="${PAD}" x2="${W - 4}" y1="${y(v)}" y2="${y(v)}" class="tgrid"/><text x="${PAD - 3}" y="${y(v) + 3}" class="tax" text-anchor="end">${Math.round(v)}</text>`).join("");
       const mins = Math.round(n * (t.step || 5) / 60);
       const xlab = `<text x="${PAD}" y="${H - 2}" class="tax">−${mins} min</text><text x="${W - 4}" y="${H - 2}" class="tax" text-anchor="end">${tr("jetzt")}</text>`;
-      const legend = [];
-      const paths = names.map((k, i) => {
-        const s = series[k];
-        if (!s || !s.temperatures.length) return "";
-        const cur = s.temperatures[s.temperatures.length - 1];
-        const active = s.temperatures.some((v) => v > 45) || s.targets.some((v) => v > 0);
-        if (!active && k !== "heater_bed") return "";
-        const label = k === "heater_bed" ? tr("Bett") : heads[i] && heads[i].name || tr("Kopf {n}", { n: i + 1 });
-        legend.push(`<span><i style="background:${colors[i]}"></i>${esc(label)} ${num(cur, 0, "°C")}</span>`);
-        return line(s.targets, colors[i], "3 3", 0.8) + line(s.temperatures, colors[i], "", 1.6);
+      const paths = shown.map((s) => {
+        const d = series[s.key];
+        return (s.heater ? line(d.targets || [], s.color, "3 3", 0.8) : "") + line(d.temperatures, s.color, "", s.heater ? 1.6 : 1.2);
+      }).join("");
+      const legend = defs.map((s) => {
+        const vals = series[s.key].temperatures.filter(isNum);
+        const off = hidden.has(s.key);
+        return `<button type="button" class="tleg" data-tser="${s.key}" aria-pressed="${!off}" title="${esc(off ? tr("Einblenden") : tr("Ausblenden"))}"><i style="background:${s.color}"></i>${esc(s.label)} ${num(vals[vals.length - 1], 0, "°C")}</button>`;
       }).join("");
       return `<svg viewBox="0 0 ${W} ${H}" class="tsvg" role="img" aria-label="${tr("Temperaturverlauf")}">${grid}${paths}${xlab}</svg>
-      <div class="tlegend">${legend.join("")}</div>`;
+      <div class="tlegend">${legend}</div>`;
     }
     async _fetchJson(url) {
       const h = this._hass;
@@ -4082,6 +4139,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .tsvg .tax { font-size: 8px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
   .tlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--u1-on-variant); margin-top: 4px; }
   .tlegend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  button.tleg { all: unset; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: var(--u1-r-s); font: inherit; color: inherit; }
+  button.tleg:hover { background: color-mix(in srgb, var(--u1-on) 8%, transparent); }
+  button.tleg:focus-visible { outline: 2px solid var(--u1-primary); }
+  button.tleg[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
   .mesh { display: flex; flex-direction: column; align-items: center; }
   .mesh-svg { width: 100%; max-width: 420px; height: auto; display: block; }
   .mesh-svg .tax { font-size: 9px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
@@ -4902,6 +4963,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       r.querySelectorAll("[data-video]").forEach(
         (b) => b.addEventListener("click", () => this._openVideo(Number(b.dataset.video)))
       );
+      const tc = r.querySelector("[data-tchart]");
+      if (tc) tc.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-tser]");
+        if (b) this._toggleTempSeries(b.dataset.tser);
+      });
       r.querySelectorAll("[data-more]").forEach(
         (el) => el.addEventListener("click", () => this._more(el.dataset.more))
       );

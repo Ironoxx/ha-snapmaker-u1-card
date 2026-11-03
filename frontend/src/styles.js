@@ -456,6 +456,10 @@ export const STYLES = `
   .tsvg .tax { font-size: 8px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
   .tlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--u1-on-variant); margin-top: 4px; }
   .tlegend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  button.tleg { all: unset; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: var(--u1-r-s); font: inherit; color: inherit; }
+  button.tleg:hover { background: color-mix(in srgb, var(--u1-on) 8%, transparent); }
+  button.tleg:focus-visible { outline: 2px solid var(--u1-primary); }
+  button.tleg[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
   .mesh { display: flex; flex-direction: column; align-items: center; }
   .mesh-svg { width: 100%; max-width: 420px; height: auto; display: block; }
   .mesh-svg .tax { font-size: 9px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }

@@ -485,6 +485,7 @@ export const EN = {
   "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
   "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
   "Spule für {head}": "Spool for {head}",
+  "Einblenden": "Show",
   "Einstellungen": "Settings",
   "Änderungen verwerfen?": "Discard changes?",
   "Lade Einstellungen …": "Loading settings …",

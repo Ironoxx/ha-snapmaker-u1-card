@@ -469,7 +469,7 @@ The integration installs the blueprint *Snapmaker U1 – status light* into `con
 
 ## Temperature chart
 
-In the *Control* tab: actual and target temperature of the active heads and the bed over the last 20 minutes. Moonraker stores this data anyway (`/server/temperature_store`); the card fetches it every 10 s through the integration, only while the tab is visible.
+In the *Control* tab: actual and target temperature of the active heads and the bed over the last 20 minutes. Moonraker stores this data anyway (`/server/temperature_store`); the card fetches it every 10 s through the integration, only while the tab is visible. Also shown: chamber air and the X/Y stepper drivers (only while the motors are on; Klipper reports no driver temperature otherwise). Tap an entry in the legend to hide or show its line; the choice is remembered per browser.
 
 ## Idle shutdown
 

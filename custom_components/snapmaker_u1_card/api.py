@@ -345,7 +345,8 @@ class MoonrakerClient:
 
     async def temperature_store(self) -> dict[str, Any]:
         """Temperature history Moonraker keeps anyway (1/s, 20 min)."""
-        result = await self._get_json("/server/temperature_store", {"include_monitors": "false"})
+        # monitors: the stepper drivers (tmc2240) report a temperature too
+        result = await self._get_json("/server/temperature_store", {"include_monitors": "true"})
         return result if isinstance(result, dict) else {}
 
     async def delete_file(self, path: str, root: str = "gcodes") -> None:
