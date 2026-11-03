@@ -4,6 +4,44 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.0b1
+
+Beta. Top cover and chamber heater features, and a smoother camera away from home.
+
+**Testers wanted:** I built the top cover and Panda Breath / DragonBreath parts from the firmware without owning the hardware. If you have one, please try it and report back in an [issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues), ideally with the diagnostics file. Without a top cover or chamber heater nothing of this shows up.
+
+**Top cover**
+- Mode right in the card (chips on the top cover panel) and as `select.…_top_cover_mode`: idle, cool, preheat, hot (`SET_PURIFIER_MODE`).
+- Chamber target as a slider (presets 35/45/55 °C, up to 70 °C) and as `number.…_top_cover_chamber_target`.
+- The maintenance item *Replace the air filter* counts the real filter hours of the top cover instead of print hours.
+
+**Chamber heater and notifications**
+- New notification *Chamber is warm* (event `chamber_ready`, off by default): once when the chamber heater (Panda Breath / DragonBreath) or the top cover in preheat/hot reaches its target. A new target arms it again; no message after a restart.
+- The temperature chart shows the chamber heater with its target.
+
+**Camera**
+- Away from home (Nabu Casa) the stream through Home Assistant restarted every time the card rebuilt (pause, Spoolman weight, maintenance progress and so on): HA's player closes its connection when it leaves the page. The camera frame now stays in place during a rebuild. With `debug_camera: true` the browser console shows what caused a rebuild.
+
+### Deutsch
+
+Beta. Funktionen für Top Cover und Kammerheizung, und eine ruhigere Kamera unterwegs.
+
+**Tester gesucht:** Top Cover und Panda Breath / DragonBreath habe ich nach der Firmware gebaut, ohne die Hardware selbst zu haben. Wer eins hat: bitte ausprobieren und als [Issue](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues) melden, am besten mit Diagnose-Datei. Ohne Top Cover oder Kammerheizung taucht davon nichts auf.
+
+**Top Cover**
+- Modus direkt in der Karte (Chips im Top-Cover-Bereich) und als `select.…_top_cover_modus`: Leerlauf, Kammer kühlen, vorheizen, heiß (`SET_PURIFIER_MODE`).
+- Kammer-Soll als Regler (Schnellwerte 35/45/55 °C, bis 70 °C) und als `number.…_top_cover_kammer_soll`.
+- Der Wartungspunkt *Luftfilter wechseln* zählt die echten Filterstunden der Top Cover statt Druckstunden.
+
+**Kammerheizung und Benachrichtigungen**
+- Neue Benachrichtigung *Kammer ist warm* (Ereignis `chamber_ready`, standardmäßig aus): einmal, wenn die Kammerheizung (Panda Breath / DragonBreath) oder die Top Cover beim Vorheizen/Heiß ihr Soll erreicht. Ein neues Soll schaltet sie wieder scharf; nach einem Neustart keine Meldung.
+- Der Temperaturverlauf zeigt die Kammerheizung mit ihrem Soll.
+
+**Kamera**
+- Unterwegs (Nabu Casa) startete der Stream über Home Assistant bei jedem Neuaufbau der Karte neu (Pause, Spoolman-Gewicht, Wartungsfortschritt usw.): Der Player von HA baut seine Verbindung ab, sobald er die Seite verlässt. Der Kamerarahmen bleibt beim Neuaufbau jetzt stehen. Mit `debug_camera: true` zeigt die Browser-Konsole, was einen Neuaufbau ausgelöst hat.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0
 
 **No Moonraker integration needed any more.** The card used to need a second integration for temperatures, fans, light, axes, layer and most controls. Since 2.0 the Snapmaker U1 Card integration talks to the printer itself for all of it. One integration, one setup, and everything reacts faster: values arrive over the live connection within about a second instead of every 30 s. Thanks to everyone who tested the seven betas!

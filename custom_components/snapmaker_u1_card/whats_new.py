@@ -80,6 +80,26 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 
 ⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
     },
+    "2.1": {
+        "de": ("Snapmaker U1 Card 2.1 – das ist neu", f"""- **Top Cover steuern:** Modus (Leerlauf, Kammer kühlen, vorheizen, heiß) und Kammer-Soll direkt in der Karte und als Entitäten
+- **Kammer ist warm:** Benachrichtigung, sobald Kammerheizung oder Top Cover das Soll erreicht (in den Einstellungen einschalten)
+- **Luftfilter-Wartung** zählt die echten Filterstunden der Top Cover
+- **Temperaturverlauf** mit Panda Breath / DragonBreath
+- **Kamera unterwegs:** kein Neustart des Streams mehr, wenn sich die Karte neu aufbaut
+
+Top Cover, Panda Breath und DragonBreath werden automatisch erkannt; ohne sie ändert sich nichts. Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/releases/tag/v2.1.0)
+
+⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
+        "en": ("Snapmaker U1 Card 2.1 – what's new", f"""- **Control the top cover:** mode (idle, cool, preheat, hot) and chamber target right in the card and as entities
+- **Chamber is warm:** notification once the chamber heater or top cover reaches its target (turn it on in the settings)
+- **Air filter maintenance** counts the real filter hours of the top cover
+- **Temperature chart** with Panda Breath / DragonBreath
+- **Camera away from home:** the stream no longer restarts when the card rebuilds
+
+Top cover, Panda Breath and DragonBreath are detected automatically; without them nothing changes. Please reload the dashboard once. All details: [release notes]({GITHUB}/releases/tag/v2.1.0)
+
+⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
+    },
 }
 
 
