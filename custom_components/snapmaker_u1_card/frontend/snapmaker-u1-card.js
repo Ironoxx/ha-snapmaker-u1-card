@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.0.0b5";
+  var CARD_VERSION = "2.0.0b6";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -576,6 +576,9 @@
     "Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen": "Spoolman spool #{id} (chosen manually) – tap to change",
     "Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g": "Spool #{id} has {rest} g left, about {need} g needed",
     "Spule für {head}": "Spool for {head}",
+    "CPU": "CPU",
+    "Temperatur des Rechners im Drucker (Moonraker).": "Temperature of the printer's computer (Moonraker).",
+    "CPU-Temperatur": "CPU temperature",
     "Einblenden": "Show",
     "Einstellungen": "Settings",
     "Änderungen verwerfen?": "Discard changes?",
@@ -1171,6 +1174,7 @@
         mcuLoad: this._n(`sensor.${P("mcu_load")}`),
         mcuAwake: this._n(`sensor.${P("mcu_awake")}`),
         memory: this._n(`sensor.${P("memory_used")}`),
+        cpuTemp: this._n(`sensor.${P("cpu_temp")}`),
         sysLoad: this._n(`sensor.${P("system_load")}`),
         totalsJobs: this._n(`sensor.${P("totals_jobs")}`, 0),
         totalsTime: this._s(`sensor.${P("totals_print_time")}`, "—"),
@@ -2355,7 +2359,7 @@
 
   // frontend/src/card/control-tab.js
   var TEMP_HIDDEN = "snapmaker-u1-card.temp-hidden";
-  var KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y"];
+  var KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y", "cpu"];
   var EXTRA_COLORS = ["#fdd835", "#d81b60", "#5e35b1", "#00897b", "#c0ca33"];
   var ControlTabMixin = (Base) => class extends Base {
     _sectionClimate() {
@@ -2466,6 +2470,7 @@
         { key: "cavity", color: "#00acc1", label: tr("Innenraum") },
         { key: "stepper_x", color: "#8d6e63", label: tr("Stepper X") },
         { key: "stepper_y", color: "#9e9e9e", label: tr("Stepper Y") },
+        { key: "cpu", color: "#78909c", label: tr("CPU") },
         // further sensors of the printer config (mods): own colours, name from Klipper
         ...Object.keys(series).filter((k) => !KNOWN_SERIES.includes(k)).map((k, i) => ({
           key: k,
@@ -2596,6 +2601,7 @@
             ${this._row(tr("Idle-Status"), `<span data-su1="idle">${esc(d.idleTimeout)}</span>`)}
             ${this._row(tr("MCU Host (Last / Wach)"), `<span data-su1="mcuhost">${num(d.mcuLoad, 2, "%")} / ${num(d.mcuAwake, 2, "%")}</span>`, null, mcuTip)}
             ${heads}
+            ${d.cpuTemp !== null ? this._row(tr("CPU-Temperatur"), `<span data-su1="cputemp">${num(d.cpuTemp, 1, "°C")}</span>`, null, tr("Temperatur des Rechners im Drucker (Moonraker).")) : ""}
             ${this._row(tr("Arbeitsspeicher"), `<span data-su1="mem">${num(d.memory, 1, "%")}</span>`, null, tr("Belegter Arbeitsspeicher des Druckerrechners (ohne Puffer und Cache)."))}
             <div class="row" title="${tr("Load Average über 1 Minute: im Mittel laufende oder wartende Prozesse. Liegt der Wert unter der Zahl der Kerne, ist der Drucker nicht ausgelastet.")}">
               <span class="k">${tr("Systemlast (Ø 1 min)")}</span><span class="v" data-su1="sys">${this._loadText()}</span></div>
@@ -4783,7 +4789,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         `f${this._ents.flow && d.flow !== null}`,
         d.headStates.join(","),
         // stepper driver temperatures only exist while the motors are on (Klipper reports None otherwise)
-        `st${d.stepX !== null}${d.stepY !== null}`,
+        `st${d.stepX !== null}${d.stepY !== null}${d.cpuTemp !== null}`,
         `${this._ents.camera}${this._hasCamera2()}`,
         this._pendingKey()
       ].join("~");
@@ -5061,6 +5067,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       set("queue", esc(d.queueState));
       set("mcuhost", `${num(d.mcuLoad, 2, "%")} / ${num(d.mcuAwake, 2, "%")}`);
       set("mem", num(d.memory, 1, "%"));
+      set("cputemp", num(d.cpuTemp, 1, "°C"));
       set("sys", this._loadText());
       set("stepx", num(d.stepX, 1, "°C"));
       if (d.chamber) {

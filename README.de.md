@@ -464,7 +464,7 @@ Die Integration legt den Blueprint *Snapmaker U1 – status light* unter `config
 
 ## Temperaturverlauf
 
-Im Reiter *Steuerung*: Ist- und Solltemperatur der aktiven Köpfe und des Betts der letzten 20 Minuten. Die Daten speichert Moonraker ohnehin (`/server/temperature_store`); die Karte holt sie alle 10 s über die Integration, nur solange der Reiter sichtbar ist. Außerdem zu sehen: Innenraumluft und die Schrittmotortreiber X/Y (nur bei eingeschalteten Motoren; sonst meldet Klipper keine Treibertemperatur). Ein Tipp auf einen Eintrag der Legende blendet die Linie aus oder ein; die Wahl merkt sich der Browser.
+Im Reiter *Steuerung*: Ist- und Solltemperatur der aktiven Köpfe und des Betts der letzten 20 Minuten. Die Daten speichert Moonraker ohnehin (`/server/temperature_store`); die Karte holt sie alle 10 s über die Integration, nur solange der Reiter sichtbar ist. Außerdem zu sehen: die CPU-Temperatur des Rechners im Drucker (Moonraker sendet sie jede Sekunde, die Integration zeichnet sie auf), Innenraumluft und die Schrittmotortreiber X/Y (nur bei eingeschalteten Motoren; sonst meldet Klipper keine Treibertemperatur). Ein Tipp auf einen Eintrag der Legende blendet die Linie aus oder ein; die Wahl merkt sich der Browser.
 
 ## Leerlauf-Abschaltung
 

@@ -50,7 +50,7 @@ export const RenderMixin = (Base) => class extends Base {
       `f${this._ents.flow && d.flow !== null}`,
       d.headStates.join(","),
       // stepper driver temperatures only exist while the motors are on (Klipper reports None otherwise)
-      `st${d.stepX !== null}${d.stepY !== null}`,
+      `st${d.stepX !== null}${d.stepY !== null}${d.cpuTemp !== null}`,
       `${this._ents.camera}${this._hasCamera2()}`,
       this._pendingKey(),
     ].join("~");
@@ -315,6 +315,7 @@ export const RenderMixin = (Base) => class extends Base {
     set("queue", esc(d.queueState));
     set("mcuhost", `${num(d.mcuLoad, 2, "%")} / ${num(d.mcuAwake, 2, "%")}`);
     set("mem", num(d.memory, 1, "%"));
+    set("cputemp", num(d.cpuTemp, 1, "°C"));
     set("sys", this._loadText());
     set("stepx", num(d.stepX, 1, "°C"));
     if (d.chamber) {

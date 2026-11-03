@@ -405,6 +405,9 @@
       },
       "current_layer": {
         "name": "Layer"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
       }
     },
     "switch": {

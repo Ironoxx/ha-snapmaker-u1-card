@@ -106,6 +106,10 @@ def test_downsample() -> None:
     assert "stepper_y" not in out, "never on: no line"
     out = downsample({"temperature_sensor mcu_temp": {"temperatures": [40] * 5}}, step=5)["series"]
     assert out == {"mcu_temp": {"temperatures": [40.0], "targets": []}}, "further sensors of the config"
+    # CPU history (live, 1/s) aligned to the end of the store
+    store = {"extruder": {"temperatures": [20] * 10, "targets": [0] * 10}}
+    out = downsample(store, step=5, cpu=[50, 50, 51, 51, 52, 52, 53])["series"]
+    assert out["cpu"]["temperatures"] == [50.0, 51.8], "3 s missing at the start -> padded"
 
 
 # ── Integration ─────────────────────────────────────────────────────────────

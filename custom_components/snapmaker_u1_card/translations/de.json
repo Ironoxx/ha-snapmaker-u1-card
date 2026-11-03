@@ -405,6 +405,9 @@
       },
       "current_layer": {
         "name": "Schicht"
+      },
+      "cpu_temperature": {
+        "name": "CPU-Temperatur"
       }
     },
     "switch": {

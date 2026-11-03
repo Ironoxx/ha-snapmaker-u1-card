@@ -17,6 +17,7 @@ import contextlib
 import json
 import logging
 import time
+from collections import deque
 from collections.abc import Callable
 from typing import Any
 
@@ -68,6 +69,10 @@ class LiveListener:
         self.extra: dict[str, list[str] | None] = {}
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._pending = 0
+        # 2.0: CPU temperature of the printer's computer (Moonraker sends it once a second);
+        # kept like Moonraker's temperature store: 1 value/s, 20 min
+        self.cpu_temp: float | None = None
+        self.cpu_hist: deque[float | None] = deque(maxlen=1200)
 
     def start(self, hass: Any) -> None:
         if self._task is None:
@@ -164,6 +169,13 @@ class LiveListener:
                     merge(self.status, diff)
                     self.messages += 1
                     self._on_update(diff)
+                elif method == "notify_proc_stat_update":
+                    params = data.get("params") or []
+                    stats = params[0] if params and isinstance(params[0], dict) else {}
+                    temp = stats.get("cpu_temp")
+                    ok = isinstance(temp, (int, float)) and not isinstance(temp, bool)
+                    self.cpu_temp = round(float(temp), 1) if ok else None
+                    self.cpu_hist.append(self.cpu_temp)
                 elif method == "notify_klippy_ready":
                     await self._subscribe(ws)
                 elif method in ("notify_klippy_disconnected", "notify_klippy_shutdown"):

@@ -183,9 +183,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
     heater_bed: { temperatures: [25, 40, 58, 60], targets: [60, 60, 60, 60] },
     cavity: { temperatures: [26, 27, 28, 29], targets: [] },
     stepper_x: { temperatures: [null, 38, 40, 41], targets: [] },
-    stepper_y: { temperatures: [null, null, null, null], targets: [] } } };
+    stepper_y: { temperatures: [null, null, null, null], targets: [] },
+    cpu: { temperatures: [50, 51, 52, 52], targets: [] } } };
   tc.innerHTML = card._tempSvg();
-  assert.strictEqual(tc.querySelectorAll("polyline").length, 6, "Kopf + Bett je 2, Innenraum, Stepper X");
+  assert.match(text(tc.querySelector(".tlegend")), /CPU 52 °C/);
+  tc.querySelector('[data-tser="cpu"]').click();
+  assert.strictEqual(tc.querySelectorAll("polyline").length, 6, "Kopf + Bett je 2, Innenraum, Stepper X (CPU aus)");
   assert.match(text(tc.querySelector(".tlegend")), /Innenraum 29 °C.*Stepper X 41 °C/);
   assert.ok(!/Stepper Y/.test(text(tc)), "nie an: keine Legende");
   tc.querySelector('[data-tser="stepper_x"]').click();

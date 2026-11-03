@@ -4,6 +4,25 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.0.0b6
+
+**Sixth beta of 2.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b5 is included (details below).
+
+**New**
+- **CPU temperature of the printer's computer:** Moonraker sends it once a second; the integration records it for the temperature chart (last 20 minutes, can be hidden via the legend like every line), shows it in the *System* tab and offers it as a diagnostic sensor *CPU temperature*. Useful in a closed enclosure with ABS/ASA.
+
+⭐ Like it? Star the project on [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Buy me a coffee on Ko-fi](https://ko-fi.com/ironoxx)
+
+---
+**Deutsch**
+
+**Sechste Beta von 2.0.** Wird nur installiert, wenn in HACS für dieses Repository *Betaversionen anzeigen* eingeschaltet ist. Alles aus b1–b5 ist enthalten (Details unten).
+
+**Neu**
+- **CPU-Temperatur des Rechners im Drucker:** Moonraker sendet sie jede Sekunde; die Integration zeichnet sie für den Temperaturverlauf auf (letzte 20 Minuten, wie jede Linie über die Legende ausblendbar), zeigt sie im Reiter *System* und bietet sie als Diagnose-Sensor *CPU-Temperatur* an. Nützlich im geschlossenen Gehäuse mit ABS/ASA.
+
+⭐ Gefällt dir das? Gib dem Projekt einen Stern auf [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Kauf mir einen Kaffee auf Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.0.0b5
 
 **Fifth beta of 2.0.** Installs only with *Show beta versions* turned on for this repository in HACS. Everything from b1–b4 is included (details below).

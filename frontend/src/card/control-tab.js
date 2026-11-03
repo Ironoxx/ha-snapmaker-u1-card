@@ -5,7 +5,7 @@ import { esc, num } from "../format.js";
 import { tr } from "../i18n.js";
 
 const TEMP_HIDDEN = "snapmaker-u1-card.temp-hidden";
-const KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y"];
+const KNOWN_SERIES = ["extruder", "extruder1", "extruder2", "extruder3", "heater_bed", "cavity", "stepper_x", "stepper_y", "cpu"];
 const EXTRA_COLORS = ["#fdd835", "#d81b60", "#5e35b1", "#00897b", "#c0ca33"];
 
 export const ControlTabMixin = (Base) => class extends Base {
@@ -99,6 +99,7 @@ export const ControlTabMixin = (Base) => class extends Base {
       { key: "cavity", color: "#00acc1", label: tr("Innenraum") },
       { key: "stepper_x", color: "#8d6e63", label: tr("Stepper X") },
       { key: "stepper_y", color: "#9e9e9e", label: tr("Stepper Y") },
+      { key: "cpu", color: "#78909c", label: tr("CPU") },
       // further sensors of the printer config (mods): own colours, name from Klipper
       ...Object.keys(series).filter((k) => !KNOWN_SERIES.includes(k)).map((k, i) => ({
         key: k, color: EXTRA_COLORS[i % EXTRA_COLORS.length], label: k.replace(/_/g, " ") })),

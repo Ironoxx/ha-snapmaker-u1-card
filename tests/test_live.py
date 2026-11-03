@@ -42,6 +42,8 @@ async def test_listener_subscribe_diff_resubscribe(socket_enabled) -> None:
                                                "toolhead": {"extruder": "extruder"}}}})
                 await ws.send_json({"jsonrpc": "2.0", "method": "notify_status_update",
                                     "params": [{"toolhead": {"extruder": "extruder2"}}, 2]})
+                await ws.send_json({"jsonrpc": "2.0", "method": "notify_proc_stat_update",
+                                    "params": [{"cpu_temp": 48.27, "system_cpu_usage": {}}]})
                 await ws.send_json({"jsonrpc": "2.0", "method": "notify_klippy_ready"})
             else:
                 # second subscription after a Klipper restart: refused, then end
@@ -71,6 +73,7 @@ async def test_listener_subscribe_diff_resubscribe(socket_enabled) -> None:
     assert listener.status["toolhead"]["extruder"] == "extruder2"
     assert listener.status["print_stats"]["info"] == {"current_layer": 1}
     assert states[0] is True and states[-1] is False
+    assert listener.cpu_temp == 48.3 and list(listener.cpu_hist) == [48.3], "CPU temperature from proc stats"
 
 
 @pytest.mark.live

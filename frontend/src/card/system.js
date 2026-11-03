@@ -29,6 +29,7 @@ export const SystemMixin = (Base) => class extends Base {
             ${this._row(tr("Idle-Status"), `<span data-su1="idle">${esc(d.idleTimeout)}</span>`)}
             ${this._row(tr("MCU Host (Last / Wach)"), `<span data-su1="mcuhost">${num(d.mcuLoad, 2, "%")} / ${num(d.mcuAwake, 2, "%")}</span>`, null, mcuTip)}
             ${heads}
+            ${d.cpuTemp !== null ? this._row(tr("CPU-Temperatur"), `<span data-su1="cputemp">${num(d.cpuTemp, 1, "°C")}</span>`, null, tr("Temperatur des Rechners im Drucker (Moonraker).")) : ""}
             ${this._row(tr("Arbeitsspeicher"), `<span data-su1="mem">${num(d.memory, 1, "%")}</span>`, null, tr("Belegter Arbeitsspeicher des Druckerrechners (ohne Puffer und Cache)."))}
             <div class="row" title="${tr("Load Average über 1 Minute: im Mittel laufende oder wartende Prozesse. Liegt der Wert unter der Zahl der Kerne, ist der Drucker nicht ausgelastet.")}">
               <span class="k">${tr("Systemlast (Ø 1 min)")}</span><span class="v" data-su1="sys">${this._loadText()}</span></div>

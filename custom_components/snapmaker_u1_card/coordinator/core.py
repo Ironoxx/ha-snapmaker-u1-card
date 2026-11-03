@@ -310,7 +310,10 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             for obj, fields in self.live.status.items():
                 if isinstance(fields, dict):
                     status.setdefault(obj, {}).update(fields)
-        return machine_build(status, self._machine_extras)
+        extras = dict(self._machine_extras)
+        if self.live.connected and self.live.cpu_temp is not None:
+            extras["cpu_temp"] = (self.live.cpu_temp, {"unit_of_measurement": "°C"})
+        return machine_build(status, extras)
 
     async def _update_machine_extras(self, print_state: str | None) -> None:
         """Values outside Klipper's objects: memory, job queue, totals, file data."""
@@ -321,7 +324,10 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             self._machine_slow_at = now
             slow: dict[str, Any] = {}
             try:
-                mem = (await self.client.proc_stats()).get("system_memory") or {}
+                proc = await self.client.proc_stats()
+                mem = proc.get("system_memory") or {}
+                if isinstance(proc.get("cpu_temp"), (int, float)):
+                    slow["cpu_temp"] = (round(float(proc["cpu_temp"]), 1), {"unit_of_measurement": "°C"})
                 if isinstance(mem.get("total"), (int, float)) and mem["total"] > 0 and isinstance(mem.get("used"), (int, float)):
                     slow["memory_used"] = (round(mem["used"] / mem["total"] * 100, 1), {"unit_of_measurement": "%"})
             except MoonrakerError:

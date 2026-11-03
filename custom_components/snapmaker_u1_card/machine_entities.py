@@ -71,6 +71,9 @@ class TemperatureSensor(U1Entity, SensorEntity):
             self._attr_translation_key = "bed_temperature"
         elif key == "cavity":
             self._attr_translation_key = "cavity_temperature"
+        elif key == "cpu":
+            self._attr_translation_key = "cpu_temperature"
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         else:
             self._attr_translation_key = "nozzle_temperature"
             self._attr_translation_placeholders = {"head": str(HEAD_SUFFIX[key])}
@@ -78,7 +81,9 @@ class TemperatureSensor(U1Entity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         m = self.coordinator.data.machine
-        return m.get("cavity_temp") if self._key == "cavity" else m.get(f"{self._key}_temperature")
+        if self._key in ("cavity", "cpu"):
+            return m.get(f"{self._key}_temp")
+        return m.get(f"{self._key}_temperature")
 
 
 class ProgressSensor(U1Entity, SensorEntity):

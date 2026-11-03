@@ -75,6 +75,8 @@ async def async_setup_entry(
             out[f"temp_{k}"] = lambda k=k: TemperatureSensor(coordinator, k)
         if "cavity_temp" in m:
             out["temp_cavity"] = lambda: TemperatureSensor(coordinator, "cavity")
+        if "cpu_temp" in m:
+            out["temp_cpu"] = lambda: TemperatureSensor(coordinator, "cpu")
         return out
 
     add_machine(entry, wanted, async_add_entities)

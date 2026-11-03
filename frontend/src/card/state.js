@@ -248,6 +248,7 @@ export const StateMixin = (Base) => class extends Base {
       mcuLoad: this._n(`sensor.${P("mcu_load")}`),
       mcuAwake: this._n(`sensor.${P("mcu_awake")}`),
       memory: this._n(`sensor.${P("memory_used")}`),
+      cpuTemp: this._n(`sensor.${P("cpu_temp")}`),
       sysLoad: this._n(`sensor.${P("system_load")}`),
 
       totalsJobs: this._n(`sensor.${P("totals_jobs")}`, 0),

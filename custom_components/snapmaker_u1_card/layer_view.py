@@ -93,8 +93,11 @@ def _avg(values: list[Any], step: int) -> list[float | None]:
     return out
 
 
-def downsample(store: dict[str, Any], step: int = 5) -> dict[str, Any]:
-    """Average Moonraker's temperature store (1 value/s) over ``step`` seconds."""
+def downsample(store: dict[str, Any], step: int = 5, cpu: list[float | None] | None = None) -> dict[str, Any]:
+    """Average Moonraker's temperature store (1 value/s) over ``step`` seconds.
+
+    ``cpu``: CPU temperature history from the live connection (1/s), aligned to the store's end.
+    """
     out: dict[str, Any] = {}
     for name in TEMP_SERIES:
         series = store.get(name)
@@ -114,6 +117,11 @@ def downsample(store: dict[str, Any], step: int = 5) -> dict[str, Any]:
         temps = _avg(series.get("temperatures") or [], step)
         if any(v is not None for v in temps):
             out[name] = {"temperatures": temps, "targets": []}
+    if cpu and any(v is not None for v in cpu):
+        length = max((len(s.get("temperatures") or []) for s in store.values() if isinstance(s, dict)), default=0)
+        values = list(cpu)[-length:] if length else list(cpu)
+        values = [None] * (length - len(values)) + values
+        out["cpu"] = {"temperatures": _avg(values, step), "targets": []}
     return {"step": step, "series": out}
 
 
@@ -134,4 +142,4 @@ class TempsView(HomeAssistantView):
             store = await entry.runtime_data.client.temperature_store()
         except MoonrakerError:
             return self.json({"step": 5, "series": {}, "offline": True})
-        return self.json(downsample(store))
+        return self.json(downsample(store, cpu=list(entry.runtime_data.live.cpu_hist)))
