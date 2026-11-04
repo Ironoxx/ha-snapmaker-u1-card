@@ -178,6 +178,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         # Layer view of the running file (layers.py)
         self.layer_view: dict[str, Any] = {"key": None, "status": "none"}
         self._layer_task: asyncio.Task | None = None
+        # 2.1: G-code preview of any file (print dialog), key -> state; a few kept on disk
+        self._previews: dict[str, dict[str, Any]] = {}
         # Live subscription (live.py) and once-per-print events (first layer, almost done)
         self.live = LiveListener(client, self._on_live, self._on_live_state, self.power_is_off)
         self._event_key: Any = None

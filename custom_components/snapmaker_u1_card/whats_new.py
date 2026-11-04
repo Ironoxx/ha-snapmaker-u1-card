@@ -82,6 +82,7 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
     },
     "2.1": {
         "de": ("Snapmaker U1 Card 2.1 – das ist neu", f"""- **Reiter Spoolman:** alle Spulen mit Restgewicht, Filter und Suche; neue Spule mit Vorschlägen aus Spoolman und dem Spoolman-Katalog
+- **G-Code-Vorschau:** Schichtansicht mit Schiebereglern für Schicht und Fortschritt, Vorschau jeder Datei im Druckdialog
 - **Top Cover steuern:** Modus (Leerlauf, Kammer kühlen, vorheizen, heiß) und Kammer-Soll direkt in der Karte und als Entitäten
 - **Kammer ist warm:** Benachrichtigung, sobald Kammerheizung oder Top Cover das Soll erreicht (in den Einstellungen einschalten)
 - **Luftfilter-Wartung** zählt die echten Filterstunden der Top Cover
@@ -92,6 +93,7 @@ Top Cover, Panda Breath und DragonBreath werden automatisch erkannt; ohne sie ä
 
 ⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
         "en": ("Snapmaker U1 Card 2.1 – what's new", f"""- **Spoolman tab:** every spool with its remaining weight, filter and search; new spool with suggestions from Spoolman and its catalogue
+- **G-code preview:** layer view with sliders for layer and progress, preview of any file in the print dialog
 - **Control the top cover:** mode (idle, cool, preheat, hot) and chamber target right in the card and as entities
 - **Chamber is warm:** notification once the chamber heater or top cover reaches its target (turn it on in the settings)
 - **Air filter maintenance** counts the real filter hours of the top cover

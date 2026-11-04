@@ -194,6 +194,10 @@ The stock firmware stores timelapses in the Moonraker folder `camera` (`Name_YYY
 
 ## Layer view
 
+**Sliders.** *Layer* browses the whole file: earlier layers show as printed, later ones as pending, the head line says which layer is printing; *Live* goes back to it. *Progress* plays the current layer in file order (with the nozzle in the bed view); dragging it fully to the right goes back to the live position.
+
+**G-code preview before printing.** In the print dialog, *G-code preview* shows any file layer by layer with the same two sliders. The integration downloads and splits the file in the background on first opening (a few seconds for large files) and keeps the last three previews; the running print's file is not downloaded again. The colours follow the mapping chosen in the dialog: filament → head → spool loaded there. API: `/api/snapmaker_u1_card/layers/<entry>?file=<path>&layer=<n>`.
+
 **Exclude objects.** With objects defined in the file (`EXCLUDE_OBJECT_DEFINE`, Orca: "Label objects" on), the layer view draws their outlines and lists them below. Tapping one asks for confirmation and then calls `snapmaker_u1_card.exclude_object` (Klipper `EXCLUDE_OBJECT NAME=…`): the printer skips the object from now on. The object being printed is highlighted, excluded ones are faded. The last remaining object cannot be excluded (cancel the print instead).
 
 As soon as the card requests the layer view during a print for the first time, the integration downloads the file once and splits it into layers (`;LAYER_CHANGE` or `SET_PRINT_STATS_INFO`). The card only fetches the current layer (`/api/snapmaker_u1_card/layers/…`, authenticated) and every 5 s the file position (`virtual_sdcard.file_position`, from the live subscription, without asking the printer): everything before it is printed. Colour per filament: head from the mapping → colour of the spool loaded there, otherwise the colour from the file. Arcs (G2/G3) are split into short segments, points closer than 0.35 mm are merged. For large files the preparation takes a few seconds.

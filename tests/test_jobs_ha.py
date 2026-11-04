@@ -319,3 +319,41 @@ async def test_no_listing_while_printing(hass: HomeAssistant, mock_client, notif
         await _refresh(hass, entry)
         assert "camera" in roots
         hist.assert_called()
+
+
+async def test_gcode_preview(hass: HomeAssistant, mock_client, hass_client, notifications) -> None:
+    """2.1: any file, parsed once per version; a few kept; the running print's data reused."""
+    from tests.test_features import LAYERED
+
+    downloads = []
+
+    async def download_to(self, root, path, target, hass_):
+        downloads.append(path)
+        target.write_text(LAYERED)
+        return len(LAYERED)
+
+    with patch(f"{API}.download_to", download_to):
+        entry = await _setup(hass)
+        client = await hass_client()
+        url = f"/api/{DOMAIN}/layers/{entry.entry_id}"
+        first = await (await client.get(f"{url}?file=a.gcode&layer=1")).json()
+        assert first["status"] == "parsing" and first["preview"] is True
+        await hass.async_block_till_done(wait_background_tasks=True)
+        body = await (await client.get(f"{url}?file=a.gcode&layer=2")).json()
+        assert body["status"] == "ready" and body["layer"] == 2 and body["total"] == 3
+        assert body["first"] == 1 and body["last"] == 3 and body["colors"]["map_table"] == []
+        assert (await (await client.get(f"{url}?file=a.gcode&layer=9")).json())["missing"] is True
+        assert downloads == ["a.gcode"], "nur einmal geladen"
+        for name in ("b.gcode", "c.gcode", "d.gcode"):
+            await client.get(f"{url}?file={name}")
+            await hass.async_block_till_done(wait_background_tasks=True)
+        coord = entry.runtime_data
+        assert len(coord._previews) == 3, "älteste Vorschau entfernt"
+        assert not any(k.startswith("a.gcode|") for k in coord._previews)
+        # the running print: its own layer data, no second download
+        _status(mock_client, "printing", "sub/new.gcode")
+        await _refresh(hass, entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        downloads.clear()
+        body = await (await client.get(f"{url}?file=sub/new.gcode&layer=1")).json()
+        assert body["status"] == "ready" and downloads == []

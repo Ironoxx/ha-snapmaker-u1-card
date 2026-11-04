@@ -461,6 +461,9 @@ def layer_payload(meta: dict[str, Any], store: Path, number: int) -> dict[str, A
     return {
         "layer": number,
         "total": meta["total"],
+        # first layer number (a file may count from 0); the card's layer slider starts there
+        "first": index[0][0],
+        "last": index[-1][0],
         "z": lay["z"],
         "bbox": meta["bbox"],
         "tools": meta["tools"],

@@ -585,5 +585,11 @@ export const EN = {
   "in Spoolman": "in Spoolman",
   "keinem Kopf": "no head",
   "z. B. Polymaker PLA Pro schwarz": "e.g. Polymaker PLA Pro black",
-  "{n} Spulen · {kg} kg": "{n} spools · {kg} kg"
+  "{n} Spulen · {kg} kg": "{n} spools · {kg} kg",
+  // 2.1 G-code preview
+  "G-Code-Vorschau": "G-code preview",
+  "Fortschritt": "Progress",
+  "Live": "Live",
+  "Verlauf in der Schicht": "Progress within the layer",
+  "druckt {n}": "printing {n}"
 };

@@ -194,6 +194,10 @@ Die Stock-Firmware legt Zeitraffer im Moonraker-Ordner `camera` ab (`Name_JJJJMM
 
 ## Schichtansicht
 
+**Schieberegler.** *Schicht* blättert durch die ganze Datei: frühere Schichten erscheinen gedruckt, spätere als folgend, die Kopfzeile sagt, welche Schicht gerade gedruckt wird; *Live* springt zurück. *Fortschritt* spielt die Schicht in Dateireihenfolge ab (in der Bettansicht mit Düse); ganz nach rechts geschoben gilt wieder die Live-Position.
+
+**G-Code-Vorschau vor dem Druck.** Im Druckdialog zeigt *G-Code-Vorschau* jede Datei Schicht für Schicht mit denselben zwei Reglern. Beim ersten Öffnen lädt die Integration die Datei im Hintergrund und zerlegt sie (bei großen Dateien einige Sekunden); die letzten drei Vorschauen bleiben gespeichert, die Datei des laufenden Drucks wird nicht erneut geladen. Die Farben folgen der Zuordnung im Dialog: Filament → Kopf → dort geladene Spule. API: `/api/snapmaker_u1_card/layers/<entry>?file=<pfad>&layer=<n>`.
+
 **Objekte ausschließen.** Sind in der Datei Objekte definiert (`EXCLUDE_OBJECT_DEFINE`, Orca: „Objekte beschriften“ an), zeichnet die Schichtansicht ihre Umrisse und listet sie darunter. Antippen fragt nach und ruft dann `snapmaker_u1_card.exclude_object` auf (Klipper `EXCLUDE_OBJECT NAME=…`): Der Drucker lässt das Objekt ab sofort aus. Das gerade gedruckte Objekt ist hervorgehoben, ausgeschlossene sind blass. Das letzte verbleibende Objekt lässt sich nicht ausschließen (dafür den Druck abbrechen).
 
 Sobald die Karte die Schichtansicht während eines Drucks zum ersten Mal anfragt, lädt die Integration die Datei einmal vom Drucker und zerlegt sie in Schichten (`;LAYER_CHANGE` bzw. `SET_PRINT_STATS_INFO`). Die Karte holt nur die aktuelle Schicht (`/api/snapmaker_u1_card/layers/…`, angemeldet) und alle 5 s die Dateiposition (`virtual_sdcard.file_position`, aus dem Live-Abo, ohne Anfrage beim Drucker): was davor liegt, ist gedruckt. Farbe je Filament: Kopf laut Zuordnung → Farbe der dort geladenen Spule, sonst die Farbe aus der Datei. Bögen (G2/G3) werden in kurze Stücke zerlegt, Punkte näher als 0,35 mm zusammengefasst. Bei großen Dateien dauert die Vorbereitung einige Sekunden.

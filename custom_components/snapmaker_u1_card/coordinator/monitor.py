@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import shutil
 import tempfile
@@ -37,6 +38,7 @@ from .helpers import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+PREVIEW_KEEP = 3
 
 
 class PrintMonitorMixin:
@@ -88,6 +90,62 @@ class PrintMonitorMixin:
         if self.layer_view.get("key") == key:
             self.layer_view = {"key": key, "status": "ready", "file": filename, "meta": meta}
             _LOGGER.debug("Layer view %s: %s layers", filename, meta["total"])
+
+    # ── G-code preview of any file (2.1) ───────────────────────────────────
+    def request_preview(self, filename: str) -> dict[str, Any]:
+        """State of the preview of ``filename``: parsing | ready (meta, store) | error.
+
+        The file is downloaded and split like the running print's (same store
+        format), once per file version; the running print's own data is reused.
+        The last PREVIEW_KEEP previews stay on disk.
+        """
+        active = self._print_state.get("active") or {}
+        if active.get("file") == filename and self.layer_view.get("status") == "ready":
+            return {"status": "ready", "file": filename, "meta": self.layer_view["meta"], "store": self.layer_store}
+        info = next((f for f in self._all_files or self._files if f.get("path") == filename), None)
+        key = f"{filename}|{(info or {}).get('modified')}"
+        state = self._previews.get(key)
+        if state is None:
+            store = self.layer_store.parent / (
+                f"{self.config_entry.entry_id}-preview-{hashlib.sha1(key.encode()).hexdigest()[:12]}.jsonl")
+            state = self._previews[key] = {"status": "parsing", "file": filename, "store": store}
+            self.hass.async_create_background_task(self._parse_preview(key, filename, state), f"{DOMAIN} preview")
+            self._drop_old_previews()
+        state["used"] = time.time()
+        return state
+
+    def _drop_old_previews(self) -> None:
+        done = sorted((k for k, v in self._previews.items() if v["status"] != "parsing"),
+                      key=lambda k: self._previews[k].get("used", 0))
+        for k in done[:max(0, len(self._previews) - PREVIEW_KEEP)]:
+            store = self._previews.pop(k)["store"]
+            self.hass.async_add_executor_job(store.unlink, True)
+
+    async def _parse_preview(self, key: str, filename: str, state: dict[str, Any]) -> None:
+        tmp = Path(await self.hass.async_add_executor_job(tempfile.mkdtemp, None, "u1preview"))
+        try:
+            src = tmp / "file.gcode"
+            await self.client.download_to("gcodes", filename, src, self.hass)
+            part = tmp / "layers.jsonl"
+            meta = await self.hass.async_add_executor_job(parse_layers, src, part)
+
+            def _move() -> None:
+                state["store"].parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(part), str(state["store"]))
+
+            await self.hass.async_add_executor_job(_move)
+            state.update(status="ready", meta=meta)
+        except Exception as err:  # noqa: BLE001 - a preview must never interfere
+            _LOGGER.info("Preview of %s not possible: %s", filename, err)
+            state.update(status="error", error=str(err))
+        finally:
+            await self.hass.async_add_executor_job(shutil.rmtree, tmp, True)
+
+    def preview_colors(self, filename: str) -> dict[str, Any]:
+        """File colours per logical filament; no mapping yet (that is chosen in the print dialog)."""
+        info = next((f for f in self._all_files or self._files if f.get("path") == filename), None)
+        fils = {str(f["index"]): f.get("color") for f in (info or {}).get("filaments") or [] if "index" in f}
+        return {"file": fils, "map_table": []}
 
     def layer_colors(self) -> dict[str, Any]:
         """Colours per logical filament (from the file) and mapping to the heads."""

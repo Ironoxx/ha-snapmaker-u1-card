@@ -6,7 +6,7 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 
 ## 2.1.0b2
 
-Beta. Spoolman stock and suggestions for new spools. Includes everything from 2.1.0b1 (top cover mode and chamber target, chamber-warm notification, real filter hours, chamber heater in the chart, camera keeps running when the card rebuilds).
+Beta. Spoolman tab, suggestions for new spools and a G-code preview with sliders. Includes everything from 2.1.0b1 (top cover mode and chamber target, chamber-warm notification, real filter hours, chamber heater in the chart, camera keeps running when the card rebuilds).
 
 **Spoolman stock**
 - New tab *Spoolman* (only with Spoolman set up): every active spool with colour, vendor, material, location, the head it is in and the remaining weight as a bar (orange below the warning threshold).
@@ -19,9 +19,13 @@ Beta. Spoolman stock and suggestions for new spools. Includes everything from 2.
 - Service `create_spool`: new fields `filament_id`, `external_id` and `location`; `material` is optional with either ID.
 - The catalogue needs Spoolman 0.18 or newer with internet access; otherwise only your own filaments are suggested.
 
+**G-code preview with sliders**
+- Layer view during a print: slider *Layer* browses the whole file (earlier layers printed, later ones pending), *Live* goes back; slider *Progress* plays the layer path by path, in the bed view with the nozzle.
+- Print dialog: *G-code preview* shows any file before printing, layer by layer with the same sliders, in the colours of the heads chosen in the dialog. The file is parsed once in the background; the last three previews are kept.
+
 ### Deutsch
 
-Beta. Spoolman-Bestand und Vorschläge für neue Spulen. Enthält alles aus 2.1.0b1 (Top-Cover-Modus und Kammer-Soll, Meldung „Kammer ist warm“, echte Filterstunden, Kammerheizung im Verlauf, Kamera läuft beim Neuaufbau der Karte weiter).
+Beta. Reiter Spoolman, Vorschläge für neue Spulen und G-Code-Vorschau mit Schiebereglern. Enthält alles aus 2.1.0b1 (Top-Cover-Modus und Kammer-Soll, Meldung „Kammer ist warm“, echte Filterstunden, Kammerheizung im Verlauf, Kamera läuft beim Neuaufbau der Karte weiter).
 
 **Spoolman-Bestand**
 - Neuer Reiter *Spoolman* (nur mit eingerichtetem Spoolman): alle aktiven Spulen mit Farbe, Hersteller, Material, Ort, dem Kopf, in dem sie steckt, und dem Restgewicht als Balken (orange unter der Warnschwelle).
@@ -33,6 +37,10 @@ Beta. Spoolman-Bestand und Vorschläge für neue Spulen. Enthält alles aus 2.1.
 - Hersteller und Material schlagen bekannte Namen vor. Neu: Ort, und im Reiter *Spoolman* der Kopf zum Zuordnen (oder keiner). Die Spulenwahl je Kopf bleibt unter den Druckköpfen.
 - Dienst `create_spool`: neue Felder `filament_id`, `external_id` und `location`; `material` ist mit einer der IDs optional.
 - Der Katalog braucht Spoolman 0.18 oder neuer mit Internetzugang; sonst werden nur deine eigenen Filamente vorgeschlagen.
+
+**G-Code-Vorschau mit Schiebereglern**
+- Schichtansicht im Druck: Regler *Schicht* blättert durch die ganze Datei (frühere Schichten gedruckt, spätere folgen), *Live* springt zurück; Regler *Fortschritt* spielt die Schicht Bahn für Bahn ab, in der Bettansicht mit Düse.
+- Druckdialog: *G-Code-Vorschau* zeigt jede Datei vor dem Druck, Schicht für Schicht mit denselben Reglern, in den Farben der im Dialog gewählten Köpfe. Die Datei wird einmal im Hintergrund zerlegt; die letzten drei Vorschauen bleiben gespeichert.
 
 ⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
 

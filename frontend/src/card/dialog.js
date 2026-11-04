@@ -313,6 +313,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
               g.settings.support ? tr("Stützen") : ""].filter(Boolean).join(" · "))}</span>` : ""}</summary>
           ${this._settingsHtml(g)}
         </details>
+        <details class="dlg-settings" data-preview ${g.previewOpen ? "open" : ""}>
+          <summary><ha-icon icon="mdi:layers-search-outline"></ha-icon>${tr("G-Code-Vorschau")}</summary>
+          ${g.previewOpen ? this._pvHtml(g) : ""}
+        </details>
         <div class="dlg-sec">${tr("Filamentzuordnung")}${stale ? ` <span class="t-label">${tr("(Stand vor dem Ausschalten)")}</span>` : ""}</div>
         <div class="map">${rows}</div>
         <div class="dlg-sec">${tr("Optionen")}</div>
@@ -367,6 +371,14 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (del) del.addEventListener("click", () => this._deleteFile());
     const qb = el.querySelector('[data-dlg="queue"]');
     if (qb) qb.addEventListener("click", () => this._submitPrint(true));
+    const pvd = el.querySelector("[data-preview]");
+    if (pvd) pvd.addEventListener("toggle", () => {
+      if (g.previewOpen === pvd.open) return;
+      g.previewOpen = pvd.open;
+      if (pvd.open) { pvd.insertAdjacentHTML("beforeend", this._pvHtml(g)); this._pvWire(g); if (!g.pv || !g.pv.data) this._pvLoad(null); }
+      else pvd.querySelectorAll("[data-pvhost]").forEach((x) => x.remove());
+    });
+    if (g.previewOpen) this._pvWire(g);
     const det = el.querySelector("[data-settings]");
     if (det) det.addEventListener("toggle", () => { g.settingsOpen = det.open; });
     const pin = el.querySelector("[data-pause]");

@@ -37,6 +37,8 @@ class LayerView(HomeAssistantView):
         if entry is None or entry.domain != DOMAIN or not hasattr(entry, "runtime_data"):
             return self.json_message("not found", HTTPStatus.NOT_FOUND)
         coordinator = entry.runtime_data
+        if request.query.get("file"):
+            return await self._preview(hass, request, coordinator, request.query["file"])
         coordinator.request_layers()
         view = coordinator.layer_view
         base = {"status": view.get("status"), "file": view.get("file"), "error": view.get("error")}
@@ -74,6 +76,21 @@ class LayerView(HomeAssistantView):
         if payload is None:
             return self.json({**base, "layer": number, "missing": True, "total": view["meta"]["total"]})
         return self.json({**base, **payload, "colors": coordinator.layer_colors()})
+
+    async def _preview(self, hass: Any, request: web.Request, coordinator: Any, filename: str) -> web.Response:
+        """2.1: one layer of any file (``file=…&layer=N``) for the preview in the print dialog."""
+        state = coordinator.request_preview(filename)
+        base = {"status": state["status"], "file": filename, "error": state.get("error"), "preview": True}
+        if state["status"] != "ready":
+            return self.json(base)
+        try:
+            number = int(request.query.get("layer", "1"))
+        except ValueError:
+            return self.json_message("layer", HTTPStatus.BAD_REQUEST)
+        payload = await hass.async_add_executor_job(layer_payload, state["meta"], state["store"], number)
+        if payload is None:
+            return self.json({**base, "layer": number, "missing": True, "total": state["meta"]["total"]})
+        return self.json({**base, **payload, "colors": coordinator.preview_colors(filename)})
 
 
 TEMPS_URL = f"/api/{DOMAIN}/temps"

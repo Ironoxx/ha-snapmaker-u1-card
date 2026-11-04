@@ -91,6 +91,30 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   card._renderKey = null; card.hass = hass(); await tick();
   assert.strictEqual(R().querySelectorAll("[data-lv] polyline").length, 3, "nach Neuaufbau noch da");
 
+  // 2.1 sliders: browse to layer 3 (ahead of printing layer 2: all pending), Live back
+  const todo = () => [...R().querySelectorAll("[data-lv] polyline")].map((l) => l.classList.contains("todo"));
+  const ls = () => R().querySelector("[data-lvlayer]");
+  assert.ok(ls() && ls().max === "3", "Schicht-Regler");
+  assert.ok(R().querySelector("[data-lvlive]").hidden, "Live erst beim Blättern");
+  card._lvSeek(3); await tick(); await tick();
+  assert.ok(requests.at(-2).includes("layer=3") || requests.some((u) => /layer=3/.test(u)));
+  assert.deepEqual(todo(), [true, true, true], "spätere Schicht: alles folgt");
+  assert.ok(!R().querySelector("[data-lvlive]").hidden);
+  assert.match(R().querySelector('[data-su1="lvhead"]').textContent, /Schicht 3 \/ 3.*druckt 2/);
+  card._lvSeek(1); await tick(); await tick();
+  assert.deepEqual(todo(), [false, false, false], "frühere Schicht: alles gedruckt");
+  // progress slider: 50 % of 100..900 = 500 -> first two printed
+  const st = R().querySelector("[data-lvstep]");
+  st.value = "500"; st.dispatchEvent(new w.Event("input", { bubbles: true }));
+  assert.deepEqual(todo(), [false, false, true], "Fortschritt in der Schicht");
+  st.value = "0"; st.dispatchEvent(new w.Event("input", { bubbles: true }));
+  assert.deepEqual(todo(), [true, true, true]);
+  R().querySelector("[data-lvlive]").click(); await tick(); await tick();
+  assert.strictEqual(card._lv.pinned, null);
+  assert.strictEqual(card._lv.scrub, null);
+  assert.match(R().querySelector('[data-su1="lvhead"]').textContent, /Schicht 2 \/ 3/);
+  assert.deepEqual(todo(), [false, false, true], "wieder live (Position 450)");
+
   // Other tab: no requests
   const before = requests.length;
   R().querySelector('[data-tab="history"]').click();

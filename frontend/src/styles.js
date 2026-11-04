@@ -934,6 +934,15 @@ export const STYLES = `
   .lv-paths polyline.todo { opacity: .28; }
   .lv-empty { fill: var(--u1-on-variant); font-size: 6px; text-anchor: middle; }
   .lv-msg { padding: 16px; text-align: center; }
+  .lv-ctl { display: grid; grid-template-columns: 1fr 1fr auto; gap: 6px 12px; align-items: end; }
+  .lv-ctl[hidden] { display: none; }
+  .lv-range { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--u1-on-variant); min-width: 0; }
+  .lv-range input { width: 100%; margin: 0; accent-color: var(--u1-primary); }
+  .lv-ctl [data-lvlive][hidden] { display: none; }
+  /* while dragging: no fade, the paths follow the slider directly */
+  :is(.lv-panel, .pv):has([data-lvstep]:active) .lv-paths polyline { transition: none; }
+  .pv { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; }
+  @media (max-width: 480px) { .lv-ctl { grid-template-columns: 1fr; } }
   .lv-legend { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 12px; color: var(--u1-on-variant); }
   .lv-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .lv-legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }

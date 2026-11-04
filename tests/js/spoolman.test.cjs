@@ -43,13 +43,19 @@ add("sensor.u1c_druckdateien", "1", { entry_id: "E1", files: [{
   filaments: [{ index: 0, type: "PLA", color: "#FFFFFF", weight: 80, used: true }, { index: 1, type: "PLA", color: "#000000", weight: 10, used: true }],
 }] }, "snapmaker_u1_card", "files");
 
-const calls = [], ws = [];
+const calls = [], ws = [], fetches = [];
 const SUGGEST = [
   { key: "f:9", source: "own", filament_id: 9, vendor: "Generic", name: "PLA Silk Bronze", material: "PLA", color: "#6f4c2f", colors: ["#6f4c2f"], weight: 1000 },
   { key: "x:pm", source: "db", external_id: "polymaker_pla_black", vendor: "Polymaker", name: "PolyTerra PLA Black", material: "PLA", color: "#1a1a1a", colors: ["#1a1a1a"], weight: 1000, spool_weight: 140 },
 ];
 const hass = () => ({ states: JSON.parse(JSON.stringify(states)), entities: reg,
   callService: async (...a) => { calls.push(JSON.parse(JSON.stringify(a))); },
+  fetchWithAuth: async (url) => { fetches.push(url); const q = new URL(url, "http://x").searchParams;
+    const n = Number(q.get("layer"));
+    const body = fetches.length < 2 ? { status: "parsing", preview: true } : { status: "ready", preview: true, layer: n, first: 1, last: 5,
+      total: 5, z: 0.2 * n, bbox: [0, 0, 50, 50], start: 0, end: 1000, segs: [[0, [0, 0, 10, 0], 100], [1, [10, 10, 20, 10], 600]],
+      colors: { file: { 0: "#FFFFFF", 1: "#000000" }, map_table: [] } };
+    return { ok: true, json: async () => body }; },
   callWS: async (m) => { ws.push(m); return m.type.endsWith("/catalog")
     ? { vendors: ["Generic", "Polymaker"], materials: ["PETG", "PLA"], catalog: 1 } : { items: SUGGEST }; } });
 const card = w.document.createElement("snapmaker-u1-card");
@@ -180,6 +186,31 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const pd = card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)");
   assert.ok(/Spule #3 hat noch 60 g, gebraucht werden ca\. 80 g/.test(pd.textContent), pd.textContent.replace(/\s+/g, " "));
   assert.ok(pd.querySelector(".slot-rest"), "Restgewicht an den Kopf-Knoepfen");
+  // 2.1 G-code preview: parsed in the background, sliders, colours of the chosen heads
+  const pvd = pd.querySelector("[data-preview]");
+  assert.ok(pvd && !pvd.open && !pd.querySelector("[data-pvhost]"), "Vorschau zu, nichts geladen");
+  pvd.open = true; pvd.dispatchEvent(new w.Event("toggle"));
+  await new Promise((r) => setTimeout(r, 1700)); await tick();
+  assert.ok(fetches[0].includes("file=teil.gcode") && fetches.length >= 2, fetches.join());
+  const pvhost = () => card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool) [data-pvhost]");
+  const pls = () => [...pvhost().querySelectorAll("polyline")];
+  assert.strictEqual(pls().length, 2);
+  // filament 1 (white) is mapped to head 2 (white spool) -> slot colour
+  assert.strictEqual(pls()[0].getAttribute("stroke"), "#FFFFFF");
+  assert.match(pvhost().querySelector("[data-pvhead]").textContent, /Schicht 1 \/ 5/);
+  assert.ok(!pls().some((l) => l.classList.contains("todo")), "ohne Regler alles normal");
+  const pst = pvhost().querySelector("[data-lvstep]");
+  pst.value = "300"; pst.dispatchEvent(new w.Event("input", { bubbles: true }));
+  assert.deepEqual(pls().map((l) => l.classList.contains("todo")), [false, true]);
+  const plr = pvhost().querySelector("[data-lvlayer]");
+  plr.value = "4"; plr.dispatchEvent(new w.Event("input", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 200)); await tick();
+  assert.ok(fetches.at(-1).includes("layer=4"));
+  assert.match(pvhost().querySelector("[data-pvhead]").textContent, /Schicht 4 \/ 5/);
+  // changing the mapping re-renders the dialog: preview stays open with its layer
+  pd.querySelector('[data-map="0"][data-slot="0"]').click();
+  assert.ok(pvhost(), "Vorschau bleibt offen");
+  assert.strictEqual(pls()[0].getAttribute("stroke"), "#000000", "Farbe des neu gewählten Kopfs");
   // both filaments on head 1 (650 g): no warning
   pd.querySelector('[data-map="0"][data-slot="0"]').click();
   assert.ok(!/gebraucht werden/.test(card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)").textContent));

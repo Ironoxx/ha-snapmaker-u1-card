@@ -1,4 +1,11 @@
-/** Layer view: paths of the current layer with printed/pending state. */
+/**
+ * Layer view: paths of the current layer with printed/pending state.
+ *
+ * 2.1: two sliders – layer (browse the whole file; "Live" goes back to the
+ * printing layer) and progress within the layer (plays the paths in file
+ * order). The same view previews any file in the print dialog
+ * (``?file=…`` on the layer API, parsed in the background).
+ */
 
 import { DOMAIN, LAYER_PALETTE } from "../const.js";
 import { esc, fixed } from "../format.js";
@@ -29,14 +36,48 @@ export const LayerViewMixin = (Base) => class extends Base {
             <ha-icon icon="${this._lvMode() === "bed" ? "mdi:magnify-plus-outline" : "mdi:grid"}"></ha-icon></button>
         </div>
         <div class="lv" data-lv data-mode="${this._lvMode()}">${this._layerSvg()}</div>
+        ${this._lvControls(lv)}
         <div class="lv-legend" data-su1="lvlegend">${this._layerLegend()}</div>
         <div class="lv-objects" data-su1="lvobjects">${this._objectsHtml()}</div>
       </section>`;
   }
 
+  /** Layer and progress sliders; Live only while browsing. */
+  _lvControls(lv, preview = false) {
+    const v = lv && lv.data;
+    if (!v || v.status !== "ready") return `<div class="lv-ctl" data-lvctl hidden></div>`;
+    const first = v.first ?? 1, last = v.last ?? v.total ?? 1;
+    const browsing = !preview && lv && (lv.pinned != null || lv.scrub != null);
+    return `<div class="lv-ctl" data-lvctl>
+        <label class="lv-range"><span>${tr("Schicht")}</span>
+          <input type="range" data-lvlayer min="${first}" max="${last}" step="1" value="${v.layer ?? first}" aria-label="${tr("Schicht")}" /></label>
+        <label class="lv-range"><span>${tr("Fortschritt")}</span>
+          <input type="range" data-lvstep min="0" max="1000" step="1" value="${lv.scrub ?? 1000}" aria-label="${tr("Verlauf in der Schicht")}" /></label>
+        ${preview ? "" : `<button type="button" class="chip sm" data-lvlive ${browsing ? "" : "hidden"}><ha-icon icon="mdi:crosshairs-gps"></ha-icon><span>${tr("Live")}</span></button>`}
+      </div>`;
+  }
+
+  /**
+   * File position that separates printed from pending: the progress slider,
+   * else a browsed layer before (all printed) or after (all pending) the
+   * printing one, else the live position. null = nothing marked (preview).
+   */
+  _lvPos(lv = this._lv) {
+    const v = lv && lv.data;
+    if (!v) return null;
+    if (lv.scrub != null && v.start != null) return v.start + (v.end - v.start) * lv.scrub / 1000;
+    if (lv.preview) return null;
+    if (lv.pinned != null && this._d) {
+      const live = this._d.layer || 1;
+      if (lv.pinned < live) return Infinity;
+      if (lv.pinned > live) return -Infinity;
+    }
+    return lv.position;
+  }
+
   /** Colour per logical filament: head from the mapping -> loaded spool, else the file colour. */
-  _toolColor(tool) {
-    const c = (this._lv && this._lv.data && this._lv.data.colors) || {};
+  _toolColor(tool, lv = this._lv) {
+    const c = (lv && lv.data && lv.data.colors) || {};
     const head = Array.isArray(c.map_table) ? c.map_table[tool] : undefined;
     const slot = (this._slots() || [])[head !== undefined ? head : tool];
     if (slot && slot.loaded && slot.color) return slot.color;
@@ -44,8 +85,7 @@ export const LayerViewMixin = (Base) => class extends Base {
     return LAYER_PALETTE[tool % LAYER_PALETTE.length];
   }
 
-  _layerSvg() {
-    const lv = this._lv;
+  _layerSvg(lv = this._lv) {
     if (!lv || !lv.data) return `<div class="t-label lv-msg">${tr("Schichtansicht wird vorbereitet …")}</div>`;
     const v = lv.data;
     if (v.status === "error") return `<div class="t-label lv-msg">${esc(tr("Schichtansicht nicht verfügbar: {e}", { e: v.error || "" }))}</div>`;
@@ -58,15 +98,15 @@ export const LayerViewMixin = (Base) => class extends Base {
     let top = bed && !img ? y1 + DOCK_DEPTH : y1;
     if (img) { [x0, y0, x1, top] = img.area; }
     const vb = [x0 - pad, -(top + pad), x1 - x0 + 2 * pad, top - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
-    const pos = lv.position;
-    const ex = this._exclude();
+    const pos = this._lvPos(lv);
+    const ex = lv.preview ? { objects: [], excluded: [], current: null } : this._exclude();
     const excluded = new Set(ex.excluded);
     const lines = (v.segs || []).map(([tool, pts, off, obj]) => {
       const p = [];
       for (let i = 0; i < pts.length; i += 2) p.push(`${pts[i]},${-pts[i + 1]}`);
       const todo = pos !== null && pos !== undefined && off >= pos;
       const cls = [todo ? "todo" : "", obj && excluded.has(obj) ? "excl" : ""].filter(Boolean).join(" ");
-      return `<polyline points="${p.join(" ")}" stroke="${esc(this._toolColor(tool))}" data-o="${off}"${cls ? ` class="${cls}"` : ""}/>`;
+      return `<polyline points="${p.join(" ")}" stroke="${esc(this._toolColor(tool, lv))}" data-o="${off}"${cls ? ` class="${cls}"` : ""}/>`;
     }).join("");
     // Object outlines (EXCLUDE_OBJECT_DEFINE): tap = exclude, only with 2+ objects
     const pick = ex.objects.length > 1;
@@ -81,14 +121,14 @@ export const LayerViewMixin = (Base) => class extends Base {
     return `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${tr("Schichtansicht")}">
         ${ground}
         <g class="lv-paths" stroke-width="${w.toFixed(2)}">${lines}</g>
-        ${bed ? this._nozzleSvg(v, pos) : ""}
+        ${bed ? this._nozzleSvg(v, pos, lv) : ""}
         ${outlines ? `<g class="lv-objs">${outlines}</g>` : ""}
         ${v.missing || !(v.segs || []).length ? `<text x="${((x0 + x1) / 2).toFixed(1)}" y="${(-(y0 + y1) / 2).toFixed(1)}" class="lv-empty">${tr("keine Bahnen")}</text>` : ""}
       </svg>`;
   }
 
-  _layerLegend() {
-    const v = this._lv && this._lv.data;
+  _layerLegend(lv = this._lv) {
+    const v = lv && lv.data;
     if (!v || v.status !== "ready") return "";
     const used = [...new Set((v.segs || []).map((s) => s[0]))].sort((a, b) => a - b);
     const heads = this._d ? this._d.heads : [];
@@ -96,8 +136,8 @@ export const LayerViewMixin = (Base) => class extends Base {
     return used.map((t) => {
       const head = Array.isArray(c.map_table) ? c.map_table[t] : t;
       const h = heads[head];
-      return `<span><i style="background:${esc(this._toolColor(t))}"></i>${tr("Filament {n}", { n: t + 1 })}${h ? ` → ${esc(h.name)}` : ""}</span>`;
-    }).join("") + (this._lv.position !== null && this._lv.position !== undefined
+      return `<span><i style="background:${esc(this._toolColor(t, lv))}"></i>${tr("Filament {n}", { n: t + 1 })}${h ? ` → ${esc(h.name)}` : ""}</span>`;
+    }).join("") + (this._lvPos(lv) !== null && this._lvPos(lv) !== undefined
       ? `<span class="lv-hint"><i class="lv-done"></i>${tr("gedruckt")}<i class="lv-todo"></i>${tr("folgt")}</span>` : "");
   }
 
@@ -194,11 +234,15 @@ export const LayerViewMixin = (Base) => class extends Base {
     return [best[1][n - 2], best[1][n - 1]];
   }
 
-  _nozzleSvg(v, pos) {
-    if (pos === null || pos === undefined || !this._d || !this._d.printing) return "";
-    const at = (this._noz && this._noz.layer === v.layer && this._noz.xy) || this._nozzleAt(v, pos);
+  _nozzleSvg(v, pos, lv = this._lv) {
+    if (!Number.isFinite(pos)) return "";
+    const scrub = lv && lv.scrub != null;
+    if (!scrub && (lv.preview || !this._d || !this._d.printing)) return "";
+    // slider: exactly at its position; live: where the animation left it
+    const at = scrub ? this._nozzleAt(v, pos)
+      : (this._noz && this._noz.layer === v.layer && this._noz.xy) || this._nozzleAt(v, pos);
     if (!at) return "";
-    this._noz = { layer: v.layer, pos, xy: at };
+    if (!scrub) this._noz = { layer: v.layer, pos, xy: at };
     const [x, y] = at;
     return `<g class="lv-gantry" transform="translate(0,${-y})"><rect x="-8" y="-3.5" width="${BED_W + 16}" height="7" rx="3.5"/></g>
       <g class="lv-nozzle" transform="translate(${x},${-y})">
@@ -255,6 +299,16 @@ export const LayerViewMixin = (Base) => class extends Base {
     this._nozRaf = requestAnimationFrame(step);
   }
 
+  /** Progress slider in the bed view: nozzle and gantry straight to the slider position. */
+  _placeNozzle(box, v, pos) {
+    if (this._nozRaf) cancelAnimationFrame(this._nozRaf);
+    const at = Number.isFinite(pos) && v ? this._nozzleAt(v, pos) : null;
+    const noz = box.querySelector(".lv-nozzle"), gantry = box.querySelector(".lv-gantry");
+    if (!at || !noz) return;
+    noz.setAttribute("transform", `translate(${at[0].toFixed(2)},${(-at[1]).toFixed(2)})`);
+    if (gantry) gantry.setAttribute("transform", `translate(0,${(-at[1]).toFixed(2)})`);
+  }
+
   /** Exclude-object state from the last position poll. */
   _exclude() {
     const e = this._lv && this._lv.exclude;
@@ -296,7 +350,68 @@ export const LayerViewMixin = (Base) => class extends Base {
     }
   }
 
+  /** Sliders after a repaint: (re)build when the layer range appears, else just move them (not while dragged). */
+  _lvSyncCtl(host, lv, preview) {
+    const ctl = host && host.querySelector("[data-lvctl]");
+    if (!ctl) return;
+    const v = lv && lv.data;
+    if (ctl.hidden || !ctl.querySelector("[data-lvlayer]")) {
+      if (v && v.status === "ready") ctl.outerHTML = this._lvControls(lv, preview);
+      return;
+    }
+    const layer = ctl.querySelector("[data-lvlayer]"), step = ctl.querySelector("[data-lvstep]");
+    const active = this.shadowRoot.activeElement;
+    if (v && v.status === "ready") {
+      layer.min = v.first ?? 1; layer.max = v.last ?? v.total;
+      if (active !== layer) layer.value = v.layer;
+    }
+    if (active !== step) step.value = lv.scrub ?? 1000;
+    const live = ctl.querySelector("[data-lvlive]");
+    if (live) live.hidden = lv.pinned == null && lv.scrub == null;
+  }
+
+  /**
+   * Slider events on a layer view host. get() returns the view state,
+   * seek(n) loads layer n, paint() redraws.
+   */
+  _wireLvControls(host, get, seek, paint) {
+    if (!host || host._lvCtlWired) return;
+    host._lvCtlWired = true;
+    host.addEventListener("input", (e) => {
+      const t = e.target;
+      if (!t || !t.dataset) return;
+      const lv = get();
+      if (!lv) return;
+      if (t.dataset.lvstep !== undefined) {
+        lv.scrub = Number(t.value) >= 1000 && !lv.preview ? null : Number(t.value);
+        paint(false);
+      } else if (t.dataset.lvlayer !== undefined) {
+        clearTimeout(host._lvSeekTimer);
+        host._lvSeekTimer = setTimeout(() => seek(Number(t.value)), 150);
+      }
+    });
+    host.addEventListener("click", (e) => {
+      if (!e.target || !e.target.closest || !e.target.closest("[data-lvlive]")) return;
+      const lv = get();
+      if (!lv) return;
+      lv.pinned = null; lv.scrub = null;
+      seek(null);
+    });
+  }
+
+  /** Live view: browse to layer n (null = back to the printing layer). */
+  _lvSeek(n) {
+    const lv = this._lv;
+    if (!lv) return;
+    const live = (this._d && this._d.layer) || 1;
+    lv.pinned = n === null || n === live ? null : n;
+    lv.scrub = null;
+    lv.layer = null;  // fetch on the next tick
+    this._tickLayer();
+  }
+
   _wireObjects(root) {
+    this._wireLvControls(root, () => this._lv, (n) => this._lvSeek(n), (full) => this._paintLayer(full));
     if (!root || root._objWired) return;
     root._objWired = true;
     root.addEventListener("click", (e) => {
@@ -326,8 +441,8 @@ export const LayerViewMixin = (Base) => class extends Base {
     if (!d || !d.active || !box) { if (d && !d.active) this._lv = null; return; }
     const pane = box.closest("[data-pane]");
     if (document.hidden || !this._onScreen || (pane && pane.hidden) || this._lvBusy) return;
-    const want = d.layer || 1;
     const lv = this._lv || (this._lv = { layer: null, data: null, position: null });
+    const want = lv.pinned ?? (d.layer || 1);
     const needLayer = lv.layer !== want || !lv.data || lv.data.status !== "ready";
     if (fromHass && !needLayer) return; // position only on the tick
     if (needLayer && lv.data && lv.data.status !== "ready" && Date.now() - (lv.at || 0) < 5000) return;
@@ -369,25 +484,112 @@ export const LayerViewMixin = (Base) => class extends Base {
     const r = this.shadowRoot.getElementById("u1card");
     const box = r && r.querySelector("[data-lv]");
     if (!box) return;
-    const bedNoNozzle = this._lvMode() === "bed" && this._d && this._d.printing && !box.querySelector(".lv-nozzle");
+    const scrubbing = this._lv.scrub != null;
+    const bedNoNozzle = this._lvMode() === "bed" && ((this._d && this._d.printing) || scrubbing) && !box.querySelector(".lv-nozzle");
     if (full || !box.querySelector("svg") || bedNoNozzle) {
       if (full && this._nozRaf) cancelAnimationFrame(this._nozRaf);
       box.innerHTML = this._layerSvg();
     } else {
-      const pos = this._lv.position;
+      const pos = this._lvPos();
       box.querySelectorAll("polyline").forEach((pl) =>
         pl.classList.toggle("todo", pos !== null && pos !== undefined && Number(pl.dataset.o) >= pos));
-      if (this._lvMode() === "bed" && this._lv.data) this._animateNozzle(this._lv.data, this._lv.prevPos, pos);
+      const live = this._lv.pinned == null && this._lv.scrub == null;
+      if (live && this._lvMode() === "bed" && this._lv.data) this._animateNozzle(this._lv.data, this._lv.prevPos, pos);
+      else if (scrubbing && this._lvMode() === "bed") this._placeNozzle(box, this._lv.data, pos);
     }
     const v = this._lv.data;
     const head = r.querySelector('[data-su1="lvhead"]');
     if (head) head.textContent = v && v.status === "ready" && !v.missing
-      ? `${tr("Schicht {n} / {t}", { n: v.layer, t: (this._d && this._d.totalLayers) || v.total })}${v.z !== null && v.z !== undefined ? ` · Z ${fixed(v.z, 2)} mm` : ""}` : "";
+      ? `${tr("Schicht {n} / {t}", { n: v.layer, t: (this._d && this._d.totalLayers) || v.total })}${v.z !== null && v.z !== undefined ? ` · Z ${fixed(v.z, 2)} mm` : ""}${this._lv.pinned != null && this._d ? ` · ${tr("druckt {n}", { n: this._d.layer || 1 })}` : ""}` : "";
+    this._lvSyncCtl(box.closest(".lv-panel"), this._lv, false);
     const leg = r.querySelector('[data-su1="lvlegend"]');
     if (leg) leg.innerHTML = this._layerLegend();
     const objs = r.querySelector('[data-su1="lvobjects"]');
     if (objs) objs.innerHTML = this._objectsHtml();
     this._wireObjects(box.closest(".lv-panel"));
+  }
+
+  // ── G-code preview in the print dialog (2.1) ─────────────────────────────
+  _pvHtml(g) {
+    const pv = g.pv || (g.pv = { preview: true, data: null, scrub: null, want: null });
+    this._pvColors(g);
+    return `<div class="pv" data-pvhost>
+        <div class="lv" data-lv data-mode="${this._lvMode()}">${this._layerSvg(pv)}</div>
+        ${this._lvControls(pv, true)}
+        <div class="lv-legend" data-pvlegend>${this._layerLegend(pv)}</div>
+        <div class="t-label" data-pvhead>${this._pvHead(pv)}</div>
+      </div>`;
+  }
+
+  _pvHead(pv) {
+    const v = pv && pv.data;
+    return v && v.status === "ready" && !v.missing
+      ? `${tr("Schicht {n} / {t}", { n: v.layer, t: v.last ?? v.total })}${v.z != null ? ` · Z ${fixed(v.z, 2)} mm` : ""}` : "";
+  }
+
+  /** Colours as chosen in the dialog: logical filament -> head -> its loaded filament. */
+  _pvColors(g) {
+    const v = g.pv && g.pv.data;
+    if (!v || !v.colors) return;
+    const table = [];
+    Object.entries(g.map || {}).forEach(([fil, head]) => { table[Number(fil)] = head; });
+    v.colors = { ...v.colors, map_table: table };
+  }
+
+  _pvWire(g) {
+    const host = this._dlgEl && this._dlgEl.querySelector("[data-pvhost]");
+    this._wireLvControls(host, () => (this._dlg === g ? g.pv : null), (n) => this._pvLoad(n), (full) => this._pvPaint(full));
+  }
+
+  /** Load layer n of the dialog's file (null = first); waits while the integration parses the file. */
+  async _pvLoad(n) {
+    const g = this._dlg;
+    if (!g || !g.pv) return;
+    const pv = g.pv;
+    if (n !== null) pv.want = n;
+    const seq = (pv.seq = (pv.seq || 0) + 1);
+    const query = () => `file=${encodeURIComponent(g.file.path)}&layer=${pv.want ?? 1}`;
+    try {
+      let data = await this._fetchLayer(query());
+      for (let i = 0; data.status === "parsing" && i < 120; i++) {
+        await new Promise((r) => setTimeout(r, 1500));
+        if (this._dlg !== g || !g.previewOpen || pv.seq !== seq) return;
+        data = await this._fetchLayer(query());
+      }
+      // a file counting from layer 0
+      if (data.missing && pv.want == null && data.first != null) {
+        pv.want = data.first;
+        data = await this._fetchLayer(query());
+      }
+      if (this._dlg !== g || pv.seq !== seq) return;
+      pv.data = data;
+      pv.scrub = null;
+    } catch (err) {
+      pv.data = { status: "error", error: (err && err.message) || String(err) };
+    }
+    this._pvColors(g);
+    this._pvPaint(true);
+  }
+
+  _pvPaint(full) {
+    const g = this._dlg;
+    const host = this._dlgEl && this._dlgEl.querySelector("[data-pvhost]");
+    if (!g || !g.pv || !host) return;
+    const pv = g.pv;
+    const box = host.querySelector("[data-lv]");
+    if (full || !box.querySelector("svg")) box.innerHTML = this._layerSvg(pv);
+    else {
+      const pos = this._lvPos(pv);
+      box.querySelectorAll("polyline").forEach((pl) =>
+        pl.classList.toggle("todo", pos !== null && Number(pl.dataset.o) >= pos));
+      if (this._lvMode() === "bed") {
+        if (!box.querySelector(".lv-nozzle") && pv.scrub != null) box.innerHTML = this._layerSvg(pv);
+        else this._placeNozzle(box, pv.data, pos);
+      }
+    }
+    host.querySelector("[data-pvlegend]").innerHTML = this._layerLegend(pv);
+    host.querySelector("[data-pvhead]").textContent = this._pvHead(pv);
+    this._lvSyncCtl(host, pv, true);
   }
 
   /** Load average with context: "0,50 · 13 % von 4 Kernen". */
