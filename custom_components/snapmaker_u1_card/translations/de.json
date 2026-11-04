@@ -981,7 +981,7 @@
         },
         "target": {
           "name": "Ziel",
-          "description": "home: all/x/y/z; set: bed_target, extruder1_target, fan_speed, speed_factor, <lüfter>_speed; switch: output_pin_<name> oder led_<name>."
+          "description": "home: all/x/y/z; set: bed_target, extruder1_target, fan_speed, speed_factor, LÜFTER_speed; switch: output_pin_NAME oder led_NAME (LÜFTER, NAME wie in Klipper)."
         },
         "value": {
           "name": "Wert",
