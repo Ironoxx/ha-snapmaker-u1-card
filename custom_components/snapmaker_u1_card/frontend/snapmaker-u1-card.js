@@ -5236,6 +5236,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         }));
         this._filterFiles();
       }
+      r.querySelectorAll(".hist-thumb img").forEach((img) => img.addEventListener("error", () => {
+        img.replaceWith(Object.assign(document.createElement("ha-icon"), { icon: "mdi:printer-3d" }));
+      }, { once: true }));
       r.querySelectorAll("[data-photo]").forEach(
         (el) => el.addEventListener("click", (e) => {
           e.stopPropagation();

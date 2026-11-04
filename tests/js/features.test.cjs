@@ -48,7 +48,7 @@ own("sensor.snapmaker_u1_card_druckdateien", "1", { entry_id: "E1", files }, "fi
 own("sensor.snapmaker_u1_card_druckhistorie", "1", { entry_id: "E1", prints: [
   { file: "box.gcode", source: "box.gcode", name: "Box", result: "complete", ended: "2026-10-08T19:56:43+00:00", duration: 3600,
     mapping: { 0: 2, 1: 0 }, options: { timelapse: true }, pause_layers: [12] },
-  { file: "weg.gcode", name: "Weg", result: "error", ended: "2026-10-07T19:56:43+00:00", error: "Spaghetti erkannt. Druck prüfen." },
+  { file: "weg.gcode", name: "Weg", thumb: "/snapmaker_u1_card/thumbs/E1/weg.png", result: "error", ended: "2026-10-07T19:56:43+00:00", error: "Spaghetti erkannt. Druck prüfen." },
 ] }, "history");
 own("sensor.snapmaker_u1_card_warteschlange", "2", { entry_id: "E1", jobs: [
   { id: "j1", file: "box.gcode", name: "Box", mapping: { 0: 1 }, timelapse: true, pause_layers: [5, 9] },
@@ -135,6 +135,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(R().querySelectorAll("[data-reprint]").length, 1, "nur, wenn die Datei noch da ist");
   assert.match(text(R().querySelector(".hist-list")), /Pause vor 12/);
   assert.match(text(R().querySelector(".hist-list")), /Spaghetti erkannt/);
+  // thumbnail of a deleted file: printer icon instead of a broken image
+  const himg = R().querySelector('.hist-thumb img[src$="weg.png"]');
+  assert.ok(himg);
+  const hbox = himg.parentNode;
+  himg.dispatchEvent(new w.Event("error"));
+  assert.ok(!hbox.querySelector("img") && hbox.querySelector("ha-icon"), hbox.innerHTML);
   R().querySelector("[data-reprint]").click();
   let dl = D();
   assert.ok(dl && dl.hasAttribute("open"), "Dialog offen");

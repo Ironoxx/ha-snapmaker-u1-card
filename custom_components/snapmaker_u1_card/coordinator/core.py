@@ -180,6 +180,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._layer_task: asyncio.Task | None = None
         # 2.1: G-code preview of any file (print dialog), key -> state; a few kept on disk
         self._previews: dict[str, dict[str, Any]] = {}
+        # history thumbnails already looked for this session (files that no longer have one)
+        self._thumb_repair_tried: set[str] = set()
         # Live subscription (live.py) and once-per-print events (first layer, almost done)
         self.live = LiveListener(client, self._on_live, self._on_live_state, self.power_is_off)
         self._event_key: Any = None
@@ -676,6 +678,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                 self._files = files
                 self._files_at = now
                 self._force_files = False
+                if not printing:
+                    await self._repair_history_thumbs()
             except MoonrakerError as err:
                 # The file list is secondary: keep the old state.
                 _LOGGER.debug("File list not updated: %s", err)

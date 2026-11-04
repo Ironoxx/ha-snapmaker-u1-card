@@ -269,6 +269,10 @@ export const RenderMixin = (Base) => class extends Base {
       }));
       this._filterFiles();
     }
+    // thumbnail of a file that is gone: the printer icon instead of a broken image
+    r.querySelectorAll(".hist-thumb img").forEach((img) => img.addEventListener("error", () => {
+      img.replaceWith(Object.assign(document.createElement("ha-icon"), { icon: "mdi:printer-3d" }));
+    }, { once: true }));
     r.querySelectorAll("[data-photo]").forEach((el) =>
       el.addEventListener("click", (e) => { e.stopPropagation(); this._showPhoto(el.dataset.photo); })
     );

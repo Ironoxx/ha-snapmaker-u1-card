@@ -346,3 +346,41 @@ async def test_machine_entities_added_when_values_appear(hass: HomeAssistant, mo
     await coord.async_refresh()
     await hass.async_block_till_done()
     assert len(mine()) == n
+
+
+async def test_history_thumbnails(hass: HomeAssistant, mock_client) -> None:
+    """Thumbnails: a file printed straight from the slicer gets one, history images survive pruning and are repaired."""
+    from pathlib import Path
+
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    status = mock_client["query"].return_value
+    # uploaded and started from the slicer: not in the cached file list
+    status["print_stats"] = {"state": "printing", "filename": "fresh.gcode"}
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    active = coord._print_state["active"]
+    assert active["thumb"] and active["thumb"].startswith(f"/snapmaker_u1_card/thumbs/{entry.entry_id}/")
+    mock_client["download"].assert_any_await(".thumbs/t.png")
+
+    status["print_stats"] = {"state": "complete", "filename": "fresh.gcode"}
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    rec = coord._print_state["history"][0]
+    assert rec["file"] == "fresh.gcode" and rec["thumb"] == active["thumb"]
+    # the file list no longer has it: the image stays because the history uses it
+    coord._force_files = True
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    assert (coord._own_dir / Path(rec["thumb"]).name).exists(), "Bild der Historie nicht gelöscht"
+
+    # an older entry without a thumbnail (or with a deleted one) is repaired from the file
+    coord._print_state["history"].append({"file": "old.gcode", "result": "complete", "thumb": None})
+    coord._print_state["history"].append({"file": "gone.gcode", "result": "complete", "thumb": "/x/missing.png"})
+    coord._force_files = True
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    old = next(h for h in coord._print_state["history"] if h["file"] == "old.gcode")
+    assert old["thumb"] and (coord._own_dir / Path(old["thumb"]).name).exists()
+    gone = next(h for h in coord._print_state["history"] if h["file"] == "gone.gcode")
+    assert gone["thumb"] == "/x/missing.png", "Datei weg: nichts zu holen, Karte zeigt das Symbol"

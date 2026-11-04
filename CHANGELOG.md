@@ -23,6 +23,9 @@ Beta. Spoolman tab, suggestions for new spools and a G-code preview with sliders
 - Layer view during a print: slider *Layer* browses the whole file (earlier layers printed, later ones pending), *Live* goes back; slider *Progress* plays the layer path by path, in the bed view with the nozzle.
 - Print dialog: *G-code preview* shows any file before printing, layer by layer with the same sliders, in the colours of the heads chosen in the dialog. The file is parsed once in the background; the last three previews are kept.
 
+**Fixed**
+- History without a thumbnail: a file uploaded and started straight from the slicer (not in the file list yet) got no image, and images of files that dropped out of the list were deleted although the history still showed them. Now the image is fetched at print start, kept while the history uses it, and missing ones are taken from the file again if it still exists. Without the file the card shows the printer icon instead of a broken image.
+
 ### Deutsch
 
 Beta. Reiter Spoolman, Vorschläge für neue Spulen und G-Code-Vorschau mit Schiebereglern. Enthält alles aus 2.1.0b1 (Top-Cover-Modus und Kammer-Soll, Meldung „Kammer ist warm“, echte Filterstunden, Kammerheizung im Verlauf, Kamera läuft beim Neuaufbau der Karte weiter).
@@ -41,6 +44,9 @@ Beta. Reiter Spoolman, Vorschläge für neue Spulen und G-Code-Vorschau mit Schi
 **G-Code-Vorschau mit Schiebereglern**
 - Schichtansicht im Druck: Regler *Schicht* blättert durch die ganze Datei (frühere Schichten gedruckt, spätere folgen), *Live* springt zurück; Regler *Fortschritt* spielt die Schicht Bahn für Bahn ab, in der Bettansicht mit Düse.
 - Druckdialog: *G-Code-Vorschau* zeigt jede Datei vor dem Druck, Schicht für Schicht mit denselben Reglern, in den Farben der im Dialog gewählten Köpfe. Die Datei wird einmal im Hintergrund zerlegt; die letzten drei Vorschauen bleiben gespeichert.
+
+**Behoben**
+- Historie ohne Vorschaubild: Eine Datei, die direkt aus dem Slicer hochgeladen und gestartet wurde (noch nicht in der Dateiliste), bekam kein Bild, und Bilder von Dateien, die aus der Liste fielen, wurden gelöscht, obwohl die Historie sie noch zeigte. Jetzt wird das Bild beim Druckstart geholt, bleibt erhalten, solange die Historie es nutzt, und fehlende werden aus der Datei nachgeholt, wenn es sie noch gibt. Ohne Datei zeigt die Karte das Drucker-Symbol statt eines kaputten Bilds.
 
 ⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
 

@@ -211,10 +211,53 @@ class MediaMixin:
         keep = {(e["path"], float(e.get("modified") or 0)) for e in [*entries, *extra]}
         for stale in [k for k in self._file_cache if k not in keep]:
             del self._file_cache[stale]
-        await self.hass.async_add_executor_job(
-            self._prune_thumbs, {Path(f["thumb"]).name for f in [*files, *pinned] if f["thumb"]}
-        )
+        # Thumbnails the history or the running print still show stay, even when
+        # their file has dropped out of the list (older than files_limit, deleted, replaced).
+        keep_thumbs = {Path(f["thumb"]).name for f in [*files, *pinned] if f["thumb"]}
+        keep_thumbs |= {Path(t).name for t in self._used_thumbs()}
+        await self.hass.async_add_executor_job(self._prune_thumbs, keep_thumbs)
         return list(files)
+
+    def _used_thumbs(self) -> list[str]:
+        records = [*(self._print_state.get("history") or []),
+                   self._print_state.get("active") or {}, self._print_state.get("last") or {}]
+        return [r["thumb"] for r in records if isinstance(r, dict) and r.get("thumb")]
+
+    async def async_thumb_for(self, path: str, meta: dict[str, Any]) -> str | None:
+        """Thumbnail URL for a file outside the cached list (e.g. uploaded and started from the slicer)."""
+        entry = next((e for e in self._all_files if e["path"] == path), None)
+        modified = (entry or {}).get("modified") or meta.get("modified") or 0
+        return await self._cache_thumbnail(path, (path, float(modified)), meta)
+
+    async def _repair_history_thumbs(self) -> None:
+        """History entries without a thumbnail (or with a deleted one): take it from the file if it still exists.
+
+        Up to 2.1 the cache was pruned to the listed files, so older entries lost their image.
+        Each file is tried once per session.
+        """
+        history = self._print_state.get("history") or []
+        tried = self._thumb_repair_tried
+        known = {e["path"] for e in self._all_files}
+        changed = False
+        for rec in history:
+            path = rec.get("file")
+            if not path or path in tried or path not in known:
+                continue
+            thumb = rec.get("thumb")
+            if thumb and await self.hass.async_add_executor_job(
+                    (self._own_dir / Path(thumb).name).exists):
+                continue
+            tried.add(path)
+            try:
+                meta = await self.client.file_metadata(path)
+            except MoonrakerError:
+                continue
+            url = await self.async_thumb_for(path, meta)
+            if url and url != thumb:
+                rec["thumb"] = url
+                changed = True
+        if changed:
+            self._save(30)
 
     async def _file_info(self, entry: dict[str, Any], sem: asyncio.Semaphore) -> dict[str, Any]:
         """Metadata and thumbnail for one file, cached per file version."""

@@ -402,3 +402,8 @@ class SpoolMixin:
         active["name"] = (info or {}).get("name") or describe_file(original_file(path), {}, meta)["name"]
         if info and info.get("thumb"):
             active["thumb"] = info["thumb"]
+        else:
+            # not in the cached list yet (uploaded and started from the slicer, or older than the list)
+            thumb = await self.async_thumb_for(path, meta)
+            if thumb:
+                active["thumb"] = thumb
