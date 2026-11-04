@@ -26,7 +26,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from . import blueprints, resource, settings_ws, whats_new
+from . import blueprints, resource, settings_ws, spoolman_ws, whats_new
 from .api import MoonrakerClient
 from .const import (
     CARD_FILENAME,
@@ -147,7 +147,11 @@ WEIGH_SPOOL_SCHEMA = vol.All(vol.Schema({
 }), cv.has_at_least_one_key("slot", "spool_id"))
 CREATE_SPOOL_SCHEMA = vol.Schema({
     vol.Optional("slot"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-    vol.Required("material"): vol.All(cv.string, vol.Length(min=1, max=32)),
+    # material is needed unless an existing filament or a catalogue entry is given
+    vol.Optional("material", default=""): vol.All(cv.string, vol.Length(max=32)),
+    vol.Optional("filament_id"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional("external_id"): vol.All(cv.string, vol.Length(min=1, max=200)),
+    vol.Optional("location"): vol.All(cv.string, vol.Length(max=64)),
     vol.Optional("vendor", default="Generic"): vol.All(cv.string, vol.Length(max=64)),
     vol.Optional("name"): vol.All(cv.string, vol.Length(max=64)),
     vol.Optional("color"): vol.Match(r"^#?[0-9a-fA-F]{6}$"),
@@ -185,6 +189,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     hass.http.register_view(TimelapseView())
     settings_ws.async_register(hass)
+    spoolman_ws.async_register(hass)
     hass.http.register_view(GcodeView())
     hass.http.register_view(UploadView())
     hass.http.register_view(LayerView())
@@ -245,7 +250,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         slot = d.get("slot")
         return await _coordinator(hass, d.get(ATTR_ENTRY)).async_create_spool(
             slot - 1 if slot else None, d["material"], d.get("vendor", "Generic"), d.get("name"),
-            d.get("color"), d["weight"], d.get("spool_weight"), d.get("price"), d.get("remaining"))
+            d.get("color"), d["weight"], d.get("spool_weight"), d.get("price"), d.get("remaining"),
+            d.get("filament_id"), d.get("external_id"), d.get("location"))
 
     hass.services.async_register(DOMAIN, "create_spool", create_spool, schema=CREATE_SPOOL_SCHEMA,
                                  supports_response=SupportsResponse.OPTIONAL)

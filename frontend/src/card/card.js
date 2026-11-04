@@ -77,13 +77,14 @@ import { MachineMixin } from "./machine.js";
 import { WebrtcMixin } from "./webrtc.js";
 import { SettingsMixin } from "./settings.js";
 import { HaStreamMixin } from "./hastream.js";
+import { SpoolStockMixin } from "./spoolstock.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin, HaStreamMixin,
+  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin, HaStreamMixin, SpoolStockMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -202,6 +203,7 @@ export class SnapmakerU1Card extends U1Base {
     this._render();
     if (this._dlg) this._refreshDialog();
     else if (this._afterUpload) this._checkAfterUpload();
+    this._refreshStock();
     this._tickLayer(true);
   }
 

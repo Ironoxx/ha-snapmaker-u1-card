@@ -138,7 +138,15 @@ Once a day, never during a print, the integration fetches all files from Moonrak
 
 Optional. Without a Spoolman address none of this appears in the card or the integration.
 
-**New spool.** A spool that is not in Spoolman yet can be created right from the card: in the spool picker *Create new spool*, prefilled with the head's material, vendor and colour (from the RFID tag, if there is one). Vendor and filament are reused in Spoolman if they exist (same name, material and colour), otherwise created (density by material, 1.75 mm); the new spool is assigned to the head (with SpoolLink via `SET_SPOOL_ID`). Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`), returns `spool_id`.
+**Stock.** *Stock* in the print heads panel lists every active spool: colour, vendor, material, location, which head it is in and the remaining weight as a bar (below the warning threshold in orange). On top the number of spools, the filament left in kg and its value (from the spool prices). Filter by material, search by name, vendor, location or `#ID`.
+
+**New spool.** From the stock (*New spool*) or the spool picker of a head (*Create new spool*, prefilled with the head's material, vendor and colour, from the RFID tag if there is one). Typing in *Search filament* shows matches from your own Spoolman filaments and from Spoolman's catalogue [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (several thousand filaments of known vendors, 1.75 mm only); vendor and material fields suggest the known names. A pick fills vendor, material, name, colour, net weight and empty spool weight:
+- an own filament is used as it is,
+- a catalogue entry is imported into Spoolman once (vendor created if needed, with its colour, density and temperatures) and reused for the next spool.
+
+Without a pick, vendor and filament are reused if they exist (same name, material and colour), otherwise created (density by material, 1.75 mm). Location and price are optional; from the stock you choose the head in the form or none. With SpoolLink the head is set via `SET_SPOOL_ID`. The catalogue needs Spoolman 0.18 or newer with internet access; without it only your own filaments are suggested.
+
+Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`, `location`, `filament_id` or `external_id`), returns `spool_id`.
 
 **Assigning spools to heads.** Moonraker only knows *one* active spool for Spoolman; with four heads the integration handles this itself. For each loaded head an active (not archived) spool is chosen by:
 
@@ -161,7 +169,7 @@ The same applies to any other `[spoolman]` section in Moonraker's configuration.
 
 **Unloading and reloading.** Without an RFID tag the printer forgets the spool when the filament is unloaded (with SpoolLink it clears `filament_spool_id`). When the head is loaded again, it offers its previous spool: "Use #5 … again?" – one tap restores it (with SpoolLink via `SET_SPOOL_ID`). Until then nothing is booked and no other spool is guessed for that head. Option *Last spool after reloading a head* (Spoolman section): offer (default), set automatically (not during a print; wrong spool if you load a different one and forget to change it), or off.
 
-**Weighing a spool.** In the head details (with a spool assigned) enter what the scale shows: with the empty spool (its weight comes from Spoolman: spool, filament or vendor *empty spool weight*) or the filament only. The integration sets the remaining weight in Spoolman. Service `weigh_spool` (`slot` or `spool_id`, `weight`, `gross`). So only new spools still need Spoolman itself.
+**Weighing a spool.** In the head details (with a spool assigned) enter what the scale shows: with the empty spool (its weight comes from Spoolman: spool, filament or vendor *empty spool weight*) or the filament only. The integration sets the remaining weight in Spoolman. Service `weigh_spool` (`slot` or `spool_id`, `weight`, `gross`). Spoolman's own interface is then only needed for details of vendors and filaments.
 
 Limitation: if the firmware switches to another head automatically during a print (auto-replenish on an empty spool), the whole usage is attributed to the last reported head.
 

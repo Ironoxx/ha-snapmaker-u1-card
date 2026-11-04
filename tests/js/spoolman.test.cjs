@@ -43,9 +43,15 @@ add("sensor.u1c_druckdateien", "1", { entry_id: "E1", files: [{
   filaments: [{ index: 0, type: "PLA", color: "#FFFFFF", weight: 80, used: true }, { index: 1, type: "PLA", color: "#000000", weight: 10, used: true }],
 }] }, "snapmaker_u1_card", "files");
 
-const calls = [];
+const calls = [], ws = [];
+const SUGGEST = [
+  { key: "f:9", source: "own", filament_id: 9, vendor: "Generic", name: "PLA Silk Bronze", material: "PLA", color: "#6f4c2f", colors: ["#6f4c2f"], weight: 1000 },
+  { key: "x:pm", source: "db", external_id: "polymaker_pla_black", vendor: "Polymaker", name: "PolyTerra PLA Black", material: "PLA", color: "#1a1a1a", colors: ["#1a1a1a"], weight: 1000, spool_weight: 140 },
+];
 const hass = () => ({ states: JSON.parse(JSON.stringify(states)), entities: reg,
-  callService: async (...a) => { calls.push(JSON.parse(JSON.stringify(a))); } });
+  callService: async (...a) => { calls.push(JSON.parse(JSON.stringify(a))); },
+  callWS: async (m) => { ws.push(m); return m.type.endsWith("/catalog")
+    ? { vendors: ["Generic", "Polymaker"], materials: ["PETG", "PLA"], catalog: 1 } : { items: SUGGEST }; } });
 const card = w.document.createElement("snapmaker-u1-card");
 card.setConfig({ type: "custom:snapmaker-u1-card", show: ["toolheads", "files"] });
 w.document.body.appendChild(card);
@@ -103,6 +109,64 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   dlg().querySelector("[data-newspool]").click();
   dlg().querySelector("[data-back]").click();
   assert.ok(dlg().querySelector("[data-pick]"), "zurueck zur Liste");
+  dlg().close();
+
+  // 2c. Stock: all spools, totals, filter by material and text, where each spool is
+  root().querySelector("[data-spoolstock]").click();
+  const rows = () => [...dlg().querySelectorAll("[data-stock]")];
+  assert.strictEqual(rows().length, 4);
+  assert.ok(/4 Spulen · 2\.1 kg/.test(dlg().querySelector("[data-stocksum]").textContent));
+  assert.ok(/steckt in/.test(rows().find((r) => r.dataset.stock === "4").textContent), "Kopf der Spule");
+  assert.strictEqual(rows().find((r) => r.dataset.stock === "3").dataset.low, "1", "unter der Warnschwelle");
+  dlg().querySelector('[data-stockmat="PETG"]').click();
+  assert.deepStrictEqual(rows().map((r) => r.dataset.stock), ["6"]);
+  dlg().querySelector('[data-stockmat=""]').click();
+  card._openSpoolStock({ material: "", text: "regal" });
+  assert.deepStrictEqual(rows().map((r) => r.dataset.stock), ["4"], "Suche im Ort");
+  card._openSpoolStock({ material: "", text: "" });
+
+  // 2d. New spool from the stock: suggestions, a catalogue pick, head chosen in the form
+  dlg().querySelector("[data-stocknew]").click();
+  await tick();
+  const f2 = dlg().querySelector("[data-newspoolform]");
+  assert.strictEqual(f2.querySelectorAll("#u1-vendors option").length, 2, "Herstellervorschläge");
+  f2.elements.q.value = "pla";
+  card._suggestTimer = null;
+  f2.elements.q.dispatchEvent(new w.Event("input"));
+  await new Promise((r) => setTimeout(r, 300)); await tick();
+  assert.strictEqual(ws.at(-1).type, "snapmaker_u1_card/spoolman/suggest");
+  assert.strictEqual(ws.at(-1).query, "pla");
+  const sug = [...f2.querySelectorAll("[data-sug]")];
+  assert.strictEqual(sug.length, 2);
+  assert.ok(/Katalog/.test(sug[1].textContent));
+  sug[1].click();
+  assert.strictEqual(f2.elements.vendor.value, "Polymaker");
+  assert.strictEqual(f2.elements.spool_weight.value, "140");
+  assert.ok(!f2.querySelector("[data-picked]").hidden);
+  f2.elements.slot.value = "4";
+  f2.elements.location.value = "Trockenbox";
+  f2.dispatchEvent(new w.Event("submit", { cancelable: true }));
+  await tick();
+  assert.deepStrictEqual(calls.at(-1)[2], { vendor: "Polymaker", material: "PLA", color: "#1a1a1a", weight: 1000,
+    spool_weight: 140, config_entry_id: "E1", name: "PolyTerra PLA Black", location: "Trockenbox", slot: 4,
+    external_id: "polymaker_pla_black" });
+  // own filament: by ID; editing the name drops the pick
+  dlg().querySelector("[data-stocknew]").click(); await tick();
+  const f3 = dlg().querySelector("[data-newspoolform]");
+  f3.elements.q.value = "silk"; f3.elements.q.dispatchEvent(new w.Event("input"));
+  await new Promise((r) => setTimeout(r, 300)); await tick();
+  f3.querySelector('[data-sug="0"]').click();
+  f3.dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
+  assert.strictEqual(calls.at(-1)[2].filament_id, 9);
+  assert.ok(!("slot" in calls.at(-1)[2]), "keinem Kopf");
+  dlg().querySelector("[data-stocknew]").click(); await tick();
+  const f4 = dlg().querySelector("[data-newspoolform]");
+  f4.elements.q.value = "silk"; f4.elements.q.dispatchEvent(new w.Event("input"));
+  await new Promise((r) => setTimeout(r, 300)); await tick();
+  f4.querySelector('[data-sug="0"]').click();
+  f4.elements.name.value = "PLA Silk Kupfer"; f4.elements.name.dispatchEvent(new w.Event("input"));
+  f4.dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
+  assert.ok(!("filament_id" in calls.at(-1)[2]) && calls.at(-1)[2].name === "PLA Silk Kupfer");
   dlg().close();
 
   // 3. Print dialog: white PLA (80 g) on head 2 with 60 g -> warning, remainder on the button

@@ -28,6 +28,7 @@ from ..parsing import (
     parse_file_filaments,
     spool_filament,
 )
+from ..spool_catalog import external_body
 from .data import U1Data
 
 _LOGGER = logging.getLogger(__name__)
@@ -264,14 +265,21 @@ class SpoolMixin:
 
     async def async_create_spool(self, slot_index: int | None, material: str, vendor: str, name: str | None,
                                  color: str | None, weight: float, spool_weight: float | None = None,
-                                 price: float | None = None, remaining: float | None = None) -> dict[str, Any]:
-        """Create a spool in Spoolman (vendor and filament reused or created) and assign it to a head."""
+                                 price: float | None = None, remaining: float | None = None,
+                                 filament_id: int | None = None, external_id: str | None = None,
+                                 location: str | None = None) -> dict[str, Any]:
+        """Create a spool in Spoolman (vendor and filament reused or created) and assign it to a head.
+
+        ``filament_id`` takes an existing Spoolman filament as it is; ``external_id``
+        imports a SpoolmanDB filament (vendor created if needed, reused if already
+        imported). Otherwise vendor and filament are found or built from the fields.
+        """
         mgr = self.spools
         if not mgr.enabled or mgr.client is None:
             raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
         vendor = (vendor or "").strip() or "Generic"
         material = (material or "").strip().upper()
-        if not material:
+        if not material and filament_id is None and not external_id:
             raise HomeAssistantError(tr(self.hass, "Material fehlt.", "Material missing."))
         name = (name or "").strip() or material
         slot = None
@@ -282,15 +290,46 @@ class SpoolMixin:
                  rfid.get("bed_temp"))
         client = mgr.client
         try:
-            v = next((x for x in await client.vendors()
-                      if str(x.get("name") or "").strip().casefold() == vendor.casefold()), None)
-            vendor_id = v["id"] if v else (await client.create("vendor", {"name": vendor}))["id"]
-            fil_id, body = find_or_build_filament(await client.filaments(), vendor_id, material, name,
-                                                  color, weight, spool_weight, temps)
+            vendor_id: int | None = None
+            fil_id, body = None, {}
+            filaments = await client.filaments()
+            ext = None
+            if filament_id is not None:
+                fil = next((f for f in filaments if f.get("id") == filament_id), None)
+                if fil is None:
+                    raise HomeAssistantError(tr(self.hass, f"Filament {filament_id} gibt es in Spoolman nicht.",
+                                                f"Filament {filament_id} does not exist in Spoolman."))
+                fil_id, vendor_id = filament_id, (fil.get("vendor") or {}).get("id")
+            elif external_id:
+                await mgr.catalog.external(client)
+                ext = mgr.catalog.find_external(external_id)
+                if ext is None:
+                    raise HomeAssistantError(tr(self.hass, "Filament nicht im Spoolman-Katalog gefunden.",
+                                                "Filament not found in the Spoolman catalogue."))
+                vendor = ext["vendor"] or vendor
+                fil_id = next((f["id"] for f in filaments if f.get("external_id") == external_id), None)
+            if fil_id is None:
+                v = next((x for x in await client.vendors()
+                          if str(x.get("name") or "").strip().casefold() == vendor.casefold()), None)
+                vendor_id = v["id"] if v else (await client.create("vendor", {"name": vendor}))["id"]
+                if ext is not None:
+                    body = external_body(ext, vendor_id)
+                else:
+                    fil_id, body = find_or_build_filament(filaments, vendor_id, material, name,
+                                                          color, weight, spool_weight, temps)
             new_filament = fil_id is None
             if new_filament:
-                fil_id = (await client.create("filament", body))["id"]
+                try:
+                    fil_id = (await client.create("filament", body))["id"]
+                except MoonrakerError:
+                    if "external_id" not in body:
+                        raise
+                    # Spoolman before 0.18 does not know external_id
+                    body.pop("external_id")
+                    fil_id = (await client.create("filament", body))["id"]
             spool_body: dict[str, Any] = {"filament_id": fil_id, "initial_weight": round(float(weight), 1)}
+            if location:
+                spool_body["location"] = location.strip()[:64]
             if spool_weight:
                 spool_body["spool_weight"] = round(float(spool_weight), 1)
             if price is not None:

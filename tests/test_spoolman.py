@@ -658,3 +658,92 @@ async def test_prices_from_spoolman(hass: HomeAssistant, mock_client, spoolman) 
     assert coord.filament_prices == {"PLA": 18.0, "PETG": 25.0}, "Spoolman beats own PLA price, own PETG fills the gap"
     assert coord.spool_prices()[0] == 18.0
     assert any(s.entity_id.endswith("cost_print") or "kosten" in s.entity_id for s in hass.states.async_all("sensor"))
+
+
+EXTERNAL = [
+    {"id": "polymaker_pla_black_1000_175", "manufacturer": "Polymaker", "name": "PolyTerra PLA Charcoal Black",
+     "material": "PLA", "density": 1.31, "weight": 1000, "spool_weight": 140, "diameter": 1.75,
+     "color_hex": "1A1A1A", "extruder_temp": 210, "bed_temp": 60},
+    {"id": "esun_petg_multi_1000_175", "manufacturer": "eSUN", "name": "PETG Rainbow", "material": "PETG",
+     "density": 1.27, "weight": 1000, "diameter": 1.75, "color_hexes": ["FF0000", "00FF00"]},
+    {"id": "big_285", "manufacturer": "Polymaker", "name": "PLA 2.85", "material": "PLA", "density": 1.24,
+     "weight": 750, "diameter": 2.85},
+]
+
+
+def test_spool_catalog_search():
+    from custom_components.snapmaker_u1_card import spool_catalog as sc
+
+    own = [sc.compact_own({"id": 9, "name": "PLA Silk", "material": "pla", "color_hex": "6f4c2f",
+                           "vendor": {"id": 1, "name": "Polymaker"}, "weight": 1000})]
+    ext = [sc.compact_external(f) for f in EXTERNAL[:2]]
+    assert [c.lower() for c in ext[1]["colors"]] == ["#ff0000", "#00ff00"] and ext[0]["spool_weight"] == 140
+    # every word must match; own filaments first
+    hits = sc.search(own + ext, "polymaker pla")
+    assert [h["key"] for h in hits] == ["f:9", "x:polymaker_pla_black_1000_175"]
+    assert [h["key"] for h in sc.search(own + ext, "rainbow")] == ["x:esun_petg_multi_1000_175"]
+    assert sc.search(own + ext, "", vendor="esun")[0]["vendor"] == "eSUN"
+    body = sc.external_body(ext[1], 5)
+    assert body["multi_color_hexes"] == "ff0000,00ff00" and "color_hex" not in body
+    assert body["vendor_id"] == 5 and body["external_id"] == "esun_petg_multi_1000_175"
+    body = sc.external_body(ext[0], 5)
+    assert body["color_hex"] == "1a1a1a" and body["settings_extruder_temp"] == 210 and body["spool_weight"] == 140
+
+
+async def test_create_spool_from_catalog(hass: HomeAssistant, mock_client, spoolman, hass_ws_client) -> None:
+    """Suggestions over the websocket; a catalogue pick imports the filament once, an own one is reused."""
+    _real_slots(mock_client)
+    created = []
+    vendors = [{"id": 1, "name": "Generic"}]
+    filaments = [{"id": 9, "name": "PLA Silk", "material": "PLA", "color_hex": "6f4c2f",
+                  "vendor": {"id": 1, "name": "Generic"}}]
+
+    async def create(self, kind, data):
+        new_id = 100 + len(created)
+        created.append((kind, data))
+        return {"id": new_id}
+
+    with patch(f"{SM}.vendors", AsyncMock(return_value=vendors)), \
+         patch(f"{SM}.filaments", AsyncMock(return_value=filaments)), \
+         patch(f"{SM}.external_filaments", AsyncMock(return_value=EXTERNAL)), \
+         patch(f"{SM}.create", create):
+        entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+        await _refresh(hass, entry)
+        ws = await hass_ws_client(hass)
+        await ws.send_json({"id": 1, "type": f"{DOMAIN}/spoolman/catalog"})
+        cat = (await ws.receive_json())["result"]
+        assert cat["vendors"] == ["Generic", "eSUN", "Polymaker"], "own vendors first"
+        assert "PETG" in cat["materials"] and cat["catalog"] == 2, "2.85 mm left out"
+        await ws.send_json({"id": 2, "type": f"{DOMAIN}/spoolman/suggest", "query": "pla"})
+        items = (await ws.receive_json())["result"]["items"]
+        assert [i["source"] for i in items] == ["own", "db"]
+
+        res = await hass.services.async_call(DOMAIN, "create_spool", {
+            "external_id": "polymaker_pla_black_1000_175", "weight": 1000, "location": "Regal 2"},
+            blocking=True, return_response=True)
+        assert [k for k, _ in created] == ["vendor", "filament", "spool"]
+        assert created[0][1] == {"name": "Polymaker"}
+        assert created[1][1]["external_id"] == "polymaker_pla_black_1000_175"
+        assert created[1][1]["name"] == "PolyTerra PLA Charcoal Black"
+        assert created[2][1] == {"filament_id": 101, "initial_weight": 1000.0, "location": "Regal 2"}
+        assert res["new_filament"] is True
+
+        # imported before: reuse the filament with that external_id
+        created.clear()
+        filaments.append({"id": 101, "name": "PolyTerra PLA Charcoal Black", "material": "PLA",
+                          "external_id": "polymaker_pla_black_1000_175", "vendor": {"id": 100, "name": "Polymaker"}})
+        await hass.services.async_call(DOMAIN, "create_spool", {
+            "external_id": "polymaker_pla_black_1000_175", "weight": 1000}, blocking=True, return_response=True)
+        assert [k for k, _ in created] == ["spool"]
+
+        # own filament by ID
+        created.clear()
+        res = await hass.services.async_call(DOMAIN, "create_spool", {"filament_id": 9, "weight": 750},
+                                             blocking=True, return_response=True)
+        assert created == [("spool", {"filament_id": 9, "initial_weight": 750.0})]
+        assert res["filament_id"] == 9 and res["new_filament"] is False
+
+        # neither material nor a filament
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(DOMAIN, "create_spool", {"weight": 1000}, blocking=True,
+                                           return_response=True)

@@ -138,7 +138,15 @@ Einmal am Tag, nie während eines Drucks, holt die Integration alle Dateien aus 
 
 Optional. Ohne Spoolman-Adresse erscheint in Karte und Integration nichts davon.
 
-**Neue Spule.** Eine Spule, die noch nicht in Spoolman steht, lässt sich direkt aus der Karte anlegen: in der Spulenauswahl *Neue Spule anlegen*, vorausgefüllt mit Material, Hersteller und Farbe des Kopfs (vom RFID-Tag, falls vorhanden). Hersteller und Filament werden in Spoolman wiederverwendet, wenn es sie schon gibt (gleicher Name, Material und Farbe), sonst angelegt (Dichte nach Material, 1,75 mm); die neue Spule wird dem Kopf zugeordnet (mit SpoolLink per `SET_SPOOL_ID`). Dienst: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`), liefert `spool_id`.
+**Bestand.** *Bestand* im Bereich Druckköpfe zeigt alle aktiven Spulen: Farbe, Hersteller, Material, Ort, in welchem Kopf sie steckt und das Restgewicht als Balken (unter der Warnschwelle orange). Oben Anzahl, verbleibendes Filament in kg und dessen Wert (aus den Spulenpreisen). Filter nach Material, Suche nach Name, Hersteller, Ort oder `#ID`.
+
+**Neue Spule.** Aus dem Bestand (*Neue Spule*) oder aus der Spulenauswahl eines Kopfs (*Neue Spule anlegen*, vorausgefüllt mit Material, Hersteller und Farbe des Kopfs, vom RFID-Tag falls vorhanden). Beim Tippen in *Filament suchen* erscheinen Treffer aus deinen Spoolman-Filamenten und aus dem Spoolman-Katalog [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (mehrere tausend Filamente bekannter Hersteller, nur 1,75 mm); die Felder Hersteller und Material schlagen bekannte Namen vor. Ein Treffer füllt Hersteller, Material, Name, Farbe, Nettogewicht und Leerspule:
+- ein eigenes Filament wird so genommen, wie es ist,
+- ein Katalog-Eintrag wird einmal in Spoolman übernommen (Hersteller bei Bedarf angelegt, mit Farbe, Dichte und Temperaturen) und für die nächste Spule wiederverwendet.
+
+Ohne Treffer werden Hersteller und Filament wiederverwendet, wenn es sie schon gibt (gleicher Name, Material und Farbe), sonst angelegt (Dichte nach Material, 1,75 mm). Ort und Preis sind optional; aus dem Bestand wählst du den Kopf im Formular oder keinen. Mit SpoolLink wird der Kopf per `SET_SPOOL_ID` gesetzt. Der Katalog braucht Spoolman 0.18 oder neuer mit Internetzugang; sonst werden nur deine eigenen Filamente vorgeschlagen.
+
+Dienst: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`, `location`, `filament_id` oder `external_id`), liefert `spool_id`.
 
 **Zuordnung Spule → Kopf.** Moonraker kennt für Spoolman nur *eine* aktive Spule; bei vier Köpfen übernimmt das die Integration selbst. Je geladenem Kopf wird eine aktive (nicht archivierte) Spule gesucht:
 
@@ -161,7 +169,7 @@ Dasselbe gilt für jeden anderen `[spoolman]`-Abschnitt in Moonrakers Konfigurat
 
 **Entladen und neu einlegen.** Ohne RFID-Tag vergisst der Drucker beim Entladen die Spule (mit SpoolLink setzt er `filament_spool_id` zurück). Wird der Kopf wieder beladen, bietet er seine vorherige Spule an: „Wieder #5 …?“ – ein Tipp übernimmt sie (mit SpoolLink per `SET_SPOOL_ID`). Bis dahin wird nichts gebucht und für diesen Kopf keine andere Spule geraten. Option *Letzte Spule nach dem Neu-Einlegen* (Abschnitt Spoolman): vorschlagen (Standard), automatisch setzen (nicht im Druck; falsche Spule, wenn du eine andere einlegst und das Umstellen vergisst) oder aus.
 
-**Spule wiegen.** In den Kopfdetails (mit zugeordneter Spule) eintragen, was die Waage zeigt: mit Leerspule (deren Gewicht kommt aus Spoolman: Spule, Filament oder Hersteller *Leerspulengewicht*) oder nur das Filament. Die Integration setzt das Restgewicht in Spoolman. Dienst `weigh_spool` (`slot` oder `spool_id`, `weight`, `gross`). In Spoolman selbst bleibt damit nur das Anlegen neuer Spulen.
+**Spule wiegen.** In den Kopfdetails (mit zugeordneter Spule) eintragen, was die Waage zeigt: mit Leerspule (deren Gewicht kommt aus Spoolman: Spule, Filament oder Hersteller *Leerspulengewicht*) oder nur das Filament. Die Integration setzt das Restgewicht in Spoolman. Dienst `weigh_spool` (`slot` oder `spool_id`, `weight`, `gross`). Die Oberfläche von Spoolman brauchst du damit nur noch für Details zu Herstellern und Filamenten.
 
 Grenzen: Wechselt die Firmware mitten im Druck automatisch auf einen anderen Kopf (Auto-Nachfüllen bei leerer Spule), wird der gesamte Verbrauch dem zuletzt gemeldeten Kopf zugerechnet.
 

@@ -36,6 +36,7 @@ Nabu Casa.
 | `machine_status.py` | 2.0, HA-free: which printer objects to subscribe to, turning their status into the card's values (named like the Moonraker integration's entities) and the G-code for the controls |
 | `machine_entities.py`, `button.py`, `light.py` | 2.0: entities for those values (temperatures, targets, fans, speed, light, buttons); `add_machine()` in `sensor.py` adds each one when its value first appears |
 | `settings_ws.py` | 2.0: websocket commands `snapmaker_u1_card/settings/get` and `/set` for the settings in the card; fields, labels and validation come from the options flow |
+| `spool_catalog.py`, `spoolman_ws.py` | 2.1: suggestions for a new spool – own Spoolman filaments plus the SpoolmanDB catalogue (`/api/v1/external/filament`, cached for a day), searched over the websocket commands `snapmaker_u1_card/spoolman/catalog` and `/suggest` |
 | `coordinator/` | Polling, print tracking and all feature logic (see below) |
 | `parsing.py` | Pure data processing (no HA imports): slots, files, mapping, cost, print tracking |
 | `layers.py` | G-code parser: layer paths for the layer view and a time profile for remaining time |

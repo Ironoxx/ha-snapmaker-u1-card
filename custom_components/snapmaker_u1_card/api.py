@@ -517,11 +517,11 @@ class SpoolmanClient:
             url = f"http://{url}"
         self.url = url.removesuffix("/api/v1")
 
-    async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
+    async def _request(self, method: str, path: str, timeout: float = 10, **kwargs: Any) -> Any:
         """Call the Spoolman API and return the decoded JSON."""
         try:
             async with self._session.request(
-                method, f"{self.url}/api/v1{path}", timeout=aiohttp.ClientTimeout(total=10), **kwargs
+                method, f"{self.url}/api/v1{path}", timeout=aiohttp.ClientTimeout(total=timeout), **kwargs
             ) as resp:
                 body = await resp.text()
                 if resp.status >= 400:
@@ -548,6 +548,11 @@ class SpoolmanClient:
 
     async def filaments(self) -> list[dict[str, Any]]:
         result = await self._request("GET", "/filament")
+        return result if isinstance(result, list) else []
+
+    async def external_filaments(self) -> list[dict[str, Any]]:
+        """SpoolmanDB catalogue (Spoolman 0.18+); large, so a longer timeout."""
+        result = await self._request("GET", "/external/filament", timeout=30)
         return result if isinstance(result, list) else []
 
     async def create(self, kind: str, data: dict[str, Any]) -> dict[str, Any]:

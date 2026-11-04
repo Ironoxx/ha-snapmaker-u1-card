@@ -573,6 +573,20 @@ export const STYLES = `
   .spool-opt ha-icon { --mdc-icon-size: 20px; color: var(--u1-on-variant); }
   .spool-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .spool-opt-text > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stock-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--u1-outline) 50%, transparent); }
+  .stock-row .spool-track { margin-top: 4px; }
+  .stock-row[data-low="1"] .spool-rest { color: var(--u1-warn); }
+  .stock-row[data-low="1"] .spool-track i { background: var(--u1-warn); }
+  .stock-search { font: inherit; padding: 8px 12px; border-radius: 10px; color: var(--u1-on); background: transparent;
+    border: 1px solid color-mix(in srgb, var(--u1-outline) 60%, transparent); }
+  .stock-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .head-form .wide { grid-column: 1 / -1; }
+  .head-form .suggest { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow: auto; }
+  .head-form .suggest[hidden], .head-form .picked[hidden] { display: none; }
+  .head-form .picked { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--u1-on-variant); }
+  .head-form .picked ha-icon { --mdc-icon-size: 18px; color: var(--u1-primary); }
+  .head-form .picked .chip { margin-left: auto; }
   .spool-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--fil); flex-shrink: 0;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-on) 25%, transparent); }
   .rfid {

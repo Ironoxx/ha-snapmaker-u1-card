@@ -1003,7 +1003,19 @@
         },
         "material": {
           "name": "Material",
-          "description": "z. B. PLA, PETG, TPU."
+          "description": "z. B. PLA, PETG, TPU. Nicht nötig mit Filament-ID oder Katalog-Eintrag."
+        },
+        "filament_id": {
+          "name": "Filament-ID",
+          "description": "Vorhandenes Spoolman-Filament für die Spule; Hersteller, Material, Name und Farbe kommen dann von dort."
+        },
+        "external_id": {
+          "name": "Katalog-Eintrag",
+          "description": "ID eines Filaments aus dem Spoolman-Katalog (SpoolmanDB); einmal übernommen, danach wiederverwendet."
+        },
+        "location": {
+          "name": "Ort",
+          "description": "Wo die Spule liegt, z. B. Regal oder Trockenbox."
         },
         "vendor": {
           "name": "Hersteller",

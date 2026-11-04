@@ -17,14 +17,18 @@ from typing import Any
 
 from .api import MoonrakerError, SpoolmanClient
 from .parsing import compact_spool, grams_per_slot, slot_fingerprint, suggest_spools
+from .spool_catalog import SpoolCatalog
 
 _LOGGER = logging.getLogger(__name__)
+
 
 
 class SpoolManager:
     """Spoolman state: spool list, assignment per head and pending bookings."""
     def __init__(self, client: SpoolmanClient | None, stored: dict[str, Any] | None, deduct: bool) -> None:
         self.client = client
+        # suggestions for new spools (own filaments + SpoolmanDB)
+        self.catalog = SpoolCatalog()
         stored = stored or {}
         self._map: dict[str, dict[str, Any]] = {
             str(k): dict(v) for k, v in (stored.get("spool_map") or {}).items() if isinstance(v, dict)

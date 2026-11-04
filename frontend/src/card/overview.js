@@ -240,6 +240,8 @@ export const OverviewMixin = (Base) => class extends Base {
         <div class="panel-head">
           <ha-icon icon="mdi:printer-3d-nozzle"></ha-icon>
           <span class="panel-title">${tr("Druckköpfe")}</span>
+          ${this._spoolman() ? `<button type="button" class="chip sm" data-spoolstock title="${tr("Alle Spulen in Spoolman")}"
+            style="margin-left:auto"><ha-icon icon="mdi:package-variant-closed"></ha-icon><span>${tr("Bestand")}</span></button>` : ""}
           ${this._lockBtn()}
         </div>
         <div class="heads">${cards}</div>
@@ -303,66 +305,6 @@ export const OverviewMixin = (Base) => class extends Base {
     const take = r.takeover !== null && r.takeover !== undefined
       ? ` · ${tr("{h} übernimmt", { h: (heads[r.takeover] || {}).name || tr("Kopf {n}", { n: r.takeover + 1 }) })}` : "";
     return `<span class="runout" data-runout="${idx}">${tr("leer in ~{m} min", { m: r.minutes })}${esc(take)}</span>`;
-  }
-
-  /** Form in the picker dialog: create a spool in Spoolman, prefilled from the head's filament. */
-  _newSpoolForm(dlg, idx) {
-    const slot = (this._slots() || [])[idx] || {};
-    const head = (this._d && this._d.heads[idx]) || { name: `E${idx}` };
-    const rfid = slot.rfid || {};
-    const color = /^#[0-9a-f]{6}$/i.test(slot.color || "") ? slot.color : "#ffffff";
-    const vendor = slot.vendor && slot.vendor !== "Generic" ? slot.vendor : (rfid.manufacturer || rfid.vendor || "Generic");
-    const material = (slot.type || "PLA").toUpperCase();
-    const name = [material, slot.sub_type].filter(Boolean).join(" ");
-    dlg.innerHTML = `<div class="dlg">
-        <header class="dlg-head"><div style="min-width:0">
-          <div class="dlg-title">${esc(tr("Neue Spule für {head}", { head: head.name }))}</div>
-          <div class="t-label">${tr("Hersteller und Filament werden in Spoolman wiederverwendet oder angelegt.")}</div></div>
-          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
-        </header>
-        <form class="head-form" data-newspoolform>
-          <label>${tr("Hersteller")}<input name="vendor" value="${esc(vendor)}" required maxlength="64" /></label>
-          <label>${tr("Material")}<input name="material" value="${esc(material)}" required maxlength="32" /></label>
-          <label>${tr("Name")}<input name="name" value="${esc(name)}" maxlength="64" placeholder="${tr("z. B. PLA Matte Schwarz")}" /></label>
-          <label>${tr("Farbe")}<input name="color" type="color" value="${esc(color)}" /></label>
-          <label>${tr("Nettogewicht (g)")}<input name="weight" type="number" min="1" max="10000" step="1" value="${Math.round(rfid.weight_g || 1000)}" required /></label>
-          <label>${tr("Leerspule (g)")}<input name="spool_weight" type="number" min="0" max="2000" step="1" placeholder="${tr("optional")}" /></label>
-          <label>${tr("Preis")}<input name="price" type="number" min="0" max="10000" step="0.01" placeholder="${tr("optional")}" /></label>
-          <div class="dlg-error" hidden></div>
-          <div class="dlg-actions">
-            <button type="button" class="outline" data-back>${tr("Zurück")}</button>
-            <button type="submit" class="filled"><ha-icon icon="mdi:content-save-outline"></ha-icon>${tr("Anlegen und zuordnen")}</button>
-          </div>
-        </form>
-      </div>`;
-    dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
-    dlg.querySelector("[data-back]").addEventListener("click", () => this._openSpoolPicker(idx));
-    const form = dlg.querySelector("[data-newspoolform]");
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const f = new FormData(form);
-      const opt = (k) => (String(f.get(k) || "").trim() === "" ? {} : { [k]: Number(f.get(k)) });
-      const data = {
-        slot: idx + 1, vendor: String(f.get("vendor") || "").trim() || "Generic",
-        material: String(f.get("material") || "").trim(), name: String(f.get("name") || "").trim() || undefined,
-        color: f.get("color"), weight: Number(f.get("weight")), ...opt("spool_weight"), ...opt("price"),
-        ...this._entryData(),
-      };
-      if (!data.name) delete data.name;
-      const btn = form.querySelector("button[type=submit]");
-      btn.disabled = true;
-      try {
-        const res = await this._hass.callService(DOMAIN, "create_spool", data, undefined, false, true);
-        const id = res && res.response && res.response.spool_id;
-        dlg.close();
-        this._toast(tr("Spule #{id} angelegt und {head} zugeordnet", { id: id ?? "?", head: head.name }));
-      } catch (err) {
-        btn.disabled = false;
-        const el = form.querySelector(".dlg-error");
-        el.hidden = false;
-        el.textContent = (err && err.message) || String(err);
-      }
-    });
   }
 
   _openSpoolPicker(idx) {

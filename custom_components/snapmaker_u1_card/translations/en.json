@@ -1003,7 +1003,19 @@
         },
         "material": {
           "name": "Material",
-          "description": "e.g. PLA, PETG, TPU."
+          "description": "e.g. PLA, PETG, TPU. Not needed with a filament ID or catalogue entry."
+        },
+        "filament_id": {
+          "name": "Filament ID",
+          "description": "Existing Spoolman filament for the spool; vendor, material, name and colour then come from it."
+        },
+        "external_id": {
+          "name": "Catalogue entry",
+          "description": "ID of a filament in Spoolman's catalogue (SpoolmanDB); imported once, reused afterwards."
+        },
+        "location": {
+          "name": "Location",
+          "description": "Where the spool is stored, e.g. a shelf or dry box."
         },
         "vendor": {
           "name": "Vendor",

@@ -240,6 +240,8 @@ export const RenderMixin = (Base) => class extends Base {
         { preference: "entangle_sensitivity", value: b.dataset.prefsen })));
     r.querySelectorAll("[data-spoolrestore]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._restoreSpool(Number(b.dataset.spoolrestore), Number(b.dataset.spool)); }));
+    r.querySelectorAll("[data-spoolstock]").forEach((b) =>
+      b.addEventListener("click", (e) => { e.stopPropagation(); this._openSpoolStock(); }));
     r.querySelectorAll("[data-spoolpick]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._openSpoolPicker(Number(b.dataset.spoolpick)); }));
 
