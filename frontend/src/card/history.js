@@ -103,7 +103,7 @@ export const HistoryMixin = (Base) => class extends Base {
     const chips = METRICS.filter(([k]) => k !== "cost" || cost).map(([k, label]) =>
       `<button class="chip ${k === metric ? "sel" : ""}" data-metric="${k}">${tr(label)}</button>`).join("");
     const rate = t.success_rate === null || t.success_rate === undefined ? "—"
-      : `${String(t.success_rate).replace(".", LANG === "de" ? "," : ".")} %`;
+      : `${String(t.success_rate).replace(".", LANG === "en" ? "." : ",")} %`;
     const tiles = [
       [tr("Drucke"), fmtInt(t.prints)],
       [tr("Erfolgsquote"), rate],

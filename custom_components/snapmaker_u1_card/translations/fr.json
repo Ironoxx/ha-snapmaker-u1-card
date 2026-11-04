@@ -1,0 +1,1113 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Snapmaker U1",
+        "description": "Adresse IP ou nom d’hôte de l’imprimante. Le port 80 fonctionne avec le firmware d’origine, l’Extended Firmware et Bespok3d.",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "api_key": "Clé API Moonraker (facultatif)"
+        }
+      },
+      "reconfigure": {
+        "title": "Snapmaker U1",
+        "data": {
+          "host": "Hôte",
+          "port": "Port",
+          "api_key": "Clé API Moonraker (facultatif)"
+        }
+      },
+      "settings": {
+        "title": "Paramètres",
+        "description": "Tout est facultatif et modifiable plus tard sous « Configurer ». Dépliez les sections.",
+        "sections": {
+          "power": {
+            "name": "Alimentation et énergie",
+            "description": "N’importe quel interrupteur convient : Shelly, KNX, prise Zigbee, …",
+            "data": {
+              "power_switch": "Interrupteur d’alimentation de l’imprimante",
+              "power_sensor": "Capteur de puissance (W)",
+              "energy_sensor": "Compteur d’énergie (kWh)",
+              "energy_price": "Entité du prix de l’électricité",
+              "shutdown_host": "Arrêter l’imprimante avant de couper le courant",
+              "auto_on": "Allumer automatiquement au lancement d’une impression",
+              "auto_off": "Éteindre automatiquement après une impression",
+              "auto_off_temp": "Arrêt automatique sous la température",
+              "auto_off_delay": "Délai d’arrêt automatique après l’impression",
+              "idle_off_hours": "Éteindre après inactivité",
+              "energy_price_fixed": "Prix fixe de l’énergie"
+            },
+            "data_description": {
+              "power_switch": "Utilisé pour le bouton marche/arrêt de la carte. L’arrêt est bloqué pendant l’impression.",
+              "power_sensor": "Puissance instantanée, généralement de la même prise.",
+              "energy_sensor": "Compteur d’énergie total. Utilisé pour la consommation de chaque impression.",
+              "energy_price": "Capteur ou entrée avec le prix actuel (tarifs dynamiques). Vide = prix fixe ci-dessous ou le tableau de bord énergie.",
+              "shutdown_host": "Envoie un arrêt à l’imprimante, attend qu’elle ait disparu plus 10 s, puis coupe le courant. Si l’imprimante refuse, le courant est coupé après 10 s comme avec son interrupteur.",
+              "auto_on": "Lancer une impression depuis la carte alors que l’imprimante est éteinte l’allume et attend qu’elle soit prête (env. 1–2 min).",
+              "auto_off": "Après une impression terminée ou annulée, une fois tous les éléments chauffants refroidis.",
+              "auto_off_temp": "Les buses et le plateau doivent être sous cette température.",
+              "auto_off_delay": "Délai minimal entre la fin de l’impression et l’extinction.",
+              "idle_off_hours": "Heures sans impression ni chauffe, puis arrêt propre et coupure du courant. 0 = désactivé.",
+              "energy_price_fixed": "Par kWh, utilisé sans entité de prix. Sans les deux, le prix du tableau de bord énergie est utilisé."
+            }
+          },
+          "notify": {
+            "name": "Notifications et caméra",
+            "description": "Push sur le téléphone : fin d’impression, erreurs, pause, messages, première couche, presque terminé, filament bas.",
+            "data": {
+              "notify_targets": "Services de notification",
+              "notify_events": "Notifier pour",
+              "camera": "Caméra pour l’image",
+              "almost_done_minutes": "Alerte « presque terminé »",
+              "bed_cool_temp": "« Pièce prête » à",
+              "camera_wake": "Garder la caméra éveillée",
+              "live_notify_budget": "Notification de progression : mises à jour par jour",
+              "live_notify_image": "Notification de progression : image de la caméra",
+              "notify_click_url": "Ouvrir au toucher"
+            },
+            "data_description": {
+              "notify_targets": "p. ex. notify.mobile_app_pixel_8. Plusieurs possibles.",
+              "camera": "L’application Companion joint une image actuelle. Également utilisée pour la photo du résultat dans l’historique.",
+              "almost_done_minutes": "Minutes avant la fin estimée.",
+              "bed_cool_temp": "Température du plateau après une impression terminée à laquelle le message est envoyé.",
+              "camera_wake": "Envoie camera.start_monitor toutes les 10 s comme l’application Snapmaker. Nécessaire si l’image se fige avec le firmware d’origine ; le firmware modifié n’en a généralement pas besoin.",
+              "live_notify_budget": "Limite pour la notification de progression continue (Android) par jour et par téléphone. L’application Companion autorise environ 500 push par jour ; les messages de fin, d’erreur et de pause ne comptent pas ici.",
+              "live_notify_image": "Affiche l’image de la caméra quand la notification de progression est dépliée (mise à jour à chaque progression, sans push supplémentaire).",
+              "notify_click_url": "Chemin du tableau de bord ou URL ouvert au toucher d’une notification, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vide = valeur par défaut de l’application."
+            }
+          },
+          "filament": {
+            "name": "Prix du filament",
+            "description": "Prix au kg par matériau, pour le coût du filament de chaque impression. Avec Spoolman, ses prix passent en premier (la bobine de chaque tête, sinon la moyenne de vos bobines de ce matériau) ; ces champs ne servent que pour les matériaux sans prix là-bas. Laisser vide pour ignorer.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Autres matériaux"
+            }
+          },
+          "files": {
+            "name": "Fichiers",
+            "data": {
+              "files_limit": "Nombre de fichiers les plus récents",
+              "config_backup": "Sauvegarder la configuration de l’imprimante"
+            },
+            "data_description": {
+              "config_backup": "Copie quotidienne de printer.cfg etc. dans /config/snapmaker_u1_backup (uniquement si modifiée, 10 versions)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Facultatif. Laissez l’URL vide si vous n’utilisez pas Spoolman.",
+            "data": {
+              "spoolman_url": "URL de Spoolman",
+              "spoolman_deduct": "Déduire la consommation par tête après chaque impression",
+              "spoolman_low": "Avertir en dessous de",
+              "spool_restore": "Dernière bobine après rechargement d’une tête"
+            },
+            "data_description": {
+              "spoolman_url": "Adresse avec le port 7912, p. ex. 192.168.0.10:7912 (module complémentaire Home Assistant : homeassistant.local:7912). Vide = désactivé.",
+              "spoolman_deduct": "Poids du slicer par tête (au prorata en cas d’annulation). Désactivez si autre chose comptabilise déjà la consommation (p. ex. la connexion Spoolman propre à Moonraker), sinon elle est comptée deux fois.",
+              "spoolman_low": "La carte avertit quand une bobine a moins de filament.",
+              "spool_restore": "L’imprimante oublie la bobine au déchargement du filament (sans étiquette RFID). Demander : la tête propose la dernière bobine, un toucher la rétablit. Automatique : elle est réattribuée sans demander (mauvaise bobine si vous en chargez une autre). Désactivé : choisir à nouveau."
+            }
+          },
+          "timelapse": {
+            "name": "Sauvegarde des timelapses",
+            "description": "Copie les nouveaux timelapses dans le dossier média de Home Assistant (snapmaker_u1). Les plus anciens peuvent ensuite être supprimés sur l’imprimante.",
+            "data": {
+              "timelapse_archive": "Sauvegarder les timelapses",
+              "timelapse_keep": "Garder sur l’imprimante",
+              "timelapse_archive_max": "Garder dans le dossier média",
+              "timelapse_archive_days": "Supprimer les sauvegardes de plus de"
+            },
+            "data_description": {
+              "timelapse_keep": "Ce nombre de plus récents reste sur l’imprimante, les plus anciens sont supprimés après la sauvegarde. 0 = ne jamais supprimer.",
+              "timelapse_archive_max": "Vidéos les plus récentes gardées dans le dossier média ; les plus anciennes sont supprimées. 0 = tout garder.",
+              "timelapse_archive_days": "Jours ; 0 = pas de limite d’âge."
+            }
+          },
+          "maintenance": {
+            "name": "Entretien",
+            "description": "Intervalles en heures d’impression. 0 = masquer l’élément.",
+            "data": {
+              "maint_plate": "Nettoyer le plateau",
+              "maint_nozzle": "Nettoyer les buses et l’essuyeur",
+              "maint_rails": "Lubrifier les guidages linéaires",
+              "maint_belts": "Vérifier la tension des courroies",
+              "maint_filter": "Remplacer le filtre à air"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Imprimante injoignable.",
+      "not_u1": "Moonraker a répondu, mais ce n’est pas une Snapmaker U1 (print_task_config manquant).",
+      "auto_needs_switch": "La marche et l’arrêt automatiques nécessitent un interrupteur d’alimentation.",
+      "unknown_notify": "L’un des services de notification n’existe pas.",
+      "spoolman_unreachable": "Spoolman n’est pas joignable à cette URL."
+    },
+    "abort": {
+      "already_configured": "Cette imprimante est déjà configurée.",
+      "reconfigure_successful": "Paramètres mis à jour."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options Snapmaker U1",
+        "description": "Tout est facultatif. La carte le détecte automatiquement.",
+        "sections": {
+          "power": {
+            "name": "Alimentation et énergie",
+            "description": "N’importe quel interrupteur convient : Shelly, KNX, prise Zigbee, …",
+            "data": {
+              "power_switch": "Interrupteur d’alimentation de l’imprimante",
+              "power_sensor": "Capteur de puissance (W)",
+              "energy_sensor": "Compteur d’énergie (kWh)",
+              "energy_price": "Entité du prix de l’électricité",
+              "shutdown_host": "Arrêter l’imprimante avant de couper le courant",
+              "auto_on": "Allumer automatiquement au lancement d’une impression",
+              "auto_off": "Éteindre automatiquement après une impression",
+              "auto_off_temp": "Arrêt automatique sous la température",
+              "auto_off_delay": "Délai d’arrêt automatique après l’impression",
+              "idle_off_hours": "Éteindre après inactivité",
+              "energy_price_fixed": "Prix fixe de l’énergie"
+            },
+            "data_description": {
+              "power_switch": "Utilisé pour le bouton marche/arrêt de la carte. L’arrêt est bloqué pendant l’impression.",
+              "power_sensor": "Puissance instantanée, généralement de la même prise.",
+              "energy_sensor": "Compteur d’énergie total. Utilisé pour la consommation de chaque impression.",
+              "energy_price": "Capteur ou entrée avec le prix actuel (tarifs dynamiques). Vide = prix fixe ci-dessous ou le tableau de bord énergie.",
+              "shutdown_host": "Envoie un arrêt à l’imprimante, attend qu’elle ait disparu plus 10 s, puis coupe le courant. Si l’imprimante refuse, le courant est coupé après 10 s comme avec son interrupteur.",
+              "auto_on": "Lancer une impression depuis la carte alors que l’imprimante est éteinte l’allume et attend qu’elle soit prête (env. 1–2 min).",
+              "auto_off": "Après une impression terminée ou annulée, une fois tous les éléments chauffants refroidis.",
+              "auto_off_temp": "Les buses et le plateau doivent être sous cette température.",
+              "auto_off_delay": "Délai minimal entre la fin de l’impression et l’extinction.",
+              "idle_off_hours": "Heures sans impression ni chauffe, puis arrêt propre et coupure du courant. 0 = désactivé.",
+              "energy_price_fixed": "Par kWh, utilisé sans entité de prix. Sans les deux, le prix du tableau de bord énergie est utilisé."
+            }
+          },
+          "notify": {
+            "name": "Notifications et caméra",
+            "description": "Push sur le téléphone : fin d’impression, erreurs, pause, messages, première couche, presque terminé, filament bas.",
+            "data": {
+              "notify_targets": "Services de notification",
+              "notify_events": "Notifier pour",
+              "camera": "Caméra pour l’image",
+              "almost_done_minutes": "Alerte « presque terminé »",
+              "bed_cool_temp": "« Pièce prête » à",
+              "camera_wake": "Garder la caméra éveillée",
+              "live_notify_budget": "Notification de progression : mises à jour par jour",
+              "live_notify_image": "Notification de progression : image",
+              "notify_click_url": "Ouvrir au toucher"
+            },
+            "data_description": {
+              "notify_targets": "p. ex. notify.mobile_app_pixel_8. Plusieurs possibles.",
+              "camera": "L’application Companion joint une image actuelle. Également utilisée pour la photo du résultat dans l’historique.",
+              "almost_done_minutes": "Minutes avant la fin estimée.",
+              "bed_cool_temp": "Température du plateau après une impression terminée à laquelle le message est envoyé.",
+              "camera_wake": "Envoie camera.start_monitor toutes les 10 s comme l’application Snapmaker. Nécessaire si l’image se fige avec le firmware d’origine ; le firmware modifié n’en a généralement pas besoin.",
+              "live_notify_budget": "Limite pour la notification de progression continue (Android) par jour et par téléphone. L’application Companion autorise environ 500 push par jour ; les messages de fin, d’erreur et de pause ne comptent pas ici.",
+              "live_notify_image": "Image quand la notification de progression est dépliée : image de la caméra (mise à jour à chaque progression) ou aperçu du modèle du slicer. Sans push supplémentaire.",
+              "notify_click_url": "Chemin du tableau de bord ou URL ouvert au toucher d’une notification, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vide = valeur par défaut de l’application."
+            }
+          },
+          "filament": {
+            "name": "Prix du filament",
+            "description": "Prix au kg par matériau, pour le coût du filament de chaque impression. Avec Spoolman, ses prix passent en premier (la bobine de chaque tête, sinon la moyenne de vos bobines de ce matériau) ; ces champs ne servent que pour les matériaux sans prix là-bas. Laisser vide pour ignorer.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Autres matériaux"
+            }
+          },
+          "files": {
+            "name": "Fichiers",
+            "data": {
+              "files_limit": "Nombre de fichiers les plus récents",
+              "config_backup": "Sauvegarder la configuration de l’imprimante"
+            },
+            "data_description": {
+              "config_backup": "Copie quotidienne de printer.cfg etc. dans /config/snapmaker_u1_backup (uniquement si modifiée, 10 versions)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Facultatif. Laissez l’URL vide si vous n’utilisez pas Spoolman.",
+            "data": {
+              "spoolman_url": "URL de Spoolman",
+              "spoolman_deduct": "Déduire la consommation par tête après chaque impression",
+              "spoolman_low": "Avertir en dessous de",
+              "spool_restore": "Dernière bobine après rechargement d’une tête"
+            },
+            "data_description": {
+              "spoolman_url": "Adresse avec le port 7912, p. ex. 192.168.0.10:7912 (module complémentaire Home Assistant : homeassistant.local:7912). Vide = désactivé.",
+              "spoolman_deduct": "Poids du slicer par tête (au prorata en cas d’annulation). Désactivez si autre chose comptabilise déjà la consommation (p. ex. la connexion Spoolman propre à Moonraker), sinon elle est comptée deux fois.",
+              "spoolman_low": "La carte avertit quand une bobine a moins de filament.",
+              "spool_restore": "L’imprimante oublie la bobine au déchargement du filament (sans étiquette RFID). Demander : la tête propose la dernière bobine, un toucher la rétablit. Automatique : elle est réattribuée sans demander (mauvaise bobine si vous en chargez une autre). Désactivé : choisir à nouveau."
+            }
+          },
+          "timelapse": {
+            "name": "Sauvegarde des timelapses",
+            "description": "Copie les nouveaux timelapses dans le dossier média de Home Assistant (snapmaker_u1). Les plus anciens peuvent ensuite être supprimés sur l’imprimante.",
+            "data": {
+              "timelapse_archive": "Sauvegarder les timelapses",
+              "timelapse_keep": "Garder sur l’imprimante",
+              "timelapse_archive_max": "Garder dans le dossier média",
+              "timelapse_archive_days": "Supprimer les sauvegardes de plus de"
+            },
+            "data_description": {
+              "timelapse_keep": "Ce nombre de plus récents reste sur l’imprimante, les plus anciens sont supprimés après la sauvegarde. 0 = ne jamais supprimer.",
+              "timelapse_archive_max": "Vidéos les plus récentes gardées dans le dossier média ; les plus anciennes sont supprimées. 0 = tout garder.",
+              "timelapse_archive_days": "Jours ; 0 = pas de limite d’âge."
+            }
+          },
+          "maintenance": {
+            "name": "Entretien",
+            "description": "Intervalles en heures d’impression (h) et/ou en mois (mo) ; le premier atteint rend l’élément à faire. Les mois suivent le guide d’entretien U1 de Snapmaker. 0 = désactivé, les deux à 0 = masquer l’élément.",
+            "data": {
+              "maint_plate": "Nettoyer le plateau (heures d’impression)",
+              "maint_m_plate": "Nettoyer le plateau (mois)",
+              "maint_nozzle": "Nettoyer les buses et l’essuyeur (heures d’impression)",
+              "maint_m_nozzle": "Nettoyer les buses et l’essuyeur (mois)",
+              "maint_rails": "Nettoyer et lubrifier les guidages linéaires (heures d’impression)",
+              "maint_m_rails": "Nettoyer et lubrifier les guidages linéaires (mois)",
+              "maint_belts": "Vérifier les courroies (heures d’impression)",
+              "maint_m_belts": "Vérifier les courroies (mois)",
+              "maint_filter": "Remplacer le filtre à air (heures d’impression)",
+              "maint_m_filter": "Remplacer le filtre à air (mois)",
+              "maint_carbon_rods": "Nettoyer les tiges carbone X (heures d’impression)",
+              "maint_m_carbon_rods": "Nettoyer les tiges carbone X (mois)",
+              "maint_lead_screws": "Graisser les vis Z et écrous (heures d’impression)",
+              "maint_m_lead_screws": "Graisser les vis Z et écrous (mois)",
+              "maint_coupling": "Goupilles et billes du couplage des têtes (heures d’impression)",
+              "maint_m_coupling": "Goupilles et billes du couplage des têtes (mois)",
+              "maint_pogo": "Nettoyer les contacts pogo des têtes (heures d’impression)",
+              "maint_m_pogo": "Nettoyer les contacts pogo des têtes (mois)"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "auto_needs_switch": "La marche et l’arrêt automatiques nécessitent un interrupteur d’alimentation.",
+      "unknown_notify": "L’un des services de notification n’existe pas.",
+      "spoolman_unreachable": "Spoolman n’est pas joignable à cette URL."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "filaments": {
+        "name": "Filaments",
+        "unit_of_measurement": "chargés"
+      },
+      "slot": {
+        "name": "Emplacement {slot}"
+      },
+      "files": {
+        "name": "Fichiers d’impression",
+        "unit_of_measurement": "fichiers"
+      },
+      "tool_changes": {
+        "name": "Changements d’outil",
+        "unit_of_measurement": "changements"
+      },
+      "tool_changes_print": {
+        "name": "Changements d’outil (impression)",
+        "unit_of_measurement": "changements"
+      },
+      "print_energy": {
+        "name": "Énergie (impression)"
+      },
+      "print_cost": {
+        "name": "Coût (impression)"
+      },
+      "history": {
+        "name": "Historique d’impression",
+        "unit_of_measurement": "impressions"
+      },
+      "timelapses": {
+        "name": "Timelapses",
+        "unit_of_measurement": "vidéos"
+      },
+      "queue": {
+        "name": "File d’attente",
+        "unit_of_measurement": "tâches"
+      },
+      "statistics": {
+        "name": "Heures d’impression"
+      },
+      "maintenance": {
+        "name": "Entretien à faire",
+        "unit_of_measurement": "éléments"
+      },
+      "errors": {
+        "name": "Messages de l’imprimante",
+        "unit_of_measurement": "messages"
+      },
+      "remaining": {
+        "name": "Temps restant"
+      },
+      "finish": {
+        "name": "Heure de fin"
+      },
+      "bed_mesh": {
+        "name": "Écart du maillage du plateau"
+      },
+      "top_cover": {
+        "name": "Top cover",
+        "state": {
+          "idle": "Repos",
+          "cool": "Refroidissement de l’enceinte",
+          "preheat": "Préchauffage de l’enceinte",
+          "hot": "Enceinte chaude",
+          "unknown": "Inconnu"
+        }
+      },
+      "chamber_heater": {
+        "name": "Chauffage d’enceinte"
+      },
+      "machine": {
+        "name": "Valeurs de l’imprimante"
+      },
+      "bed_temperature": {
+        "name": "Température du plateau"
+      },
+      "nozzle_temperature": {
+        "name": "Température de la buse {head}"
+      },
+      "cavity_temperature": {
+        "name": "Température de l’enceinte"
+      },
+      "progress": {
+        "name": "Progression"
+      },
+      "print_state": {
+        "name": "État d’impression",
+        "state": {
+          "standby": "Prête",
+          "printing": "Impression",
+          "paused": "En pause",
+          "complete": "Terminée",
+          "cancelled": "Annulée",
+          "error": "Erreur"
+        }
+      },
+      "current_layer": {
+        "name": "Couche"
+      },
+      "cpu_temperature": {
+        "name": "Température du CPU"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Alimentation"
+      },
+      "auto_replenish": {
+        "name": "Réapprovisionnement automatique du filament"
+      },
+      "replenish_ignore_color": {
+        "name": "Réapprovisionner sans tenir compte de la couleur"
+      },
+      "entangle_detect": {
+        "name": "Détection d’emmêlement du filament"
+      },
+      "end_led_off": {
+        "name": "Éteindre la lumière après l’impression"
+      },
+      "live_notify": {
+        "name": "Notification de progression (Android)"
+      },
+      "chamber_filter": {
+        "name": "Filtre du chauffage d’enceinte"
+      }
+    },
+    "binary_sensor": {
+      "live": {
+        "name": "Connexion en direct"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    },
+    "select": {
+      "entangle_sensitivity": {
+        "name": "Sensibilité de la détection d’emmêlement",
+        "state": {
+          "low": "Faible",
+          "medium": "Moyenne",
+          "high": "Élevée"
+        }
+      },
+      "top_cover_mode": {
+        "name": "Mode du top cover",
+        "state": {
+          "idle": "Repos",
+          "cool": "Refroidir l’enceinte",
+          "preheat": "Préchauffer l’enceinte",
+          "hot": "Enceinte chaude"
+        }
+      }
+    },
+    "camera": {
+      "camera": {
+        "name": "Caméra",
+        "state_attributes": {
+          "mode": {
+            "name": "Mode",
+            "state": {
+              "live": "Flux en direct",
+              "still": "Images fixes",
+              "wake": "Images fixes (origine, réveillée)",
+              "none": "Pas de caméra"
+            }
+          }
+        }
+      },
+      "camera2": {
+        "name": "Caméra 2"
+      }
+    },
+    "number": {
+      "flow_factor": {
+        "name": "Débit"
+      },
+      "top_cover_exhaust": {
+        "name": "Ventilateur d’extraction du top cover"
+      },
+      "top_cover_inner": {
+        "name": "Ventilateur de recirculation du top cover"
+      },
+      "chamber_target": {
+        "name": "Consigne du chauffage d’enceinte"
+      },
+      "bed_target": {
+        "name": "Consigne du plateau"
+      },
+      "nozzle_target": {
+        "name": "Consigne de la buse {head}"
+      },
+      "part_fan": {
+        "name": "Ventilateur de pièce"
+      },
+      "speed_factor": {
+        "name": "Facteur de vitesse"
+      },
+      "top_cover_target": {
+        "name": "Consigne d’enceinte du top cover"
+      }
+    },
+    "button": {
+      "pause_print": {
+        "name": "Mettre l’impression en pause"
+      },
+      "resume_print": {
+        "name": "Reprendre l’impression"
+      },
+      "cancel_print": {
+        "name": "Annuler l’impression"
+      },
+      "emergency_stop": {
+        "name": "Arrêt d’urgence"
+      },
+      "home": {
+        "name": "Homing de tous les axes"
+      }
+    },
+    "light": {
+      "chamber_light": {
+        "name": "Lumière de l’enceinte"
+      },
+      "led": {
+        "name": "LED {name}"
+      }
+    }
+  },
+  "services": {
+    "start_print": {
+      "name": "Lancer l’impression",
+      "description": "Lance un fichier d’impression sur l’imprimante avec attribution des filaments, comme Snapmaker Orca.",
+      "fields": {
+        "filename": {
+          "name": "Fichier",
+          "description": "Chemin relatif au dossier gcodes."
+        },
+        "mapping": {
+          "name": "Attribution des filaments",
+          "description": "Filament logique (T0, T1, ...) vers emplacement 0-3 de l’imprimante, p. ex. 0: 2 et 1: 0 en mappage YAML. Vide = proposition automatique."
+        },
+        "bed_leveling": {
+          "name": "Nivellement du plateau",
+          "description": "Effectuer le nivellement automatique du plateau avant l’impression."
+        },
+        "flow_calibration": {
+          "name": "Calibration du débit",
+          "description": "Effectuer la calibration du débit avant l’impression."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Enregistrer un timelapse."
+        },
+        "plate": {
+          "name": "Plaque",
+          "description": "Numéro de plaque pour les fichiers 3MF."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        },
+        "pause_layers": {
+          "name": "Pause avant la couche",
+          "description": "Liste de couches (1 = première). L’imprimante s’arrête avant ces couches, p. ex. pour insérer des aimants. Une copie du fichier avec PAUSE est créée à cet effet."
+        }
+      }
+    },
+    "refresh": {
+      "name": "Actualiser",
+      "description": "Recharger immédiatement la liste des fichiers et les filaments.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "power_on": {
+      "name": "Allumer",
+      "description": "Allumer l’imprimante.",
+      "fields": {
+        "wait": {
+          "name": "Attendre qu’elle soit prête",
+          "description": "Ne revenir que lorsque Klipper est prêt (jusqu’à 4 min)."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "power_off": {
+      "name": "Éteindre en toute sécurité",
+      "description": "Arrêter l’imprimante puis couper le courant. Refusé pendant l’impression.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        },
+        "force": {
+          "name": "Forcer",
+          "description": "Éteindre même si une impression est enregistrée comme en cours, p. ex. après un plantage de l’imprimante. Non vérifié par rapport à l’état de l’imprimante."
+        }
+      }
+    },
+    "set_spool": {
+      "name": "Attribuer une bobine",
+      "description": "Attribue une bobine Spoolman à une tête. Sans spool_id, l’intégration choisit à nouveau automatiquement.",
+      "fields": {
+        "slot": {
+          "name": "Tête",
+          "description": "1-4"
+        },
+        "spool_id": {
+          "name": "ID de bobine",
+          "description": "ID dans Spoolman ; 0 = aucune bobine. Vide = automatique."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "queue_add": {
+      "name": "Ajouter à la file",
+      "description": "Planifie une impression avec attribution et options. Elle est lancée manuellement (queue_start) une fois le plateau vidé.",
+      "fields": {
+        "filename": {
+          "name": "Fichier",
+          "description": "Chemin relatif au dossier gcodes."
+        },
+        "mapping": {
+          "name": "Attribution des filaments",
+          "description": "Filament logique (T0, T1, ...) vers emplacement 0-3 de l’imprimante, p. ex. 0: 2 et 1: 0 en mappage YAML. Vide = proposition automatique."
+        },
+        "bed_leveling": {
+          "name": "Nivellement du plateau",
+          "description": "Effectuer le nivellement automatique du plateau avant l’impression."
+        },
+        "flow_calibration": {
+          "name": "Calibration du débit",
+          "description": "Effectuer la calibration du débit avant l’impression."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Enregistrer un timelapse."
+        },
+        "plate": {
+          "name": "Plaque",
+          "description": "Numéro de plaque pour les fichiers 3MF."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        },
+        "pause_layers": {
+          "name": "Pause avant la couche",
+          "description": "Liste de couches (1 = première). L’imprimante s’arrête avant ces couches, p. ex. pour insérer des aimants. Une copie du fichier avec PAUSE est créée à cet effet."
+        }
+      }
+    },
+    "queue_remove": {
+      "name": "Retirer de la file",
+      "description": "Supprime une tâche.",
+      "fields": {
+        "job_id": {
+          "name": "Tâche",
+          "description": "ID provenant de l’attribut jobs du capteur de file."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "queue_move": {
+      "name": "Déplacer la tâche",
+      "description": "Modifie l’ordre.",
+      "fields": {
+        "job_id": {
+          "name": "Tâche",
+          "description": "ID provenant de l’attribut jobs du capteur de file."
+        },
+        "position": {
+          "name": "Position",
+          "description": "0 = première."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "queue_start": {
+      "name": "Lancer la tâche",
+      "description": "Lance la première tâche (ou celle indiquée). Videz d’abord le plateau.",
+      "fields": {
+        "job_id": {
+          "name": "Tâche",
+          "description": "Vide = première tâche."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "queue_clear": {
+      "name": "Vider la file",
+      "description": "Supprime toutes les tâches.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Entretien effectué",
+      "description": "Réinitialise le compteur d’un élément d’entretien.",
+      "fields": {
+        "item": {
+          "name": "Élément",
+          "description": ""
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "backup_timelapses": {
+      "name": "Sauvegarder les timelapses maintenant",
+      "description": "Sauvegarde les timelapses manquants dans le dossier média, puis fait le ménage sur l’imprimante.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "backup_config": {
+      "name": "Sauvegarder la configuration de l’imprimante",
+      "description": "Copie printer.cfg etc. de l’imprimante vers /config/snapmaker_u1_backup (nouvelle version uniquement si modifiée).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "file_details": {
+      "name": "Détails du fichier",
+      "description": "Métadonnées et miniature d’un fichier d’impression, y compris les plus anciens (pour la recherche de la carte).",
+      "fields": {
+        "path": {
+          "name": "Fichier",
+          "description": "Chemin relatif à gcodes, p. ex. pieces/support.gcode"
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "file_settings": {
+      "name": "Réglages du slicer",
+      "description": "Hauteur de couche, parois, remplissage, supports, plaque et températures du bloc de réglages du G-code.",
+      "fields": {
+        "path": {
+          "name": "Fichier",
+          "description": "Chemin relatif à gcodes, p. ex. pieces/support.gcode"
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "delete_file": {
+      "name": "Supprimer le fichier",
+      "description": "Supprime un fichier d’impression sur l’imprimante. Pas pendant son impression ni s’il est dans la file.",
+      "fields": {
+        "path": {
+          "name": "Fichier",
+          "description": "Chemin relatif à gcodes, p. ex. pieces/support.gcode"
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "move_file": {
+      "name": "Renommer/déplacer le fichier",
+      "description": "Nouveau nom ou chemin ; les sous-dossiers sont créés.",
+      "fields": {
+        "source": {
+          "name": "Fichier",
+          "description": "Chemin actuel"
+        },
+        "dest": {
+          "name": "Destination",
+          "description": "Nouveau nom ou chemin"
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "self_test": {
+      "name": "Autotest",
+      "description": "Vérifie l’imprimante, la connexion en direct, le stockage, l’intégration Moonraker, la caméra, l’alimentation, les notifications, Spoolman, Assist et le dossier média.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        },
+        "language": {
+          "name": "Langue",
+          "description": "de ou en ; vide = langue de Home Assistant."
+        }
+      }
+    },
+    "set_preference": {
+      "name": "Régler une préférence de l’imprimante",
+      "description": "Modifie une préférence du firmware de l’imprimante. Possible pendant l’impression.",
+      "fields": {
+        "preference": {
+          "name": "Préférence",
+          "description": "auto_replenish, replenish_ignore_color, entangle_detect, end_led_off ou entangle_sensitivity."
+        },
+        "value": {
+          "name": "Valeur",
+          "description": "true/false ; pour entangle_sensitivity low, medium ou high."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "set_filament": {
+      "name": "Régler le filament",
+      "description": "Règle à la main le matériau, le sous-type, le fabricant et la couleur d’une tête, p. ex. pour des bobines sans RFID. Pas pendant l’impression.",
+      "fields": {
+        "slot": {
+          "name": "Tête",
+          "description": "1-4"
+        },
+        "type": {
+          "name": "Matériau",
+          "description": "p. ex. PLA, PETG, TPU."
+        },
+        "sub_type": {
+          "name": "Sous-type",
+          "description": "p. ex. Silk, Matte, HF. Vide = aucun."
+        },
+        "vendor": {
+          "name": "Fabricant",
+          "description": "p. ex. Generic."
+        },
+        "color": {
+          "name": "Couleur",
+          "description": "Couleur hex, p. ex. #FF0000."
+        },
+        "colors": {
+          "name": "Couleurs (multicolore)",
+          "description": "Jusqu’à 5 couleurs hex pour une bobine multicolore (silk dual/tri, arc-en-ciel). Remplace Couleur."
+        },
+        "force": {
+          "name": "Écraser la bobine officielle",
+          "description": "Écraser aussi les données RFID d’une bobine officielle Snapmaker."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "camera_wake": {
+      "name": "Réveiller la caméra",
+      "description": "Envoie camera.start_monitor une fois (comme l’application Snapmaker). La carte l’appelle automatiquement quand l’image se fige.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "exclude_object": {
+      "name": "Exclure un objet",
+      "description": "Arrête l’impression d’un objet de l’impression en cours (Klipper EXCLUDE_OBJECT). Irréversible. Le dernier objet restant ne peut pas être exclu.",
+      "fields": {
+        "name": {
+          "name": "Objet",
+          "description": "Nom tel que défini dans le fichier (EXCLUDE_OBJECT_DEFINE)."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "send_gcode": {
+      "name": "Envoyer du G-code",
+      "description": "Exécute du G-code sur l’imprimante et renvoie ses réponses. Pendant l’impression, seules les commandes de réglage sont autorisées (températures, ventilateurs, vitesse, débit, décalage Z, lumière, top cover, requêtes).",
+      "fields": {
+        "script": {
+          "name": "G-code",
+          "description": "Une commande par ligne, 20 lignes au maximum."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "tool_change": {
+      "name": "Prendre ou garer une tête",
+      "description": "Prend une tête sur le chariot ou repose la tête actuelle dans son dock. Fait d’abord le homing X/Y si nécessaire. Verrouillé pendant l’impression.",
+      "fields": {
+        "head": {
+          "name": "Tête",
+          "description": "1-4 ; ignoré pour garer."
+        },
+        "action": {
+          "name": "Action",
+          "description": "pick = prendre cette tête, park = reposer la tête actuelle."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "weigh_spool": {
+      "name": "Peser la bobine",
+      "description": "Règle dans Spoolman le filament restant d’une bobine d’après la balance. Pesée avec la bobine vide (par défaut) : son poids vient de Spoolman.",
+      "fields": {
+        "slot": {
+          "name": "Tête",
+          "description": "1-4 ; la bobine attribuée à cette tête."
+        },
+        "spool_id": {
+          "name": "ID de bobine",
+          "description": "Au lieu d’une tête."
+        },
+        "weight": {
+          "name": "Poids",
+          "description": "Ce qu’indique la balance en g."
+        },
+        "gross": {
+          "name": "Avec bobine vide",
+          "description": "Activé = pesé avec la bobine (brut), désactivé = filament seul."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "machine_command": {
+      "name": "Commande machine",
+      "description": "Pause, reprise, annulation, arrêt d’urgence, homing, consignes et interrupteurs sans l’intégration Moonraker.",
+      "fields": {
+        "action": {
+          "name": "Action",
+          "description": "pause, resume, cancel, emergency_stop, home, set ou switch."
+        },
+        "target": {
+          "name": "Cible",
+          "description": "home: all/x/y/z ; set: bed_target, extruder1_target, fan_speed, speed_factor, FAN_speed ; switch: output_pin_NAME ou led_NAME (FAN, NAME comme dans Klipper)."
+        },
+        "value": {
+          "name": "Valeur",
+          "description": "Nombre pour set, on/off pour switch."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "create_spool": {
+      "name": "Créer une bobine",
+      "description": "Crée une bobine dans Spoolman (le fabricant et le filament sont réutilisés s’ils existent, sinon créés) et l’attribue à une tête.",
+      "fields": {
+        "slot": {
+          "name": "Tête",
+          "description": "1-4 ; la nouvelle bobine est attribuée à cette tête. Vide = créer seulement."
+        },
+        "material": {
+          "name": "Matériau",
+          "description": "p. ex. PLA, PETG, TPU. Inutile avec un ID de filament ou une entrée du catalogue."
+        },
+        "filament_id": {
+          "name": "ID de filament",
+          "description": "Filament Spoolman existant pour la bobine ; fabricant, matériau, nom et couleur en proviennent."
+        },
+        "external_id": {
+          "name": "Entrée du catalogue",
+          "description": "ID d’un filament du catalogue de Spoolman (SpoolmanDB) ; importé une fois, réutilisé ensuite."
+        },
+        "location": {
+          "name": "Emplacement",
+          "description": "Où la bobine est rangée, p. ex. une étagère ou une boîte de séchage."
+        },
+        "vendor": {
+          "name": "Fabricant",
+          "description": "Créé dans Spoolman s’il manque."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom du filament, p. ex. PLA Matte Noir. Vide = matériau."
+        },
+        "color": {
+          "name": "Couleur",
+          "description": "Hex, p. ex. #1a1a1a."
+        },
+        "weight": {
+          "name": "Poids net",
+          "description": "Filament d’une bobine pleine en g."
+        },
+        "spool_weight": {
+          "name": "Bobine vide",
+          "description": "Poids de la bobine vide en g (pour la pesée)."
+        },
+        "price": {
+          "name": "Prix",
+          "description": "Prix de la bobine."
+        },
+        "remaining": {
+          "name": "Restant",
+          "description": "Filament restant en g ; vide = pleine."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    }
+  },
+  "selector": {
+    "spool_restore": {
+      "options": {
+        "ask": "Proposer (un toucher)",
+        "auto": "Régler automatiquement",
+        "off": "Désactivé"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "complete": "Impression terminée",
+        "cancelled": "Impression annulée",
+        "error": "Erreur d’impression",
+        "paused": "Impression en pause (p. ex. fin de filament)",
+        "alert": "Message de l’imprimante pendant une impression",
+        "first_layer": "Première couche terminée",
+        "almost_done": "Presque terminée",
+        "spool_low": "Filament insuffisant (Spoolman)",
+        "spool_runout": "Bobine bientôt vide pendant l’impression (Spoolman)",
+        "bed_cool": "Pièce prête à retirer (plateau refroidi)",
+        "maintenance": "Entretien à faire",
+        "chamber_ready": "L’enceinte a atteint sa consigne (top cover ou chauffage d’enceinte)"
+      }
+    },
+    "maintenance_item": {
+      "options": {
+        "plate": "Nettoyer le plateau",
+        "nozzle": "Nettoyer les buses et l’essuyeur",
+        "rails": "Nettoyer et lubrifier les guidages linéaires",
+        "belts": "Vérifier les courroies",
+        "filter": "Remplacer le filtre à air",
+        "carbon_rods": "Nettoyer les tiges carbone X",
+        "lead_screws": "Graisser les vis Z et écrous",
+        "coupling": "Goupilles et billes du couplage des têtes",
+        "pogo": "Nettoyer les contacts pogo des têtes"
+      }
+    },
+    "camera_wake": {
+      "options": {
+        "off": "Désactivé",
+        "printing": "Pendant une impression",
+        "always": "Toujours quand l’imprimante est allumée"
+      }
+    },
+    "tool_change_action": {
+      "options": {
+        "pick": "Prendre",
+        "park": "Garer"
+      }
+    },
+    "live_notify_image": {
+      "options": {
+        "camera": "Image de la caméra",
+        "thumbnail": "Aperçu du modèle",
+        "off": "Pas d’image"
+      }
+    }
+  }
+}

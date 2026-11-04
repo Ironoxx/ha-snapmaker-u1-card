@@ -2,19 +2,35 @@
  * Translation of the card's UI texts.
  *
  * German is the source language: tr("Text") returns the text itself in German,
- * otherwise the English translation from EN (if missing, German is kept).
+ * otherwise the translation (English in EN, es/fr/it/nl/pt in ./i18n/), falling
+ * back to English and then German.
  * Placeholders: tr("Spule #{id}", { id: 3 }). The language follows Home Assistant.
  */
 
+import es from "./i18n/es.js";
+import fr from "./i18n/fr.js";
+import it from "./i18n/it.js";
+import nl from "./i18n/nl.js";
+import pt from "./i18n/pt.js";
+
 export let LANG = "de";
 export let LOCALE = "de-DE";
+// 2.1: more languages; missing entries fall back to English, then German.
+const MORE = { es, fr, it, nl, pt };
+const LOCALES = { de: "de-DE", es: "es-ES", fr: "fr-FR", it: "it-IT", nl: "nl-NL", pt: "pt-PT" };
 export function setLang(hass) {
   const l = String((hass && ((hass.locale && hass.locale.language) || hass.language)) || "de").toLowerCase();
-  LANG = l.startsWith("de") ? "de" : "en";
-  LOCALE = LANG === "de" ? "de-DE" : (l.includes("-") ? l : "en-GB");
+  const base = l.split("-")[0];
+  LANG = base === "de" || MORE[base] ? base : "en";
+  // the region of the HA language when there is one (pt-BR, es-419, nl-BE …), else the default
+  LOCALE = l.includes("-") ? l : (LOCALES[LANG] || "en-GB");
 }
 export function tr(text, vars) {
-  let out = LANG === "de" ? text : (EN[text] !== undefined ? EN[text] : text);
+  let out = text;
+  if (LANG !== "de") {
+    const more = MORE[LANG];
+    out = more && more[text] !== undefined ? more[text] : (EN[text] !== undefined ? EN[text] : text);
+  }
   if (vars) for (const [k, v] of Object.entries(vars)) out = out.split(`{${k}}`).join(String(v));
   return out;
 }
@@ -588,6 +604,9 @@ export const EN = {
   "{n} Spulen · {kg} kg": "{n} spools · {kg} kg",
   // 2.1 G-code preview
   "G-Code-Vorschau": "G-code preview",
+  "Druckstunden": "Print hours",
+  "Spule #{id}": "Spool #{id}",
+  "Text": "Text",
   "Fortschritt": "Progress",
   "Live": "Live",
   "Verlauf in der Schicht": "Progress within the layer",

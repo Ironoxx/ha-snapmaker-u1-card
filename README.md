@@ -35,13 +35,13 @@ One integration for the Snapmaker U1 in Home Assistant, with its own dashboard c
 - Phone notifications with camera image and buttons, live progress notification on Android
 - Power switch with clean shutdown, auto-on and auto-off, energy and cost per print
 - History, statistics per material, maintenance planner, firmware check, self test, configuration backup, voice commands via Assist
-- Settings right in the card; the card follows your theme and language (German or English)
+- Settings right in the card; the card follows your theme and language (English, German, Spanish, French, Italian, Dutch or Portuguese)
 
 It works the same locally, over VPN and through Nabu Casa.
 
 ## Screenshots
 
-The screenshots show the German interface; with Home Assistant set to English the card is in English.
+The screenshots show the German interface; the card and the integration follow the language of Home Assistant.
 
 | Control: bed mesh, flow, temperatures, console | History and statistics |
 |---|---|

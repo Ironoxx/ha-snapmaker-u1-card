@@ -4,6 +4,32 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.0b3
+
+Beta. Five more languages. Includes everything from 2.1.0b1 and 2.1.0b2.
+
+**Languages**
+- The card and the integration (setup, settings, entities, services, notification events) now also speak Spanish, French, Italian, Portuguese and Dutch, following the language of Home Assistant. Regional variants use the base language (e.g. pt-BR → Portuguese, nl-BE → Dutch); other languages get English.
+- Push notifications, firmware messages and the self test text stay German or English for now.
+- Corrections from native speakers are welcome as an issue or pull request: `frontend/src/i18n/<language>.js` (card) and `custom_components/snapmaker_u1_card/translations/<language>.json` (integration).
+
+**Fixed**
+- Home Assistant's validation (hassfest) failed on a service description with angle brackets.
+
+### Deutsch
+
+Beta. Fünf weitere Sprachen. Enthält alles aus 2.1.0b1 und 2.1.0b2.
+
+**Sprachen**
+- Karte und Integration (Einrichtung, Einstellungen, Entitäten, Dienste, Benachrichtigungsereignisse) sprechen jetzt auch Spanisch, Französisch, Italienisch, Portugiesisch und Niederländisch, passend zur Sprache von Home Assistant. Regionale Varianten nutzen die Grundsprache (z. B. pt-BR → Portugiesisch, nl-BE → Niederländisch); andere Sprachen bekommen Englisch.
+- Push-Benachrichtigungen, Firmware-Meldungen und der Text des Selbsttests bleiben vorerst Deutsch oder Englisch.
+- Korrekturen von Muttersprachlern gern als Issue oder Pull Request: `frontend/src/i18n/<sprache>.js` (Karte) und `custom_components/snapmaker_u1_card/translations/<sprache>.json` (Integration).
+
+**Behoben**
+- Die Prüfung von Home Assistant (hassfest) scheiterte an einer Dienstbeschreibung mit spitzen Klammern.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.0b2
 
 Beta. Spoolman tab, suggestions for new spools and a G-code preview with sliders. Includes everything from 2.1.0b1 (top cover mode and chamber target, chamber-warm notification, real filter hours, chamber heater in the chart, camera keeps running when the card rebuilds).

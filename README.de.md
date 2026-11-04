@@ -35,7 +35,7 @@ Eine Integration für den Snapmaker U1 in Home Assistant, mit eigener Dashboard-
 - Benachrichtigungen aufs Handy mit Kamerabild und Knöpfen, laufende Fortschrittsanzeige unter Android
 - Netzschalter mit sauberem Herunterfahren, Auto-Ein und Auto-Aus, Strom und Kosten je Druck
 - Verlauf, Statistik je Material, Wartungsplaner, Firmware-Prüfung, Selbsttest, Sicherung der Druckerkonfiguration, Sprachbefehle über Assist
-- Einstellungen direkt in der Karte; die Karte folgt deinem Theme und deiner Sprache (Deutsch oder Englisch)
+- Einstellungen direkt in der Karte; die Karte folgt deinem Theme und deiner Sprache (Deutsch, Englisch, Spanisch, Französisch, Italienisch, Niederländisch oder Portugiesisch)
 
 Das funktioniert lokal, über VPN und über Nabu Casa gleich.
 

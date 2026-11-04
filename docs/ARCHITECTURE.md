@@ -120,7 +120,8 @@ Rendering rules that matter:
 - The camera stream only runs while the card is visible and not in edit mode;
   browsers allow only six connections per host over HTTP/1.1.
 - UI texts are German in the source and translated with `tr()`; English lives
-  in `EN` in `i18n.js`.
+  in `EN` in `i18n.js`, Spanish, French, Italian, Dutch and Portuguese in
+  `i18n/<lang>.js` (missing entries fall back to English).
 
 ## Snapmaker specifics
 

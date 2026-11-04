@@ -1,0 +1,1113 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Snapmaker U1",
+        "description": "IP-adres of hostnaam van de printer. Poort 80 werkt met originele firmware, Extended Firmware en Bespok3d.",
+        "data": {
+          "host": "Host",
+          "port": "Poort",
+          "api_key": "Moonraker-API-sleutel (optioneel)"
+        }
+      },
+      "reconfigure": {
+        "title": "Snapmaker U1",
+        "data": {
+          "host": "Host",
+          "port": "Poort",
+          "api_key": "Moonraker-API-sleutel (optioneel)"
+        }
+      },
+      "settings": {
+        "title": "Instellingen",
+        "description": "Alles optioneel en later te wijzigen onder „Configureren”. Klap de secties uit.",
+        "sections": {
+          "power": {
+            "name": "Stroom en energie",
+            "description": "Elke schakelaar werkt: Shelly, KNX, Zigbee-stekker, …",
+            "data": {
+              "power_switch": "Stroomschakelaar van de printer",
+              "power_sensor": "Vermogenssensor (W)",
+              "energy_sensor": "Energiemeter (kWh)",
+              "energy_price": "Entiteit voor de stroomprijs",
+              "shutdown_host": "Printer afsluiten voordat de stroom wordt uitgeschakeld",
+              "auto_on": "Automatisch inschakelen bij het starten van een print",
+              "auto_off": "Automatisch uitschakelen na een print",
+              "auto_off_temp": "Automatisch uit onder temperatuur",
+              "auto_off_delay": "Vertraging automatisch uit na de print",
+              "idle_off_hours": "Uitschakelen na inactiviteit",
+              "energy_price_fixed": "Vaste energieprijs"
+            },
+            "data_description": {
+              "power_switch": "Gebruikt voor de aan/uit-knop op de kaart. Uitschakelen is geblokkeerd tijdens het printen.",
+              "power_sensor": "Actueel vermogen, meestal van dezelfde stekker.",
+              "energy_sensor": "Totale energieteller. Gebruikt voor het verbruik per print.",
+              "energy_price": "Sensor of helper met de actuele prijs (dynamische tarieven). Leeg = vaste prijs hieronder of het energiedashboard.",
+              "shutdown_host": "Stuurt een afsluitopdracht naar de printer, wacht tot hij weg is plus 10 s en schakelt dan uit. Weigert de printer, dan wordt na 10 s uitgeschakeld zoals met zijn wipschakelaar.",
+              "auto_on": "Een print vanuit de kaart starten terwijl de printer uit is, schakelt hem in en wacht tot hij gereed is (ca. 1–2 min).",
+              "auto_off": "Na een voltooide of geannuleerde print, zodra alle verwarmingen zijn afgekoeld.",
+              "auto_off_temp": "Nozzles en bed moeten onder deze temperatuur zijn.",
+              "auto_off_delay": "Minimale tijd tussen het einde van de print en het uitschakelen.",
+              "idle_off_hours": "Uren zonder print en zonder verwarming, daarna netjes afsluiten en uitschakelen. 0 = uit.",
+              "energy_price_fixed": "Per kWh, gebruikt als er geen prijsentiteit is. Zonder beide wordt de prijs van het energiedashboard gebruikt."
+            }
+          },
+          "notify": {
+            "name": "Meldingen en camera",
+            "description": "Push naar de telefoon: einde print, fouten, pauze, berichten, eerste laag, bijna klaar, weinig filament.",
+            "data": {
+              "notify_targets": "Meldingsdiensten",
+              "notify_events": "Melden bij",
+              "camera": "Camera voor het beeld",
+              "almost_done_minutes": "Waarschuwing „bijna klaar”",
+              "bed_cool_temp": "„Onderdeel klaar” bij",
+              "camera_wake": "Camera wakker houden",
+              "live_notify_budget": "Voortgangsmelding: updates per dag",
+              "live_notify_image": "Voortgangsmelding: camerabeeld",
+              "notify_click_url": "Openen bij tikken"
+            },
+            "data_description": {
+              "notify_targets": "bijv. notify.mobile_app_pixel_8. Meerdere mogelijk.",
+              "camera": "De Companion-app voegt een actueel beeld toe. Ook gebruikt voor de resultaatfoto in de geschiedenis.",
+              "almost_done_minutes": "Minuten voor het geschatte einde.",
+              "bed_cool_temp": "Bedtemperatuur na een voltooide print waarbij het bericht wordt verstuurd.",
+              "camera_wake": "Stuurt elke 10 s camera.start_monitor zoals de Snapmaker-app. Nodig als het camerabeeld stilvalt met de originele firmware; aangepaste firmware heeft het meestal niet nodig.",
+              "live_notify_budget": "Bovengrens voor de doorlopende voortgangsmelding (Android) per dag en telefoon. De Companion-app staat ongeveer 500 pushes per dag toe; berichten over einde, fout en pauze tellen hier niet mee.",
+              "live_notify_image": "Toont het camerabeeld als de voortgangsmelding is uitgeklapt (bij elke voortgangsupdate vernieuwd, geen extra pushes).",
+              "notify_click_url": "Dashboardpad of URL dat bij tikken op een melding opent, bijv. /dashboard-printer/0 of /lovelace/printer. Leeg = standaard van de app."
+            }
+          },
+          "filament": {
+            "name": "Filamentprijzen",
+            "description": "Prijs per kg per materiaal, gebruikt voor de filamentkosten van elke print. Met Spoolman gaan zijn prijzen voor (de spoel in elke kop, anders het gemiddelde van je spoelen van dat materiaal); deze velden gelden alleen voor materialen zonder prijs daar. Leeg laten om over te slaan.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Overige materialen"
+            }
+          },
+          "files": {
+            "name": "Bestanden",
+            "data": {
+              "files_limit": "Aantal nieuwste bestanden",
+              "config_backup": "Printerconfiguratie back-uppen"
+            },
+            "data_description": {
+              "config_backup": "Dagelijkse kopie van printer.cfg enz. naar /config/snapmaker_u1_backup (alleen bij wijziging, 10 versies)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Optioneel. Laat de URL leeg als je Spoolman niet gebruikt.",
+            "data": {
+              "spoolman_url": "Spoolman-URL",
+              "spoolman_deduct": "Verbruik per kop afschrijven na elke print",
+              "spoolman_low": "Waarschuwen onder",
+              "spool_restore": "Laatste spoel na het opnieuw laden van een kop"
+            },
+            "data_description": {
+              "spoolman_url": "Adres met poort 7912, bijv. 192.168.0.10:7912 (Home Assistant-add-on: homeassistant.local:7912). Leeg = uit.",
+              "spoolman_deduct": "Slicergewicht per printkop (naar rato bij annuleren). Uitzetten als iets anders het verbruik al boekt (bijv. de eigen Spoolman-koppeling van Moonraker), anders wordt het dubbel geteld.",
+              "spoolman_low": "De kaart waarschuwt als een spoel minder filament over heeft.",
+              "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen."
+            }
+          },
+          "timelapse": {
+            "name": "Timelapse-back-up",
+            "description": "Kopieert nieuwe timelapses naar de mediamap van Home Assistant (snapmaker_u1). De oudste kunnen daarna op de printer worden verwijderd.",
+            "data": {
+              "timelapse_archive": "Timelapses back-uppen",
+              "timelapse_keep": "Bewaren op de printer",
+              "timelapse_archive_max": "Bewaren in de mediamap",
+              "timelapse_archive_days": "Back-ups verwijderen ouder dan"
+            },
+            "data_description": {
+              "timelapse_keep": "Zoveel nieuwste blijven op de printer, oudere worden na de back-up verwijderd. 0 = nooit verwijderen.",
+              "timelapse_archive_max": "Nieuwste video’s die in de mediamap blijven; oudere worden verwijderd. 0 = alles bewaren.",
+              "timelapse_archive_days": "Dagen; 0 = geen leeftijdsgrens."
+            }
+          },
+          "maintenance": {
+            "name": "Onderhoud",
+            "description": "Intervallen in printuren. 0 = punt verbergen.",
+            "data": {
+              "maint_plate": "Bouwplaat reinigen",
+              "maint_nozzle": "Nozzles en wisser reinigen",
+              "maint_rails": "Lineaire geleiders smeren",
+              "maint_belts": "Riemspanning controleren",
+              "maint_filter": "Luchtfilter vervangen"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Printer niet bereikbaar.",
+      "not_u1": "Moonraker antwoordde, maar dit is geen Snapmaker U1 (print_task_config ontbreekt).",
+      "auto_needs_switch": "Automatisch aan en uit hebben een stroomschakelaar nodig.",
+      "unknown_notify": "Een van de meldingsdiensten bestaat niet.",
+      "spoolman_unreachable": "Spoolman is niet bereikbaar op deze URL."
+    },
+    "abort": {
+      "already_configured": "Deze printer is al ingesteld.",
+      "reconfigure_successful": "Instellingen bijgewerkt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opties Snapmaker U1",
+        "description": "Alles hier is optioneel. De kaart pikt het automatisch op.",
+        "sections": {
+          "power": {
+            "name": "Stroom en energie",
+            "description": "Elke schakelaar werkt: Shelly, KNX, Zigbee-stekker, …",
+            "data": {
+              "power_switch": "Stroomschakelaar van de printer",
+              "power_sensor": "Vermogenssensor (W)",
+              "energy_sensor": "Energiemeter (kWh)",
+              "energy_price": "Entiteit voor de stroomprijs",
+              "shutdown_host": "Printer afsluiten voordat de stroom wordt uitgeschakeld",
+              "auto_on": "Automatisch inschakelen bij het starten van een print",
+              "auto_off": "Automatisch uitschakelen na een print",
+              "auto_off_temp": "Automatisch uit onder temperatuur",
+              "auto_off_delay": "Vertraging automatisch uit na de print",
+              "idle_off_hours": "Uitschakelen na inactiviteit",
+              "energy_price_fixed": "Vaste energieprijs"
+            },
+            "data_description": {
+              "power_switch": "Gebruikt voor de aan/uit-knop op de kaart. Uitschakelen is geblokkeerd tijdens het printen.",
+              "power_sensor": "Actueel vermogen, meestal van dezelfde stekker.",
+              "energy_sensor": "Totale energieteller. Gebruikt voor het verbruik per print.",
+              "energy_price": "Sensor of helper met de actuele prijs (dynamische tarieven). Leeg = vaste prijs hieronder of het energiedashboard.",
+              "shutdown_host": "Stuurt een afsluitopdracht naar de printer, wacht tot hij weg is plus 10 s en schakelt dan uit. Weigert de printer, dan wordt na 10 s uitgeschakeld zoals met zijn wipschakelaar.",
+              "auto_on": "Een print vanuit de kaart starten terwijl de printer uit is, schakelt hem in en wacht tot hij gereed is (ca. 1–2 min).",
+              "auto_off": "Na een voltooide of geannuleerde print, zodra alle verwarmingen zijn afgekoeld.",
+              "auto_off_temp": "Nozzles en bed moeten onder deze temperatuur zijn.",
+              "auto_off_delay": "Minimale tijd tussen het einde van de print en het uitschakelen.",
+              "idle_off_hours": "Uren zonder print en zonder verwarming, daarna netjes afsluiten en uitschakelen. 0 = uit.",
+              "energy_price_fixed": "Per kWh, gebruikt als er geen prijsentiteit is. Zonder beide wordt de prijs van het energiedashboard gebruikt."
+            }
+          },
+          "notify": {
+            "name": "Meldingen en camera",
+            "description": "Push naar de telefoon: einde print, fouten, pauze, berichten, eerste laag, bijna klaar, weinig filament.",
+            "data": {
+              "notify_targets": "Meldingsdiensten",
+              "notify_events": "Melden bij",
+              "camera": "Camera voor het beeld",
+              "almost_done_minutes": "Waarschuwing „bijna klaar”",
+              "bed_cool_temp": "„Onderdeel klaar” bij",
+              "camera_wake": "Camera wakker houden",
+              "live_notify_budget": "Voortgangsmelding: updates per dag",
+              "live_notify_image": "Voortgangsmelding: beeld",
+              "notify_click_url": "Openen bij tikken"
+            },
+            "data_description": {
+              "notify_targets": "bijv. notify.mobile_app_pixel_8. Meerdere mogelijk.",
+              "camera": "De Companion-app voegt een actueel beeld toe. Ook gebruikt voor de resultaatfoto in de geschiedenis.",
+              "almost_done_minutes": "Minuten voor het geschatte einde.",
+              "bed_cool_temp": "Bedtemperatuur na een voltooide print waarbij het bericht wordt verstuurd.",
+              "camera_wake": "Stuurt elke 10 s camera.start_monitor zoals de Snapmaker-app. Nodig als het camerabeeld stilvalt met de originele firmware; aangepaste firmware heeft het meestal niet nodig.",
+              "live_notify_budget": "Bovengrens voor de doorlopende voortgangsmelding (Android) per dag en telefoon. De Companion-app staat ongeveer 500 pushes per dag toe; berichten over einde, fout en pauze tellen hier niet mee.",
+              "live_notify_image": "Beeld als de voortgangsmelding is uitgeklapt: camerabeeld (bij elke update vernieuwd) of het modelvoorbeeld van de slicer. Geen extra pushes.",
+              "notify_click_url": "Dashboardpad of URL dat bij tikken op een melding opent, bijv. /dashboard-printer/0 of /lovelace/printer. Leeg = standaard van de app."
+            }
+          },
+          "filament": {
+            "name": "Filamentprijzen",
+            "description": "Prijs per kg per materiaal, gebruikt voor de filamentkosten van elke print. Met Spoolman gaan zijn prijzen voor (de spoel in elke kop, anders het gemiddelde van je spoelen van dat materiaal); deze velden gelden alleen voor materialen zonder prijs daar. Leeg laten om over te slaan.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Overige materialen"
+            }
+          },
+          "files": {
+            "name": "Bestanden",
+            "data": {
+              "files_limit": "Aantal nieuwste bestanden",
+              "config_backup": "Printerconfiguratie back-uppen"
+            },
+            "data_description": {
+              "config_backup": "Dagelijkse kopie van printer.cfg enz. naar /config/snapmaker_u1_backup (alleen bij wijziging, 10 versies)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "Optioneel. Laat de URL leeg als je Spoolman niet gebruikt.",
+            "data": {
+              "spoolman_url": "Spoolman-URL",
+              "spoolman_deduct": "Verbruik per kop afschrijven na elke print",
+              "spoolman_low": "Waarschuwen onder",
+              "spool_restore": "Laatste spoel na het opnieuw laden van een kop"
+            },
+            "data_description": {
+              "spoolman_url": "Adres met poort 7912, bijv. 192.168.0.10:7912 (Home Assistant-add-on: homeassistant.local:7912). Leeg = uit.",
+              "spoolman_deduct": "Slicergewicht per printkop (naar rato bij annuleren). Uitzetten als iets anders het verbruik al boekt (bijv. de eigen Spoolman-koppeling van Moonraker), anders wordt het dubbel geteld.",
+              "spoolman_low": "De kaart waarschuwt als een spoel minder filament over heeft.",
+              "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen."
+            }
+          },
+          "timelapse": {
+            "name": "Timelapse-back-up",
+            "description": "Kopieert nieuwe timelapses naar de mediamap van Home Assistant (snapmaker_u1). De oudste kunnen daarna op de printer worden verwijderd.",
+            "data": {
+              "timelapse_archive": "Timelapses back-uppen",
+              "timelapse_keep": "Bewaren op de printer",
+              "timelapse_archive_max": "Bewaren in de mediamap",
+              "timelapse_archive_days": "Back-ups verwijderen ouder dan"
+            },
+            "data_description": {
+              "timelapse_keep": "Zoveel nieuwste blijven op de printer, oudere worden na de back-up verwijderd. 0 = nooit verwijderen.",
+              "timelapse_archive_max": "Nieuwste video’s die in de mediamap blijven; oudere worden verwijderd. 0 = alles bewaren.",
+              "timelapse_archive_days": "Dagen; 0 = geen leeftijdsgrens."
+            }
+          },
+          "maintenance": {
+            "name": "Onderhoud",
+            "description": "Intervallen in printuren (h) en/of maanden (mo); wat het eerst wordt bereikt, maakt het punt aan de beurt. Maanden volgen de U1-onderhoudsgids van Snapmaker. 0 = uit, beide 0 = punt verbergen.",
+            "data": {
+              "maint_plate": "Bouwplaat reinigen (printuren)",
+              "maint_m_plate": "Bouwplaat reinigen (maanden)",
+              "maint_nozzle": "Nozzles en wisser reinigen (printuren)",
+              "maint_m_nozzle": "Nozzles en wisser reinigen (maanden)",
+              "maint_rails": "Lineaire geleiders reinigen en smeren (printuren)",
+              "maint_m_rails": "Lineaire geleiders reinigen en smeren (maanden)",
+              "maint_belts": "Riemen controleren (printuren)",
+              "maint_m_belts": "Riemen controleren (maanden)",
+              "maint_filter": "Luchtfilter vervangen (printuren)",
+              "maint_m_filter": "Luchtfilter vervangen (maanden)",
+              "maint_carbon_rods": "X-carbonstangen reinigen (printuren)",
+              "maint_m_carbon_rods": "X-carbonstangen reinigen (maanden)",
+              "maint_lead_screws": "Z-spindels en moeren smeren (printuren)",
+              "maint_m_lead_screws": "Z-spindels en moeren smeren (maanden)",
+              "maint_coupling": "Stalen pennen en kogels van de kopkoppeling (printuren)",
+              "maint_m_coupling": "Stalen pennen en kogels van de kopkoppeling (maanden)",
+              "maint_pogo": "Pogo-contacten van de koppen reinigen (printuren)",
+              "maint_m_pogo": "Pogo-contacten van de koppen reinigen (maanden)"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "auto_needs_switch": "Automatisch aan en uit hebben een stroomschakelaar nodig.",
+      "unknown_notify": "Een van de meldingsdiensten bestaat niet.",
+      "spoolman_unreachable": "Spoolman is niet bereikbaar op deze URL."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "filaments": {
+        "name": "Filamenten",
+        "unit_of_measurement": "geladen"
+      },
+      "slot": {
+        "name": "Slot {slot}"
+      },
+      "files": {
+        "name": "Printbestanden",
+        "unit_of_measurement": "bestanden"
+      },
+      "tool_changes": {
+        "name": "Gereedschapswissels",
+        "unit_of_measurement": "wissels"
+      },
+      "tool_changes_print": {
+        "name": "Gereedschapswissels (print)",
+        "unit_of_measurement": "wissels"
+      },
+      "print_energy": {
+        "name": "Energie (print)"
+      },
+      "print_cost": {
+        "name": "Kosten (print)"
+      },
+      "history": {
+        "name": "Printgeschiedenis",
+        "unit_of_measurement": "prints"
+      },
+      "timelapses": {
+        "name": "Timelapses",
+        "unit_of_measurement": "video’s"
+      },
+      "queue": {
+        "name": "Wachtrij",
+        "unit_of_measurement": "opdrachten"
+      },
+      "statistics": {
+        "name": "Printuren"
+      },
+      "maintenance": {
+        "name": "Onderhoud nodig",
+        "unit_of_measurement": "punten"
+      },
+      "errors": {
+        "name": "Printerberichten",
+        "unit_of_measurement": "berichten"
+      },
+      "remaining": {
+        "name": "Resterende tijd"
+      },
+      "finish": {
+        "name": "Eindtijd"
+      },
+      "bed_mesh": {
+        "name": "Spreiding bedmesh"
+      },
+      "top_cover": {
+        "name": "Top cover",
+        "state": {
+          "idle": "Inactief",
+          "cool": "Kamer koelen",
+          "preheat": "Kamer voorverwarmen",
+          "hot": "Hete kamer",
+          "unknown": "Onbekend"
+        }
+      },
+      "chamber_heater": {
+        "name": "Kamerverwarming"
+      },
+      "machine": {
+        "name": "Printerwaarden"
+      },
+      "bed_temperature": {
+        "name": "Bedtemperatuur"
+      },
+      "nozzle_temperature": {
+        "name": "Temperatuur nozzle {head}"
+      },
+      "cavity_temperature": {
+        "name": "Kamertemperatuur"
+      },
+      "progress": {
+        "name": "Voortgang"
+      },
+      "print_state": {
+        "name": "Printstatus",
+        "state": {
+          "standby": "Gereed",
+          "printing": "Printen",
+          "paused": "Gepauzeerd",
+          "complete": "Voltooid",
+          "cancelled": "Geannuleerd",
+          "error": "Fout"
+        }
+      },
+      "current_layer": {
+        "name": "Laag"
+      },
+      "cpu_temperature": {
+        "name": "CPU-temperatuur"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Stroom"
+      },
+      "auto_replenish": {
+        "name": "Filament automatisch aanvullen"
+      },
+      "replenish_ignore_color": {
+        "name": "Aanvullen ongeacht de kleur"
+      },
+      "entangle_detect": {
+        "name": "Detectie van verward filament"
+      },
+      "end_led_off": {
+        "name": "Licht uit na de print"
+      },
+      "live_notify": {
+        "name": "Voortgangsmelding (Android)"
+      },
+      "chamber_filter": {
+        "name": "Filter van de kamerverwarming"
+      }
+    },
+    "binary_sensor": {
+      "live": {
+        "name": "Live-verbinding"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Firmware"
+      }
+    },
+    "select": {
+      "entangle_sensitivity": {
+        "name": "Gevoeligheid detectie verward filament",
+        "state": {
+          "low": "Laag",
+          "medium": "Middel",
+          "high": "Hoog"
+        }
+      },
+      "top_cover_mode": {
+        "name": "Modus top cover",
+        "state": {
+          "idle": "Inactief",
+          "cool": "Kamer koelen",
+          "preheat": "Kamer voorverwarmen",
+          "hot": "Hete kamer"
+        }
+      }
+    },
+    "camera": {
+      "camera": {
+        "name": "Camera",
+        "state_attributes": {
+          "mode": {
+            "name": "Modus",
+            "state": {
+              "live": "Livebeeld",
+              "still": "Losse beelden",
+              "wake": "Losse beelden (origineel, gewekt)",
+              "none": "Geen camera"
+            }
+          }
+        }
+      },
+      "camera2": {
+        "name": "Camera 2"
+      }
+    },
+    "number": {
+      "flow_factor": {
+        "name": "Flow"
+      },
+      "top_cover_exhaust": {
+        "name": "Afzuigventilator top cover"
+      },
+      "top_cover_inner": {
+        "name": "Circulatieventilator top cover"
+      },
+      "chamber_target": {
+        "name": "Doel kamerverwarming"
+      },
+      "bed_target": {
+        "name": "Beddoel"
+      },
+      "nozzle_target": {
+        "name": "Doel nozzle {head}"
+      },
+      "part_fan": {
+        "name": "Objectventilator"
+      },
+      "speed_factor": {
+        "name": "Snelheidsfactor"
+      },
+      "top_cover_target": {
+        "name": "Kamerdoel top cover"
+      }
+    },
+    "button": {
+      "pause_print": {
+        "name": "Print pauzeren"
+      },
+      "resume_print": {
+        "name": "Print hervatten"
+      },
+      "cancel_print": {
+        "name": "Print annuleren"
+      },
+      "emergency_stop": {
+        "name": "Noodstop"
+      },
+      "home": {
+        "name": "Alle assen homen"
+      }
+    },
+    "light": {
+      "chamber_light": {
+        "name": "Kamerlicht"
+      },
+      "led": {
+        "name": "LED {name}"
+      }
+    }
+  },
+  "services": {
+    "start_print": {
+      "name": "Print starten",
+      "description": "Start een printbestand op de printer met filamenttoewijzing, zoals Snapmaker Orca.",
+      "fields": {
+        "filename": {
+          "name": "Bestand",
+          "description": "Pad ten opzichte van de map gcodes."
+        },
+        "mapping": {
+          "name": "Filamenttoewijzing",
+          "description": "Logisch filament (T0, T1, ...) naar printerslot 0-3, bijv. 0: 2 en 1: 0 als YAML-mapping. Leeg = automatisch voorstel."
+        },
+        "bed_leveling": {
+          "name": "Bednivellering",
+          "description": "Automatische bednivellering uitvoeren voor het printen."
+        },
+        "flow_calibration": {
+          "name": "Flowkalibratie",
+          "description": "Flowkalibratie uitvoeren voor het printen."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Een timelapse opnemen."
+        },
+        "plate": {
+          "name": "Plaat",
+          "description": "Plaatnummer voor 3MF-bestanden."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        },
+        "pause_layers": {
+          "name": "Pauze vóór laag",
+          "description": "Lijst met lagen (1 = eerste). De printer pauzeert vóór deze lagen, bijv. om magneten te plaatsen. Hiervoor wordt een kopie van het bestand met PAUSE gemaakt."
+        }
+      }
+    },
+    "refresh": {
+      "name": "Vernieuwen",
+      "description": "Bestandslijst en filamenten direct opnieuw laden.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "power_on": {
+      "name": "Inschakelen",
+      "description": "De printer inschakelen.",
+      "fields": {
+        "wait": {
+          "name": "Wachten tot gereed",
+          "description": "Pas terugkeren als Klipper gereed is (tot 4 min)."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "power_off": {
+      "name": "Veilig uitschakelen",
+      "description": "De printer afsluiten en daarna uitschakelen. Geweigerd tijdens het printen.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        },
+        "force": {
+          "name": "Forceren",
+          "description": "Uitschakelen ook al staat er een print als lopend geregistreerd, bijv. nadat de printer is vastgelopen. Niet gecontroleerd tegen de printerstatus."
+        }
+      }
+    },
+    "set_spool": {
+      "name": "Spoel toewijzen",
+      "description": "Wijst een Spoolman-spoel toe aan een printkop. Zonder spool_id kiest de integratie weer automatisch.",
+      "fields": {
+        "slot": {
+          "name": "Printkop",
+          "description": "1-4"
+        },
+        "spool_id": {
+          "name": "Spoel-ID",
+          "description": "ID in Spoolman; 0 = geen spoel. Leeg = automatisch."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "queue_add": {
+      "name": "Aan wachtrij toevoegen",
+      "description": "Plant een print met toewijzing en opties. Wordt handmatig gestart (queue_start) zodra het bed leeg is.",
+      "fields": {
+        "filename": {
+          "name": "Bestand",
+          "description": "Pad ten opzichte van de map gcodes."
+        },
+        "mapping": {
+          "name": "Filamenttoewijzing",
+          "description": "Logisch filament (T0, T1, ...) naar printerslot 0-3, bijv. 0: 2 en 1: 0 als YAML-mapping. Leeg = automatisch voorstel."
+        },
+        "bed_leveling": {
+          "name": "Bednivellering",
+          "description": "Automatische bednivellering uitvoeren voor het printen."
+        },
+        "flow_calibration": {
+          "name": "Flowkalibratie",
+          "description": "Flowkalibratie uitvoeren voor het printen."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Een timelapse opnemen."
+        },
+        "plate": {
+          "name": "Plaat",
+          "description": "Plaatnummer voor 3MF-bestanden."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        },
+        "pause_layers": {
+          "name": "Pauze vóór laag",
+          "description": "Lijst met lagen (1 = eerste). De printer pauzeert vóór deze lagen, bijv. om magneten te plaatsen. Hiervoor wordt een kopie van het bestand met PAUSE gemaakt."
+        }
+      }
+    },
+    "queue_remove": {
+      "name": "Uit wachtrij verwijderen",
+      "description": "Verwijdert een opdracht.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "ID uit het attribuut jobs van de wachtrijsensor."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "queue_move": {
+      "name": "Opdracht verplaatsen",
+      "description": "Wijzigt de volgorde.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "ID uit het attribuut jobs van de wachtrijsensor."
+        },
+        "position": {
+          "name": "Positie",
+          "description": "0 = eerste."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "queue_start": {
+      "name": "Opdracht starten",
+      "description": "Start de eerste (of de opgegeven) opdracht. Maak eerst het bed leeg.",
+      "fields": {
+        "job_id": {
+          "name": "Opdracht",
+          "description": "Leeg = eerste opdracht."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "queue_clear": {
+      "name": "Wachtrij leegmaken",
+      "description": "Verwijdert alle opdrachten.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Onderhoud uitgevoerd",
+      "description": "Zet de teller van een onderhoudspunt terug.",
+      "fields": {
+        "item": {
+          "name": "Punt",
+          "description": ""
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "backup_timelapses": {
+      "name": "Timelapses nu back-uppen",
+      "description": "Zet ontbrekende timelapses in de mediamap en ruimt daarna de printer op.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "backup_config": {
+      "name": "Printerconfiguratie back-uppen",
+      "description": "Kopieert printer.cfg enz. van de printer naar /config/snapmaker_u1_backup (nieuwe versie alleen bij wijziging).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "file_details": {
+      "name": "Bestandsdetails",
+      "description": "Metadata en miniatuur van een printbestand, ook oudere (voor het zoeken in de kaart).",
+      "fields": {
+        "path": {
+          "name": "Bestand",
+          "description": "Pad ten opzichte van gcodes, bijv. onderdelen/houder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "file_settings": {
+      "name": "Slicerinstellingen",
+      "description": "Laaghoogte, wanden, vulling, ondersteuning, plaat en temperaturen uit het instellingenblok van de G-code.",
+      "fields": {
+        "path": {
+          "name": "Bestand",
+          "description": "Pad ten opzichte van gcodes, bijv. onderdelen/houder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "delete_file": {
+      "name": "Bestand verwijderen",
+      "description": "Verwijdert een printbestand op de printer. Niet tijdens het printen ervan of als het in de wachtrij staat.",
+      "fields": {
+        "path": {
+          "name": "Bestand",
+          "description": "Pad ten opzichte van gcodes, bijv. onderdelen/houder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "move_file": {
+      "name": "Bestand hernoemen/verplaatsen",
+      "description": "Nieuwe naam of pad; submappen worden aangemaakt.",
+      "fields": {
+        "source": {
+          "name": "Bestand",
+          "description": "Huidig pad"
+        },
+        "dest": {
+          "name": "Bestemming",
+          "description": "Nieuwe naam of pad"
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "self_test": {
+      "name": "Zelftest",
+      "description": "Controleert printer, live-verbinding, opslag, Moonraker-integratie, camera, stroom, meldingen, Spoolman, Assist en mediamap.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        },
+        "language": {
+          "name": "Taal",
+          "description": "de of en; leeg = taal van Home Assistant."
+        }
+      }
+    },
+    "set_preference": {
+      "name": "Printervoorkeur instellen",
+      "description": "Wijzigt een firmwarevoorkeur van de printer. Mogelijk tijdens het printen.",
+      "fields": {
+        "preference": {
+          "name": "Voorkeur",
+          "description": "auto_replenish, replenish_ignore_color, entangle_detect, end_led_off of entangle_sensitivity."
+        },
+        "value": {
+          "name": "Waarde",
+          "description": "true/false; voor entangle_sensitivity low, medium of high."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "set_filament": {
+      "name": "Filament instellen",
+      "description": "Stelt materiaal, subtype, fabrikant en kleur van een printkop handmatig in, bijv. voor spoelen zonder RFID. Niet tijdens het printen.",
+      "fields": {
+        "slot": {
+          "name": "Printkop",
+          "description": "1-4"
+        },
+        "type": {
+          "name": "Materiaal",
+          "description": "bijv. PLA, PETG, TPU."
+        },
+        "sub_type": {
+          "name": "Subtype",
+          "description": "bijv. Silk, Matte, HF. Leeg = geen."
+        },
+        "vendor": {
+          "name": "Fabrikant",
+          "description": "bijv. Generic."
+        },
+        "color": {
+          "name": "Kleur",
+          "description": "Hexkleur, bijv. #FF0000."
+        },
+        "colors": {
+          "name": "Kleuren (meerkleurig)",
+          "description": "Tot 5 hexkleuren voor een meerkleurige spoel (silk dual/tri, regenboog). Vervangt Kleur."
+        },
+        "force": {
+          "name": "Officiële spoel overschrijven",
+          "description": "Ook de RFID-gegevens van een officiële Snapmaker-spoel overschrijven."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "camera_wake": {
+      "name": "Camera wekken",
+      "description": "Stuurt eenmaal camera.start_monitor (zoals de Snapmaker-app). De kaart roept dit automatisch aan als het camerabeeld stilstaat.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "exclude_object": {
+      "name": "Object uitsluiten",
+      "description": "Stopt met het printen van één object van de lopende print (Klipper EXCLUDE_OBJECT). Kan niet ongedaan worden gemaakt. Het laatste resterende object kan niet worden uitgesloten.",
+      "fields": {
+        "name": {
+          "name": "Object",
+          "description": "Naam zoals gedefinieerd in het bestand (EXCLUDE_OBJECT_DEFINE)."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "send_gcode": {
+      "name": "G-code versturen",
+      "description": "Voert G-code uit op de printer en geeft de antwoorden terug. Tijdens het printen zijn alleen bijstelcommando’s toegestaan (temperaturen, ventilatoren, snelheid, flow, Z-offset, licht, top cover, opvragingen).",
+      "fields": {
+        "script": {
+          "name": "G-code",
+          "description": "Eén commando per regel, maximaal 20 regels."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "tool_change": {
+      "name": "Kop oppakken of parkeren",
+      "description": "Neemt een kop op de wagen of zet de huidige terug in het dock. Homet eerst X/Y indien nodig. Vergrendeld tijdens het printen.",
+      "fields": {
+        "head": {
+          "name": "Kop",
+          "description": "1-4; genegeerd bij parkeren."
+        },
+        "action": {
+          "name": "Actie",
+          "description": "pick = deze kop nemen, park = de huidige kop terugzetten."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "weigh_spool": {
+      "name": "Spoel wegen",
+      "description": "Stelt het resterende filament van een spoel in Spoolman in op basis van de weegschaal. Gewogen met de lege spoel (standaard): het gewicht daarvan komt uit Spoolman.",
+      "fields": {
+        "slot": {
+          "name": "Kop",
+          "description": "1-4; de spoel die aan deze kop is toegewezen."
+        },
+        "spool_id": {
+          "name": "Spoel-ID",
+          "description": "In plaats van een kop."
+        },
+        "weight": {
+          "name": "Gewicht",
+          "description": "Wat de weegschaal aangeeft in g."
+        },
+        "gross": {
+          "name": "Met lege spoel",
+          "description": "Aan = gewogen met de spoel (bruto), uit = alleen filament."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "machine_command": {
+      "name": "Machinecommando",
+      "description": "Pauzeren, hervatten, annuleren, noodstop, homing, doelwaarden en schakelaars zonder de Moonraker-integratie.",
+      "fields": {
+        "action": {
+          "name": "Actie",
+          "description": "pause, resume, cancel, emergency_stop, home, set of switch."
+        },
+        "target": {
+          "name": "Doel",
+          "description": "home: all/x/y/z; set: bed_target, extruder1_target, fan_speed, speed_factor, FAN_speed; switch: output_pin_NAME of led_NAME (FAN, NAME zoals in Klipper)."
+        },
+        "value": {
+          "name": "Waarde",
+          "description": "Getal voor set, on/off voor switch."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "create_spool": {
+      "name": "Spoel aanmaken",
+      "description": "Maakt een spoel aan in Spoolman (fabrikant en filament worden hergebruikt als ze bestaan, anders aangemaakt) en wijst hem toe aan een kop.",
+      "fields": {
+        "slot": {
+          "name": "Kop",
+          "description": "1-4; de nieuwe spoel wordt aan deze kop toegewezen. Leeg = alleen aanmaken."
+        },
+        "material": {
+          "name": "Materiaal",
+          "description": "bijv. PLA, PETG, TPU. Niet nodig met een filament-ID of catalogusitem."
+        },
+        "filament_id": {
+          "name": "Filament-ID",
+          "description": "Bestaand Spoolman-filament voor de spoel; fabrikant, materiaal, naam en kleur komen daarvandaan."
+        },
+        "external_id": {
+          "name": "Catalogusitem",
+          "description": "ID van een filament uit de Spoolman-catalogus (SpoolmanDB); eenmaal overgenomen, daarna hergebruikt."
+        },
+        "location": {
+          "name": "Locatie",
+          "description": "Waar de spoel ligt, bijv. een plank of droogbox."
+        },
+        "vendor": {
+          "name": "Fabrikant",
+          "description": "Wordt in Spoolman aangemaakt als hij ontbreekt."
+        },
+        "name": {
+          "name": "Naam",
+          "description": "Filamentnaam, bijv. PLA Matte Zwart. Leeg = materiaal."
+        },
+        "color": {
+          "name": "Kleur",
+          "description": "Hex, bijv. #1a1a1a."
+        },
+        "weight": {
+          "name": "Nettogewicht",
+          "description": "Filament op een volle spoel in g."
+        },
+        "spool_weight": {
+          "name": "Lege spoel",
+          "description": "Gewicht van de lege spoel in g (voor het wegen)."
+        },
+        "price": {
+          "name": "Prijs",
+          "description": "Prijs van de spoel."
+        },
+        "remaining": {
+          "name": "Resterend",
+          "description": "Resterend filament in g; leeg = vol."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    }
+  },
+  "selector": {
+    "spool_restore": {
+      "options": {
+        "ask": "Aanbieden (één tik)",
+        "auto": "Automatisch instellen",
+        "off": "Uit"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "complete": "Print voltooid",
+        "cancelled": "Print geannuleerd",
+        "error": "Printfout",
+        "paused": "Print gepauzeerd (bijv. filament op)",
+        "alert": "Printerbericht tijdens een print",
+        "first_layer": "Eerste laag klaar",
+        "almost_done": "Bijna klaar",
+        "spool_low": "Te weinig filament (Spoolman)",
+        "spool_runout": "Spoel raakt op tijdens de print (Spoolman)",
+        "bed_cool": "Onderdeel klaar om te verwijderen (bed afgekoeld)",
+        "maintenance": "Onderhoud nodig",
+        "chamber_ready": "Kamer heeft het doel bereikt (top cover of kamerverwarming)"
+      }
+    },
+    "maintenance_item": {
+      "options": {
+        "plate": "Bouwplaat reinigen",
+        "nozzle": "Nozzles en wisser reinigen",
+        "rails": "Lineaire geleiders reinigen en smeren",
+        "belts": "Riemen controleren",
+        "filter": "Luchtfilter vervangen",
+        "carbon_rods": "X-carbonstangen reinigen",
+        "lead_screws": "Z-spindels en moeren smeren",
+        "coupling": "Stalen pennen en kogels van de kopkoppeling",
+        "pogo": "Pogo-contacten van de koppen reinigen"
+      }
+    },
+    "camera_wake": {
+      "options": {
+        "off": "Uit",
+        "printing": "Tijdens een print",
+        "always": "Altijd als de printer aan staat"
+      }
+    },
+    "tool_change_action": {
+      "options": {
+        "pick": "Oppakken",
+        "park": "Parkeren"
+      }
+    },
+    "live_notify_image": {
+      "options": {
+        "camera": "Camerabeeld",
+        "thumbnail": "Modelvoorbeeld",
+        "off": "Geen beeld"
+      }
+    }
+  }
+}
