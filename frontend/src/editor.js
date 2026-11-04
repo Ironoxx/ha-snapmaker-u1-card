@@ -8,6 +8,7 @@ export const SECTION_LABELS = {
   climate: "Bett & Innenraum", mesh: "Bettnivellierung", motion: "Bewegung", console: "G-Code-Konsole", system: "System & Diagnose",
   stats: "Statistik", history: "Druckhistorie", timelapse: "Zeitraffer",
   queue: "Warteschlange", charts: "Diagramme", maintenance: "Wartung", layer: "Schichtansicht",
+  spools: "Spoolman-Bestand",
 };
 export const FORM_LABELS = {
   printer_name: "Name", printer_brand: "Marke", layout: "Darstellung", hide: "Bereiche ausblenden",

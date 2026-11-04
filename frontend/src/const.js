@@ -7,15 +7,17 @@ export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAA
 
 export const SUFFIX = ["", "1", "2", "3"];
 export const SECTIONS = ["stage", "layer", "job", "queue", "files", "toolheads", "climate", "mesh", "motion", "console", "system",
-  "maintenance", "charts", "stats", "history", "timelapse"];
+  "maintenance", "charts", "stats", "history", "timelapse", "spools"];
 // Useful while the printer is off (data comes from the integration, not the printer)
-export const OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance"];
+export const OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance", "spools"];
 // Tabs (layout: tabs). A tab appears when at least one of its
 // sections is listed in show.
 export const TABS = [
   { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "toolheads"] },
   { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "mesh", "motion", "console"] },
   { id: "files", icon: "mdi:file-document-multiple-outline", label: "Dateien", sections: ["queue", "files"] },
+  // only with Spoolman (the section renders nothing otherwise and is left out in _layout)
+  { id: "spoolman", icon: "mdi:package-variant-closed", label: "Spoolman", sections: ["spools"] },
   { id: "history", icon: "mdi:history", label: "Verlauf", sections: ["charts", "history", "stats"] },
   { id: "timelapse", icon: "mdi:filmstrip", label: "Zeitraffer", sections: ["timelapse"] },
   { id: "system", icon: "mdi:chip", label: "System", sections: ["maintenance", "system"] },

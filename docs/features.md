@@ -138,13 +138,13 @@ Once a day, never during a print, the integration fetches all files from Moonrak
 
 Optional. Without a Spoolman address none of this appears in the card or the integration.
 
-**Stock.** *Stock* in the print heads panel lists every active spool: colour, vendor, material, location, which head it is in and the remaining weight as a bar (below the warning threshold in orange). On top the number of spools, the filament left in kg and its value (from the spool prices). Filter by material, search by name, vendor, location or `#ID`.
+**Stock.** The tab *Spoolman* (only with Spoolman set up) lists every active spool: colour, vendor, material, location, which head it is in and the remaining weight as a bar (below the warning threshold in orange). On top the number of spools, the filament left in kg and its value (from the spool prices). Filter by material, search by name, vendor, location or `#ID`.
 
-**New spool.** From the stock (*New spool*) or the spool picker of a head (*Create new spool*, prefilled with the head's material, vendor and colour, from the RFID tag if there is one). Typing in *Search filament* shows matches from your own Spoolman filaments and from Spoolman's catalogue [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (several thousand filaments of known vendors, 1.75 mm only); vendor and material fields suggest the known names. A pick fills vendor, material, name, colour, net weight and empty spool weight:
+**New spool.** From the *Spoolman* tab (*New spool*) or the spool picker of a head (*Create new spool*, prefilled with the head's material, vendor and colour, from the RFID tag if there is one). Typing in *Search filament* shows matches from your own Spoolman filaments and from Spoolman's catalogue [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (several thousand filaments of known vendors, 1.75 mm only); vendor and material fields suggest the known names. A pick fills vendor, material, name, colour, net weight and empty spool weight:
 - an own filament is used as it is,
 - a catalogue entry is imported into Spoolman once (vendor created if needed, with its colour, density and temperatures) and reused for the next spool.
 
-Without a pick, vendor and filament are reused if they exist (same name, material and colour), otherwise created (density by material, 1.75 mm). Location and price are optional; from the stock you choose the head in the form or none. With SpoolLink the head is set via `SET_SPOOL_ID`. The catalogue needs Spoolman 0.18 or newer with internet access; without it only your own filaments are suggested.
+Without a pick, vendor and filament are reused if they exist (same name, material and colour), otherwise created (density by material, 1.75 mm). Location and price are optional; from the *Spoolman* tab you choose the head in the form or none. Picking a spool for a head stays under the print heads. With SpoolLink the head is set via `SET_SPOOL_ID`. The catalogue needs Spoolman 0.18 or newer with internet access; without it only your own filaments are suggested.
 
 Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`, `location`, `filament_id` or `external_id`), returns `spool_id`.
 

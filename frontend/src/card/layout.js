@@ -149,6 +149,7 @@ export const LayoutMixin = (Base) => class extends Base {
       case "charts": return this._sectionCharts();
       case "maintenance": return this._sectionMaintenance();
       case "layer": return this._sectionLayer();
+      case "spools": return this._sectionSpools();
       default: return "";
     }
   }
@@ -165,6 +166,7 @@ export const LayoutMixin = (Base) => class extends Base {
 
   /** Sections as tabs, stacked (layout: scroll) or camera beside the tabs (layout: tablet). */
   _layout(sections) {
+    if (!this._spoolman()) sections = sections.filter((s) => s !== "spools");
     if (!sections.length) return "";
     if (this._cfg.layout === "scroll") {
       // Order as before: stage job files toolheads ...

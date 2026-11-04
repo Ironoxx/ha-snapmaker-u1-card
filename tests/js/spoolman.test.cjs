@@ -53,7 +53,7 @@ const hass = () => ({ states: JSON.parse(JSON.stringify(states)), entities: reg,
   callWS: async (m) => { ws.push(m); return m.type.endsWith("/catalog")
     ? { vendors: ["Generic", "Polymaker"], materials: ["PETG", "PLA"], catalog: 1 } : { items: SUGGEST }; } });
 const card = w.document.createElement("snapmaker-u1-card");
-card.setConfig({ type: "custom:snapmaker-u1-card", show: ["toolheads", "files"] });
+card.setConfig({ type: "custom:snapmaker-u1-card", show: ["toolheads", "files", "spools"] });
 w.document.body.appendChild(card);
 card.hass = hass();
 const root = () => card.shadowRoot.getElementById("u1card");
@@ -111,22 +111,28 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(dlg().querySelector("[data-pick]"), "zurueck zur Liste");
   dlg().close();
 
-  // 2c. Stock: all spools, totals, filter by material and text, where each spool is
-  root().querySelector("[data-spoolstock]").click();
-  const rows = () => [...dlg().querySelectorAll("[data-stock]")];
+  // 2c. Tab "Spoolman": all spools, totals, filter by material and text in place, where each spool is
+  assert.ok(root().querySelector('[data-tab="spoolman"]'), "Reiter Spoolman");
+  const sec = () => root().querySelector("[data-spools]");
+  const rows = () => [...sec().querySelectorAll("[data-stock]")].filter((r) => !r.hidden);
   assert.strictEqual(rows().length, 4);
-  assert.ok(/4 Spulen · 2\.1 kg/.test(dlg().querySelector("[data-stocksum]").textContent));
+  assert.ok(/4 Spulen · 2\.1 kg/.test(sec().querySelector("[data-stocksum]").textContent));
   assert.ok(/steckt in/.test(rows().find((r) => r.dataset.stock === "4").textContent), "Kopf der Spule");
   assert.strictEqual(rows().find((r) => r.dataset.stock === "3").dataset.low, "1", "unter der Warnschwelle");
-  dlg().querySelector('[data-stockmat="PETG"]').click();
+  const search = sec().querySelector("[data-stocktext]");
+  sec().querySelector('[data-stockmat="PETG"]').click();
   assert.deepStrictEqual(rows().map((r) => r.dataset.stock), ["6"]);
-  dlg().querySelector('[data-stockmat=""]').click();
-  card._openSpoolStock({ material: "", text: "regal" });
+  assert.strictEqual(sec().querySelector("[data-stocktext]"), search, "kein Neuaufbau beim Filtern");
+  sec().querySelector('[data-stockmat=""]').click();
+  search.value = "regal"; search.dispatchEvent(new w.Event("input"));
   assert.deepStrictEqual(rows().map((r) => r.dataset.stock), ["4"], "Suche im Ort");
-  card._openSpoolStock({ material: "", text: "" });
+  search.value = "xyz"; search.dispatchEvent(new w.Event("input"));
+  assert.ok(!sec().querySelector("[data-stockempty]").hidden);
+  search.value = ""; search.dispatchEvent(new w.Event("input"));
+  const stockNew = () => { sec().querySelector("[data-stocknew]").click(); };
 
   // 2d. New spool from the stock: suggestions, a catalogue pick, head chosen in the form
-  dlg().querySelector("[data-stocknew]").click();
+  stockNew();
   await tick();
   const f2 = dlg().querySelector("[data-newspoolform]");
   assert.strictEqual(f2.querySelectorAll("#u1-vendors option").length, 2, "Herstellervorschläge");
@@ -151,7 +157,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
     spool_weight: 140, config_entry_id: "E1", name: "PolyTerra PLA Black", location: "Trockenbox", slot: 4,
     external_id: "polymaker_pla_black" });
   // own filament: by ID; editing the name drops the pick
-  dlg().querySelector("[data-stocknew]").click(); await tick();
+  stockNew(); await tick();
   const f3 = dlg().querySelector("[data-newspoolform]");
   f3.elements.q.value = "silk"; f3.elements.q.dispatchEvent(new w.Event("input"));
   await new Promise((r) => setTimeout(r, 300)); await tick();
@@ -159,7 +165,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   f3.dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
   assert.strictEqual(calls.at(-1)[2].filament_id, 9);
   assert.ok(!("slot" in calls.at(-1)[2]), "keinem Kopf");
-  dlg().querySelector("[data-stocknew]").click(); await tick();
+  stockNew(); await tick();
   const f4 = dlg().querySelector("[data-newspoolform]");
   f4.elements.q.value = "silk"; f4.elements.q.dispatchEvent(new w.Event("input"));
   await new Promise((r) => setTimeout(r, 300)); await tick();

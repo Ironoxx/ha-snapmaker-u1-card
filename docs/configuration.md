@@ -49,7 +49,7 @@ All options are optional; except head names and presets they can also be set in 
 | `camera_mode` | `auto` | `auto` = the camera entity decides (live stream or still images), `stream` = force the stream, `still` = still images (saves WiFi) |
 | `refresh` | `2` | seconds between still images (`still` and fallback) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | all | sections: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse` |
+| `show` | all | sections: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse spools` (`spools` = Spoolman tab, only with Spoolman) |
 | `hide` | – | sections to hide (counterpart of `show`, used by the editor) |
 | `controls_lock` | `60` | lock for temperature and fan sliders, presets, heater switches and homing: `off`, seconds (`30`, `60`, `120`, `300`) until it locks again after the last interaction, or `manual` (open until locked again). During a print the card asks before changing a target temperature. Legacy: `unlock_controls: true` = `off` |
 | `timelapse_limit` | `8` | timelapses shown |

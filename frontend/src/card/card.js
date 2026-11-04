@@ -203,7 +203,6 @@ export class SnapmakerU1Card extends U1Base {
     this._render();
     if (this._dlg) this._refreshDialog();
     else if (this._afterUpload) this._checkAfterUpload();
-    this._refreshStock();
     this._tickLayer(true);
   }
 

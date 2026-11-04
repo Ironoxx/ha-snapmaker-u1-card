@@ -573,6 +573,9 @@ export const STYLES = `
   .spool-opt ha-icon { --mdc-icon-size: 20px; color: var(--u1-on-variant); }
   .spool-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .spool-opt-text > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stock { display: flex; flex-direction: column; gap: 10px; }
+  .stock-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+  .stock-row[hidden] { display: none; }
   .stock-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--u1-outline) 50%, transparent); }
   .stock-row .spool-track { margin-top: 4px; }

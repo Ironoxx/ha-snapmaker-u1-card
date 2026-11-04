@@ -21,13 +21,16 @@
     "charts",
     "stats",
     "history",
-    "timelapse"
+    "timelapse",
+    "spools"
   ];
-  var OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance"];
+  var OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance", "spools"];
   var TABS = [
     { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "toolheads"] },
     { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "mesh", "motion", "console"] },
     { id: "files", icon: "mdi:file-document-multiple-outline", label: "Dateien", sections: ["queue", "files"] },
+    // only with Spoolman (the section renders nothing otherwise and is left out in _layout)
+    { id: "spoolman", icon: "mdi:package-variant-closed", label: "Spoolman", sections: ["spools"] },
     { id: "history", icon: "mdi:history", label: "Verlauf", sections: ["charts", "history", "stats"] },
     { id: "timelapse", icon: "mdi:filmstrip", label: "Zeitraffer", sections: ["timelapse"] },
     { id: "system", icon: "mdi:chip", label: "System", sections: ["maintenance", "system"] }
@@ -658,9 +661,7 @@
     "{n} Wechsel": "{n} changes",
     "{n} neueste": "{n} newest",
     // 2.1 Spoolman stock and suggestions
-    "Alle Spulen in Spoolman": "All spools in Spoolman",
     "Anlegen": "Create",
-    "Bestand": "Stock",
     "Filament aus deinem Spoolman": "Filament from your Spoolman",
     "Filament suchen": "Search filament",
     "Katalog": "catalogue",
@@ -736,7 +737,8 @@
     queue: "Warteschlange",
     charts: "Diagramme",
     maintenance: "Wartung",
-    layer: "Schichtansicht"
+    layer: "Schichtansicht",
+    spools: "Spoolman-Bestand"
   };
   var FORM_LABELS = {
     printer_name: "Name",
@@ -1941,8 +1943,6 @@
         <div class="panel-head">
           <ha-icon icon="mdi:printer-3d-nozzle"></ha-icon>
           <span class="panel-title">${tr("Druckköpfe")}</span>
-          ${this._spoolman() ? `<button type="button" class="chip sm" data-spoolstock title="${tr("Alle Spulen in Spoolman")}"
-            style="margin-left:auto"><ha-icon icon="mdi:package-variant-closed"></ha-icon><span>${tr("Bestand")}</span></button>` : ""}
           ${this._lockBtn()}
         </div>
         <div class="heads">${cards}</div>
@@ -3600,6 +3600,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           return this._sectionMaintenance();
         case "layer":
           return this._sectionLayer();
+        case "spools":
+          return this._sectionSpools();
         default:
           return "";
       }
@@ -3613,6 +3615,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     /** Sections as tabs, stacked (layout: scroll) or camera beside the tabs (layout: tablet). */
     _layout(sections) {
+      if (!this._spoolman()) sections = sections.filter((s) => s !== "spools");
       if (!sections.length) return "";
       if (this._cfg.layout === "scroll") {
         return `<div class="layout">${SECTIONS.filter((s) => sections.includes(s)).map((s) => this._section(s)).join("")}</div>`;
@@ -4231,6 +4234,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .spool-opt ha-icon { --mdc-icon-size: 20px; color: var(--u1-on-variant); }
   .spool-opt-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .spool-opt-text > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stock { display: flex; flex-direction: column; gap: 10px; }
+  .stock-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+  .stock-row[hidden] { display: none; }
   .stock-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--u1-outline) 50%, transparent); }
   .stock-row .spool-track { margin-top: 4px; }
@@ -4751,7 +4757,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.heads.findIndex((h) => h.active),
         (() => {
           const sm = this._spoolman();
-          return sm ? `sm${sm.online}${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}r${Object.entries(sm.restore || {}).map(([k, v]) => `${k}:${v.id}`).join(",")}` : "nosm";
+          return sm ? `sm${sm.online}${(sm.spools || []).map((v) => `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.location || ""}:${v.name}`).join(",")}|${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}r${Object.entries(sm.restore || {}).map(([k, v]) => `${k}:${v.id}`).join(",")}` : "nosm";
         })(),
         d.tc ? `tc${d.tc.inProgress}${d.tc.heads.length}` : "notc",
         d.power ? `p${d.power.on}${d.power.available}${d.power.autoOn}${d.online ? "" : d.power.shuttingDown + "" + d.power.poweringOn}` : "nop",
@@ -4996,10 +5002,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         e.stopPropagation();
         this._restoreSpool(Number(b.dataset.spoolrestore), Number(b.dataset.spool));
       }));
-      r.querySelectorAll("[data-spoolstock]").forEach((b) => b.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this._openSpoolStock();
-      }));
+      this._wireSpools(r);
       r.querySelectorAll("[data-spoolpick]").forEach((b) => b.addEventListener("click", (e) => {
         e.stopPropagation();
         this._openSpoolPicker(Number(b.dataset.spoolpick));
@@ -7226,26 +7229,24 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       });
       return out;
     }
-    _openSpoolStock(filter = this._stockFilter || { material: "", text: "" }) {
+    /** Tab "Spoolman": every active spool; filter and search work in place (no rebuild, focus stays). */
+    _sectionSpools() {
       const sm = this._spoolman();
-      if (!sm) return;
-      this._stockFilter = filter;
-      this._stockSeen = JSON.stringify(sm.spools || []);
-      const dlg = this._spoolDialog();
-      const all = sm.spools || [];
+      if (!sm) return "";
+      const all = (sm.spools || []).slice().sort((a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
       const heads = this._spoolHeads();
       const materials = [...new Set(all.map((s) => (s.material || "").toUpperCase()).filter(Boolean))].sort();
-      const words = filter.text.toLowerCase().split(/\s+/).filter(Boolean);
-      const list = all.filter((s) => (!filter.material || (s.material || "").toUpperCase() === filter.material) && words.every((w) => [s.name, s.vendor, s.material, s.location, `#${s.id}`].join(" ").toLowerCase().includes(w))).sort((a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
-      const grams = list.reduce((n, s) => n + (s.remaining_weight || 0), 0);
-      const value = list.reduce((n, s) => n + (s.price_kg && s.remaining_weight ? s.price_kg * s.remaining_weight / 1e3 : 0), 0);
+      const f = this._stockFilter || (this._stockFilter = { material: "", text: "" });
       const low = sm.low || 0;
       const row = (s) => {
         const rest = s.remaining_weight;
         const pct = rest != null && s.initial_weight ? clamp(rest / s.initial_weight * 100, 0, 100) : null;
         const head = heads.get(s.id);
         const colors = s.colors && s.colors.length > 1 ? `linear-gradient(135deg, ${s.colors.map(esc).join(", ")})` : esc(s.color || "var(--u1-outline)");
-        return `<div class="stock-row" data-stock="${s.id}" data-low="${rest != null && rest < low ? 1 : 0}">
+        const text = [s.name, s.vendor, s.material, s.location, `#${s.id}`].join(" ").toLowerCase();
+        return `<div class="stock-row" data-stock="${s.id}" data-low="${rest != null && rest < low ? 1 : 0}"
+          data-mat="${esc((s.material || "").toUpperCase())}" data-text="${esc(text)}"
+          data-rest="${rest || 0}" data-value="${s.price_kg && rest ? (s.price_kg * rest / 1e3).toFixed(2) : 0}">
           <span class="spool-dot" style="--fil:${colors}"></span>
           <span class="spool-opt-text"><span>#${s.id} ${esc(s.name)}</span>
             <span class="t-label">${[
@@ -7258,48 +7259,60 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
         </div>`;
       };
-      dlg.innerHTML = `<div class="dlg">
-        <header class="dlg-head"><div style="min-width:0">
-          <div class="dlg-title">${tr("Spoolman-Bestand")}</div>
-          <div class="t-label" data-stocksum>${tr("{n} Spulen · {kg} kg", { n: list.length, kg: (grams / 1e3).toFixed(1) })}${value > 0 ? ` · ${fmtEuro(value)}` : ""}</div></div>
-          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
-        </header>
+      return `
+      <section class="panel span2 span3 stock" data-spools>
+        <div class="panel-head">
+          <ha-icon icon="mdi:package-variant-closed"></ha-icon>
+          <span class="panel-title">${tr("Spoolman-Bestand")}</span>
+          <button type="button" class="chip sm" data-stocknew style="margin-left:auto" ${sm.online ? "" : "disabled"}>
+            <ha-icon icon="mdi:plus"></ha-icon><span>${tr("Neue Spule")}</span></button>
+        </div>
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
-        <input class="stock-search" type="search" data-stocktext value="${esc(filter.text)}" placeholder="${tr("Suchen: Name, Hersteller, Ort, #ID")}" />
+        <div class="t-label" data-stocksum></div>
+        <input class="stock-search" type="search" data-stocktext value="${esc(f.text)}" placeholder="${tr("Suchen: Name, Hersteller, Ort, #ID")}" />
         <div class="chips stock-chips">
-          <button type="button" class="chip sm" data-stockmat="" aria-pressed="${!filter.material}">${tr("Alle")}</button>
-          ${materials.map((m) => `<button type="button" class="chip sm" data-stockmat="${esc(m)}" aria-pressed="${filter.material === m}">${esc(m)}</button>`).join("")}
+          <button type="button" class="chip sm" data-stockmat="" aria-pressed="${!f.material}">${tr("Alle")}</button>
+          ${materials.map((m) => `<button type="button" class="chip sm" data-stockmat="${esc(m)}" aria-pressed="${f.material === m}">${esc(m)}</button>`).join("")}
         </div>
-        <div class="spool-list">${list.map(row).join("") || `<div class="t-label">${all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>`}</div>
-        <div class="dlg-actions">
-          <button type="button" class="filled" data-stocknew ${sm.online ? "" : "disabled"}><ha-icon icon="mdi:plus"></ha-icon>${tr("Neue Spule")}</button>
-        </div>
-      </div>`;
-      dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
-      dlg.querySelectorAll("[data-stockmat]").forEach((b) => b.addEventListener("click", () => this._openSpoolStock({ ...this._stockFilter, material: b.dataset.stockmat })));
-      const txt = dlg.querySelector("[data-stocktext]");
-      txt.addEventListener("input", () => {
-        clearTimeout(this._stockTimer);
-        this._stockTimer = setTimeout(() => {
-          this._openSpoolStock({ ...this._stockFilter, text: txt.value });
-          const again = this._spoolDialog().querySelector("[data-stocktext]");
-          if (again) {
-            again.focus();
-            again.setSelectionRange(again.value.length, again.value.length);
-          }
-        }, 200);
-      });
-      dlg.querySelector("[data-stocknew]").addEventListener("click", () => this._newSpoolForm(dlg, null));
-      this._showDialog(dlg);
+        <div class="stock-list">${all.map(row).join("")}</div>
+        <div class="t-label" data-stockempty hidden>${all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>
+      </section>`;
     }
-    /** Stock open: show new or changed spools (not while typing in its search field). */
-    _refreshStock() {
-      const sm = this._spoolman();
-      const dlg = this.shadowRoot && this.shadowRoot.querySelector("dialog.u1spool");
-      if (!sm || !dlg || !dlg.open || !dlg.querySelector("[data-stocktext]")) return;
-      if (JSON.stringify(sm.spools || []) === this._stockSeen) return;
-      if (this.shadowRoot.activeElement === dlg.querySelector("[data-stocktext]")) return;
-      this._openSpoolStock();
+    _wireSpools(r) {
+      const sec = r.querySelector("[data-spools]");
+      if (!sec) return;
+      sec.querySelectorAll("[data-stockmat]").forEach((b) => b.addEventListener("click", () => {
+        this._stockFilter.material = b.dataset.stockmat;
+        this._filterSpools(sec);
+      }));
+      const txt = sec.querySelector("[data-stocktext]");
+      txt.addEventListener("input", () => {
+        this._stockFilter.text = txt.value;
+        this._filterSpools(sec);
+      });
+      sec.querySelector("[data-stocknew]").addEventListener("click", () => {
+        const dlg = this._spoolDialog();
+        this._newSpoolForm(dlg, null);
+        this._showDialog(dlg);
+      });
+      this._filterSpools(sec);
+    }
+    _filterSpools(sec) {
+      const f = this._stockFilter;
+      const words = f.text.toLowerCase().split(/\s+/).filter(Boolean);
+      let n = 0, grams = 0, value = 0;
+      sec.querySelectorAll("[data-stock]").forEach((el) => {
+        const show = (!f.material || el.dataset.mat === f.material) && words.every((w) => el.dataset.text.includes(w));
+        el.hidden = !show;
+        if (show) {
+          n++;
+          grams += Number(el.dataset.rest);
+          value += Number(el.dataset.value);
+        }
+      });
+      sec.querySelectorAll("[data-stockmat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stockmat === f.material)));
+      sec.querySelector("[data-stocksum]").textContent = tr("{n} Spulen · {kg} kg", { n, kg: (grams / 1e3).toFixed(1) }) + (value > 0 ? ` · ${fmtEuro(value)}` : "");
+      sec.querySelector("[data-stockempty]").hidden = n > 0;
     }
     /** Form: create a spool in Spoolman. idx = head to assign to (prefilled from it), null = from the stock. */
     _newSpoolForm(dlg, idx) {
@@ -7343,7 +7356,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const field = (n) => form.querySelector(`[name="${n}"]`);
       let picked = null;
       dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
-      dlg.querySelector("[data-back]").addEventListener("click", () => idx !== null ? this._openSpoolPicker(idx) : this._openSpoolStock());
+      dlg.querySelector("[data-back]").addEventListener("click", () => idx !== null ? this._openSpoolPicker(idx) : dlg.close());
       this._spoolCatalogWS("catalog", {}).then((cat) => {
         if (!cat) return;
         const opts = (list) => list.map((v) => `<option value="${esc(v)}"></option>`).join("");
@@ -7439,8 +7452,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           const id = res && res.response && res.response.spool_id;
           const name2 = target ? (heads[target - 1] || {}).name || `E${target - 1}` : null;
           this._toast(name2 ? tr("Spule #{id} angelegt und {head} zugeordnet", { id: id ?? "?", head: name2 }) : tr("Spule #{id} angelegt", { id: id ?? "?" }));
-          if (head) dlg.close();
-          else this._openSpoolStock();
+          dlg.close();
         } catch (err) {
           btn.disabled = false;
           const el = form.querySelector(".dlg-error");
@@ -7610,7 +7622,6 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._render();
       if (this._dlg) this._refreshDialog();
       else if (this._afterUpload) this._checkAfterUpload();
-      this._refreshStock();
       this._tickLayer(true);
     }
     // ── Find entities automatically ───────────────────────────────────────────

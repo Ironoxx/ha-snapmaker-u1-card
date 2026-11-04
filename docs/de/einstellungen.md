@@ -49,7 +49,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `camera_mode` | `auto` | `auto` = die Kamera-Entität entscheidet (Livestream oder Standbilder), `stream` = Stream erzwingen, `still` = Einzelbilder (spart WLAN) |
 | `refresh` | `2` | Sekunden zwischen Einzelbildern (`still` und Rückfall) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | alle | Bereiche: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse` |
+| `show` | alle | Bereiche: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse spools` (`spools` = Reiter Spoolman, nur mit Spoolman) |
 | `hide` | – | Bereiche ausblenden (Gegenstück zu `show`, nutzt der Editor) |
 | `controls_lock` | `60` | Sperre für Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt: `off`, Sekunden (`30`, `60`, `120`, `300`) bis zur automatischen Sperre nach der letzten Bedienung, oder `manual` (offen, bis man wieder sperrt). Im Druck fragt die Karte vor jeder Änderung einer Solltemperatur nach. Alt: `unlock_controls: true` = `off` |
 | `timelapse_limit` | `8` | angezeigte Zeitraffer |

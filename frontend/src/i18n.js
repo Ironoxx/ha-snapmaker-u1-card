@@ -566,9 +566,7 @@ export const EN = {
   "{n} Wechsel": "{n} changes",
   "{n} neueste": "{n} newest",
   // 2.1 Spoolman stock and suggestions
-  "Alle Spulen in Spoolman": "All spools in Spoolman",
   "Anlegen": "Create",
-  "Bestand": "Stock",
   "Filament aus deinem Spoolman": "Filament from your Spoolman",
   "Filament suchen": "Search filament",
   "Katalog": "catalogue",

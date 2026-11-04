@@ -27,7 +27,7 @@ export const RenderMixin = (Base) => class extends Base {
       this._cfg.show.join(","),
       `${this._cfg.layout}${this._cfg.camera_overlay}`,
       d.heads.findIndex((h) => h.active),
-      (() => { const sm = this._spoolman(); return sm ? `sm${sm.online}${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}r${Object.entries(sm.restore || {}).map(([k, v]) => `${k}:${v.id}`).join(",")}` : "nosm"; })(),
+      (() => { const sm = this._spoolman(); return sm ? `sm${sm.online}${(sm.spools || []).map((v) => `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.location || ""}:${v.name}`).join(",")}|${Object.values(sm.slots || {}).map((v) => v ? `${v.id}:${Math.round(v.remaining_weight || 0)}:${v.manual}` : "-").join(",")}r${Object.entries(sm.restore || {}).map(([k, v]) => `${k}:${v.id}`).join(",")}` : "nosm"; })(),
       d.tc ? `tc${d.tc.inProgress}${d.tc.heads.length}` : "notc",
       d.power ? `p${d.power.on}${d.power.available}${d.power.autoOn}${d.online ? "" : d.power.shuttingDown + "" + d.power.poweringOn}` : "nop",
       d.usage ? `u${d.usage.inProgress}${d.usage.hasEnergy}${d.usage.hasCost}` : "nou",
@@ -240,8 +240,7 @@ export const RenderMixin = (Base) => class extends Base {
         { preference: "entangle_sensitivity", value: b.dataset.prefsen })));
     r.querySelectorAll("[data-spoolrestore]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._restoreSpool(Number(b.dataset.spoolrestore), Number(b.dataset.spool)); }));
-    r.querySelectorAll("[data-spoolstock]").forEach((b) =>
-      b.addEventListener("click", (e) => { e.stopPropagation(); this._openSpoolStock(); }));
+    this._wireSpools(r);
     r.querySelectorAll("[data-spoolpick]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._openSpoolPicker(Number(b.dataset.spoolpick)); }));
 

@@ -240,8 +240,6 @@ export const OverviewMixin = (Base) => class extends Base {
         <div class="panel-head">
           <ha-icon icon="mdi:printer-3d-nozzle"></ha-icon>
           <span class="panel-title">${tr("Druckköpfe")}</span>
-          ${this._spoolman() ? `<button type="button" class="chip sm" data-spoolstock title="${tr("Alle Spulen in Spoolman")}"
-            style="margin-left:auto"><ha-icon icon="mdi:package-variant-closed"></ha-icon><span>${tr("Bestand")}</span></button>` : ""}
           ${this._lockBtn()}
         </div>
         <div class="heads">${cards}</div>

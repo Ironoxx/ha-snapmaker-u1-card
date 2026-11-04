@@ -2,10 +2,11 @@
  * Spoolman in the card (2.1): the stock of spools and a "new spool" form with
  * suggestions.
  *
- * Stock: every active spool with colour, vendor, material, location and the
- * remaining weight, filtered by material or text, totals on top. The data is
- * the spool list the integration already keeps (sensor filaments, attribute
- * spoolman.spools), so opening it costs no request.
+ * Tab "Spoolman": every active spool with colour, vendor, material, location
+ * and the remaining weight, filtered by material or text, totals on top. The
+ * data is the spool list the integration already keeps (sensor filaments,
+ * attribute spoolman.spools), so it costs no request. Picking a spool for a
+ * head stays in the print heads panel.
  *
  * New spool: typing searches the own Spoolman filaments and Spoolman's
  * catalogue SpoolmanDB (websocket spoolman/suggest). A pick fills vendor,
@@ -45,22 +46,15 @@ export const SpoolStockMixin = (Base) => class extends Base {
     return out;
   }
 
-  _openSpoolStock(filter = this._stockFilter || { material: "", text: "" }) {
+  /** Tab "Spoolman": every active spool; filter and search work in place (no rebuild, focus stays). */
+  _sectionSpools() {
     const sm = this._spoolman();
-    if (!sm) return;
-    this._stockFilter = filter;
-    this._stockSeen = JSON.stringify(sm.spools || []);
-    const dlg = this._spoolDialog();
-    const all = sm.spools || [];
+    if (!sm) return "";
+    const all = (sm.spools || []).slice().sort((a, b) => (a.material || "").localeCompare(b.material || "")
+      || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
     const heads = this._spoolHeads();
     const materials = [...new Set(all.map((s) => (s.material || "").toUpperCase()).filter(Boolean))].sort();
-    const words = filter.text.toLowerCase().split(/\s+/).filter(Boolean);
-    const list = all.filter((s) => (!filter.material || (s.material || "").toUpperCase() === filter.material)
-      && words.every((w) => [s.name, s.vendor, s.material, s.location, `#${s.id}`].join(" ").toLowerCase().includes(w)))
-      .sort((a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "")
-        || (a.name || "").localeCompare(b.name || ""));
-    const grams = list.reduce((n, s) => n + (s.remaining_weight || 0), 0);
-    const value = list.reduce((n, s) => n + (s.price_kg && s.remaining_weight ? s.price_kg * s.remaining_weight / 1000 : 0), 0);
+    const f = this._stockFilter || (this._stockFilter = { material: "", text: "" });
     const low = sm.low || 0;
     const row = (s) => {
       const rest = s.remaining_weight;
@@ -68,7 +62,10 @@ export const SpoolStockMixin = (Base) => class extends Base {
       const head = heads.get(s.id);
       const colors = (s.colors && s.colors.length > 1)
         ? `linear-gradient(135deg, ${s.colors.map(esc).join(", ")})` : esc(s.color || "var(--u1-outline)");
-      return `<div class="stock-row" data-stock="${s.id}" data-low="${rest != null && rest < low ? 1 : 0}">
+      const text = [s.name, s.vendor, s.material, s.location, `#${s.id}`].join(" ").toLowerCase();
+      return `<div class="stock-row" data-stock="${s.id}" data-low="${rest != null && rest < low ? 1 : 0}"
+          data-mat="${esc((s.material || "").toUpperCase())}" data-text="${esc(text)}"
+          data-rest="${rest || 0}" data-value="${s.price_kg && rest ? (s.price_kg * rest / 1000).toFixed(2) : 0}">
           <span class="spool-dot" style="--fil:${colors}"></span>
           <span class="spool-opt-text"><span>#${s.id} ${esc(s.name)}</span>
             <span class="t-label">${[s.vendor, s.material, s.location,
@@ -78,47 +75,56 @@ export const SpoolStockMixin = (Base) => class extends Base {
           <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
         </div>`;
     };
-    dlg.innerHTML = `<div class="dlg">
-        <header class="dlg-head"><div style="min-width:0">
-          <div class="dlg-title">${tr("Spoolman-Bestand")}</div>
-          <div class="t-label" data-stocksum>${tr("{n} Spulen · {kg} kg", { n: list.length, kg: (grams / 1000).toFixed(1) })}${value > 0 ? ` · ${fmtEuro(value)}` : ""}</div></div>
-          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
-        </header>
+    return `
+      <section class="panel span2 span3 stock" data-spools>
+        <div class="panel-head">
+          <ha-icon icon="mdi:package-variant-closed"></ha-icon>
+          <span class="panel-title">${tr("Spoolman-Bestand")}</span>
+          <button type="button" class="chip sm" data-stocknew style="margin-left:auto" ${sm.online ? "" : "disabled"}>
+            <ha-icon icon="mdi:plus"></ha-icon><span>${tr("Neue Spule")}</span></button>
+        </div>
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
-        <input class="stock-search" type="search" data-stocktext value="${esc(filter.text)}" placeholder="${tr("Suchen: Name, Hersteller, Ort, #ID")}" />
+        <div class="t-label" data-stocksum></div>
+        <input class="stock-search" type="search" data-stocktext value="${esc(f.text)}" placeholder="${tr("Suchen: Name, Hersteller, Ort, #ID")}" />
         <div class="chips stock-chips">
-          <button type="button" class="chip sm" data-stockmat="" aria-pressed="${!filter.material}">${tr("Alle")}</button>
-          ${materials.map((m) => `<button type="button" class="chip sm" data-stockmat="${esc(m)}" aria-pressed="${filter.material === m}">${esc(m)}</button>`).join("")}
+          <button type="button" class="chip sm" data-stockmat="" aria-pressed="${!f.material}">${tr("Alle")}</button>
+          ${materials.map((m) => `<button type="button" class="chip sm" data-stockmat="${esc(m)}" aria-pressed="${f.material === m}">${esc(m)}</button>`).join("")}
         </div>
-        <div class="spool-list">${list.map(row).join("") || `<div class="t-label">${all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>`}</div>
-        <div class="dlg-actions">
-          <button type="button" class="filled" data-stocknew ${sm.online ? "" : "disabled"}><ha-icon icon="mdi:plus"></ha-icon>${tr("Neue Spule")}</button>
-        </div>
-      </div>`;
-    dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
-    dlg.querySelectorAll("[data-stockmat]").forEach((b) => b.addEventListener("click", () =>
-      this._openSpoolStock({ ...this._stockFilter, material: b.dataset.stockmat })));
-    const txt = dlg.querySelector("[data-stocktext]");
-    txt.addEventListener("input", () => {
-      clearTimeout(this._stockTimer);
-      this._stockTimer = setTimeout(() => {
-        this._openSpoolStock({ ...this._stockFilter, text: txt.value });
-        const again = this._spoolDialog().querySelector("[data-stocktext]");
-        if (again) { again.focus(); again.setSelectionRange(again.value.length, again.value.length); }
-      }, 200);
-    });
-    dlg.querySelector("[data-stocknew]").addEventListener("click", () => this._newSpoolForm(dlg, null));
-    this._showDialog(dlg);
+        <div class="stock-list">${all.map(row).join("")}</div>
+        <div class="t-label" data-stockempty hidden>${all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>
+      </section>`;
   }
 
-  /** Stock open: show new or changed spools (not while typing in its search field). */
-  _refreshStock() {
-    const sm = this._spoolman();
-    const dlg = this.shadowRoot && this.shadowRoot.querySelector("dialog.u1spool");
-    if (!sm || !dlg || !dlg.open || !dlg.querySelector("[data-stocktext]")) return;
-    if (JSON.stringify(sm.spools || []) === this._stockSeen) return;
-    if (this.shadowRoot.activeElement === dlg.querySelector("[data-stocktext]")) return;
-    this._openSpoolStock();
+  _wireSpools(r) {
+    const sec = r.querySelector("[data-spools]");
+    if (!sec) return;
+    sec.querySelectorAll("[data-stockmat]").forEach((b) => b.addEventListener("click", () => {
+      this._stockFilter.material = b.dataset.stockmat;
+      this._filterSpools(sec);
+    }));
+    const txt = sec.querySelector("[data-stocktext]");
+    txt.addEventListener("input", () => { this._stockFilter.text = txt.value; this._filterSpools(sec); });
+    sec.querySelector("[data-stocknew]").addEventListener("click", () => {
+      const dlg = this._spoolDialog();
+      this._newSpoolForm(dlg, null);
+      this._showDialog(dlg);
+    });
+    this._filterSpools(sec);
+  }
+
+  _filterSpools(sec) {
+    const f = this._stockFilter;
+    const words = f.text.toLowerCase().split(/\s+/).filter(Boolean);
+    let n = 0, grams = 0, value = 0;
+    sec.querySelectorAll("[data-stock]").forEach((el) => {
+      const show = (!f.material || el.dataset.mat === f.material) && words.every((w) => el.dataset.text.includes(w));
+      el.hidden = !show;
+      if (show) { n++; grams += Number(el.dataset.rest); value += Number(el.dataset.value); }
+    });
+    sec.querySelectorAll("[data-stockmat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stockmat === f.material)));
+    sec.querySelector("[data-stocksum]").textContent =
+      tr("{n} Spulen · {kg} kg", { n, kg: (grams / 1000).toFixed(1) }) + (value > 0 ? ` · ${fmtEuro(value)}` : "");
+    sec.querySelector("[data-stockempty]").hidden = n > 0;
   }
 
   /** Form: create a spool in Spoolman. idx = head to assign to (prefilled from it), null = from the stock. */
@@ -164,7 +170,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
     let picked = null;
     dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
     dlg.querySelector("[data-back]").addEventListener("click", () =>
-      (idx !== null ? this._openSpoolPicker(idx) : this._openSpoolStock()));
+      (idx !== null ? this._openSpoolPicker(idx) : dlg.close()));
 
     // vendor and material names for the browser's suggestion lists
     this._spoolCatalogWS("catalog", {}).then((cat) => {
@@ -246,7 +252,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
         const name = target ? ((heads[target - 1] || {}).name || `E${target - 1}`) : null;
         this._toast(name ? tr("Spule #{id} angelegt und {head} zugeordnet", { id: id ?? "?", head: name })
           : tr("Spule #{id} angelegt", { id: id ?? "?" }));
-        if (head) dlg.close(); else this._openSpoolStock();
+        dlg.close();
       } catch (err) {
         btn.disabled = false;
         const el = form.querySelector(".dlg-error");

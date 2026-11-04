@@ -9,13 +9,13 @@ reload the dashboard (the card shows a hint if the browser still has the old one
 Beta. Spoolman stock and suggestions for new spools. Includes everything from 2.1.0b1 (top cover mode and chamber target, chamber-warm notification, real filter hours, chamber heater in the chart, camera keeps running when the card rebuilds).
 
 **Spoolman stock**
-- *Stock* in the print heads panel: every active spool with colour, vendor, material, location, the head it is in and the remaining weight as a bar (orange below the warning threshold).
+- New tab *Spoolman* (only with Spoolman set up): every active spool with colour, vendor, material, location, the head it is in and the remaining weight as a bar (orange below the warning threshold).
 - Totals on top (spools, kg left, value from the spool prices), filter by material, search by name, vendor, location or `#ID`.
 
 **New spool with suggestions**
 - Typing in *Search filament* shows your own Spoolman filaments first, then matches from Spoolman's catalogue [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (the same suggestions Spoolman's own interface uses; 1.75 mm only, fetched once a day).
 - A pick fills vendor, material, name, colour, net weight and empty spool weight. An own filament is used as it is; a catalogue entry is imported into Spoolman once (with colour, density and temperatures) and reused afterwards.
-- Vendor and material fields suggest the known names. New fields: location, and from the stock the head to assign (or none).
+- Vendor and material fields suggest the known names. New fields: location, and in the *Spoolman* tab the head to assign (or none). Picking a spool for a head stays under the print heads.
 - Service `create_spool`: new fields `filament_id`, `external_id` and `location`; `material` is optional with either ID.
 - The catalogue needs Spoolman 0.18 or newer with internet access; otherwise only your own filaments are suggested.
 
@@ -24,13 +24,13 @@ Beta. Spoolman stock and suggestions for new spools. Includes everything from 2.
 Beta. Spoolman-Bestand und Vorschläge für neue Spulen. Enthält alles aus 2.1.0b1 (Top-Cover-Modus und Kammer-Soll, Meldung „Kammer ist warm“, echte Filterstunden, Kammerheizung im Verlauf, Kamera läuft beim Neuaufbau der Karte weiter).
 
 **Spoolman-Bestand**
-- *Bestand* im Bereich Druckköpfe: alle aktiven Spulen mit Farbe, Hersteller, Material, Ort, dem Kopf, in dem sie steckt, und dem Restgewicht als Balken (orange unter der Warnschwelle).
+- Neuer Reiter *Spoolman* (nur mit eingerichtetem Spoolman): alle aktiven Spulen mit Farbe, Hersteller, Material, Ort, dem Kopf, in dem sie steckt, und dem Restgewicht als Balken (orange unter der Warnschwelle).
 - Oben die Summen (Spulen, kg übrig, Wert aus den Spulenpreisen), Filter nach Material, Suche nach Name, Hersteller, Ort oder `#ID`.
 
 **Neue Spule mit Vorschlägen**
 - Beim Tippen in *Filament suchen* erscheinen zuerst deine Spoolman-Filamente, dann Treffer aus dem Spoolman-Katalog [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (dieselben Vorschläge wie in Spoolman selbst; nur 1,75 mm, einmal am Tag geladen).
 - Ein Treffer füllt Hersteller, Material, Name, Farbe, Nettogewicht und Leerspule. Ein eigenes Filament wird so genommen; ein Katalog-Eintrag wird einmal in Spoolman übernommen (mit Farbe, Dichte und Temperaturen) und danach wiederverwendet.
-- Hersteller und Material schlagen bekannte Namen vor. Neu: Ort, und aus dem Bestand der Kopf zum Zuordnen (oder keiner).
+- Hersteller und Material schlagen bekannte Namen vor. Neu: Ort, und im Reiter *Spoolman* der Kopf zum Zuordnen (oder keiner). Die Spulenwahl je Kopf bleibt unter den Druckköpfen.
 - Dienst `create_spool`: neue Felder `filament_id`, `external_id` und `location`; `material` ist mit einer der IDs optional.
 - Der Katalog braucht Spoolman 0.18 oder neuer mit Internetzugang; sonst werden nur deine eigenen Filamente vorgeschlagen.
 

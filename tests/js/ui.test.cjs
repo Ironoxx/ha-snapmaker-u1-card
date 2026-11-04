@@ -67,7 +67,7 @@ const R = (el) => el.shadowRoot.getElementById("u1card");
 const card = make("snapmaker-u1-card");
 let r = R(card);
 const tabs = [...r.querySelectorAll("[data-tab]")].map((b) => b.dataset.tab);
-assert.deepStrictEqual(tabs, ["overview", "control", "files", "history", "timelapse", "system"], "Reiter");
+assert.deepStrictEqual(tabs, ["overview", "control", "files", "spoolman", "history", "timelapse", "system"], "Reiter (mit Spoolman)");
 const visible = () => [...r.querySelectorAll("[data-pane]")].filter((p) => !p.hidden).map((p) => p.dataset.pane);
 assert.deepStrictEqual(visible(), ["overview"]);
 const live = r.querySelector("img[data-live]");
@@ -96,7 +96,7 @@ const noHud = make("snapmaker-u1-card", { camera_overlay: false });
 assert.ok(!R(noHud).querySelector(".hud"), "Overlay abschaltbar");
 assert.ok(!R(make("snapmaker-u1-card", { hide_overlay: true })).querySelector(".hud"), "hide_overlay");
 const hid = make("snapmaker-u1-card", { hide: ["system", "maintenance", "timelapse"] });
-assert.deepStrictEqual([...R(hid).querySelectorAll("[data-tab]")].map((b) => b.dataset.tab), ["overview", "control", "files", "history"], "hide");
+assert.deepStrictEqual([...R(hid).querySelectorAll("[data-tab]")].map((b) => b.dataset.tab), ["overview", "control", "files", "spoolman", "history"], "hide");
 
 // 3. layout: scroll = everything stacked, no tabs
 const scroll = make("snapmaker-u1-card", { layout: "scroll" });
