@@ -4,6 +4,112 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.3
+
+**Snapmaker U1 Card is officially in HACS!** 🎉 It is now part of the HACS default list: search for *Snapmaker U1 Card* in HACS (on Home Assistant 2026.11 and newer under *Settings → Marketplace*); no custom repository needed any more. Thanks to everyone who tested, reported bugs and contributed! Tested as 2.1.3b1–b3.
+
+**New in 2.1.3**
+- **Printer display in the card (paxx12 Extended Firmware).** paxx12 mirrors the touchscreen at `/screen/`; the integration finds it by itself and the card shows it in a new tab *Display*, at most at its real size and fitted to the phone. Admins can use it from the card: hand button on, then taps and swipes go to the touchscreen; touch switches off again after a while without input. Options `display_tab` (on) and `display_camera` (off: the display as one more step of the camera switch). Thanks to [@xPlayniac](https://github.com/xPlayniac) for the pull request!
+- **Camera 2 is a real camera again:** the display mirror used to show up as Camera 2.
+- **Load / unload filament** from the head dialog, the firmware's own procedure (as "unload at the end of the print"): unloading asks first, moves to the discard position, heats to the filament's temperature, pulls back and cuts; loading feeds a filament waiting in the feeder. Locked during a print. New service `snapmaker_u1_card.filament` (`head` 1–4, `action` `load`/`unload`).
+- **Copy from the G-code console:** *Copy* in the console head copies the whole log, the copy icon next to a command copies that command with its answer.
+- One-time notification in Home Assistant about the HACS listing (not on a fresh install). README: install through the HACS search first, with an "Open in HACS" button; the custom repository stays as a fallback.
+- Build and test tools updated (esbuild, eslint 10, globals, jsdom 30); `minimatch` pinned to a fixed version (security advisory in a dev dependency only).
+
+**From 2.1.2**
+- **Card no longer copied to `/config/www`.** The dashboard resource now points to the integration's own path `/snapmaker_u1_card/card/snapmaker-u1-card.js`. On the first start after the update the old `/local/snapmaker_u1_card/…` resource is moved to it, and the old copy of the card file under `/config/www/snapmaker_u1_card/` is removed (only that file; the folder only if it is empty then). Nothing else in `/config/www` is touched.
+- **Your edits are kept.** The status-light blueprint and the Assist sentence files are only written when they are missing, or replaced when they are exactly a version the integration shipped earlier. A file you changed is never overwritten, even with the old `managed` line still in it.
+- **Config backup:** pruning old backups in `/config/snapmaker_u1_backup/` only removes the integration's own snapshot folders, never folders you put there.
+
+If the card shows "Custom element doesn't exist" right after a restart, reload the page once.
+
+**From 2.1.1**
+- Amounts in the card (cost estimate, history, statistics, Spoolman stock, energy and cost) use the currency set in Home Assistant (*Settings → System → General*) and the format of your language, e.g. `0,47 €`, `€0.47`, `₺700,00`. The price fields in the settings and in the card's settings dialog show the matching unit (`₺/kg`, `$/kWh` …), push notifications too.
+- Price limits raised for every currency: filament up to 100 000 per kg, fixed energy price up to 1 000 per kWh (was 500 and 5).
+- Turkish for the card and the integration.
+- Fixed: the HACS zip contained `__pycache__` files from subfolders.
+
+**Everything in 2.1**
+
+**Spoolman**
+- New tab *Spoolman* (only with Spoolman set up): every active spool with colour, vendor, material, location, the head it is in and the remaining weight as a bar (orange below the warning threshold). Totals on top (spools, kg left, value from the spool prices), filter by material, search by name, vendor, location or `#ID`. Picking a spool for a head stays under the print heads.
+- New spool with suggestions: typing in *Search filament* shows your own Spoolman filaments first, then Spoolman's catalogue [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (the suggestions Spoolman itself uses; 1.75 mm only). A pick fills vendor, material, name, colour, net weight and empty spool weight; a catalogue entry is imported into Spoolman once and reused afterwards. Vendor and material fields suggest known names; new fields for location and, from the tab, the head to assign.
+- Service `create_spool`: new fields `filament_id`, `external_id` and `location`. The catalogue needs Spoolman 0.18 or newer with internet access.
+
+**G-code preview**
+- Layer view during a print: slider *Layer* browses the whole file (earlier layers printed, later ones pending), *Live* goes back; slider *Progress* plays the layer path by path, in the bed view with the nozzle.
+- Print dialog: *G-code preview* shows any file before printing, layer by layer with the same sliders, in the colours of the heads chosen in the dialog. Parsed once in the background; the last three previews are kept.
+
+**Top cover and chamber heater**
+- Top cover mode in the card and as `select.…_top_cover_mode` (idle, cool, preheat, hot), chamber target as a slider and as `number.…_top_cover_chamber_target` (`SET_PURIFIER_MODE`).
+- Notification *Chamber is warm* (event `chamber_ready`, off by default) when the chamber heater (Panda Breath / DragonBreath) or the top cover reaches its target.
+- The maintenance item *Replace the air filter* counts the real filter hours of the top cover; the temperature chart shows the chamber heater with its target.
+- Built from the firmware without the hardware at hand: feedback from owners is welcome, ideally with the diagnostics file. Without a top cover or chamber heater nothing of this shows up.
+
+**Languages**
+- Card and integration now also in Spanish, French, Italian, Portuguese and Dutch, following Home Assistant's language (regional variants use the base language, other languages get English). Push notifications, firmware messages and the self test stay German or English for now. Corrections from native speakers are welcome: `frontend/src/i18n/<language>.js` and `custom_components/snapmaker_u1_card/translations/<language>.json`.
+
+**Fixed**
+- Camera away from home (Nabu Casa): the stream through Home Assistant restarted every time the card rebuilt; the camera frame now stays in place. `debug_camera: true` logs what caused a rebuild.
+- History thumbnails: a file uploaded and started straight from the slicer got no image, and images of files that dropped out of the file list were deleted. Now fetched at print start, kept while the history uses them, missing ones repaired from the file if it still exists; otherwise the printer icon instead of a broken image.
+- Home Assistant's validation (hassfest) failed on a service description with angle brackets.
+
+Update in HACS, restart Home Assistant and reload the dashboard.
+
+### Deutsch
+
+**Snapmaker U1 Card ist offiziell in HACS!** 🎉 Sie steht jetzt in der Standardliste von HACS: in HACS nach *Snapmaker U1 Card* suchen (ab Home Assistant 2026.11 unter *Einstellungen → Marketplace*), ein benutzerdefiniertes Repository ist nicht mehr nötig. Danke an alle, die getestet, Fehler gemeldet und mitgebaut haben! Getestet als 2.1.3b1–b3.
+
+**Neu in 2.1.3**
+- **Druckerdisplay in der Karte (paxx12 Extended Firmware).** paxx12 spiegelt den Touchscreen unter `/screen/`; die Integration findet das selbst, und die Karte zeigt es in einem neuen Reiter *Display*, höchstens in Originalgröße und auf dem Handy passend. Admins können es aus der Karte bedienen: Hand-Knopf an, dann gehen Tippen und Wischen an den Touchscreen; ohne Eingabe schaltet sich Touch nach einer Weile wieder aus. Optionen `display_tab` (an) und `display_camera` (aus: das Display als weiterer Schritt am Kamera-Wechselknopf). Danke an [@xPlayniac](https://github.com/xPlayniac) für den Pull Request!
+- **Kamera 2 ist wieder eine echte Kamera:** Der Display-Spiegel tauchte bisher als Kamera 2 auf.
+- **Filament laden / entladen** im Kopf-Dialog, mit dem Ablauf der Firmware (wie „am Druckende entladen“): Entladen fragt vorher, fährt zur Abwurfposition, heizt auf die Filamenttemperatur, zieht zurück und schneidet ab; Laden zieht ein im Einzug wartendes Filament ein. Während eines Drucks gesperrt. Neuer Dienst `snapmaker_u1_card.filament` (`head` 1–4, `action` `load`/`unload`).
+- **Kopieren aus der G-Code-Konsole:** *Kopieren* im Kopf der Konsole kopiert den ganzen Verlauf, das Kopier-Symbol neben einem Befehl diesen Befehl samt Antwort.
+- Einmalige Benachrichtigung in Home Assistant zur Aufnahme in HACS (nicht bei Neuinstallation). README: Installation zuerst über die HACS-Suche, mit „Open in HACS“-Knopf; das benutzerdefinierte Repository bleibt als Ausweg.
+- Werkzeuge zum Bauen und Testen aktualisiert (esbuild, eslint 10, globals, jsdom 30); `minimatch` auf eine behobene Version festgelegt (Sicherheitsmeldung nur in einer Entwicklungs-Abhängigkeit).
+
+**Aus 2.1.2**
+- **Karte wird nicht mehr nach `/config/www` kopiert.** Die Dashboard-Ressource zeigt jetzt auf den eigenen Pfad der Integration `/snapmaker_u1_card/card/snapmaker-u1-card.js`. Beim ersten Start nach dem Update wird die alte Ressource `/local/snapmaker_u1_card/…` darauf umgestellt und die alte Kopie der Kartendatei unter `/config/www/snapmaker_u1_card/` gelöscht (nur diese Datei, den Ordner nur, wenn er danach leer ist). Sonst wird in `/config/www` nichts angefasst.
+- **Deine Änderungen bleiben.** Der Status-Licht-Blueprint und die Assist-Satzdateien werden nur geschrieben, wenn sie fehlen, oder ersetzt, wenn sie genau einer früher ausgelieferten Version entsprechen. Eine geänderte Datei wird nie überschrieben, auch nicht mit der alten `managed`-Zeile darin.
+- **Konfigurationssicherung:** Beim Aufräumen alter Sicherungen in `/config/snapmaker_u1_backup/` werden nur noch die eigenen Sicherungsordner gelöscht, nie Ordner, die du dort abgelegt hast.
+
+Zeigt die Karte direkt nach einem Neustart „Custom element doesn't exist“, die Seite einmal neu laden.
+
+**Aus 2.1.1**
+- Beträge in der Karte (Kostenschätzung, Verlauf, Statistik, Spoolman-Bestand, Strom und Kosten) nutzen die Währung aus Home Assistant (*Einstellungen → System → Allgemein*) im Format deiner Sprache, z. B. `0,47 €`, `€0.47`, `₺700,00`. Die Preisfelder in den Einstellungen und im Einstellungsdialog der Karte zeigen die passende Einheit (`₺/kg`, `$/kWh` …), Push-Nachrichten ebenso.
+- Preisgrenzen für jede Währung angehoben: Filament bis 100 000 pro kg, fester Strompreis bis 1 000 pro kWh (bisher 500 und 5).
+- Türkisch für Karte und Integration.
+- Behoben: Das HACS-Zip enthielt `__pycache__`-Dateien aus Unterordnern.
+
+**Alles aus 2.1**
+
+**Spoolman**
+- Neuer Reiter *Spoolman* (nur mit eingerichtetem Spoolman): alle aktiven Spulen mit Farbe, Hersteller, Material, Ort, dem Kopf, in dem sie steckt, und dem Restgewicht als Balken (orange unter der Warnschwelle). Oben die Summen (Spulen, kg übrig, Wert aus den Spulenpreisen), Filter nach Material, Suche nach Name, Hersteller, Ort oder `#ID`. Die Spulenwahl je Kopf bleibt unter den Druckköpfen.
+- Neue Spule mit Vorschlägen: Beim Tippen in *Filament suchen* erscheinen zuerst deine Spoolman-Filamente, dann der Spoolman-Katalog [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (dieselben Vorschläge wie in Spoolman selbst; nur 1,75 mm). Ein Treffer füllt Hersteller, Material, Name, Farbe, Nettogewicht und Leerspule; ein Katalog-Eintrag wird einmal in Spoolman übernommen und danach wiederverwendet. Hersteller und Material schlagen bekannte Namen vor; neu sind Ort und, im Reiter, der Kopf zum Zuordnen.
+- Dienst `create_spool`: neue Felder `filament_id`, `external_id` und `location`. Der Katalog braucht Spoolman 0.18 oder neuer mit Internetzugang.
+
+**G-Code-Vorschau**
+- Schichtansicht im Druck: Regler *Schicht* blättert durch die ganze Datei (frühere Schichten gedruckt, spätere folgen), *Live* springt zurück; Regler *Fortschritt* spielt die Schicht Bahn für Bahn ab, in der Bettansicht mit Düse.
+- Druckdialog: *G-Code-Vorschau* zeigt jede Datei vor dem Druck, Schicht für Schicht mit denselben Reglern, in den Farben der im Dialog gewählten Köpfe. Einmal im Hintergrund zerlegt; die letzten drei Vorschauen bleiben gespeichert.
+
+**Top Cover und Kammerheizung**
+- Top-Cover-Modus in der Karte und als `select.…_top_cover_modus` (Leerlauf, kühlen, vorheizen, heiß), Kammer-Soll als Regler und als `number.…_top_cover_kammer_soll` (`SET_PURIFIER_MODE`).
+- Benachrichtigung *Kammer ist warm* (Ereignis `chamber_ready`, standardmäßig aus), wenn Kammerheizung (Panda Breath / DragonBreath) oder Top Cover ihr Soll erreichen.
+- Der Wartungspunkt *Luftfilter wechseln* zählt die echten Filterstunden der Top Cover; der Temperaturverlauf zeigt die Kammerheizung mit Soll.
+- Nach der Firmware gebaut, ohne die Hardware selbst zu haben: Rückmeldung von Besitzern ist willkommen, am besten mit Diagnose-Datei. Ohne Top Cover oder Kammerheizung taucht davon nichts auf.
+
+**Sprachen**
+- Karte und Integration jetzt auch auf Spanisch, Französisch, Italienisch, Portugiesisch und Niederländisch, passend zur Sprache von Home Assistant (regionale Varianten nutzen die Grundsprache, andere Sprachen bekommen Englisch). Push-Benachrichtigungen, Firmware-Meldungen und der Selbsttest bleiben vorerst Deutsch oder Englisch. Korrekturen von Muttersprachlern gern: `frontend/src/i18n/<sprache>.js` und `custom_components/snapmaker_u1_card/translations/<sprache>.json`.
+
+**Behoben**
+- Kamera unterwegs (Nabu Casa): Der Stream über Home Assistant startete bei jedem Neuaufbau der Karte neu; der Kamerarahmen bleibt jetzt stehen. `debug_camera: true` zeigt, was einen Neuaufbau ausgelöst hat.
+- Vorschaubilder der Historie: Eine Datei, die direkt aus dem Slicer hochgeladen und gestartet wurde, bekam kein Bild, und Bilder von Dateien, die aus der Dateiliste fielen, wurden gelöscht. Jetzt beim Druckstart geholt, behalten, solange die Historie sie nutzt, fehlende aus der Datei nachgeholt, wenn es sie noch gibt; sonst das Drucker-Symbol statt eines kaputten Bilds.
+- Die Prüfung von Home Assistant (hassfest) scheiterte an einer Dienstbeschreibung mit spitzen Klammern.
+
+In HACS aktualisieren, Home Assistant neu starten und das Dashboard neu laden.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.3b3
 
 Beta. **Snapmaker U1 Card is officially in HACS!** 🎉 Plus loading and unloading filament from the card.
