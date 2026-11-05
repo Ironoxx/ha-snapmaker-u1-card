@@ -18,7 +18,9 @@ Detection order (``detect``):
 
 A second camera (paxx12: USB camera at ``/webcam2/``) is a second ``Webcam``
 with ``second=True``: it only looks at the other Moonraker webcams and never
-falls back to the stock camera.
+falls back to the stock camera. paxx12's display mirror (``/screen/``) is
+listed as a webcam too, but it is no camera: it is skipped here and handled by
+``screen.py``.
 
 RTSP (paxx12, off by default): if the camera service answers on
 ``rtsp://<printer>:8554/stream`` (8555 for the second camera), ``rtsp_url``
@@ -39,6 +41,7 @@ import time
 from typing import Any
 
 from .api import MoonrakerClient, MoonrakerError
+from .screen import is_screen
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,7 +204,7 @@ class Webcam:
         return mode
 
     async def _probe(self) -> tuple[str, str | None, str | None]:
-        cams = await self.client.webcams()
+        cams = [c for c in await self.client.webcams() if not is_screen(c)]
         if self.second:
             # webcams in another folder than the first one Moonraker lists (that is
             # the main camera); paxx12 may list the main camera twice (MJPEG + WebRTC)

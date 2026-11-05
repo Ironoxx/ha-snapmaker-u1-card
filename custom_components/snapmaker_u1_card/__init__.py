@@ -59,6 +59,7 @@ from .coordinator import U1Coordinator
 from .i18n import tr
 from .layer_view import LayerView, TempsView
 from .parsing import ENTANGLE_SENSITIVITIES, PRINTER_PREFERENCES
+from .screen_view import ScreenSnapshotView, ScreenTouchView
 from .stats import MAINTENANCE_ITEMS
 from .upload import UploadView
 from .video import GcodeView, TimelapseView
@@ -195,6 +196,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(LayerView())
     hass.http.register_view(TempsView())
     hass.http.register_view(WebrtcView())
+    hass.http.register_view(ScreenSnapshotView())
+    hass.http.register_view(ScreenTouchView())
     # The version parameter forces browsers to reload the card after an update.
     add_extra_js_url(hass, f"{CARD_URL}/{CARD_FILENAME}?v={VERSION}")
     # Second loading path, independent of when the integration starts (see resource.py).

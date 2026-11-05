@@ -19,6 +19,8 @@
  *   network_tracker   device_tracker for a WiFi chip         (off)
  *   printer_image     static image instead of the camera
  *   camera_fit        contain | cover | fill                 (contain)
+ *   display_tab       printer display (paxx12) as own tab    (true)
+ *   display_camera    printer display as one more camera     (false)
  *   camera_height     height of the image area in px         (auto: image aspect ratio)
  *   camera_max_height upper limit for the automatic height   (520)
  *   camera_mode       auto | stream | still                  (auto: the camera entity decides)
@@ -78,13 +80,14 @@ import { WebrtcMixin } from "./webrtc.js";
 import { SettingsMixin } from "./settings.js";
 import { HaStreamMixin } from "./hastream.js";
 import { SpoolStockMixin } from "./spoolstock.js";
+import { DisplayMixin } from "./display.js";
 
 // Each mixin adds the methods of one topic. Method names are unique across
 // mixins (checked in tests), so the order only affects the prototype chain.
 const MIXINS = [
   StateMixin, ControlsMixin, OverviewMixin, FilesMixin, ControlTabMixin, SystemMixin, HistoryMixin,
   TimelapseMixin, LayerViewMixin, LayoutMixin, RenderMixin, ZoomMixin, PrintDialogMixin, CameraMixin,
-  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin, HaStreamMixin, SpoolStockMixin,
+  HeadDialogMixin, SafetyMixin, MachineMixin, WebrtcMixin, SettingsMixin, HaStreamMixin, SpoolStockMixin, DisplayMixin,
 ];
 const U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
 
@@ -299,6 +302,7 @@ export class SnapmakerU1Card extends U1Base {
       this._tickCamera();
       this._lvTick = (this._lvTick || 0) + 1;
       if (this._unlockUntil && Date.now() > this._unlockUntil) { this._unlockUntil = 0; this._applyLock(); }
+      this._tickDisplay();
       if (this._lvTick % 5 === 0) this._tickLayer();
       if (this._lvTick % 10 === 1) this._tickTemps();
     }, 1000);
@@ -311,6 +315,8 @@ export class SnapmakerU1Card extends U1Base {
     if (this._io) this._io.disconnect();
     if (this._camTimer) clearInterval(this._camTimer);
     this._camTimer = null;
+    if (this._dispTimer) clearTimeout(this._dispTimer);
+    this._dispTimer = null;
     this._stopStream();
   }
 }

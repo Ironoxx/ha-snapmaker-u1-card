@@ -48,6 +48,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: ConfigE
         "entry": {"data": dict(entry.data), "options": dict(entry.options)},
         "camera": coord.webcam.as_dict(),
         "camera2": coord.webcam2.as_dict(),
+        "screen": coord.screen.as_dict(),
         "live": {"connected": coord.live.connected, "messages": coord.live.messages,
                  "interval_s": coord.update_interval.total_seconds() if coord.update_interval else None},
         "online": data.online,

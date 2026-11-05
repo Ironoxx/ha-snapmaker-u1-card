@@ -70,6 +70,7 @@ from ..parsing import (
     print_progress,
     track_print,
 )
+from ..screen import ScreenMirror
 from ..spools import SpoolManager
 from ..stats import Maintenance
 from ..webcam import Webcam
@@ -202,6 +203,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._live_init(None)
         self.webcam = Webcam(client)
         self.webcam2 = Webcam(client, second=True)  # paxx12 USB camera (/webcam2/)
+        self.screen = ScreenMirror(client)  # paxx12 display mirror (/screen/)
         self._webcam_task: Any = None
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
         self._maint_notified: list[str] = []  # maintenance items already announced as due
@@ -412,9 +414,10 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         await self._store.async_save(self._stored())
 
     def _webcam_check(self) -> None:
-        """Detect the cameras in the background (online again, images failing, nothing found yet)."""
+        """Detect the cameras and the display mirror in the background (online again, images failing, nothing found yet)."""
         due = [cam for cam in (self.webcam, self.webcam2) if cam.due()]
-        if not due or (self._webcam_task and not self._webcam_task.done()):
+        screen_due = self.screen.due()
+        if not (due or screen_due) or (self._webcam_task and not self._webcam_task.done()):
             return
 
         async def run() -> None:
@@ -423,6 +426,9 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                 before = (cam.mode, cam.rtsp_url)
                 await cam.detect()
                 changed = changed or (cam.mode, cam.rtsp_url) != before
+            if screen_due:
+                before = self.screen.size
+                changed = changed or await self.screen.detect() != before
             if changed:
                 self.async_update_listeners()
 
@@ -540,6 +546,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             self.auto_off_armed = None
             self.webcam.reset()
             self.webcam2.reset()
+            self.screen.reset()
             self._prev = self._offline()
             return self._prev
         try:
@@ -567,6 +574,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             _LOGGER.debug("Printer not reachable: %s", err)
             self.webcam.reset()
             self.webcam2.reset()
+            self.screen.reset()
             self._prev = self._offline()
             return self._prev
 

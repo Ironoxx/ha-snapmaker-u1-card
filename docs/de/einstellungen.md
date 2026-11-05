@@ -38,6 +38,8 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `camera_direct_url` | – | eigene Adresse für den Direktstream |
 | `camera_webrtc` | `auto` | paxx12 Extended Firmware: Kamera per WebRTC (weniger Verzögerung, viel weniger Daten als MJPEG). Die wenigen Signalisierungs-Nachrichten laufen über Home Assistant, das Video direkt zwischen Browser und Drucker – klappt zu Hause und per VPN; kommt in 8 s keine direkte Verbindung zustande, bleibt 10 min MJPEG. `off` = nur MJPEG |
 | `camera_ha_stream` | `auto` | Unterwegs (keine direkte Verbindung, z. B. Nabu Casa): RTSP-Stream über Home Assistant statt MJPEG. Nur mit RTSP (paxx12). `off` = MJPEG |
+| `display_tab` | `true` | Druckerdisplay (Display-Spiegel von paxx12) im eigenen Reiter *Display* |
+| `display_camera` | `false` | Druckerdisplay als weitere Stufe des Kamera-Umschalters auf dem Bild (Druckerkamera → USB-Kamera → Display) |
 | `camera_zoom_reset` | `60` | Sekunden ohne Bedienung, bis der Kamera-Zoom auf 1× zurückgeht; `0` = nie. Seite verlassen, App wechseln oder Karte wegscrollen setzt ihn immer zurück |
 | `accent_color` | – | eigene Akzentfarbe für Knöpfe, Regler und Hervorhebungen (`[255, 152, 0]` oder `"#ff9800"`); leer = Hauptfarbe deines Designs. Auch für die Mini-Karte |
 | `camera_wake` | `true` | Solange die Karte sichtbar ist und das Bild steht (kein Stream, eingefrorenes Bild), lässt sie die Integration einmal `camera.start_monitor` senden (höchstens alle 10 s) |
@@ -49,7 +51,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `camera_mode` | `auto` | `auto` = die Kamera-Entität entscheidet (Livestream oder Standbilder), `stream` = Stream erzwingen, `still` = Einzelbilder (spart WLAN) |
 | `refresh` | `2` | Sekunden zwischen Einzelbildern (`still` und Rückfall) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | alle | Bereiche: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse spools` (`spools` = Reiter Spoolman, nur mit Spoolman) |
+| `show` | alle | Bereiche: `stage display layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse spools` (`spools` = Reiter Spoolman, nur mit Spoolman; `display` = Druckerdisplay, nur mit dem Display-Spiegel von paxx12) |
 | `hide` | – | Bereiche ausblenden (Gegenstück zu `show`, nutzt der Editor) |
 | `controls_lock` | `60` | Sperre für Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt: `off`, Sekunden (`30`, `60`, `120`, `300`) bis zur automatischen Sperre nach der letzten Bedienung, oder `manual` (offen, bis man wieder sperrt). Im Druck fragt die Karte vor jeder Änderung einer Solltemperatur nach. Alt: `unlock_controls: true` = `off` |
 | `timelapse_limit` | `8` | angezeigte Zeitraffer |

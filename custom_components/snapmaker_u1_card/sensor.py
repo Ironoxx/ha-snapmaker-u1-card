@@ -325,6 +325,9 @@ class FilesSensor(U1Entity, SensorEntity):
                            else f"http://{self.coordinator.config_entry.data[CONF_HOST]}/webcam/?action=stream"),
             # paxx12 camera with WebRTC: the card connects through the relay view
             "webrtc": bool(self.coordinator.webcam.webrtc_url),
+            # paxx12 display mirror: panel size for the card's display view, else None
+            "screen": ({"width": self.coordinator.screen.size[0], "height": self.coordinator.screen.size[1]}
+                       if self.coordinator.screen.size else None),
         }
 
 

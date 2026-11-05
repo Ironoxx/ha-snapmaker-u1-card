@@ -7,6 +7,7 @@
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
     "stage",
+    "display",
     "layer",
     "job",
     "queue",
@@ -27,6 +28,8 @@
   var OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance", "spools"];
   var TABS = [
     { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "toolheads"] },
+    // only with paxx12's display mirror (left out in _layout otherwise)
+    { id: "display", icon: "mdi:monitor-screenshot", label: "Display", sections: ["display"] },
     { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "mesh", "motion", "console"] },
     { id: "files", icon: "mdi:file-document-multiple-outline", label: "Dateien", sections: ["queue", "files"] },
     // only with Spoolman (the section renders nothing otherwise and is left out in _layout)
@@ -538,6 +541,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Vacío = 60 s sin interacción, 0 = nunca. Salir de la página o desplazarse siempre restablece el zoom.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Vacío = automático: WebRTC cuando la impresora lo ofrece (menos retardo y datos). Si no funciona ninguna conexión directa (fuera de casa sin VPN), se queda en MJPEG.",
     "Aus (MJPEG)": "Desactivado (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Pantalla de la impresora como pestaña propia",
+    "Druckerdisplay als zusätzliche Kamera": "Pantalla de la impresora como cámara adicional",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vacío = activado. Solo con el espejo de pantalla del firmware paxx12.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "El botón «Cambiar cámara» muestra entonces también la pantalla. Solo con el espejo de pantalla del firmware paxx12.",
+    "Druckerdisplay": "Pantalla de la impresora",
+    "Display": "Pantalla",
+    "Display bedienen": "Controlar la pantalla",
+    "Bedienung ausschalten": "Desactivar control",
+    "Bedienen": "Controlar",
+    "Bedienung an": "Control activo",
+    "Nur Admins können das Display bedienen.": "Solo los administradores pueden controlar la pantalla.",
+    "Zum Bedienen die Hand antippen.": "Toca la mano para controlarla.",
+    "Tippen und Wischen gehen an das Display.": "Los toques y deslizamientos van a la pantalla.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Los toques y deslizamientos van a la pantalla. Se desactiva tras {n} s sin uso.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Vacío = color primario de tu tema de Home Assistant. Colorea los botones, deslizadores y resaltados de la tarjeta.",
     "Wieder #{id} {name}?": "¿Usar de nuevo #{id} {name}?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "Esta bobina estaba en este cabezal antes de descargar",
@@ -1153,6 +1170,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Vide = 60 s sans interaction, 0 = jamais. Quitter la page ou faire défiler réinitialise toujours le zoom.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Vide = automatique : WebRTC quand l’imprimante le propose (moins de délai et de données). Si aucune connexion directe ne fonctionne (hors de la maison sans VPN), le MJPEG reste.",
     "Aus (MJPEG)": "Désactivé (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Écran de l’imprimante dans un onglet à part",
+    "Druckerdisplay als zusätzliche Kamera": "Écran de l’imprimante comme caméra supplémentaire",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vide = activé. Uniquement avec le miroir d’écran du firmware paxx12.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Le bouton « Changer de caméra » affiche alors aussi l’écran. Uniquement avec le miroir d’écran du firmware paxx12.",
+    "Druckerdisplay": "Écran de l’imprimante",
+    "Display": "Écran",
+    "Display bedienen": "Piloter l’écran",
+    "Bedienung ausschalten": "Désactiver le pilotage",
+    "Bedienen": "Piloter",
+    "Bedienung an": "Pilotage actif",
+    "Nur Admins können das Display bedienen.": "Seuls les administrateurs peuvent piloter l’écran.",
+    "Zum Bedienen die Hand antippen.": "Touchez la main pour le piloter.",
+    "Tippen und Wischen gehen an das Display.": "Les touchers et glissements vont à l’écran.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Les touchers et glissements vont à l’écran. Désactivé après {n} s sans action.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Vide = couleur principale de votre thème Home Assistant. Colore les boutons, curseurs et mises en évidence de la carte.",
     "Wieder #{id} {name}?": "Réutiliser #{id} {name} ?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "Cette bobine était dans cette tête avant le déchargement",
@@ -1768,6 +1799,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Vuoto = 60 s senza interazione, 0 = mai. Lasciare la pagina o scorrere via reimposta sempre lo zoom.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Vuoto = automatico: WebRTC quando la stampante lo offre (meno ritardo e dati). Se nessuna connessione diretta funziona (fuori casa senza VPN), resta MJPEG.",
     "Aus (MJPEG)": "Disattivato (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Display della stampante in una scheda propria",
+    "Druckerdisplay als zusätzliche Kamera": "Display della stampante come telecamera aggiuntiva",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vuoto = attivo. Solo con il mirror del display del firmware paxx12.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Il pulsante «Cambia telecamera» mostra allora anche il display. Solo con il mirror del display del firmware paxx12.",
+    "Druckerdisplay": "Display della stampante",
+    "Display": "Display",
+    "Display bedienen": "Controlla il display",
+    "Bedienung ausschalten": "Disattiva il controllo",
+    "Bedienen": "Controlla",
+    "Bedienung an": "Controllo attivo",
+    "Nur Admins können das Display bedienen.": "Solo gli amministratori possono controllare il display.",
+    "Zum Bedienen die Hand antippen.": "Tocca la mano per controllarlo.",
+    "Tippen und Wischen gehen an das Display.": "Tocchi e scorrimenti vanno al display.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Tocchi e scorrimenti vanno al display. Si disattiva dopo {n} s senza uso.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Vuoto = colore primario del tuo tema di Home Assistant. Colora pulsanti, cursori ed evidenziazioni della scheda.",
     "Wieder #{id} {name}?": "Usare di nuovo #{id} {name}?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "Questa bobina era in questa testina prima dello scaricamento",
@@ -2383,6 +2428,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Leeg = 60 s zonder interactie, 0 = nooit. De pagina verlaten of wegscrollen zet de zoom altijd terug.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Leeg = automatisch: WebRTC als de printer het aanbiedt (minder vertraging en data). Werkt geen directe verbinding (buitenshuis zonder VPN), dan blijft MJPEG.",
     "Aus (MJPEG)": "Uit (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Printerdisplay als eigen tabblad",
+    "Druckerdisplay als zusätzliche Kamera": "Printerdisplay als extra camera",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Leeg = aan. Alleen met de displayspiegel van de paxx12-firmware.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "De knop ‘Camera wisselen’ toont dan ook het display. Alleen met de displayspiegel van de paxx12-firmware.",
+    "Druckerdisplay": "Printerdisplay",
+    "Display": "Display",
+    "Display bedienen": "Display bedienen",
+    "Bedienung ausschalten": "Bediening uitschakelen",
+    "Bedienen": "Bedienen",
+    "Bedienung an": "Bediening aan",
+    "Nur Admins können das Display bedienen.": "Alleen beheerders kunnen het display bedienen.",
+    "Zum Bedienen die Hand antippen.": "Tik op de hand om het te bedienen.",
+    "Tippen und Wischen gehen an das Display.": "Tikken en vegen gaan naar het display.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Tikken en vegen gaan naar het display. Uit na {n} s zonder bediening.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Leeg = primaire kleur van je Home Assistant-thema. Kleurt de knoppen, schuifregelaars en markeringen van de kaart.",
     "Wieder #{id} {name}?": "#{id} {name} opnieuw gebruiken?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "Deze spoel zat vóór het ontladen in deze kop",
@@ -2998,6 +3057,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Vazio = 60 s sem interação, 0 = nunca. Sair da página ou deslocar-se repõe sempre o zoom.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Vazio = automático: WebRTC quando a impressora o oferece (menos atraso e dados). Se nenhuma ligação direta funcionar (fora de casa sem VPN), fica o MJPEG.",
     "Aus (MJPEG)": "Desligado (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Ecrã da impressora num separador próprio",
+    "Druckerdisplay als zusätzliche Kamera": "Ecrã da impressora como câmara adicional",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vazio = ligado. Só com o espelho de ecrã do firmware paxx12.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "O botão «Trocar câmara» passa a mostrar também o ecrã. Só com o espelho de ecrã do firmware paxx12.",
+    "Druckerdisplay": "Ecrã da impressora",
+    "Display": "Ecrã",
+    "Display bedienen": "Controlar o ecrã",
+    "Bedienung ausschalten": "Desativar controlo",
+    "Bedienen": "Controlar",
+    "Bedienung an": "Controlo ativo",
+    "Nur Admins können das Display bedienen.": "Só os administradores podem controlar o ecrã.",
+    "Zum Bedienen die Hand antippen.": "Toque na mão para o controlar.",
+    "Tippen und Wischen gehen an das Display.": "Toques e deslizes vão para o ecrã.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Toques e deslizes vão para o ecrã. Desliga após {n} s sem uso.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Vazio = cor principal do seu tema do Home Assistant. Colore os botões, deslizadores e destaques do cartão.",
     "Wieder #{id} {name}?": "Usar novamente #{id} {name}?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "Esta bobina estava nesta cabeça antes de descarregar",
@@ -3613,6 +3686,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Boş = etkileşimsiz 60 sn, 0 = asla. Sayfadan ayrılmak veya kaydırıp uzaklaşmak yakınlaştırmayı her zaman sıfırlar.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Boş = otomatik: yazıcı sunuyorsa WebRTC (daha az gecikme ve veri). Doğrudan bağlantı kurulamazsa (VPN'siz ev dışında) MJPEG kalır.",
     "Aus (MJPEG)": "Kapalı (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Yazıcı ekranı ayrı sekmede",
+    "Druckerdisplay als zusätzliche Kamera": "Yazıcı ekranı ek kamera olarak",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Boş = açık. Yalnızca paxx12 yazılımının ekran yansıtmasıyla.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "“Kamerayı değiştir” düğmesi bu durumda ekranı da gösterir. Yalnızca paxx12 yazılımının ekran yansıtmasıyla.",
+    "Druckerdisplay": "Yazıcı ekranı",
+    "Display": "Ekran",
+    "Display bedienen": "Ekranı kontrol et",
+    "Bedienung ausschalten": "Kontrolü kapat",
+    "Bedienen": "Kontrol et",
+    "Bedienung an": "Kontrol açık",
+    "Nur Admins können das Display bedienen.": "Ekranı yalnızca yöneticiler kontrol edebilir.",
+    "Zum Bedienen die Hand antippen.": "Kontrol etmek için ele dokunun.",
+    "Tippen und Wischen gehen an das Display.": "Dokunma ve kaydırmalar ekrana gider.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Dokunma ve kaydırmalar ekrana gider. {n} sn işlem yapılmazsa kapanır.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Boş = Home Assistant temanızın ana rengi. Kartın düğmelerini, kaydırıcılarını ve vurgularını renklendirir.",
     "Wieder #{id} {name}?": "#{id} {name} yeniden kullanılsın mı?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "Bu makara boşaltmadan önce bu kafadaydı",
@@ -4250,6 +4337,20 @@
     "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.": "Empty = 60 s without interaction, 0 = never. Leaving the page or scrolling away always resets the zoom.",
     "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.": "Empty = automatic: WebRTC when the printer offers it (less delay and data). If no direct connection works (away without VPN), MJPEG stays.",
     "Aus (MJPEG)": "Off (MJPEG)",
+    "Druckerdisplay als eigener Reiter": "Printer display as its own tab",
+    "Druckerdisplay als zusätzliche Kamera": "Printer display as an additional camera",
+    "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Empty = on. Only with the display mirror of the paxx12 firmware.",
+    "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.": "The “Switch camera” button then shows the display too. Only with the display mirror of the paxx12 firmware.",
+    "Druckerdisplay": "Printer display",
+    "Display": "Display",
+    "Display bedienen": "Control the display",
+    "Bedienung ausschalten": "Switch control off",
+    "Bedienen": "Control",
+    "Bedienung an": "Control on",
+    "Nur Admins können das Display bedienen.": "Only admins can control the display.",
+    "Zum Bedienen die Hand antippen.": "Tap the hand to control it.",
+    "Tippen und Wischen gehen an das Display.": "Taps and swipes go to the display.",
+    "Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.": "Taps and swipes go to the display. Off after {n} s without input.",
     "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.": "Empty = your Home Assistant theme's primary colour. Colours the card's buttons, sliders and highlights.",
     "Wieder #{id} {name}?": "Use #{id} {name} again?",
     "Diese Spule steckte vor dem Entladen in diesem Kopf": "This spool was in this head before unloading",
@@ -4447,7 +4548,8 @@
     charts: "Diagramme",
     maintenance: "Wartung",
     layer: "Schichtansicht",
-    spools: "Spoolman-Bestand"
+    spools: "Spoolman-Bestand",
+    display: "Druckerdisplay"
   };
   var FORM_LABELS = {
     printer_name: "Name",
@@ -4482,7 +4584,9 @@
     camera_direct_url: "Adresse des Direktstreams",
     camera_webrtc: "WebRTC (paxx12-Firmware)",
     camera_ha_stream: "Unterwegs: RTSP über Home Assistant",
-    camera_zoom_reset: "Zoom zurücksetzen nach (s)"
+    camera_zoom_reset: "Zoom zurücksetzen nach (s)",
+    display_tab: "Druckerdisplay als eigener Reiter",
+    display_camera: "Druckerdisplay als zusätzliche Kamera"
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -4499,6 +4603,8 @@
     camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
     camera_ha_stream: "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).",
     camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
+    display_tab: "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.",
+    display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
     controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
@@ -4599,7 +4705,11 @@
           { name: "camera_direct_url", selector: { text: {} } },
           { name: "camera_webrtc", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
           { name: "camera_ha_stream", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
-          { name: "printer_image", selector: { text: {} } }
+          { name: "printer_image", selector: { text: {} } },
+          { type: "grid", name: "", schema: [
+            { name: "display_tab", selector: { boolean: {} } },
+            { name: "display_camera", selector: { boolean: {} } }
+          ] }
         ]
       },
       advanced
@@ -5449,6 +5559,7 @@
   // frontend/src/card/overview.js
   var OverviewMixin = (Base) => class extends Base {
     _sectionStage() {
+      if (this._camDisplay && this._displayAsCamera()) return this._stageDisplay();
       const d = this._d;
       const fit = ["cover", "contain", "fill"].includes(this._cfg.camera_fit) ? this._cfg.camera_fit : "contain";
       const h = parseInt(this._cfg.camera_height, 10) || 0;
@@ -5493,7 +5604,7 @@
             <button type="button" class="zoom-btn" data-zoom="in" title="${tr("Vergrößern")}" aria-label="${tr("Vergrößern")}"><ha-icon icon="mdi:magnify-plus-outline"></ha-icon></button>
             <button type="button" class="zoom-btn" data-zoom="out" title="${tr("Verkleinern")}" aria-label="${tr("Verkleinern")}" hidden><ha-icon icon="mdi:magnify-minus-outline"></ha-icon></button>
             ${document.fullscreenEnabled || document.webkitFullscreenEnabled ? `<button type="button" class="zoom-btn" data-zoom="full" title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
-            ${this._hasCamera2() ? `<button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="${!!this._ents.camAlt}"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>` : ""}
+            ${this._camSwitchable() ? `<button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="${!!this._ents.camAlt}"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>` : ""}
           </div>
           <span class="zoom-badge" hidden></span>
           ${pill}
@@ -7500,6 +7611,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           return this._sectionLayer();
         case "spools":
           return this._sectionSpools();
+        case "display":
+          return this._sectionDisplay();
         default:
           return "";
       }
@@ -7514,6 +7627,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     /** Sections as tabs, stacked (layout: scroll) or camera beside the tabs (layout: tablet). */
     _layout(sections) {
       if (!this._spoolman()) sections = sections.filter((s) => s !== "spools");
+      if (!this._displayTab()) sections = sections.filter((s) => s !== "display");
       if (!sections.length) return "";
       if (this._cfg.layout === "scroll") {
         return `<div class="layout">${SECTIONS.filter((s) => sections.includes(s)).map((s) => this._section(s)).join("")}</div>`;
@@ -7554,6 +7668,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         p.hidden = p.dataset.pane !== id;
       });
       this._tickCamera();
+      this._tickDisplay();
       this._tickTemps();
     }
   };
@@ -7744,6 +7859,24 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
   /* ── Image area ──────────────────────────────────────────────────────── */
   .stage { padding: 0; overflow: hidden; gap: 0; }
+  /* Printer display (paxx12 mirror): own view; touch on = accent border, no page scrolling on it */
+  .display-frame {
+    position: relative; width: 100%; max-height: 70vh; overflow: hidden;
+    border-radius: var(--u1-r-m); background: #000; touch-action: pan-y;
+  }
+  .display-frame img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+    user-select: none; -webkit-user-drag: none;
+  }
+  .display-frame .zoom-ctl { z-index: 3; }
+  .display-frame:hover .zoom-ctl { opacity: 1; }
+  .display-frame:fullscreen { max-height: none !important; background: #000; }
+  button.zoom-btn[data-display-touch][aria-pressed="true"] { background: var(--u1-primary); color: var(--u1-on-primary, #fff); }
+  .display-frame.touch { touch-action: none; cursor: pointer; user-select: none; }
+  .display-frame.touch::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    border: 2px solid var(--u1-primary); border-radius: inherit;
+  }
   .frame {
     position: relative; width: 100%;
     background: var(--md-sys-color-surface-container-lowest, #0d0e13);
@@ -8680,6 +8813,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         this._up ? `up${!!this._up.error}${this._up.done}` : "",
         JSON.stringify(this._prefs()),
         this._st(this._ents.files)?.attributes.version || "",
+        (() => {
+          const s = this._screenInfo();
+          return s ? `scr${s.width}x${s.height}` : "noscr";
+        })(),
         this._ents.ownCamera ? this._st(this._ents.ownCamera)?.attributes.mode || "" : "",
         (() => {
           const l = this._st(this._ents.liveNotify);
@@ -8862,6 +8999,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       );
       this._wireEstop(r);
       this._wireMachine(r);
+      this._wireDisplay(r);
       r.querySelectorAll("[data-camswitch]").forEach((b) => b.addEventListener("click", (e) => {
         e.stopPropagation();
         this._switchCamera();
@@ -10590,9 +10728,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const st = id && this._st(id);
       return !!(st && !["unavailable", "unknown"].includes(st.state) && !this._cfg.camera && !this._cfg.printer_image);
     }
-    /** Switch the image between the printer's camera and the second (USB) camera. */
+    /** Next image on the stage: printer camera -> second (USB) camera -> printer display (display_camera). */
     _switchCamera() {
-      this._camAlt = !this._camAlt;
+      const views = ["main", ...this._hasCamera2() ? ["usb"] : [], ...this._displayAsCamera() ? ["display"] : []];
+      const cur = this._camDisplay ? "display" : this._camAlt ? "usb" : "main";
+      const next = views[(views.indexOf(cur) + 1) % views.length];
+      this._camAlt = next === "usb";
+      this._camDisplay = next === "display";
       this._stopStream();
       this._ents = null;
       this._resolve();
@@ -11397,6 +11539,246 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/card/display.js
+  var POLL_MS = 700;
+  var POLL_TOUCH_MS = 200;
+  var TOUCH_FAST_MS = 2500;
+  var MOVE_EVERY_MS = 60;
+  var LOAD_TIMEOUT_MS = 5e3;
+  var TOUCH_IDLE_OFF_S = 60;
+  var DisplayMixin = (Base) => class extends Base {
+    /** {width, height} of the panel, or null without a display mirror. */
+    _screenInfo() {
+      const st = this._ents && this._ents.files && this._st(this._ents.files);
+      const s = st && st.attributes && st.attributes.screen;
+      return s && s.width > 0 && s.height > 0 && this._entryData().config_entry_id ? s : null;
+    }
+    _displayTab() {
+      return this._cfg.display_tab !== false && !!this._screenInfo();
+    }
+    /** The display as additional "camera" of the stage (only the card's own cameras). */
+    _displayAsCamera() {
+      return this._cfg.display_camera === true && !this._cfg.camera && !this._cfg.printer_image && !!this._screenInfo();
+    }
+    _camSwitchable() {
+      return this._hasCamera2() || this._displayAsCamera();
+    }
+    _sectionDisplay() {
+      const s = this._screenInfo();
+      if (!s) return "";
+      return `
+      <section class="panel span2 display">
+        <div class="panel-head">
+          <ha-icon icon="mdi:monitor-screenshot"></ha-icon>
+          <span class="panel-title">${tr("Druckerdisplay")}</span>
+          ${this._displayTouchBtn()}
+        </div>
+        <div class="display-frame" data-display style="aspect-ratio:${s.width} / ${s.height}">
+          <img data-display-img alt="${tr("Druckerdisplay")}" draggable="false" />
+        </div>
+        <div class="t-label" data-display-hint>${this._displayHint()}</div>
+      </section>`;
+    }
+    /** Stage showing the display (display_camera): no camera overlays, same buttons. */
+    _stageDisplay() {
+      const s = this._screenInfo();
+      const full = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+      const hand = this._isAdmin() ? `<button type="button" class="zoom-btn" data-display-touch aria-pressed="${this._displayTouchOn()}"
+        title="${this._displayTouchTitle()}" aria-label="${this._displayTouchTitle()}"><ha-icon icon="mdi:gesture-tap"></ha-icon></button>` : "";
+      return `
+      <section class="panel stage span2">
+        <div class="display-frame stage-display" data-display
+             style="aspect-ratio:${s.width} / ${s.height};max-height:${parseInt(this._cfg.camera_max_height, 10) || 520}px">
+          <img data-display-img alt="${tr("Druckerdisplay")}" draggable="false" />
+          <div class="zoom-ctl">
+            ${hand}
+            ${full ? `<button type="button" class="zoom-btn" data-display-full title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
+            <button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="true"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>
+          </div>
+        </div>
+        <div class="stage-actions">${this._stageActions()}</div>
+      </section>`;
+    }
+    // ── Touch on/off (hand button) ─────────────────────────────────────────
+    _displayIdleMs() {
+      const m = this._lockMode();
+      if (m === "manual") return Infinity;
+      return (m === "off" ? TOUCH_IDLE_OFF_S : m) * 1e3;
+    }
+    _displayTouchOn() {
+      return this._isAdmin() && this._dispUntil > Date.now();
+    }
+    _displayTouchTitle() {
+      return this._displayTouchOn() ? tr("Bedienung ausschalten") : tr("Display bedienen");
+    }
+    _displayTouchLabel() {
+      return this._displayTouchOn() ? tr("Bedienung an") : tr("Bedienen");
+    }
+    _displayTouchBtn() {
+      if (!this._isAdmin()) return "";
+      return `<button type="button" class="chip sm lock-btn" data-display-touch aria-pressed="${this._displayTouchOn()}" style="margin-left:auto"
+        title="${this._displayTouchTitle()}">
+        <ha-icon icon="mdi:gesture-tap"></ha-icon><span>${this._displayTouchLabel()}</span>
+      </button>`;
+    }
+    _displayHint() {
+      if (!this._isAdmin()) return tr("Nur Admins können das Display bedienen.");
+      if (!this._displayTouchOn()) return tr("Zum Bedienen die Hand antippen.");
+      const ms = this._displayIdleMs();
+      return ms === Infinity ? tr("Tippen und Wischen gehen an das Display.") : tr("Tippen und Wischen gehen an das Display. Aus nach {n} s ohne Bedienung.", { n: Math.round(ms / 1e3) });
+    }
+    _toggleDisplayTouch() {
+      this._dispUntil = this._displayTouchOn() ? 0 : Date.now() + this._displayIdleMs();
+      this._dispDown = null;
+      this._applyDisplayTouch();
+    }
+    /** Update buttons, hints and frames in place (no rebuild: the picture stays). */
+    _applyDisplayTouch() {
+      const r = this.shadowRoot && this.shadowRoot.getElementById("u1card");
+      if (!r) return;
+      const on = this._displayTouchOn();
+      r.querySelectorAll("[data-display-touch]").forEach((b) => {
+        b.setAttribute("aria-pressed", String(on));
+        b.title = this._displayTouchTitle();
+        if (b.hasAttribute("aria-label")) b.setAttribute("aria-label", b.title);
+        const label = b.querySelector("span");
+        if (label) label.textContent = this._displayTouchLabel();
+      });
+      r.querySelectorAll("[data-display-hint]").forEach((h) => {
+        h.textContent = this._displayHint();
+      });
+      r.querySelectorAll("[data-display]").forEach((f) => f.classList.toggle("touch", on));
+    }
+    // ── Picture ────────────────────────────────────────────────────────────
+    /** Called every second by the card: switch touch off when idle, keep the picture going. */
+    _tickDisplay() {
+      if (this._dispUntil && Date.now() > this._dispUntil) {
+        this._dispUntil = 0;
+        this._dispDown = null;
+        this._applyDisplayTouch();
+      }
+      if (!this._dispTimer) this._pollDisplay();
+    }
+    /** Display pictures on screen right now (tab and/or stage). */
+    _displayImgs() {
+      const r = this.shadowRoot && this.shadowRoot.getElementById("u1card");
+      if (!r || !this._onScreen || document.hidden || !this.isConnected) return [];
+      return [...r.querySelectorAll("img[data-display-img]")].filter((img) => {
+        const pane = img.closest("[data-pane]");
+        return !(pane && pane.hidden);
+      });
+    }
+    _pollDisplay() {
+      this._dispTimer = null;
+      const imgs = this._displayImgs();
+      const h = this._hass;
+      if (!imgs.length || !h || typeof h.fetchWithAuth !== "function") return;
+      const now = Date.now();
+      const every = now - (this._dispTouchAt || 0) < TOUCH_FAST_MS ? POLL_TOUCH_MS : POLL_MS;
+      this._dispTimer = setTimeout(() => this._pollDisplay(), every);
+      if (this._dispLoading && now - this._dispLoadStart < LOAD_TIMEOUT_MS) return;
+      this._dispLoading = true;
+      this._dispLoadStart = now;
+      h.fetchWithAuth(`/api/${DOMAIN}/screen/${this._entryData().config_entry_id}/snapshot`).then((res) => res.ok ? res.blob() : null).then((blob) => {
+        if (blob) this._showDisplay(imgs.filter((i) => i.isConnected), blob);
+      }).catch(() => {
+      }).finally(() => {
+        this._dispLoading = false;
+      });
+    }
+    // Decode first, then swap: the old picture stays until the new one is ready.
+    _showDisplay(imgs, blob) {
+      if (!imgs.length) return;
+      const url = URL.createObjectURL(blob);
+      const pre = new Image();
+      pre.onload = () => {
+        const old = this._dispUrl;
+        imgs.forEach((img) => {
+          img.src = url;
+        });
+        this._dispUrl = url;
+        if (old) URL.revokeObjectURL(old);
+      };
+      pre.onerror = () => URL.revokeObjectURL(url);
+      pre.src = url;
+    }
+    // ── Touch ──────────────────────────────────────────────────────────────
+    _wireDisplay(r) {
+      r.querySelectorAll("[data-display-touch]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._toggleDisplayTouch();
+      }));
+      r.querySelectorAll("[data-display-full]").forEach((b) => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._fullscreen(b.closest("[data-display]"));
+      }));
+      r.querySelectorAll("[data-display]").forEach((frame) => {
+        frame.classList.toggle("touch", this._displayTouchOn());
+        frame.addEventListener("pointerdown", (e) => this._displayPointer("down", e, frame));
+        frame.addEventListener("pointermove", (e) => this._displayPointer("move", e, frame));
+        frame.addEventListener("pointerup", (e) => this._displayPointer("up", e, frame));
+        frame.addEventListener("pointercancel", (e) => this._displayPointer("up", e, frame));
+      });
+    }
+    /** Panel pixel under the pointer, or null outside the picture. */
+    _displayPoint(e, img) {
+      const s = this._screenInfo();
+      const nw = img.naturalWidth || s && s.width, nh = img.naturalHeight || s && s.height;
+      if (!nw || !nh) return null;
+      const r = img.getBoundingClientRect();
+      const scale = Math.min(r.width / nw, r.height / nh);
+      if (!(scale > 0)) return null;
+      const x = Math.floor((e.clientX - r.left - (r.width - nw * scale) / 2) / scale);
+      const y = Math.floor((e.clientY - r.top - (r.height - nh * scale) / 2) / scale);
+      return x >= 0 && y >= 0 && x < nw && y < nh ? { x, y } : null;
+    }
+    _displaySend(a, p) {
+      this._dispTouchAt = Date.now();
+      this._dispUntil = Date.now() + this._displayIdleMs();
+      this._dispQueue = (this._dispQueue || Promise.resolve()).then(() => this._hass.callApi(
+        "POST",
+        `${DOMAIN}/screen/${this._entryData().config_entry_id}/touch`,
+        { a, x: p.x, y: p.y }
+      )).catch(() => {
+      });
+      if (!this._dispTimer) this._pollDisplay();
+    }
+    _displayPointer(kind, e, frame) {
+      if (!this._displayTouchOn()) {
+        this._dispDown = null;
+        return;
+      }
+      const img = frame.querySelector("img[data-display-img]");
+      const d = this._dispDown;
+      if (kind === "down") {
+        if (e.target && e.target.closest && e.target.closest("button")) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        const p2 = img && this._displayPoint(e, img);
+        if (!p2) return;
+        e.preventDefault();
+        try {
+          frame.setPointerCapture(e.pointerId);
+        } catch (err) {
+        }
+        this._dispDown = { id: e.pointerId, p: p2, at: 0 };
+        this._displaySend("down", p2);
+        return;
+      }
+      if (!d || d.id !== e.pointerId) return;
+      const p = img && this._displayPoint(e, img) || d.p;
+      if (kind === "move") {
+        const now = Date.now();
+        if (now - d.at < MOVE_EVERY_MS || p.x === d.p.x && p.y === d.p.y) return;
+        d.at = now;
+        d.p = p;
+        this._displaySend("move", p);
+        return;
+      }
+      this._dispDown = null;
+      this._displaySend("up", p);
+    }
+  };
+
   // frontend/src/card/card.js
   var MIXINS = [
     StateMixin,
@@ -11419,7 +11801,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     WebrtcMixin,
     SettingsMixin,
     HaStreamMixin,
-    SpoolStockMixin
+    SpoolStockMixin,
+    DisplayMixin
   ];
   var U1Base = MIXINS.reduce((Base, mixin) => mixin(Base), HTMLElement);
   var SnapmakerU1Card = class extends U1Base {
@@ -11634,6 +12017,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           this._unlockUntil = 0;
           this._applyLock();
         }
+        this._tickDisplay();
         if (this._lvTick % 5 === 0) this._tickLayer();
         if (this._lvTick % 10 === 1) this._tickTemps();
       }, 1e3);
@@ -11645,6 +12029,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (this._io) this._io.disconnect();
       if (this._camTimer) clearInterval(this._camTimer);
       this._camTimer = null;
+      if (this._dispTimer) clearTimeout(this._dispTimer);
+      this._dispTimer = null;
       this._stopStream();
     }
   };

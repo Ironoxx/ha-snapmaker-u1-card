@@ -7,6 +7,7 @@ import { tr } from "../i18n.js";
 
 export const OverviewMixin = (Base) => class extends Base {
   _sectionStage() {
+    if (this._camDisplay && this._displayAsCamera()) return this._stageDisplay();
     const d = this._d;
     const fit = ["cover", "contain", "fill"].includes(this._cfg.camera_fit)
       ? this._cfg.camera_fit : "contain";
@@ -67,7 +68,7 @@ export const OverviewMixin = (Base) => class extends Base {
             <button type="button" class="zoom-btn" data-zoom="in" title="${tr("Vergrößern")}" aria-label="${tr("Vergrößern")}"><ha-icon icon="mdi:magnify-plus-outline"></ha-icon></button>
             <button type="button" class="zoom-btn" data-zoom="out" title="${tr("Verkleinern")}" aria-label="${tr("Verkleinern")}" hidden><ha-icon icon="mdi:magnify-minus-outline"></ha-icon></button>
             ${document.fullscreenEnabled || document.webkitFullscreenEnabled ? `<button type="button" class="zoom-btn" data-zoom="full" title="${tr("Vollbild")}" aria-label="${tr("Vollbild")}"><ha-icon icon="mdi:fullscreen"></ha-icon></button>` : ""}
-            ${this._hasCamera2() ? `<button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="${!!this._ents.camAlt}"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>` : ""}
+            ${this._camSwitchable() ? `<button type="button" class="zoom-btn" data-camswitch title="${tr("Kamera wechseln")}" aria-label="${tr("Kamera wechseln")}" aria-pressed="${!!this._ents.camAlt}"><ha-icon icon="mdi:camera-switch-outline"></ha-icon></button>` : ""}
           </div>
           <span class="zoom-badge" hidden></span>
           ${pill}

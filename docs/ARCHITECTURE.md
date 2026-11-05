@@ -15,7 +15,8 @@ meant for contributors; user documentation lives in the [README](../README.md) a
  coordinator/  U1Coordinator  (one per config entry, polls + live updates)
    │  U1Data snapshot
    ├─► sensor.py / binary_sensor.py / switch.py / update.py   (entities)
-   ├─► layer_view.py, video.py, upload.py, webrtc_view.py      (HTTP views for the card)
+   ├─► layer_view.py, video.py, upload.py, webrtc_view.py,     (HTTP views for the card)
+   │   screen_view.py
    └─► services (__init__.py), voice.py (Assist intents)
                                               ▲
  frontend/src  ──esbuild──►  custom_components/.../frontend/snapmaker-u1-card.js
@@ -53,6 +54,7 @@ Nabu Casa.
 | `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `number.py`, `update.py` | Entities (top cover entities are added once a cover is detected) |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
 | `webrtc_view.py` | Relays the camera-streamer WebRTC signalling (request/answer/candidates) to the paxx12 camera; the video flows browser ↔ printer |
+| `screen.py`, `screen_view.py` | paxx12 display mirror: detection apart from the cameras (panel size from the PNG), fresh picture and touch relay for the card's display tab (admin only, inside the panel, rate limited, configured printer only) |
 | `whats_new.py` | One persistent notification with the highlights after an update to a new minor version (texts per version in the module) |
 | `blueprints.py`, `blueprints/` | Copies the shipped automation blueprints (status light) to `config/blueprints/automation/snapmaker_u1_card/`; an existing file is only replaced while byte-identical to a shipped version (`SHIPPED` hashes) |
 | `webcam.py` | Camera detection (`live` / `still` / `wake` / `none`), images, wake-up, stream fallback |
@@ -109,7 +111,7 @@ bundled by esbuild into the single file the integration ships:
 | `index.js` | Entry point: registers both cards and the card picker entries |
 | `const.js`, `i18n.js`, `format.js`, `color.js`, `styles.js`, `editor.js` | Shared constants, translations, formatting, colour helpers, CSS, visual editor |
 | `card/card.js` | `SnapmakerU1Card`: lifecycle (config, hass, timers), composed from mixins |
-| `card/*.js` | One mixin per topic: state, controls, tabs (overview, files, control, system, history, timelapse), layer view, layout, rendering, zoom, print dialog, camera, machine controls (bed mesh, top cover, console, head change), settings dialog, WebRTC and the RTSP stream through HA |
+| `card/*.js` | One mixin per topic: state, controls, tabs (overview, files, control, system, history, timelapse), layer view, layout, rendering, zoom, print dialog, camera, machine controls (bed mesh, top cover, console, head change), settings dialog, WebRTC, the RTSP stream through HA and the printer display (`display.js`) |
 | `card/state.js` `_st()` | 2.0: answers `<domain>.<prefix>_<key>` from the integration's printer values first; real HA states (Moonraker integration) are only the fallback |
 | `card/mini.js` | `SnapmakerU1MiniCard`, a subclass without camera |
 
@@ -155,6 +157,8 @@ Facts taken from Snapmaker's published firmware sources (u1-klipper, u1-moonrake
   (+ `output_pin dragonbreath_filter`), found via `/printer/objects/list`.
 - Nozzle per head: `extruder*.nozzle_diameter` / `nozzle_volume_type`; per file Snapmaker's
   Moonraker reports `nozzle_diameter_list`.
+- paxx12 display mirror: listed as webcam (`/screen/snapshot`, PNG in panel pixels, page `/screen/`);
+  `POST /screen/touch?a=down|move|up&x=&y=` injects a touch in the same pixels, without auth.
 - paxx12 camera service (v4l2-mpp): `/webcam/stream.mjpg`, `/webcam/snapshot.jpg`, WebRTC page
   `/webcam/webrtc`; USB camera under `/webcam2/`; optional RTSP on ports 8554/8555.
 - The stock camera stops after a while; `camera.start_monitor` (WebSocket, proxied by

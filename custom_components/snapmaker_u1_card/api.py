@@ -166,6 +166,16 @@ class MoonrakerClient:
         except ValueError as err:
             raise MoonrakerError("Invalid WebRTC answer") from err
 
+    async def screen_touch(self, url: str, action: str, x: int, y: int) -> None:
+        """One touch on paxx12's display mirror (``POST /screen/touch``, panel pixels)."""
+        try:
+            async with self._session.post(url, params={"a": action, "x": x, "y": y}, headers=self._headers,
+                                          timeout=aiohttp.ClientTimeout(total=3)) as resp:
+                if resp.status >= 400:
+                    raise MoonrakerError(f"HTTP {resp.status}: {(await resp.text())[:200]}")
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise MoonrakerConnectionError(f"{self.host} not reachable: {err}") from err
+
     async def fetch_image(self, url: str, timeout: float = 5) -> bytes | None:
         """A JPEG/PNG from ``url`` or None (HTTP error, not an image, timeout)."""
         try:

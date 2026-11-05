@@ -44,6 +44,7 @@ try:
 except ImportError:  # without HA
     _live = None
 else:
+    from custom_components.snapmaker_u1_card import screen as _screen
     from custom_components.snapmaker_u1_card import webcam as _webcam
 
     @_pytest.fixture(autouse=True)
@@ -57,6 +58,12 @@ else:
                 self.next_check = float("inf")
                 return "none"
             monkeypatch.setattr(_webcam.Webcam, "detect", _no_detect)
+        # Display mirror detection (paxx12 /screen/) as well; tests opt in with @pytest.mark.screen
+        if "screen" not in request.keywords:
+            async def _no_screen(self):
+                self.next_check = float("inf")
+                return self.size
+            monkeypatch.setattr(_screen.ScreenMirror, "detect", _no_screen)
         # Extra machine values (2.0) poll Moonraker endpoints most tests do not mock
         if "machine_http" not in request.keywords:
             from custom_components.snapmaker_u1_card.api import MoonrakerClient
@@ -74,3 +81,4 @@ else:
 def pytest_configure(config):
     config.addinivalue_line("markers", "live: keep the live subscription enabled")
     config.addinivalue_line("markers", "webcam: keep the camera detection enabled")
+    config.addinivalue_line("markers", "screen: keep the display mirror detection enabled")

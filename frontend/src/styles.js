@@ -185,6 +185,24 @@ export const STYLES = `
 
   /* ── Image area ──────────────────────────────────────────────────────── */
   .stage { padding: 0; overflow: hidden; gap: 0; }
+  /* Printer display (paxx12 mirror): own view; touch on = accent border, no page scrolling on it */
+  .display-frame {
+    position: relative; width: 100%; max-height: 70vh; overflow: hidden;
+    border-radius: var(--u1-r-m); background: #000; touch-action: pan-y;
+  }
+  .display-frame img {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain;
+    user-select: none; -webkit-user-drag: none;
+  }
+  .display-frame .zoom-ctl { z-index: 3; }
+  .display-frame:hover .zoom-ctl { opacity: 1; }
+  .display-frame:fullscreen { max-height: none !important; background: #000; }
+  button.zoom-btn[data-display-touch][aria-pressed="true"] { background: var(--u1-primary); color: var(--u1-on-primary, #fff); }
+  .display-frame.touch { touch-action: none; cursor: pointer; user-select: none; }
+  .display-frame.touch::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    border: 2px solid var(--u1-primary); border-radius: inherit;
+  }
   .frame {
     position: relative; width: 100%;
     background: var(--md-sys-color-surface-container-lowest, #0d0e13);

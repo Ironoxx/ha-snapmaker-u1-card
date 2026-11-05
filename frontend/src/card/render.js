@@ -42,6 +42,7 @@ export const RenderMixin = (Base) => class extends Base {
       this._up ? `up${!!this._up.error}${this._up.done}` : "",
       JSON.stringify(this._prefs()),
       this._st(this._ents.files)?.attributes.version || "",
+      (() => { const s = this._screenInfo(); return s ? `scr${s.width}x${s.height}` : "noscr"; })(),
       this._ents.ownCamera ? (this._st(this._ents.ownCamera)?.attributes.mode || "") : "",
       (() => { const l = this._st(this._ents.liveNotify); return l ? `${l.state}${l.attributes.sent_today}${(l.attributes.targets || []).length}` : ""; })(),
       d.mesh ? `m${d.mesh.profile}${d.mesh.range}${d.mesh.mean}${d.mesh.cols}x${d.mesh.rows}` : "nomesh",
@@ -199,6 +200,7 @@ export const RenderMixin = (Base) => class extends Base {
     );
     this._wireEstop(r);
     this._wireMachine(r);
+    this._wireDisplay(r);
     r.querySelectorAll("[data-camswitch]").forEach((b) =>
       b.addEventListener("click", (e) => { e.stopPropagation(); this._switchCamera(); }));
     this._wireObjects(r.querySelector(".lv-panel"));
