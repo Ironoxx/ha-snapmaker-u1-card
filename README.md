@@ -75,8 +75,8 @@ The integration talks to Moonraker on the printer (port 80); the stock firmware 
 
 ## Installation
 
-1. **HACS** → search for **Snapmaker U1 Card** → download → restart Home Assistant. Or in one click: [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ironoxx&repository=ha-snapmaker-u1-card&category=integration)
-   Added it as a custom repository before? Remove that entry under HACS → ⋮ → *Custom repositories*; the installation stays.
+1. **HACS** (on Home Assistant 2026.11 and newer: *Settings → Marketplace*) → search for **Snapmaker U1 Card** → download → restart Home Assistant. Or in one click: [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ironoxx&repository=ha-snapmaker-u1-card&category=integration)
+   Fallback, if the search does not find it yet: HACS → ⋮ → *Custom repositories* → `https://github.com/Ironoxx/ha-snapmaker-u1-card`, type *Integration*.
    Without HACS: copy `custom_components/snapmaker_u1_card` from the [latest release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) to `/config/custom_components/` and restart.
 2. *Settings → Devices & services → Add integration → Snapmaker U1 Card*, enter the printer's IP address. The second step has all settings; everything is optional and can be changed later.
 3. Add the card to a dashboard: *Add card → Snapmaker U1* (or *Snapmaker U1 Mini*), or in YAML:
