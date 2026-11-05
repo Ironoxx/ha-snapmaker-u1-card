@@ -9,9 +9,11 @@ name: Release
 # the tests run and then tag, release and zips are created
 # (snapmaker_u1_card.zip for HACS + install zip).
 # Manually: Actions -> Release -> Run workflow.
+# Betas (bN, rc) are released from the branch "beta", which is always ahead of
+# main; finals only from main (beta fast-forwarded once tested).
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
     paths: ["custom_components/snapmaker_u1_card/manifest.json"]
   workflow_dispatch:
 
@@ -41,6 +43,15 @@ jobs:
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Betas from beta, finals from main
+        if: steps.ver.outputs.exists == 'false' && github.event_name == 'push'
+        run: |
+          if [ "${{ github.ref_name }}" = "beta" ] && [ "${{ steps.ver.outputs.prerelease }}" != "true" ]; then
+            echo "::error::Branch beta only releases betas (x.y.zbN); a final goes out from main."; exit 1
+          fi
+          if [ "${{ github.ref_name }}" = "main" ] && [ "${{ steps.ver.outputs.prerelease }}" = "true" ]; then
+            echo "::error::main only releases finals; betas go out from the branch beta."; exit 1
           fi
       - name: Version matches const.py and the card
         if: steps.ver.outputs.exists == 'false'

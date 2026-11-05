@@ -6,7 +6,7 @@ name: Release notes
 # text, the generated "Full Changelog" link is kept below it.
 on:
   push:
-    branches: [main]
+    branches: [main, beta]
     paths: ["CHANGELOG.md"]
   workflow_dispatch:
 
