@@ -168,6 +168,11 @@ TOOL_CHANGE_SCHEMA = vol.Schema({
     vol.Optional("action", default="pick"): vol.In(["pick", "park"]),
     vol.Optional(ATTR_ENTRY): cv.string,
 })
+FILAMENT_SCHEMA = vol.Schema({
+    vol.Required("head"): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+    vol.Required("action"): vol.In(["load", "unload"]),
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
 POWER_OFF_SCHEMA = vol.Schema(
     {vol.Optional("force", default=False): cv.boolean, vol.Optional(ATTR_ENTRY): cv.string}
 )
@@ -387,6 +392,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "send_gcode", send_gcode, schema=SEND_GCODE_SCHEMA,
                                  supports_response=SupportsResponse.OPTIONAL)
     hass.services.async_register(DOMAIN, "tool_change", tool_change, schema=TOOL_CHANGE_SCHEMA)
+
+    async def filament(call: ServiceCall) -> None:
+        await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_filament(
+            call.data["head"] - 1, call.data["action"])
+
+    hass.services.async_register(DOMAIN, "filament", filament, schema=FILAMENT_SCHEMA)
 
     async def camera_wake(call: ServiceCall) -> None:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_camera_wake_once()

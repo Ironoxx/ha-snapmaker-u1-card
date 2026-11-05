@@ -15,6 +15,7 @@ from ..machine import (
     chamber_gcode,
     console_lines,
     console_responses,
+    filament_gcode,
     flow_gcode,
     park_gcode,
     pick_gcode,
@@ -28,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Head changes and console commands may home X/Y or heat first: give them time.
 LONG_GCODE_S = 180
+FILAMENT_GCODE_S = 420
 
 
 class MachineMixin:
@@ -114,6 +116,24 @@ class MachineMixin:
             raise ServiceValidationError("action: pick | park")
         _LOGGER.info("Head %s: %s", action, script)
         await self._run_gcode(script, timeout=LONG_GCODE_S)
+
+    async def async_filament(self, head: int, action: str) -> None:
+        """Load or unload the filament of head 0-3 (machine.filament_gcode).
+
+        Locked during a print: the firmware moves the head to the discard position.
+        """
+        if self.current_print_state() in ACTIVE_PRINT_STATES:
+            raise HomeAssistantError(tr(
+                self.hass, "Filament laden/entladen ist während eines Drucks gesperrt.",
+                "Loading/unloading filament is locked during a print."))
+        try:
+            steps = filament_gcode(head, action)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        _LOGGER.info("Head %s: filament %s", head + 1, action)
+        for script in steps:
+            # heating to the filament temperature alone can take minutes
+            await self._run_gcode(script, timeout=FILAMENT_GCODE_S)
 
     async def async_console(self, script: str) -> dict[str, Any]:
         """Run console G-code and return the printer's responses.

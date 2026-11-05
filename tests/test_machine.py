@@ -9,6 +9,7 @@ from custom_components.snapmaker_u1_card.machine import (
     command_word,
     console_lines,
     console_responses,
+    filament_gcode,
     flow_gcode,
     park_gcode,
     parse_bed_mesh,
@@ -74,6 +75,13 @@ def test_heads() -> None:
     assert park_gcode(0) == "PARK_EXTRUDER" and park_gcode(3) == "PARK_EXTRUDER3"
     with pytest.raises(ValueError):
         pick_gcode(4)
+    # same steps as the firmware's own unload after a print (SM_PRINT_END_AUTO_UNLOAD_FILAMENT)
+    assert filament_gcode(1, "unload") == ["AUTO_FEEDING EXTRUDER=1 UNLOAD=1 STAGE=prepare",
+                                           "AUTO_FEEDING EXTRUDER=1 UNLOAD=1 STAGE=doing"]
+    assert filament_gcode(3, "load") == ["AUTO_FEEDING EXTRUDER=3 LOAD=1"]
+    for bad in ((4, "load"), (0, "purge")):
+        with pytest.raises(ValueError):
+            filament_gcode(*bad)
 
 
 def test_console_rules() -> None:
@@ -223,6 +231,24 @@ async def test_tool_change(hass: HomeAssistant, mock_client, notifications) -> N
         calls = gcode.await_count
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(DOMAIN, "tool_change", {"head": 2}, blocking=True)
+        assert gcode.await_count == calls
+
+
+async def test_filament(hass: HomeAssistant, mock_client, notifications) -> None:
+    _machine(mock_client)
+    entry = await _setup(hass)
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        await hass.services.async_call(DOMAIN, "filament", {"head": 2, "action": "unload"}, blocking=True)
+        assert [c.args[0] for c in gcode.await_args_list] == [
+            "AUTO_FEEDING EXTRUDER=1 UNLOAD=1 STAGE=prepare", "AUTO_FEEDING EXTRUDER=1 UNLOAD=1 STAGE=doing"]
+        assert all(c.kwargs["timeout"] >= 300 for c in gcode.await_args_list), "heating takes minutes"
+        await hass.services.async_call(DOMAIN, "filament", {"head": 4, "action": "load"}, blocking=True)
+        assert gcode.await_args.args[0] == "AUTO_FEEDING EXTRUDER=3 LOAD=1"
+        _status(mock_client, "printing", "a.gcode")
+        await _refresh(hass, entry)
+        calls = gcode.await_count
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(DOMAIN, "filament", {"head": 1, "action": "unload"}, blocking=True)
         assert gcode.await_count == calls
 
 

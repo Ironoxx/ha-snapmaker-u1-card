@@ -160,11 +160,27 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   await flush(); await flush();
   tc = calls.filter((c) => c[1] === "tool_change").pop();
   assert.deepStrictEqual(plain(tc[2]), { head: 1, action: "pick", config_entry_id: "E1" });
+  // Load / unload filament: load directly, unload after the confirm dialog
+  card._openHeadInfo(2);
+  D().querySelector('[data-filament="load"]').click();
+  await flush(); await flush();
+  let fl = calls.filter((c) => c[1] === "filament").pop();
+  assert.deepStrictEqual(plain(fl[2]), { head: 3, action: "load", config_entry_id: "E1" });
+  const before = calls.filter((c) => c[1] === "filament").length;
+  card._openHeadInfo(2);
+  D().querySelector('[data-filament="unload"]').click();
+  await flush();
+  assert.strictEqual(calls.filter((c) => c[1] === "filament").length, before, "Entladen erst nach Bestätigung");
+  card.shadowRoot.querySelector("dialog.u1confirm [data-cf=\"yes\"]").click();
+  await flush(); await flush();
+  fl = calls.filter((c) => c[1] === "filament").pop();
+  assert.deepStrictEqual(plain(fl[2]), { head: 3, action: "unload", config_entry_id: "E1" });
   // During a print: locked
   states[`sensor.${P}_current_print_state`].state = "printing";
   card.hass = hass();
   card._openHeadInfo(0);
   assert.ok(D().querySelector("[data-headchange]").disabled, "Kopfwechsel im Druck gesperrt");
+  assert.ok(D().querySelector('[data-filament="unload"]').disabled, "Entladen im Druck gesperrt");
   states[`sensor.${P}_current_print_state`].state = "standby";
 
   // 5b. Nozzle per head: shown in the head dialog, mismatch warned in the print dialog

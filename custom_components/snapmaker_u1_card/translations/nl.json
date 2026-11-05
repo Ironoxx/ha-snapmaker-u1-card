@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Filament laden of ontladen",
+      "description": "Laadt of ontlaadt het filament van een kop zoals de firmware dat doet: ontladen verwarmt op de afvalpositie tot de filamenttemperatuur en trekt het terug; laden voert een filament in dat in de invoer wacht. Geblokkeerd tijdens een print.",
+      "fields": {
+        "head": {
+          "name": "Kop",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Actie",
+          "description": "load = laden, unload = ontladen."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Spoel wegen",
       "description": "Stelt het resterende filament van een spoel in Spoolman in op basis van de weegschaal. Gewogen met de lege spoel (standaard): het gewicht daarvan komt uit Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Oppakken",
         "park": "Parkeren"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Laden",
+        "unload": "Ontladen"
       }
     },
     "live_notify_image": {

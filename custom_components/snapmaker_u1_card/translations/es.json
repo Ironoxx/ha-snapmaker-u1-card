@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Cargar o descargar filamento",
+      "description": "Carga o descarga el filamento de un cabezal como lo hace el firmware: al descargar calienta a la temperatura del filamento en la posición de descarte y lo retira; al cargar introduce un filamento que espera en el alimentador. Bloqueado durante una impresión.",
+      "fields": {
+        "head": {
+          "name": "Cabezal",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Acción",
+          "description": "load = cargar, unload = descargar."
+        },
+        "config_entry_id": {
+          "name": "Impresora",
+          "description": "Solo necesario con varias impresoras."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Pesar bobina",
       "description": "Ajusta en Spoolman el filamento restante de una bobina según la báscula. Pesado con la bobina vacía (por defecto): su peso viene de Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Recoger",
         "park": "Aparcar"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Cargar",
+        "unload": "Descargar"
       }
     },
     "live_notify_image": {

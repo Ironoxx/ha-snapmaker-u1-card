@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Load or unload filament",
+      "description": "Loads or unloads a head's filament the way the firmware does: unloading heats to the filament temperature at the discard position and pulls it back; loading feeds a filament waiting in the feeder. Locked during a print.",
+      "fields": {
+        "head": {
+          "name": "Head",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Action",
+          "description": "load = load, unload = unload."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Weigh spool",
       "description": "Sets the remaining filament of a spool in Spoolman from the scale. Weighed with the empty spool (default): its weight comes from Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Pick",
         "park": "Park"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Load",
+        "unload": "Unload"
       }
     },
     "live_notify_image": {

@@ -355,6 +355,29 @@ tool_change:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+filament:
+  fields:
+    head:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 4
+          mode: box
+    action:
+      required: true
+      default: unload
+      selector:
+        select:
+          translation_key: filament_action
+          options:
+            - load
+            - unload
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
 weigh_spool:
   fields:
     slot:

@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Carica o scarica filamento",
+      "description": "Carica o scarica il filamento di una testina come fa il firmware: lo scarico riscalda alla temperatura del filamento nella posizione di scarto e lo ritira; il carico fa entrare un filamento in attesa nell’alimentatore. Bloccato durante una stampa.",
+      "fields": {
+        "head": {
+          "name": "Testina",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Azione",
+          "description": "load = carica, unload = scarica."
+        },
+        "config_entry_id": {
+          "name": "Stampante",
+          "description": "Serve solo con più stampanti."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Pesa bobina",
       "description": "Imposta in Spoolman il filamento rimanente di una bobina dalla bilancia. Pesata con la bobina vuota (predefinito): il suo peso viene da Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Preleva",
         "park": "Parcheggia"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Carica",
+        "unload": "Scarica"
       }
     },
     "live_notify_image": {

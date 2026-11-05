@@ -117,6 +117,19 @@ data:
 
 `tool_change` nutzt die Befehle der Firmware (`T<n> A0` nimmt den physischen Kopf n ohne Filamentzuordnung, `PARK_EXTRUDER…` legt den Kopf vom Schlitten ab). Bei Bedarf fährt der Drucker vorher X/Y an.
 
+### `snapmaker_u1_card.filament`
+
+2.1.3: Filament eines Kopfes laden oder entladen, so wie die Firmware selbst (auch die Knöpfe im Kopf-Dialog der Karte). Während eines Drucks gesperrt.
+
+```yaml
+action: snapmaker_u1_card.filament
+data:
+  head: 2           # 1–4
+  action: unload    # unload oder load
+```
+
+`unload` führt dieselben Schritte aus wie „Am Druckende entladen“ der Firmware: `AUTO_FEEDING EXTRUDER=<n> UNLOAD=1 STAGE=prepare` (zur Abwurfposition fahren, auf die Filamenttemperatur heizen) und danach `STAGE=doing` (zurückziehen, abschneiden, Heizung aus). `load` sendet `AUTO_FEEDING EXTRUDER=<n> LOAD=1`: Der Einzug zieht ein am Eingang wartendes Filament ein; ohne Filament oder mit ausgeschaltetem Automatik-Modus des Einzugs tut die Firmware nichts. Der Aufruf kehrt zurück, wenn der Drucker fertig ist (ein paar Minuten).
+
 ### `snapmaker_u1_card.machine_command`
 
 2.0: Das, was die Bedienelemente der Karte senden, auch für Automationen. `action`: `pause`, `resume`, `cancel`, `emergency_stop`, `home` (`target`: `all`, `x`, `y`, `z`; im Druck gesperrt), `set` (`target`: `bed_target`, `extruder…_target`, `fan_speed`, `speed_factor`, `<lüfter>_speed`; `value`: Zahl) oder `switch` (`target`: `output_pin_<name>`, `led_<name>`; `value`: an/aus). Nur Objekte, die der Drucker meldet; Werte werden begrenzt (Bett 0–120 °C, Düse 0–300 °C, Geschwindigkeit 10–300 %).

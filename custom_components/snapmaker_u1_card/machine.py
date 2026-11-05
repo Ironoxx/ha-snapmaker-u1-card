@@ -261,6 +261,25 @@ def park_gcode(head: int) -> str:
     return f"PARK_{EXTRUDER_NAMES[head].upper()}"
 
 
+def filament_gcode(head: int, action: str) -> list[str]:
+    """Load or unload the filament of physical head 0-3, the firmware's own way.
+
+    ``unload`` is what the firmware runs after a print with "unload at the end"
+    (SM_PRINT_END_AUTO_UNLOAD_FILAMENT): ``prepare`` heats to the filament's
+    temperature at the discard position, ``doing`` pulls it back. ``load`` feeds a
+    filament waiting in the feeder (the feeder needs auto mode; without filament
+    the firmware does nothing). One script per step, each runs until it is done.
+    """
+    if not isinstance(head, int) or not 0 <= head < len(EXTRUDER_NAMES):
+        raise ValueError(f"Invalid head {head!r}")
+    if action == "unload":
+        return [f"AUTO_FEEDING EXTRUDER={head} UNLOAD=1 STAGE=prepare",
+                f"AUTO_FEEDING EXTRUDER={head} UNLOAD=1 STAGE=doing"]
+    if action == "load":
+        return [f"AUTO_FEEDING EXTRUDER={head} LOAD=1"]
+    raise ValueError(f"Invalid action {action!r}")
+
+
 # ── Nozzles ────────────────────────────────────────────────────────────────
 NOZZLE_TYPES = ("standard", "high_flow")
 

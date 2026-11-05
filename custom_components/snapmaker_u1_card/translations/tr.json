@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Filament yükle veya boşalt",
+      "description": "Bir kafanın filamentini yazılımın yaptığı gibi yükler veya boşaltır: boşaltma, atık konumunda filament sıcaklığına ısıtır ve geri çeker; yükleme, besleyicide bekleyen filamenti içeri alır. Baskı sırasında kilitli.",
+      "fields": {
+        "head": {
+          "name": "Kafa",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "İşlem",
+          "description": "load = yükle, unload = boşalt."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Makarayı tart",
       "description": "Spoolman'daki bir makaranın kalan filamentini terazideki değerden ayarlar. Boş makarayla tartıldıysa (varsayılan) makaranın ağırlığı Spoolman'dan alınır.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Al",
         "park": "Park et"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Yükle",
+        "unload": "Boşalt"
       }
     },
     "live_notify_image": {

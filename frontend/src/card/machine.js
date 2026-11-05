@@ -279,6 +279,38 @@ export const MachineMixin = (Base) => class extends Base {
       <div class="t-label">${tr("Fährt bei Bedarf vorher X/Y an.")}</div>`;
   }
 
+  // ── Loading / unloading filament (head dialog) ──────────────────────────
+  /** Load / unload buttons; the firmware's own procedure (service filament). */
+  _filamentBlock(idx, locked) {
+    if (!this._d || !(this._d.headStates || []).length) return "";
+    const busy = this._filBusy === idx;
+    return `<div class="t-label head-sub">${tr("Filament laden / entladen")}</div>
+      <div class="head-change">
+        <button type="button" class="tonal" data-filament="load" ${locked || busy ? "disabled" : ""}>
+          <ha-icon icon="mdi:tray-arrow-down"></ha-icon>${tr("Laden")}
+        </button>
+        <button type="button" class="tonal" data-filament="unload" ${locked || busy ? "disabled" : ""}>
+          <ha-icon icon="mdi:tray-arrow-up"></ha-icon>${tr("Entladen")}
+        </button>
+      </div>
+      <div class="t-label">${busy ? tr("Läuft …") : tr("Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.")}</div>`;
+  }
+
+  async _filament(idx, action) {
+    const head = (this._d && this._d.heads[idx]) || { name: `E${idx}` };
+    if (action === "unload" && !(await this._confirmAction({
+      icon: "mdi:tray-arrow-up", title: tr("{head} entladen?", { head: head.name }),
+      text: tr("Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten."),
+      ok: tr("Entladen"),
+    }))) return false;
+    this._filBusy = idx;
+    this._toast(action === "unload" ? tr("{head}: Entladen läuft …", { head: head.name }) : tr("{head}: Laden läuft …", { head: head.name }));
+    const ok = await this._call("filament", { head: idx + 1, action });
+    this._filBusy = null;
+    if (ok) this._toast(action === "unload" ? tr("{head} entladen", { head: head.name }) : tr("{head}: Laden fertig", { head: head.name }));
+    return ok;
+  }
+
   async _headChange(idx, action, btn) {
     const head = (this._d && this._d.heads[idx]) || { name: `E${idx}` };
     if (btn) { btn.disabled = true; btn.classList.add("busy"); }

@@ -120,6 +120,19 @@ data:
 
 `tool_change` uses the firmware's own commands (`T<n> A0` takes physical head n without filament mapping, `PARK_EXTRUDER…` parks the head on the carriage). The printer homes X/Y first if needed.
 
+### `snapmaker_u1_card.filament`
+
+2.1.3: load or unload a head's filament, the firmware's own way (also the buttons in the card's head dialog). Locked during a print.
+
+```yaml
+action: snapmaker_u1_card.filament
+data:
+  head: 2           # 1–4
+  action: unload    # unload or load
+```
+
+`unload` runs the same steps as the firmware's "unload at the end of the print": `AUTO_FEEDING EXTRUDER=<n> UNLOAD=1 STAGE=prepare` (move to the discard position, heat to the filament's temperature) and then `STAGE=doing` (pull back, cut, heater off). `load` sends `AUTO_FEEDING EXTRUDER=<n> LOAD=1`: the feeder pulls in a filament waiting at its inlet; without filament, or with the feeder's auto mode off, the firmware does nothing. The call returns when the printer is done (a few minutes).
+
 ### `snapmaker_u1_card.machine_command`
 
 2.0: what the card's controls send, usable in automations too. `action`: `pause`, `resume`, `cancel`, `emergency_stop`, `home` (`target`: `all`, `x`, `y`, `z`; locked during a print), `set` (`target`: `bed_target`, `extruder…_target`, `fan_speed`, `speed_factor`, `<fan>_speed`; `value`: number) or `switch` (`target`: `output_pin_<name>`, `led_<name>`; `value`: on/off). Only objects the printer reports are accepted, values are clamped (bed 0–120 °C, nozzle 0–300 °C, speed 10–300 %).

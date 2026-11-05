@@ -66,6 +66,7 @@ export const HeadDialogMixin = (Base) => class extends Base {
           ${spool ? this._weighForm(spool) : ""}
           ${sm.external_booking ? `<div class="t-label">${tr("Den Verbrauch bucht Moonraker (Spoolman im Drucker aktiv) – die Integration bucht nicht zusätzlich ab.")}</div>` : ""}` : ""}
         ${this._headChangeBlock(idx, locked)}
+        ${this._filamentBlock(idx, locked)}
         <div class="t-label head-sub">${tr("Filament von Hand setzen")}</div>
         ${locked ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${printing ? tr("Während eines Drucks nicht möglich.") : tr("Der Drucker ist ausgeschaltet.")}</div>` : ""}
         <form class="head-form" data-headform>
@@ -88,6 +89,11 @@ export const HeadDialogMixin = (Base) => class extends Base {
     if (hc) hc.addEventListener("click", async () => {
       if (await this._headChange(idx, hc.dataset.headchange, hc)) dlg.close();
     });
+    dlg.querySelectorAll("[data-filament]").forEach((b) => b.addEventListener("click", () => {
+      const action = b.dataset.filament;
+      dlg.close(); // the procedure runs for minutes; progress comes as toasts
+      this._filament(idx, action);
+    }));
     const form = dlg.querySelector("[data-headform]");
     form.addEventListener("submit", async (e) => {
       e.preventDefault();

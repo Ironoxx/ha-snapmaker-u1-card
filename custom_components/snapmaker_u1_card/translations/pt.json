@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Carregar ou descarregar filamento",
+      "description": "Carrega ou descarrega o filamento de uma cabeça tal como o firmware: descarregar aquece à temperatura do filamento na posição de descarte e retira-o; carregar introduz um filamento à espera no alimentador. Bloqueado durante uma impressão.",
+      "fields": {
+        "head": {
+          "name": "Cabeça",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Ação",
+          "description": "load = carregar, unload = descarregar."
+        },
+        "config_entry_id": {
+          "name": "Impressora",
+          "description": "Só necessário com várias impressoras."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Pesar bobina",
       "description": "Define no Spoolman o filamento restante de uma bobina a partir da balança. Pesada com a bobina vazia (padrão): o peso dela vem do Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Recolher",
         "park": "Estacionar"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Carregar",
+        "unload": "Descarregar"
       }
     },
     "live_notify_image": {

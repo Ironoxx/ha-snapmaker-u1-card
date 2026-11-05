@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Charger ou décharger le filament",
+      "description": "Charge ou décharge le filament d’une tête comme le fait le firmware : le déchargement chauffe à la température du filament à la position de purge puis le retire ; le chargement fait entrer un filament en attente dans l’alimentateur. Bloqué pendant une impression.",
+      "fields": {
+        "head": {
+          "name": "Tête",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Action",
+          "description": "load = charger, unload = décharger."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire uniquement avec plusieurs imprimantes."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Peser la bobine",
       "description": "Règle dans Spoolman le filament restant d’une bobine d’après la balance. Pesée avec la bobine vide (par défaut) : son poids vient de Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Prendre",
         "park": "Garer"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Charger",
+        "unload": "Décharger"
       }
     },
     "live_notify_image": {

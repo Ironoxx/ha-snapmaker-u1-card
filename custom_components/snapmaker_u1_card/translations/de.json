@@ -945,6 +945,24 @@
         }
       }
     },
+    "filament": {
+      "name": "Filament laden oder entladen",
+      "description": "Lädt das Filament eines Kopfes oder entlädt es, wie die Firmware selbst: Entladen heizt an der Abwurfposition auf die Filamenttemperatur und zieht es zurück; Laden zieht ein im Einzug wartendes Filament ein. Während eines Drucks gesperrt.",
+      "fields": {
+        "head": {
+          "name": "Kopf",
+          "description": "1-4."
+        },
+        "action": {
+          "name": "Aktion",
+          "description": "load = laden, unload = entladen."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
     "weigh_spool": {
       "name": "Spule wiegen",
       "description": "Setzt das Restgewicht einer Spule in Spoolman nach der Waage. Mit Leerspule gewogen (Standard): deren Gewicht kommt aus Spoolman.",
@@ -1100,6 +1118,12 @@
       "options": {
         "pick": "Aufnehmen",
         "park": "Ablegen"
+      }
+    },
+    "filament_action": {
+      "options": {
+        "load": "Laden",
+        "unload": "Entladen"
       }
     },
     "live_notify_image": {

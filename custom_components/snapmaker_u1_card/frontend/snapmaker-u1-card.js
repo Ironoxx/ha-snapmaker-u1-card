@@ -126,6 +126,16 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escribe un comando; la respuesta de la impresora aparece aquí.",
     "Läuft …": "Ejecutando …",
+    "Filament laden / entladen": "Cargar / descargar filamento",
+    "Laden": "Cargar",
+    "Entladen": "Descargar",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Como en la pantalla: descargar calienta a la temperatura del filamento y lo retira; cargar introduce un filamento insertado.",
+    "{head} entladen?": "¿Descargar {head}?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "El cabezal va a la posición de descarte, calienta a la temperatura del filamento y lo retira. Tarda unos minutos.",
+    "{head}: Entladen läuft …": "{head}: descargando …",
+    "{head}: Laden läuft …": "{head}: cargando …",
+    "{head} entladen": "{head} descargado",
+    "{head}: Laden fertig": "{head}: carga terminada",
     "Konsole kopieren": "Copiar consola",
     "Kopieren": "Copiar",
     "Eintrag kopieren": "Copiar entrada",
@@ -761,6 +771,16 @@
     "Senden": "Envoyer",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Saisissez une commande ; la réponse de l’imprimante s’affiche ici.",
     "Läuft …": "En cours …",
+    "Filament laden / entladen": "Charger / décharger le filament",
+    "Laden": "Charger",
+    "Entladen": "Décharger",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Comme sur l’écran : le déchargement chauffe à la température du filament puis le retire, le chargement fait entrer un filament inséré.",
+    "{head} entladen?": "Décharger {head} ?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "La tête va à la position de purge, chauffe à la température du filament puis le retire. Cela prend quelques minutes.",
+    "{head}: Entladen läuft …": "{head} : déchargement …",
+    "{head}: Laden läuft …": "{head} : chargement …",
+    "{head} entladen": "{head} déchargé",
+    "{head}: Laden fertig": "{head} : chargement terminé",
     "Konsole kopieren": "Copier la console",
     "Kopieren": "Copier",
     "Eintrag kopieren": "Copier l’entrée",
@@ -1396,6 +1416,16 @@
     "Senden": "Invia",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Inserisci un comando; la risposta della stampante appare qui.",
     "Läuft …": "In esecuzione …",
+    "Filament laden / entladen": "Carica / scarica filamento",
+    "Laden": "Carica",
+    "Entladen": "Scarica",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Come sul display: lo scarico riscalda alla temperatura del filamento e lo ritira, il carico fa entrare un filamento inserito.",
+    "{head} entladen?": "Scaricare {head}?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "La testina va nella posizione di scarto, riscalda alla temperatura del filamento e lo ritira. Richiede qualche minuto.",
+    "{head}: Entladen läuft …": "{head}: scarico in corso …",
+    "{head}: Laden läuft …": "{head}: carico in corso …",
+    "{head} entladen": "{head} scaricato",
+    "{head}: Laden fertig": "{head}: carico completato",
     "Konsole kopieren": "Copia console",
     "Kopieren": "Copia",
     "Eintrag kopieren": "Copia voce",
@@ -2031,6 +2061,16 @@
     "Senden": "Versturen",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Voer een commando in; het antwoord van de printer verschijnt hier.",
     "Läuft …": "Bezig …",
+    "Filament laden / entladen": "Filament laden / ontladen",
+    "Laden": "Laden",
+    "Entladen": "Ontladen",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Zoals op het display: ontladen verwarmt tot de filamenttemperatuur en trekt het filament terug, laden voert een ingestoken filament in.",
+    "{head} entladen?": "{head} ontladen?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "De kop gaat naar de afvalpositie, verwarmt tot de filamenttemperatuur en trekt het filament terug. Dit duurt een paar minuten.",
+    "{head}: Entladen läuft …": "{head}: ontladen …",
+    "{head}: Laden läuft …": "{head}: laden …",
+    "{head} entladen": "{head} ontladen",
+    "{head}: Laden fertig": "{head}: laden klaar",
     "Konsole kopieren": "Console kopiëren",
     "Kopieren": "Kopiëren",
     "Eintrag kopieren": "Item kopiëren",
@@ -2666,6 +2706,16 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escreva um comando; a resposta da impressora aparece aqui.",
     "Läuft …": "A executar …",
+    "Filament laden / entladen": "Carregar / descarregar filamento",
+    "Laden": "Carregar",
+    "Entladen": "Descarregar",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Como no ecrã: descarregar aquece à temperatura do filamento e retira-o, carregar introduz um filamento inserido.",
+    "{head} entladen?": "Descarregar {head}?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "A cabeça vai para a posição de descarte, aquece à temperatura do filamento e retira-o. Demora alguns minutos.",
+    "{head}: Entladen läuft …": "{head}: a descarregar …",
+    "{head}: Laden läuft …": "{head}: a carregar …",
+    "{head} entladen": "{head} descarregada",
+    "{head}: Laden fertig": "{head}: carregamento concluído",
     "Konsole kopieren": "Copiar consola",
     "Kopieren": "Copiar",
     "Eintrag kopieren": "Copiar entrada",
@@ -3301,6 +3351,16 @@
     "Senden": "Gönder",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Bir komut girin; yazıcının yanıtı burada görünür.",
     "Läuft …": "Çalışıyor …",
+    "Filament laden / entladen": "Filament yükle / boşalt",
+    "Laden": "Yükle",
+    "Entladen": "Boşalt",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Ekrandaki gibi: boşaltma filament sıcaklığına ısıtır ve filamenti geri çeker, yükleme takılan filamenti içeri alır.",
+    "{head} entladen?": "{head} boşaltılsın mı?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "Kafa atık konumuna gider, filament sıcaklığına ısıtır ve filamenti geri çeker. Birkaç dakika sürer.",
+    "{head}: Entladen läuft …": "{head}: boşaltılıyor …",
+    "{head}: Laden läuft …": "{head}: yükleniyor …",
+    "{head} entladen": "{head} boşaltıldı",
+    "{head}: Laden fertig": "{head}: yükleme tamam",
     "Konsole kopieren": "Konsolu kopyala",
     "Kopieren": "Kopyala",
     "Eintrag kopieren": "Girdiyi kopyala",
@@ -3958,6 +4018,16 @@
     "Senden": "Send",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Enter a command; the printer’s answer appears here.",
     "Läuft …": "Running …",
+    "Filament laden / entladen": "Load / unload filament",
+    "Laden": "Load",
+    "Entladen": "Unload",
+    "Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.": "Like on the display: unloading heats to the filament temperature and pulls the filament back, loading feeds an inserted filament.",
+    "{head} entladen?": "Unload {head}?",
+    "Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten.": "The head moves to the discard position, heats to the filament temperature and pulls the filament back. This takes a few minutes.",
+    "{head}: Entladen läuft …": "{head}: unloading …",
+    "{head}: Laden läuft …": "{head}: loading …",
+    "{head} entladen": "{head} unloaded",
+    "{head}: Laden fertig": "{head}: loading done",
     "Konsole kopieren": "Copy console",
     "Kopieren": "Copy",
     "Eintrag kopieren": "Copy entry",
@@ -10310,6 +10380,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           ${spool ? this._weighForm(spool) : ""}
           ${sm.external_booking ? `<div class="t-label">${tr("Den Verbrauch bucht Moonraker (Spoolman im Drucker aktiv) – die Integration bucht nicht zusätzlich ab.")}</div>` : ""}` : ""}
         ${this._headChangeBlock(idx, locked)}
+        ${this._filamentBlock(idx, locked)}
         <div class="t-label head-sub">${tr("Filament von Hand setzen")}</div>
         ${locked ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${printing ? tr("Während eines Drucks nicht möglich.") : tr("Der Drucker ist ausgeschaltet.")}</div>` : ""}
         <form class="head-form" data-headform>
@@ -10335,6 +10406,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (hc) hc.addEventListener("click", async () => {
         if (await this._headChange(idx, hc.dataset.headchange, hc)) dlg.close();
       });
+      dlg.querySelectorAll("[data-filament]").forEach((b) => b.addEventListener("click", () => {
+        const action = b.dataset.filament;
+        dlg.close();
+        this._filament(idx, action);
+      }));
       const form = dlg.querySelector("[data-headform]");
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -10772,6 +10848,37 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         </button>
       </div>
       <div class="t-label">${tr("Fährt bei Bedarf vorher X/Y an.")}</div>`;
+    }
+    // ── Loading / unloading filament (head dialog) ──────────────────────────
+    /** Load / unload buttons; the firmware's own procedure (service filament). */
+    _filamentBlock(idx, locked) {
+      if (!this._d || !(this._d.headStates || []).length) return "";
+      const busy = this._filBusy === idx;
+      return `<div class="t-label head-sub">${tr("Filament laden / entladen")}</div>
+      <div class="head-change">
+        <button type="button" class="tonal" data-filament="load" ${locked || busy ? "disabled" : ""}>
+          <ha-icon icon="mdi:tray-arrow-down"></ha-icon>${tr("Laden")}
+        </button>
+        <button type="button" class="tonal" data-filament="unload" ${locked || busy ? "disabled" : ""}>
+          <ha-icon icon="mdi:tray-arrow-up"></ha-icon>${tr("Entladen")}
+        </button>
+      </div>
+      <div class="t-label">${busy ? tr("Läuft …") : tr("Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.")}</div>`;
+    }
+    async _filament(idx, action) {
+      const head = this._d && this._d.heads[idx] || { name: `E${idx}` };
+      if (action === "unload" && !await this._confirmAction({
+        icon: "mdi:tray-arrow-up",
+        title: tr("{head} entladen?", { head: head.name }),
+        text: tr("Der Kopf fährt zur Abwurfposition, heizt auf die Filamenttemperatur und zieht das Filament zurück. Das dauert ein paar Minuten."),
+        ok: tr("Entladen")
+      })) return false;
+      this._filBusy = idx;
+      this._toast(action === "unload" ? tr("{head}: Entladen läuft …", { head: head.name }) : tr("{head}: Laden läuft …", { head: head.name }));
+      const ok = await this._call("filament", { head: idx + 1, action });
+      this._filBusy = null;
+      if (ok) this._toast(action === "unload" ? tr("{head} entladen", { head: head.name }) : tr("{head}: Laden fertig", { head: head.name }));
+      return ok;
     }
     async _headChange(idx, action, btn) {
       const head = this._d && this._d.heads[idx] || { name: `E${idx}` };
