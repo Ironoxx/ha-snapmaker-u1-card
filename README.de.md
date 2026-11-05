@@ -73,18 +73,39 @@ Die Integration spricht mit Moonraker auf dem Drucker (Port 80); die Stock-Firmw
 
 ## Installation
 
-1. **HACS** (ab Home Assistant 2026.11: *Einstellungen → Marketplace*) → nach **Snapmaker U1 Card** suchen → herunterladen → Home Assistant neu starten. Oder mit einem Klick: [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ironoxx&repository=ha-snapmaker-u1-card&category=integration)
-   Falls die Suche sie noch nicht findet: HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/Ironoxx/ha-snapmaker-u1-card`, Typ *Integration*.
-   Ohne HACS: `custom_components/snapmaker_u1_card` aus dem [neuesten Release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) nach `/config/custom_components/` kopieren und neu starten.
-2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Snapmaker U1 Card*, IP-Adresse des Druckers eingeben. Im zweiten Schritt stehen alle Einstellungen; alles ist optional und später änderbar.
-3. Karte ins Dashboard: *Karte hinzufügen → Snapmaker U1* (oder *Snapmaker U1 Mini*), oder in YAML:
+**1. Herunterladen**
 
-   ```yaml
-   type: custom:snapmaker-u1-card
-   ```
+[![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ironoxx&repository=ha-snapmaker-u1-card&category=integration)
 
-   Am besten in einer *Panel*-Ansicht oder in *Abschnitte* mit voller Breite. Eine Ressource musst du nicht anlegen, das macht die Integration selbst.
-4. Den Selbsttest in der Karte unter *System → Selbsttest* ausführen. Er prüft Drucker, Kamera, Strom-Entitäten und Benachrichtigungen.
+In HACS (ab Home Assistant 2026.11: *Einstellungen → Marketplace*) nach **Snapmaker U1 Card** suchen, herunterladen und Home Assistant neu starten.
+
+<details>
+<summary>Andere Wege: benutzerdefiniertes Repository, von Hand</summary>
+
+- **Benutzerdefiniertes Repository** (falls die Suche sie noch nicht findet): HACS → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/Ironoxx/ha-snapmaker-u1-card`, Typ *Integration*.
+- **Ohne HACS:** `custom_components/snapmaker_u1_card` aus dem [neuesten Release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) nach `/config/custom_components/` kopieren und neu starten.
+
+</details>
+
+**2. Einrichten**
+
+[![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=snapmaker_u1_card)
+
+*Einstellungen → Geräte & Dienste → Integration hinzufügen → Snapmaker U1 Card*, IP-Adresse des Druckers eingeben. Im zweiten Schritt stehen alle Einstellungen; alles ist optional und später änderbar.
+
+**3. Karte hinzufügen**
+
+*Karte hinzufügen → Snapmaker U1* (oder *Snapmaker U1 Mini*), oder in YAML:
+
+```yaml
+type: custom:snapmaker-u1-card
+```
+
+Am besten in einer *Panel*-Ansicht oder in *Abschnitte* mit voller Breite. Eine Ressource musst du nicht anlegen, das macht die Integration selbst.
+
+**4. Selbsttest**
+
+In der Karte unter *System → Selbsttest*: prüft Drucker, Kamera, Strom-Entitäten und Benachrichtigungen.
 
 **Update:** in HACS aktualisieren und Home Assistant neu starten. Einstellungen, Verlauf und Spulenzuordnung bleiben erhalten. Die Integration nicht löschen und neu hinzufügen, das legt einen neuen Eintrag ohne deinen Verlauf an.
 
