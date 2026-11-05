@@ -82,3 +82,8 @@ npm test                       # card tests in jsdom against the bundle
 - Comments and docstrings in English; explain *why*, not *what*.
 - Python: type hints, `from __future__ import annotations`, ruff clean.
 - JavaScript: ES2020, no framework, no runtime dependencies.
+
+## Security
+
+Security problems are reported privately, see [SECURITY.md](SECURITY.md).
+Dependabot opens weekly PRs for GitHub Actions and the npm build tools.

@@ -7,6 +7,10 @@ on:
   schedule:
     - cron: "17 4 * * 1"  # weekly: does a new HA version break anything?
 
+# Checks only read the repository (also on pull requests from forks).
+permissions:
+  contents: read
+
 jobs:
   hassfest:
     runs-on: ubuntu-latest

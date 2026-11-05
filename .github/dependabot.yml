@@ -1,0 +1,19 @@
+# Weekly update PRs for the tools used to build and test (nothing of it ships to users:
+# the integration has no Python requirements, the card is a prebuilt bundle).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-tools:
+        patterns: ["*"]
+        update-types: [minor, patch]
