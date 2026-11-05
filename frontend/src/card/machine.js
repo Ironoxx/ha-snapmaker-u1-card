@@ -303,9 +303,13 @@ export const MachineMixin = (Base) => class extends Base {
     return !!(st && !["unavailable", "unknown"].includes(st.state) && !this._cfg.camera && !this._cfg.printer_image);
   }
 
-  /** Switch the image between the printer's camera and the second (USB) camera. */
+  /** Next image on the stage: printer camera -> second (USB) camera -> printer display (display_camera). */
   _switchCamera() {
-    this._camAlt = !this._camAlt;
+    const views = ["main", ...(this._hasCamera2() ? ["usb"] : []), ...(this._displayAsCamera() ? ["display"] : [])];
+    const cur = this._camDisplay ? "display" : this._camAlt ? "usb" : "main";
+    const next = views[(views.indexOf(cur) + 1) % views.length];
+    this._camAlt = next === "usb";
+    this._camDisplay = next === "display";
     this._stopStream();
     this._ents = null;
     this._resolve();

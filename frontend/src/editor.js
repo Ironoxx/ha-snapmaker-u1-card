@@ -8,7 +8,7 @@ export const SECTION_LABELS = {
   climate: "Bett & Innenraum", mesh: "Bettnivellierung", motion: "Bewegung", console: "G-Code-Konsole", system: "System & Diagnose",
   stats: "Statistik", history: "Druckhistorie", timelapse: "Zeitraffer",
   queue: "Warteschlange", charts: "Diagramme", maintenance: "Wartung", layer: "Schichtansicht",
-  spools: "Spoolman-Bestand",
+  spools: "Spoolman-Bestand", display: "Druckerdisplay",
 };
 export const FORM_LABELS = {
   printer_name: "Name", printer_brand: "Marke", layout: "Darstellung", hide: "Bereiche ausblenden",
@@ -33,6 +33,8 @@ export const FORM_LABELS = {
   camera_webrtc: "WebRTC (paxx12-Firmware)",
   camera_ha_stream: "Unterwegs: RTSP über Home Assistant",
   camera_zoom_reset: "Zoom zurücksetzen nach (s)",
+  display_tab: "Druckerdisplay als eigener Reiter",
+  display_camera: "Druckerdisplay als zusätzliche Kamera",
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -49,6 +51,8 @@ export const FORM_HELPERS = {
   camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
   camera_ha_stream: "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).",
   camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
+  display_tab: "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.",
+  display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
   controls_lock: "Leer = 1 min. Gesperrt sind Temperatur- und Lüfterregler, Schnellwahl, Heizungsschalter und Referenzfahrt; das Schloss öffnet sie bis zur gewählten Zeit nach der letzten Bedienung.",
@@ -124,6 +128,10 @@ export function configForm(mini) {
         { name: "camera_webrtc", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
         { name: "camera_ha_stream", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
         { name: "printer_image", selector: { text: {} } },
+        { type: "grid", name: "", schema: [
+          { name: "display_tab", selector: { boolean: {} } },
+          { name: "display_camera", selector: { boolean: {} } },
+        ] },
       ],
     },
     advanced,

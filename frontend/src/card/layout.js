@@ -150,6 +150,7 @@ export const LayoutMixin = (Base) => class extends Base {
       case "maintenance": return this._sectionMaintenance();
       case "layer": return this._sectionLayer();
       case "spools": return this._sectionSpools();
+      case "display": return this._sectionDisplay();
       default: return "";
     }
   }
@@ -167,6 +168,7 @@ export const LayoutMixin = (Base) => class extends Base {
   /** Sections as tabs, stacked (layout: scroll) or camera beside the tabs (layout: tablet). */
   _layout(sections) {
     if (!this._spoolman()) sections = sections.filter((s) => s !== "spools");
+    if (!this._displayTab()) sections = sections.filter((s) => s !== "display");
     if (!sections.length) return "";
     if (this._cfg.layout === "scroll") {
       // Order as before: stage job files toolheads ...
@@ -208,6 +210,7 @@ export const LayoutMixin = (Base) => class extends Base {
     r.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === id)));
     r.querySelectorAll("[data-pane]").forEach((p) => { p.hidden = p.dataset.pane !== id; });
     this._tickCamera();
+    this._tickDisplay();
     this._tickTemps();  // right away instead of up to 10 s of "no data"
   }
 };

@@ -38,6 +38,8 @@ All options are optional; except head names and presets they can also be set in 
 | `camera_direct_url` | – | own URL for the direct stream |
 | `camera_webrtc` | `auto` | paxx12 Extended Firmware: show the camera over WebRTC (less delay, far less data than MJPEG). The few signalling messages go through Home Assistant, the video directly between browser and printer – works at home and over VPN; if no direct connection comes up within 8 s, MJPEG stays for 10 min. `off` = MJPEG only |
 | `camera_ha_stream` | `auto` | away from home (no direct connection, e.g. Nabu Casa): play the RTSP stream through Home Assistant instead of MJPEG. Only with RTSP (paxx12). `off` = MJPEG |
+| `display_tab` | `true` | printer display (paxx12 display mirror) in its own tab *Display* |
+| `display_camera` | `false` | printer display as one more step of the camera switch button on the image (printer camera → USB camera → display) |
 | `camera_zoom_reset` | `60` | seconds without interaction until the camera zoom goes back to 1×; `0` = never. Leaving the page, switching the app or scrolling the card away always resets it |
 | `accent_color` | – | own accent colour for buttons, sliders and highlights (`[255, 152, 0]` or `"#ff9800"`); empty = your theme's primary colour. Also for the mini card |
 | `camera_wake` | `true` | while the card is visible and the image stops (no stream, frozen frame), it asks the integration to send `camera.start_monitor` once (at most every 10 s) |
@@ -49,7 +51,7 @@ All options are optional; except head names and presets they can also be set in 
 | `camera_mode` | `auto` | `auto` = the camera entity decides (live stream or still images), `stream` = force the stream, `still` = still images (saves WiFi) |
 | `refresh` | `2` | seconds between still images (`still` and fallback) |
 | `camera_fit` | `contain` | `contain`, `cover`, `fill` |
-| `show` | all | sections: `stage layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse spools` (`spools` = Spoolman tab, only with Spoolman) |
+| `show` | all | sections: `stage display layer job queue files toolheads climate mesh motion console system maintenance charts stats history timelapse spools` (`spools` = Spoolman tab, only with Spoolman; `display` = printer display, only with paxx12's display mirror) |
 | `hide` | – | sections to hide (counterpart of `show`, used by the editor) |
 | `controls_lock` | `60` | lock for temperature and fan sliders, presets, heater switches and homing: `off`, seconds (`30`, `60`, `120`, `300`) until it locks again after the last interaction, or `manual` (open until locked again). During a print the card asks before changing a target temperature. Legacy: `unlock_controls: true` = `off` |
 | `timelapse_limit` | `8` | timelapses shown |
