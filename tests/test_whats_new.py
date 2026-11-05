@@ -14,7 +14,8 @@ from tests.test_init import mock_client  # noqa: E402,F401
 from tests.test_power import _setup, auto_enable, notifications  # noqa: E402,F401
 
 
-async def test_shown_once_after_update(hass: HomeAssistant) -> None:
+async def test_shown_once_after_update(hass: HomeAssistant, monkeypatch) -> None:
+    monkeypatch.setattr(wn, "ANNOUNCEMENTS", {})
     from homeassistant.components import persistent_notification as pn
     shown = []
     orig = pn.async_create
@@ -35,7 +36,8 @@ async def test_shown_once_after_update(hass: HomeAssistant) -> None:
         pn.async_create = orig
 
 
-async def test_not_on_fresh_install_and_english(hass: HomeAssistant) -> None:
+async def test_not_on_fresh_install_and_english(hass: HomeAssistant, monkeypatch) -> None:
+    monkeypatch.setattr(wn, "ANNOUNCEMENTS", {})
     from homeassistant.components import persistent_notification as pn
     shown = []
     orig = pn.async_create
@@ -53,6 +55,33 @@ async def test_not_on_fresh_install_and_english(hass: HomeAssistant) -> None:
     try:
         assert await wn.async_show(hass, dt_util.utcnow(), "1.6.0") is True, "seen 1.5 -> update, even if entry is new"
         assert shown == ["Snapmaker U1 Card 1.6 – what's new"]
+    finally:
+        pn.async_create = orig
+
+
+async def test_announcement_once_and_not_on_fresh_install(hass: HomeAssistant) -> None:
+    from homeassistant.components import persistent_notification as pn
+    shown = []
+    orig = pn.async_create
+    pn.async_create = lambda h, msg, title=None, notification_id=None: shown.append((notification_id, msg))
+    try:
+        # already on 2.1 (what's new seen): only the HACS news, once
+        await wn.Store(hass, 1, wn.STORE_KEY).async_save({"seen": "2.1"})
+        hass.config.language = "en"
+        old = dt_util.utcnow() - timedelta(days=30)
+        assert await wn.async_show(hass, old, "2.1.3") is True
+        assert [n for n, _ in shown] == ["snapmaker_u1_card_news_hacs_default"]
+        assert "HACS default list" in shown[0][1] and "ko-fi.com/ironoxx" in shown[0][1]
+        assert await wn.async_show(hass, old, "2.1.4") is False
+        assert len(shown) == 1
+        # the next minor version still gets its what's new (announcement not repeated)
+        assert (await wn.Store(hass, 1, wn.STORE_KEY).async_load())["announced"] == ["hacs_default"]
+        # fresh install: neither, but both remembered
+        await wn.Store(hass, 1, wn.STORE_KEY).async_save({})
+        shown.clear()
+        assert await wn.async_show(hass, dt_util.utcnow(), "2.1.3") is False
+        assert not shown
+        assert await wn.async_show(hass, old, "2.1.3") is False
     finally:
         pn.async_create = orig
 

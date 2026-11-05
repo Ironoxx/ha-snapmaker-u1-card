@@ -4,6 +4,36 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.3b3
+
+Beta. **Snapmaker U1 Card is officially in HACS!** 🎉 Plus loading and unloading filament from the card.
+
+**In the HACS default list**
+- The integration has been accepted into the HACS default list. New users find it by searching for *Snapmaker U1 Card* in HACS (on Home Assistant 2026.11 and newer under *Settings → Marketplace*); the custom repository is only a fallback now. README updated, with a one-click "Open in HACS" button.
+- After the update Home Assistant shows this news once as a notification (not on a fresh install).
+
+**Load / unload filament**
+- Head dialog: new buttons *Load* and *Unload*. Unloading asks first, then runs the firmware's own procedure (the same as "unload at the end of the print"): move to the discard position, heat to the filament's temperature, pull back, cut. Loading feeds a filament waiting in the feeder. Progress as short messages; locked during a print.
+- New service `snapmaker_u1_card.filament` (`head` 1–4, `action` `load`/`unload`) for automations.
+
+Please check: unload one head, then load it again (with the feeder in auto mode).
+
+### Deutsch
+
+Beta. **Snapmaker U1 Card ist offiziell in HACS!** 🎉 Dazu Filament laden und entladen aus der Karte.
+
+**In der Standardliste von HACS**
+- Die Integration wurde in die Standardliste von HACS aufgenommen. Neue Nutzer finden sie über die Suche nach *Snapmaker U1 Card* in HACS (ab Home Assistant 2026.11 unter *Einstellungen → Marketplace*); das benutzerdefinierte Repository ist nur noch der Ausweg. README angepasst, mit „Open in HACS“-Knopf.
+- Nach dem Update zeigt Home Assistant diese Nachricht einmal als Benachrichtigung (nicht bei einer Neuinstallation).
+
+**Filament laden / entladen**
+- Kopf-Dialog: neue Knöpfe *Laden* und *Entladen*. Entladen fragt vorher nach und führt dann den Ablauf der Firmware aus (derselbe wie „am Druckende entladen“): zur Abwurfposition fahren, auf die Filamenttemperatur heizen, zurückziehen, abschneiden. Laden zieht ein im Einzug wartendes Filament ein. Fortschritt als kurze Meldungen; während eines Drucks gesperrt.
+- Neuer Dienst `snapmaker_u1_card.filament` (`head` 1–4, `action` `load`/`unload`) für Automationen.
+
+Bitte prüfen: einen Kopf entladen, danach wieder laden (Einzug im Automatik-Modus).
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.3b2
 
 Beta. Display size, copying from the console.

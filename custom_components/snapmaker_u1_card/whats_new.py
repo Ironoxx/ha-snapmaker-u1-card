@@ -4,6 +4,9 @@ HACS only offers a link to the release notes in many setups, so after an
 update to a new minor version (1.6, 1.7 …) the integration creates one
 persistent notification with the highlights. Not on a fresh install, only
 once per minor version (stored in .storage), dismissable as usual.
+
+``ANNOUNCEMENTS`` are one-off news independent of the version (e.g. the
+integration joined the HACS default list), each shown once, same rules.
 """
 
 from __future__ import annotations
@@ -110,26 +113,56 @@ Top cover, Panda Breath and DragonBreath are detected automatically; without the
     },
 }
 
+# One-off news, shown once each (key stays in .storage).
+ANNOUNCEMENTS: dict[str, dict[str, tuple[str, str]]] = {
+    "hacs_default": {
+        "de": ("Snapmaker U1 Card ist offiziell in HACS 🎉", f"""Die Integration ist jetzt in der **Standardliste von HACS** aufgenommen.
+
+- Neue Nutzer finden sie direkt über die Suche in HACS (ab Home Assistant 2026.11 unter *Einstellungen → Marketplace*), ohne benutzerdefiniertes Repository.
+- Für dich ändert sich nichts: Updates kommen wie bisher über HACS.
+
+Danke an alle, die getestet, Fehler gemeldet und mitgebaut haben!
+
+⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
+        "en": ("Snapmaker U1 Card is officially in HACS 🎉", f"""The integration is now part of the **HACS default list**.
+
+- New users find it straight away by searching in HACS (on Home Assistant 2026.11 and newer under *Settings → Marketplace*), no custom repository needed.
+- Nothing changes for you: updates keep coming through HACS.
+
+Thanks to everyone who tested, reported bugs and contributed!
+
+⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
+    },
+}
+
 
 def minor(version: str) -> str:
     return ".".join(version.split(".")[:2])
 
 
 async def async_show(hass: HomeAssistant, entry_created: object | None, version: str = VERSION) -> bool:
-    """Create the notification once per minor version; True = shown."""
+    """Create the notification once per minor version (and each announcement once); True = shown."""
     store: Store = Store(hass, 1, STORE_KEY)
     data = await store.async_load() or {}
     current = minor(version)
-    if data.get("seen") == current:
+    announced = list(data.get("announced") or [])
+    pending = [key for key in ANNOUNCEMENTS if key not in announced]
+    if data.get("seen") == current and not pending:
         return False
-    await store.async_save({"seen": current})
-    # Fresh install (entry just created, nothing seen yet): no "what's new"
+    await store.async_save({"seen": current, "announced": announced + pending})
+    # Fresh install (entry just created, nothing seen yet): no "what's new", no news
     created = entry_created if hasattr(entry_created, "tzinfo") else None
     if data.get("seen") is None and created is not None and dt_util.utcnow() - created < timedelta(hours=1):
         return False
-    texts = WHATS_NEW.get(current)
-    if not texts:
-        return False
-    title, message = texts["de" if str(hass.config.language or "").lower().startswith("de") else "en"]
-    persistent_notification.async_create(hass, message, title=title, notification_id=f"{DOMAIN}_whats_new_{current}")
-    return True
+    lang = "de" if str(hass.config.language or "").lower().startswith("de") else "en"
+    shown = False
+    texts = WHATS_NEW.get(current) if data.get("seen") != current else None
+    if texts:
+        title, message = texts[lang]
+        persistent_notification.async_create(hass, message, title=title, notification_id=f"{DOMAIN}_whats_new_{current}")
+        shown = True
+    for key in pending:
+        title, message = ANNOUNCEMENTS[key][lang]
+        persistent_notification.async_create(hass, message, title=title, notification_id=f"{DOMAIN}_news_{key}")
+        shown = True
+    return shown
