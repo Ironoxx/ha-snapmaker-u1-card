@@ -4,7 +4,7 @@
 
 [English](README.md) | **Deutsch**
 
-[![HACS](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Kaffee%20spendieren-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
+[![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz) [![Release](https://img.shields.io/github/v/release/Ironoxx/ha-snapmaker-u1-card)](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) [![Ko-fi](https://img.shields.io/badge/Ko--fi-Kaffee%20spendieren-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ironoxx)
 
 Eine Integration für den Snapmaker U1 in Home Assistant, mit eigener Dashboard-Karte. Sie spricht direkt mit dem Drucker und deckt alles ab: Live-Werte und Steuerung, Kamera, Filament und Spoolman, Benachrichtigungen, Strom und Kosten. Keine Moonraker-Integration, keine weiteren Karten, keine Add-ons.
 
@@ -73,7 +73,8 @@ Die Integration spricht mit Moonraker auf dem Drucker (Port 80); die Stock-Firmw
 
 ## Installation
 
-1. **HACS** → ⋮ → *Benutzerdefinierte Repositories* → `https://github.com/Ironoxx/ha-snapmaker-u1-card`, Typ *Integration* → **Snapmaker U1 Card** installieren → Home Assistant neu starten.
+1. **HACS** → nach **Snapmaker U1 Card** suchen → herunterladen → Home Assistant neu starten. Oder mit einem Klick: [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Ironoxx&repository=ha-snapmaker-u1-card&category=integration)
+   Früher als benutzerdefiniertes Repository hinzugefügt? Den Eintrag unter HACS → ⋮ → *Benutzerdefinierte Repositories* entfernen; die Installation bleibt.
    Ohne HACS: `custom_components/snapmaker_u1_card` aus dem [neuesten Release](https://github.com/Ironoxx/ha-snapmaker-u1-card/releases/latest) nach `/config/custom_components/` kopieren und neu starten.
 2. *Einstellungen → Geräte & Dienste → Integration hinzufügen → Snapmaker U1 Card*, IP-Adresse des Druckers eingeben. Im zweiten Schritt stehen alle Einstellungen; alles ist optional und später änderbar.
 3. Karte ins Dashboard: *Karte hinzufügen → Snapmaker U1* (oder *Snapmaker U1 Mini*), oder in YAML:
