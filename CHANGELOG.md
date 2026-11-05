@@ -4,6 +4,40 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.3b1
+
+Beta. The printer display in the card. Thanks to [@xPlayniac](https://github.com/xPlayniac) for the pull request!
+
+**Printer display (paxx12 Extended Firmware)**
+- paxx12 mirrors the printer's touchscreen at `/screen/`. The integration detects it on its own and the card shows it in a new tab *Display*, fresh through Home Assistant (also over https and Nabu Casa).
+- Admins can use the display from the card: tap the hand button, then taps and swipes on the picture go to the touchscreen. Touch switches itself off again after the control lock time without input (60 s if the lock is off). The integration only accepts touches from admins, inside the panel, to the configured printer and at most about 20 per second.
+- **Camera 2 is a real camera again:** the display mirror used to show up as Camera 2; it is now never taken as a camera.
+- New card options: `display_tab` (default on) and `display_camera` (default off: the display as one more step of the camera switch button). Without the mirror (stock firmware) nothing changes.
+- When the display is dimmed, the first tap only wakes it (firmware behaviour).
+
+**Also**
+- Build tools updated (esbuild, eslint 10, globals); `minimatch` pinned to a fixed version (security advisory in a dev dependency only).
+
+Please check: the tab *Display* shows up, Camera 2 is your USB camera (or gone without one), touch works with the hand button and switches off after a while.
+
+### Deutsch
+
+Beta. Das Druckerdisplay in der Karte. Danke an [@xPlayniac](https://github.com/xPlayniac) für den Pull Request!
+
+**Druckerdisplay (paxx12 Extended Firmware)**
+- paxx12 spiegelt den Touchscreen des Druckers unter `/screen/`. Die Integration erkennt das selbst, und die Karte zeigt es in einem neuen Reiter *Display*, frisch über Home Assistant (auch über https und Nabu Casa).
+- Admins können das Display aus der Karte bedienen: Hand-Knopf antippen, dann gehen Tippen und Wischen auf dem Bild an den Touchscreen. Nach der Zeit der Bediensperre ohne Eingabe schaltet sich Touch wieder aus (60 s, wenn die Sperre aus ist). Die Integration nimmt Berührungen nur von Admins, innerhalb des Displays, an den eingerichteten Drucker und höchstens etwa 20 pro Sekunde an.
+- **Kamera 2 ist wieder eine echte Kamera:** Der Display-Spiegel tauchte bisher als Kamera 2 auf; er wird jetzt nie als Kamera genommen.
+- Neue Kartenoptionen: `display_tab` (Standard an) und `display_camera` (Standard aus: das Display als weiterer Schritt am Kamera-Wechselknopf). Ohne den Spiegel (Stock-Firmware) ändert sich nichts.
+- Ist das Display gedimmt, weckt der erste Tipp es nur auf (Verhalten der Firmware).
+
+**Außerdem**
+- Werkzeuge zum Bauen aktualisiert (esbuild, eslint 10, globals); `minimatch` auf eine behobene Version festgelegt (Sicherheitsmeldung nur in einer Entwicklungs-Abhängigkeit).
+
+Bitte prüfen: Der Reiter *Display* erscheint, Kamera 2 ist deine USB-Kamera (oder ohne USB-Kamera weg), Touch geht per Hand-Knopf und schaltet sich nach einer Weile wieder aus.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.2
 
 Changes from the review for the HACS / Home Assistant Marketplace catalogue (thanks to frenck), tested as 2.1.2b1.
