@@ -1,7 +1,7 @@
 /** Machine controls: bed mesh heatmap, top cover, G-code console and picking/parking heads. */
 
 import { DOMAIN } from "../const.js";
-import { esc, num } from "../format.js";
+import { copyText, esc, num } from "../format.js";
 import { tr } from "../i18n.js";
 
 // Console: entries kept in the card (per browser tab) and sent commands for the arrow keys
@@ -147,6 +147,10 @@ export const MachineMixin = (Base) => class extends Base {
           <ha-icon icon="mdi:console-line"></ha-icon>
           <span class="panel-title">${tr("G-Code-Konsole")}</span>
           ${this._lockBtn()}
+          <button type="button" class="chip sm con-copy" data-concopy="all" title="${tr("Konsole kopieren")}"
+                  aria-label="${tr("Konsole kopieren")}" ${this._lockBtn() ? "" : 'style="margin-left:auto"'}>
+            <ha-icon icon="mdi:content-copy"></ha-icon><span>${tr("Kopieren")}</span>
+          </button>
         </div>
         ${d.active ? `<div class="t-label">${tr("Während des Drucks nur Feineinstellungen: Temperaturen, Lüfter, Geschwindigkeit, Flussrate, Z-Versatz, Licht, Top Cover und Abfragen.")}</div>` : ""}
         <div class="con-log mono" data-conlog aria-live="polite">${this._consoleLog()}</div>
@@ -161,14 +165,32 @@ export const MachineMixin = (Base) => class extends Base {
   _consoleLog() {
     const log = this._conLog || [];
     if (!log.length) return `<div class="t-label">${tr("Befehl eingeben, Antwort des Druckers erscheint hier.")}</div>`;
-    return log.map((e) => `
+    return log.map((e, i) => `
       <div class="con-entry">
-        <div class="con-cmd">› ${esc(e.script).replace(/\n/g, "<br>› ")}</div>
+        <div class="con-cmd"><span>› ${esc(e.script).replace(/\n/g, "<br>› ")}</span>${e.pending ? "" : `
+          <button type="button" class="con-copy1" data-concopy="${i}" title="${tr("Eintrag kopieren")}"
+                  aria-label="${tr("Eintrag kopieren")}"><ha-icon icon="mdi:content-copy"></ha-icon></button>`}</div>
         ${e.pending ? `<div class="con-line t-label">${tr("Läuft …")}</div>` : ""}
         ${(e.lines || []).map((l) => `<div class="con-line">${esc(l)}</div>`).join("")}
         ${e.error ? `<div class="con-line con-err">${esc(e.error)}</div>` : ""}
         ${!e.pending && !e.error && !(e.lines || []).length ? `<div class="con-line t-label">ok</div>` : ""}
       </div>`).join("");
+  }
+
+  /** Plain text of one console entry: the command(s) with "› ", then the answer. */
+  _consoleText(e) {
+    const out = String(e.script).split("\n").map((l) => `› ${l}`);
+    out.push(...(e.lines || []));
+    if (e.error) out.push(e.error);
+    return out.join("\n");
+  }
+
+  async _copyConsole(which) {
+    const log = this._conLog || [];
+    const entries = which === "all" ? log : [log[Number(which)]].filter(Boolean);
+    const text = entries.map((e) => this._consoleText(e)).join("\n\n");
+    if (!text) { this._toast(tr("Konsole ist leer")); return; }
+    this._toast(await copyText(text) ? tr("In die Zwischenablage kopiert") : tr("Kopieren nicht möglich"));
   }
 
   _showConsoleLog() {
@@ -230,6 +252,13 @@ export const MachineMixin = (Base) => class extends Base {
       const box = r.querySelector("[data-conlog]");
       if (box) box.scrollTop = box.scrollHeight;
     }
+    // copy buttons: the whole log in the head, one entry in the log (rebuilt on every answer)
+    r.querySelectorAll('[data-concopy="all"]').forEach((b) => b.addEventListener("click", () => this._copyConsole(b.dataset.concopy)));
+    const box = r.querySelector("[data-conlog]");
+    if (box) box.addEventListener("click", (e) => {
+      const b = e.target.closest && e.target.closest("[data-concopy]");
+      if (b && box.contains(b)) this._copyConsole(b.dataset.concopy);
+    });
   }
 
   // ── Picking / parking heads (head dialog) ────────────────────────────────

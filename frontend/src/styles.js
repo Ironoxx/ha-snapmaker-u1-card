@@ -493,9 +493,18 @@ export const STYLES = `
   .con-log {
     max-height: 220px; min-height: 64px; overflow-y: auto; padding: 8px 10px; border-radius: var(--u1-r-s);
     background: var(--u1-panel-high); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere;
+    user-select: text; -webkit-user-select: text;
   }
   .con-entry + .con-entry { margin-top: 6px; }
-  .con-cmd { color: var(--u1-primary); }
+  .con-cmd { color: var(--u1-primary); display: flex; align-items: flex-start; gap: 6px; }
+  .con-cmd > span { flex: 1 1 auto; min-width: 0; }
+  button.con-copy1 {
+    flex-shrink: 0; width: 28px; height: 22px; min-height: 0; padding: 0; border: 0; border-radius: var(--u1-r-s);
+    background: transparent; color: var(--u1-on-variant); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  button.con-copy1 ha-icon { --mdc-icon-size: 14px; }
+  button.con-copy1:hover, button.con-copy1:focus-visible { background: var(--u1-panel); color: var(--u1-primary); }
+  button.con-copy ha-icon { --mdc-icon-size: 14px; }
   .con-line { color: var(--u1-on-variant); white-space: pre-wrap; }
   .con-err { color: var(--u1-error); }
   .con-form { display: flex; gap: 8px; }

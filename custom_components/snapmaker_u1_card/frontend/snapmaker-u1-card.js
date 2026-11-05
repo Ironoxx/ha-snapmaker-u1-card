@@ -126,6 +126,12 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escribe un comando; la respuesta de la impresora aparece aquí.",
     "Läuft …": "Ejecutando …",
+    "Konsole kopieren": "Copiar consola",
+    "Kopieren": "Copiar",
+    "Eintrag kopieren": "Copiar entrada",
+    "Konsole ist leer": "La consola está vacía",
+    "In die Zwischenablage kopiert": "Copiado al portapapeles",
+    "Kopieren nicht möglich": "No se puede copiar",
     "Auf dem Schlitten": "En el carro",
     "Im Dock": "En la base",
     "Status unbekannt": "Estado desconocido",
@@ -755,6 +761,12 @@
     "Senden": "Envoyer",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Saisissez une commande ; la réponse de l’imprimante s’affiche ici.",
     "Läuft …": "En cours …",
+    "Konsole kopieren": "Copier la console",
+    "Kopieren": "Copier",
+    "Eintrag kopieren": "Copier l’entrée",
+    "Konsole ist leer": "La console est vide",
+    "In die Zwischenablage kopiert": "Copié dans le presse-papiers",
+    "Kopieren nicht möglich": "Copie impossible",
     "Auf dem Schlitten": "Sur le chariot",
     "Im Dock": "Dans le dock",
     "Status unbekannt": "État inconnu",
@@ -1384,6 +1396,12 @@
     "Senden": "Invia",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Inserisci un comando; la risposta della stampante appare qui.",
     "Läuft …": "In esecuzione …",
+    "Konsole kopieren": "Copia console",
+    "Kopieren": "Copia",
+    "Eintrag kopieren": "Copia voce",
+    "Konsole ist leer": "La console è vuota",
+    "In die Zwischenablage kopiert": "Copiato negli appunti",
+    "Kopieren nicht möglich": "Impossibile copiare",
     "Auf dem Schlitten": "Sul carrello",
     "Im Dock": "Nel dock",
     "Status unbekannt": "Stato sconosciuto",
@@ -2013,6 +2031,12 @@
     "Senden": "Versturen",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Voer een commando in; het antwoord van de printer verschijnt hier.",
     "Läuft …": "Bezig …",
+    "Konsole kopieren": "Console kopiëren",
+    "Kopieren": "Kopiëren",
+    "Eintrag kopieren": "Item kopiëren",
+    "Konsole ist leer": "Console is leeg",
+    "In die Zwischenablage kopiert": "Gekopieerd naar klembord",
+    "Kopieren nicht möglich": "Kopiëren niet mogelijk",
     "Auf dem Schlitten": "Op de wagen",
     "Im Dock": "In het dock",
     "Status unbekannt": "Status onbekend",
@@ -2642,6 +2666,12 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escreva um comando; a resposta da impressora aparece aqui.",
     "Läuft …": "A executar …",
+    "Konsole kopieren": "Copiar consola",
+    "Kopieren": "Copiar",
+    "Eintrag kopieren": "Copiar entrada",
+    "Konsole ist leer": "A consola está vazia",
+    "In die Zwischenablage kopiert": "Copiado para a área de transferência",
+    "Kopieren nicht möglich": "Não foi possível copiar",
     "Auf dem Schlitten": "No carro",
     "Im Dock": "Na base",
     "Status unbekannt": "Estado desconhecido",
@@ -3271,6 +3301,12 @@
     "Senden": "Gönder",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Bir komut girin; yazıcının yanıtı burada görünür.",
     "Läuft …": "Çalışıyor …",
+    "Konsole kopieren": "Konsolu kopyala",
+    "Kopieren": "Kopyala",
+    "Eintrag kopieren": "Girdiyi kopyala",
+    "Konsole ist leer": "Konsol boş",
+    "In die Zwischenablage kopiert": "Panoya kopyalandı",
+    "Kopieren nicht möglich": "Kopyalanamadı",
     "Auf dem Schlitten": "Taşıyıcıda",
     "Im Dock": "Yuvada",
     "Status unbekannt": "Durum bilinmiyor",
@@ -3922,6 +3958,12 @@
     "Senden": "Send",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Enter a command; the printer’s answer appears here.",
     "Läuft …": "Running …",
+    "Konsole kopieren": "Copy console",
+    "Kopieren": "Copy",
+    "Eintrag kopieren": "Copy entry",
+    "Konsole ist leer": "Console is empty",
+    "In die Zwischenablage kopiert": "Copied to clipboard",
+    "Kopieren nicht möglich": "Copying not possible",
     "Auf dem Schlitten": "On the carriage",
     "Im Dock": "In the dock",
     "Status unbekannt": "State unknown",
@@ -4801,6 +4843,30 @@
   }
   var fmtInt = (v) => v === null || v === void 0 || Number.isNaN(v) ? "—" : Math.round(v).toLocaleString(LOCALE);
   var esc = (s) => String(s === null || s === void 0 ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_err) {
+    }
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, text.length);
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (_err) {
+      ok = false;
+    }
+    ta.remove();
+    return ok;
+  }
 
   // frontend/src/card/state.js
   var StateMixin = (Base) => class extends Base {
@@ -8167,9 +8233,18 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .con-log {
     max-height: 220px; min-height: 64px; overflow-y: auto; padding: 8px 10px; border-radius: var(--u1-r-s);
     background: var(--u1-panel-high); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere;
+    user-select: text; -webkit-user-select: text;
   }
   .con-entry + .con-entry { margin-top: 6px; }
-  .con-cmd { color: var(--u1-primary); }
+  .con-cmd { color: var(--u1-primary); display: flex; align-items: flex-start; gap: 6px; }
+  .con-cmd > span { flex: 1 1 auto; min-width: 0; }
+  button.con-copy1 {
+    flex-shrink: 0; width: 28px; height: 22px; min-height: 0; padding: 0; border: 0; border-radius: var(--u1-r-s);
+    background: transparent; color: var(--u1-on-variant); cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+  }
+  button.con-copy1 ha-icon { --mdc-icon-size: 14px; }
+  button.con-copy1:hover, button.con-copy1:focus-visible { background: var(--u1-panel); color: var(--u1-primary); }
+  button.con-copy ha-icon { --mdc-icon-size: 14px; }
   .con-line { color: var(--u1-on-variant); white-space: pre-wrap; }
   .con-err { color: var(--u1-error); }
   .con-form { display: flex; gap: 8px; }
@@ -10562,6 +10637,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <ha-icon icon="mdi:console-line"></ha-icon>
           <span class="panel-title">${tr("G-Code-Konsole")}</span>
           ${this._lockBtn()}
+          <button type="button" class="chip sm con-copy" data-concopy="all" title="${tr("Konsole kopieren")}"
+                  aria-label="${tr("Konsole kopieren")}" ${this._lockBtn() ? "" : 'style="margin-left:auto"'}>
+            <ha-icon icon="mdi:content-copy"></ha-icon><span>${tr("Kopieren")}</span>
+          </button>
         </div>
         ${d.active ? `<div class="t-label">${tr("Während des Drucks nur Feineinstellungen: Temperaturen, Lüfter, Geschwindigkeit, Flussrate, Z-Versatz, Licht, Top Cover und Abfragen.")}</div>` : ""}
         <div class="con-log mono" data-conlog aria-live="polite">${this._consoleLog()}</div>
@@ -10575,14 +10654,33 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _consoleLog() {
       const log = this._conLog || [];
       if (!log.length) return `<div class="t-label">${tr("Befehl eingeben, Antwort des Druckers erscheint hier.")}</div>`;
-      return log.map((e) => `
+      return log.map((e, i) => `
       <div class="con-entry">
-        <div class="con-cmd">› ${esc(e.script).replace(/\n/g, "<br>› ")}</div>
+        <div class="con-cmd"><span>› ${esc(e.script).replace(/\n/g, "<br>› ")}</span>${e.pending ? "" : `
+          <button type="button" class="con-copy1" data-concopy="${i}" title="${tr("Eintrag kopieren")}"
+                  aria-label="${tr("Eintrag kopieren")}"><ha-icon icon="mdi:content-copy"></ha-icon></button>`}</div>
         ${e.pending ? `<div class="con-line t-label">${tr("Läuft …")}</div>` : ""}
         ${(e.lines || []).map((l) => `<div class="con-line">${esc(l)}</div>`).join("")}
         ${e.error ? `<div class="con-line con-err">${esc(e.error)}</div>` : ""}
         ${!e.pending && !e.error && !(e.lines || []).length ? `<div class="con-line t-label">ok</div>` : ""}
       </div>`).join("");
+    }
+    /** Plain text of one console entry: the command(s) with "› ", then the answer. */
+    _consoleText(e) {
+      const out = String(e.script).split("\n").map((l) => `› ${l}`);
+      out.push(...e.lines || []);
+      if (e.error) out.push(e.error);
+      return out.join("\n");
+    }
+    async _copyConsole(which) {
+      const log = this._conLog || [];
+      const entries = which === "all" ? log : [log[Number(which)]].filter(Boolean);
+      const text = entries.map((e) => this._consoleText(e)).join("\n\n");
+      if (!text) {
+        this._toast(tr("Konsole ist leer"));
+        return;
+      }
+      this._toast(await copyText(text) ? tr("In die Zwischenablage kopiert") : tr("Kopieren nicht möglich"));
     }
     _showConsoleLog() {
       const r = this.shadowRoot && this.shadowRoot.getElementById("u1card");
@@ -10647,9 +10745,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           inp.value = hist[pos] || "";
           this._conDraft = inp.value;
         });
-        const box = r.querySelector("[data-conlog]");
-        if (box) box.scrollTop = box.scrollHeight;
+        const box2 = r.querySelector("[data-conlog]");
+        if (box2) box2.scrollTop = box2.scrollHeight;
       }
+      r.querySelectorAll('[data-concopy="all"]').forEach((b) => b.addEventListener("click", () => this._copyConsole(b.dataset.concopy)));
+      const box = r.querySelector("[data-conlog]");
+      if (box) box.addEventListener("click", (e) => {
+        const b = e.target.closest && e.target.closest("[data-concopy]");
+        if (b && box.contains(b)) this._copyConsole(b.dataset.concopy);
+      });
     }
     // ── Picking / parking heads (head dialog) ────────────────────────────────
     /** Block for the head dialog: state on the carriage and the pick/park button. */

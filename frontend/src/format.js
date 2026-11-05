@@ -100,3 +100,28 @@ export const esc = (s) =>
   String(s === null || s === undefined ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+
+/**
+ * Copy text to the clipboard. The Clipboard API only exists in a secure context
+ * (https, Nabu Casa, the app); on plain http on the LAN a hidden textarea and
+ * execCommand("copy") still work. Returns whether it worked.
+ */
+export async function copyText(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_err) { /* fall back below */ }
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (_err) { ok = false; }
+  ta.remove();
+  return ok;
+}

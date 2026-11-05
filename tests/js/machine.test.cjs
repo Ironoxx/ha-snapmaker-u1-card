@@ -132,6 +132,17 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   assert.ok(R().textContent.includes("Während des Drucks nur Feineinstellungen"), "Hinweis im Druck");
   states[`sensor.${P}_current_print_state`].state = "standby";
   card.hass = hass();
+  // Copy: one entry (button in the log) and the whole log (button in the head)
+  const copied = [];
+  Object.defineProperty(w, "isSecureContext", { value: true, configurable: true });
+  Object.defineProperty(w.navigator, "clipboard", { value: { writeText: async (t) => { copied.push(t); } }, configurable: true });
+  R().querySelector('[data-conlog] [data-concopy="0"]').click();
+  await flush();
+  assert.ok(copied[0].startsWith("› M105\n") && copied[0].includes("ok T0:21.0"), "Eintrag kopiert");
+  R().querySelector('[data-concopy="all"]').click();
+  await flush();
+  assert.strictEqual(copied.length, 2, "Kopf-Knopf löst genau einmal aus");
+  assert.ok(copied[1].includes("› M105") && copied[1].includes("› G28") && copied[1].includes("gesperrt"), "Ganze Konsole");
 
   // 5. Head dialog: head 2 is on the carriage -> park, head 1 in the dock -> pick
   card._openHeadInfo(1);
