@@ -4,6 +4,28 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.3b2
+
+Beta. Display size, copying from the console.
+
+- **Printer display at most its real size:** on a wide dashboard the display no longer gets blown up; it shows at most at its own resolution (e.g. 480 × 320) and shrinks on a phone to the card width. Fullscreen still fills the screen.
+- **Copy from the G-code console:** *Copy* in the console head copies the whole log, the small copy icon next to a command copies that command with its answer. The text can also be selected by hand.
+- Test tools: jsdom 30 (Dependabot); the camera rebuild no longer relies on a `:scope` selector.
+
+Please check: display size on PC and phone, copying in the console (over https and, if you use it, over plain http on the LAN).
+
+### Deutsch
+
+Beta. Displaygröße, Kopieren aus der Konsole.
+
+- **Druckerdisplay höchstens in Originalgröße:** Auf breiten Dashboards wird das Display nicht mehr aufgeblasen; es erscheint höchstens in seiner eigenen Auflösung (z. B. 480 × 320) und passt sich auf dem Handy der Kartenbreite an. Vollbild füllt weiterhin den Bildschirm.
+- **Kopieren aus der G-Code-Konsole:** *Kopieren* im Kopf der Konsole kopiert den ganzen Verlauf, das kleine Kopier-Symbol neben einem Befehl kopiert diesen Befehl samt Antwort. Der Text lässt sich auch von Hand markieren.
+- Test-Werkzeuge: jsdom 30 (Dependabot); der Neuaufbau um die Kamera braucht keinen `:scope`-Selektor mehr.
+
+Bitte prüfen: Displaygröße am PC und auf dem Handy, Kopieren in der Konsole (über https und, falls du es nutzt, über reines http im Heimnetz).
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.3b1
 
 Beta. The printer display in the card. Thanks to [@xPlayniac](https://github.com/xPlayniac) for the pull request!

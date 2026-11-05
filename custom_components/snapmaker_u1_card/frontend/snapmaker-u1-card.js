@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.1.3b1";
+  var CARD_VERSION = "2.1.3b2";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -7927,7 +7927,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .stage { padding: 0; overflow: hidden; gap: 0; }
   /* Printer display (paxx12 mirror): own view; touch on = accent border, no page scrolling on it */
   .display-frame {
-    position: relative; width: 100%; max-height: 70vh; overflow: hidden;
+    position: relative; width: 100%; margin-inline: auto; overflow: hidden;
     border-radius: var(--u1-r-m); background: #000; touch-action: pan-y;
   }
   .display-frame img {
@@ -7936,7 +7936,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .display-frame .zoom-ctl { z-index: 3; }
   .display-frame:hover .zoom-ctl { opacity: 1; }
-  .display-frame:fullscreen { max-height: none !important; background: #000; }
+  .display-frame:fullscreen { max-height: none !important; max-width: none !important; background: #000; }
   button.zoom-btn[data-display-touch][aria-pressed="true"] { background: var(--u1-primary); color: var(--u1-on-primary, #fff); }
   .display-frame.touch { touch-action: none; cursor: pointer; user-select: none; }
   .display-frame.touch::after {
@@ -11668,6 +11668,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _camSwitchable() {
       return this._hasCamera2() || this._displayAsCamera();
     }
+    /**
+     * At most the panel's own size (no upscaling on a wide dashboard), smaller on a
+     * phone: as wide as the card allows, and never taller than maxH.
+     */
+    _displaySize(s, maxH) {
+      return `aspect-ratio:${s.width} / ${s.height};max-width:min(${s.width}px, calc(${maxH} * ${s.width} / ${s.height}))`;
+    }
     _sectionDisplay() {
       const s = this._screenInfo();
       if (!s) return "";
@@ -11678,7 +11685,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <span class="panel-title">${tr("Druckerdisplay")}</span>
           ${this._displayTouchBtn()}
         </div>
-        <div class="display-frame" data-display style="aspect-ratio:${s.width} / ${s.height}">
+        <div class="display-frame" data-display style="${this._displaySize(s, "70vh")}">
           <img data-display-img alt="${tr("Druckerdisplay")}" draggable="false" />
         </div>
         <div class="t-label" data-display-hint>${this._displayHint()}</div>
@@ -11693,7 +11700,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       return `
       <section class="panel stage span2">
         <div class="display-frame stage-display" data-display
-             style="aspect-ratio:${s.width} / ${s.height};max-height:${parseInt(this._cfg.camera_max_height, 10) || 520}px">
+             style="${this._displaySize(s, `${parseInt(this._cfg.camera_max_height, 10) || 520}px`)}">
           <img data-display-img alt="${tr("Druckerdisplay")}" draggable="false" />
           <div class="zoom-ctl">
             ${hand}

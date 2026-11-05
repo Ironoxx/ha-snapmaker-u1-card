@@ -63,6 +63,7 @@ const ev = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, pointerType: "touc
   card = make();
   assert.ok($(card, '[data-tab="display"]'), "display tab");
   assert.match($(card, "[data-display]").getAttribute("style"), /aspect-ratio:480 \/ 320/);
+  assert.match($(card, "[data-display]").getAttribute("style"), /max-width:min\(480px, calc\(70vh \* 480 \/ 320\)\)/, "höchstens Originalgröße");
   card._selectTab("display");
   await new Promise((r) => setTimeout(r, 0));
   assert.deepStrictEqual(fetched.slice(0, 1), ["/api/snapmaker_u1_card/screen/E1/snapshot"]);

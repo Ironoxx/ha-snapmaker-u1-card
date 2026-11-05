@@ -36,6 +36,14 @@ export const DisplayMixin = (Base) => class extends Base {
     return this._hasCamera2() || this._displayAsCamera();
   }
 
+  /**
+   * At most the panel's own size (no upscaling on a wide dashboard), smaller on a
+   * phone: as wide as the card allows, and never taller than maxH.
+   */
+  _displaySize(s, maxH) {
+    return `aspect-ratio:${s.width} / ${s.height};max-width:min(${s.width}px, calc(${maxH} * ${s.width} / ${s.height}))`;
+  }
+
   _sectionDisplay() {
     const s = this._screenInfo();
     if (!s) return "";
@@ -46,7 +54,7 @@ export const DisplayMixin = (Base) => class extends Base {
           <span class="panel-title">${tr("Druckerdisplay")}</span>
           ${this._displayTouchBtn()}
         </div>
-        <div class="display-frame" data-display style="aspect-ratio:${s.width} / ${s.height}">
+        <div class="display-frame" data-display style="${this._displaySize(s, "70vh")}">
           <img data-display-img alt="${tr("Druckerdisplay")}" draggable="false" />
         </div>
         <div class="t-label" data-display-hint>${this._displayHint()}</div>
@@ -62,7 +70,7 @@ export const DisplayMixin = (Base) => class extends Base {
     return `
       <section class="panel stage span2">
         <div class="display-frame stage-display" data-display
-             style="aspect-ratio:${s.width} / ${s.height};max-height:${parseInt(this._cfg.camera_max_height, 10) || 520}px">
+             style="${this._displaySize(s, `${parseInt(this._cfg.camera_max_height, 10) || 520}px`)}">
           <img data-display-img alt="${tr("Druckerdisplay")}" draggable="false" />
           <div class="zoom-ctl">
             ${hand}

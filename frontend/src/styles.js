@@ -187,7 +187,7 @@ export const STYLES = `
   .stage { padding: 0; overflow: hidden; gap: 0; }
   /* Printer display (paxx12 mirror): own view; touch on = accent border, no page scrolling on it */
   .display-frame {
-    position: relative; width: 100%; max-height: 70vh; overflow: hidden;
+    position: relative; width: 100%; margin-inline: auto; overflow: hidden;
     border-radius: var(--u1-r-m); background: #000; touch-action: pan-y;
   }
   .display-frame img {
@@ -196,7 +196,7 @@ export const STYLES = `
   }
   .display-frame .zoom-ctl { z-index: 3; }
   .display-frame:hover .zoom-ctl { opacity: 1; }
-  .display-frame:fullscreen { max-height: none !important; background: #000; }
+  .display-frame:fullscreen { max-height: none !important; max-width: none !important; background: #000; }
   button.zoom-btn[data-display-touch][aria-pressed="true"] { background: var(--u1-primary); color: var(--u1-on-primary, #fff); }
   .display-frame.touch { touch-action: none; cursor: pointer; user-select: none; }
   .display-frame.touch::after {
