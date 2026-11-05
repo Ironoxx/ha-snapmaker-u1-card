@@ -1,7 +1,7 @@
 /** History tab: 12-month charts, material table, print history and statistics. */
 
 import { METRICS, RESULT } from "../const.js";
-import { esc, fmtDate, fmtEuro, fmtInt, fmtMin, num } from "../format.js";
+import { esc, fmtDate, fmtInt, fmtMin, fmtMoney, num } from "../format.js";
 import { LANG, LOCALE, tr } from "../i18n.js";
 
 export const HistoryMixin = (Base) => class extends Base {
@@ -46,7 +46,7 @@ export const HistoryMixin = (Base) => class extends Base {
               <span class="chip sm" data-tone="${tone}">${esc(label)}</span>
             </span>
             ${h.total_cost !== undefined && h.total_cost !== null
-              ? `<span class="hist-cost" title="${esc(tr("Strom {e} · Filament {f}", { e: fmtEuro(h.energy_cost), f: fmtEuro(h.filament_cost) }))}">${fmtEuro(h.total_cost)}</span>` : ""}
+              ? `<span class="hist-cost" title="${esc(tr("Strom {e} · Filament {f}", { e: fmtMoney(h.energy_cost), f: fmtMoney(h.filament_cost) }))}">${fmtMoney(h.total_cost)}</span>` : ""}
           </div>
         </div>`;
     }).join("") : `<div class="t-label">${tr("Noch keine Drucke erfasst. Die Historie füllt sich ab dem nächsten Druck.")}</div>`;
@@ -56,7 +56,7 @@ export const HistoryMixin = (Base) => class extends Base {
       return acc;
     }, { cost: 0, energy: 0 });
     const summary = list.length
-      ? `<span class="t-label" style="margin-left:auto">${tr("{n} Drucke", { n: list.length })}${sum.energy ? ` · ${num(sum.energy, 1, "kWh")}` : ""}${sum.cost ? ` · ${fmtEuro(sum.cost)}` : ""}</span>` : "";
+      ? `<span class="t-label" style="margin-left:auto">${tr("{n} Drucke", { n: list.length })}${sum.energy ? ` · ${num(sum.energy, 1, "kWh")}` : ""}${sum.cost ? ` · ${fmtMoney(sum.cost)}` : ""}</span>` : "";
     return `
       <section class="panel span2">
         <details ${this._cfg.compact ? "" : "open"}>
@@ -84,7 +84,7 @@ export const HistoryMixin = (Base) => class extends Base {
       if (metric === "prints") return `${b.prints} ${tr("fertig")}, ${b.failed} ${tr("abgebrochen")}`;
       if (metric === "hours") return num(b.hours, 1, "h");
       if (metric === "filament_g") return b.filament_g >= 1000 ? num(b.filament_g / 1000, 2, "kg") : num(b.filament_g, 0, "g");
-      return b.cost === null ? "—" : fmtEuro(b.cost);
+      return b.cost === null ? "—" : fmtMoney(b.cost);
     };
     const bars = st.months.map((b) => {
       const total = val(b);
@@ -112,7 +112,7 @@ export const HistoryMixin = (Base) => class extends Base {
       t.energy !== null && t.energy !== undefined
         ? [tr("Strom"), num(t.energy, 1, "kWh"), tr("Gemessen bei Drucken seit Installation der Integration.")] : null,
       t.cost !== null && t.cost !== undefined
-        ? [tr("Kosten"), (t.cost_estimated ? "≈ " : "") + fmtEuro(t.cost),
+        ? [tr("Kosten"), (t.cost_estimated ? "≈ " : "") + fmtMoney(t.cost),
           t.cost_estimated ? tr("Ältere Drucke mit Filamentpreis geschätzt, ohne Strom.") : ""] : null,
     ].filter(Boolean).map(([k, v, hint]) => this._stat(k, v, "sm", hint)).join("");
     const top = (st.top || []).slice(0, 3).map((f) =>
@@ -138,7 +138,7 @@ export const HistoryMixin = (Base) => class extends Base {
     if (!mats.length) return "";
     const rows = mats.map((m) => `<tr><td>${esc(m.type)}</td><td>${m.prints}</td>
         <td>${m.grams >= 1000 ? num(m.grams / 1000, 2, "kg") : num(m.grams, 0, "g")}</td>
-        <td>${m.cost !== null && m.cost !== undefined ? fmtEuro(m.cost) : "—"}</td>
+        <td>${m.cost !== null && m.cost !== undefined ? fmtMoney(m.cost) : "—"}</td>
         <td>${m.success_rate !== null && m.success_rate !== undefined ? num(m.success_rate, 0, "%") : "—"}</td></tr>`).join("");
     const colors = ((st && st.colors) || []).map((c) =>
       `<span title="${esc(c.type)}"><i style="background:${esc(c.color)}"></i>${esc(c.type)} ${num(c.grams, 0, "g")}</span>`).join("");

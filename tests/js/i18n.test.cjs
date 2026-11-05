@@ -1,4 +1,4 @@
-// 2.1: Spanish, French, Italian, Portuguese and Dutch; regional variants use the base
+// 2.1: Spanish, French, Italian, Portuguese and Dutch, then Turkish; regional variants use the base
 // language, unknown languages English; missing entries fall back to English.
 const fs = require("fs");
 const path = require("path");
@@ -31,6 +31,7 @@ assert.strictEqual(tabs("it")[0], "Panoramica");
 assert.strictEqual(tabs("nl")[0], "Overzicht");
 assert.strictEqual(tabs("pt")[0], "Visão geral");
 assert.strictEqual(tabs("pt-BR")[0], "Visão geral", "Region -> Grundsprache");
+assert.strictEqual(tabs("tr")[0], "Genel Bakış");
 assert.strictEqual(tabs("sv")[0], "Overview", "unbekannt -> Englisch");
 
 // every language table has exactly the keys of the English one, with the same placeholders
@@ -38,11 +39,31 @@ const i18n = fs.readFileSync(path.join(__dirname, "../../frontend/src/i18n.js"),
 const enSrc = i18n.slice(i18n.indexOf("export const EN = ") + "export const EN = ".length, i18n.lastIndexOf("};") + 1);
 const EN = eval(`(${enSrc})`);
 const ph = (s) => (s.match(/\{\w+\}/g) || []).sort().join();
-for (const lang of ["es", "fr", "it", "nl", "pt"]) {
+for (const lang of ["es", "fr", "it", "nl", "pt", "tr"]) {
   const t = fs.readFileSync(path.join(__dirname, `../../frontend/src/i18n/${lang}.js`), "utf8");
   const table = eval(`(${t.slice(t.indexOf("{"), t.lastIndexOf("}") + 1)})`);
   const missing = Object.keys(EN).filter((k) => !(k in table));
   assert.deepStrictEqual(missing, [], `${lang}: fehlende Texte`);
   for (const [k, v] of Object.entries(table)) assert.strictEqual(ph(v), ph(EN[k] ?? k), `${lang}: Platzhalter in ${k}`);
 }
-console.log("I18N OK – de en es fr it nl pt, regional variants, fallback, complete tables");
+
+// Amounts use Home Assistant's currency (hass.config.currency), not a fixed €
+const cost = (lang, currency) => {
+  const st = {
+    ...states,
+    "sensor.u1_kosten_druck": { entity_id: "sensor.u1_kosten_druck", state: "700", attributes: { unit_of_measurement: currency } },
+  };
+  const en = { ...entities, "sensor.u1_kosten_druck": { entity_id: "sensor.u1_kosten_druck", platform: "snapmaker_u1_card", translation_key: "print_cost" } };
+  const c = w.document.createElement("snapmaker-u1-card");
+  c.setConfig({ type: "custom:snapmaker-u1-card" });
+  w.document.body.appendChild(c);
+  c.hass = { states: st, entities: en, locale: { language: lang }, config: { currency }, callService: async () => {} };
+  const btn = c.shadowRoot.querySelector('[data-tab="system"]');
+  if (btn) btn.click();
+  const out = c.shadowRoot.textContent;
+  c.remove();
+  return out;
+};
+assert.match(cost("tr", "TRY"), /₺700,00/, "TRY in Turkish");
+assert.match(cost("de", "EUR"), /700,00\s€/, "EUR in German");
+console.log("I18N OK – de en es fr it nl pt tr, regional variants, fallback, complete tables, currency");

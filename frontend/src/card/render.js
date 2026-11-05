@@ -1,7 +1,7 @@
 /** Rendering: full rebuilds on structural changes, event wiring and in-place patching. */
 
 import { BLANK, DOMAIN, MAINT_LABELS } from "../const.js";
-import { clamp, esc, fixed, fmtClock, fmtEuro, fmtInt, fmtMin, num } from "../format.js";
+import { clamp, esc, fixed, fmtClock, fmtInt, fmtMin, fmtMoney, num } from "../format.js";
 import { LANG, tr } from "../i18n.js";
 import { STYLES } from "../styles.js";
 
@@ -350,7 +350,7 @@ export const RenderMixin = (Base) => class extends Base {
     }
     if (d.usage) {
       set("uenergy", num(d.usage.energy, 2, "kWh"));
-      set("ucost", fmtEuro(d.usage.cost));
+      set("ucost", fmtMoney(d.usage.cost));
     }
     r.querySelectorAll("[data-toggle]").forEach((b) =>
       b.classList.toggle("pending", this._isPending(`t:${b.dataset.toggle}`)));

@@ -100,8 +100,8 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   tab("files");
   R().querySelector('[data-print="box.gcode"]').click();
   const t = text(D());
-  assert.match(t, /≈ 0,48 €/);
-  assert.match(text(D().querySelector("[data-cost]")), /Geschätzt: Filament 0,40 € · Strom 0,08 € \(0,25 kWh\)/);
+  assert.match(t, /≈ 0,48\s€/);
+  assert.match(text(D().querySelector("[data-cost]")), /Geschätzt: Filament 0,40\s€ · Strom 0,08\s€ \(0,25 kWh\)/);
   D().close();
 
   // 2. Config backup in the system tab
@@ -172,7 +172,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   lang = "en"; card._renderKey = null; card.hass = hass();
   tab("files");
   R().querySelector('[data-print="box.gcode"]').click();
-  assert.match(text(D().querySelector("[data-cost]")), /Estimated: Filament 0\.40 € · Energy 0\.08 €/);
+  assert.match(text(D().querySelector("[data-cost]")), /Estimated: Filament €0\.40 · Energy €0\.08/);
   D().close();
   tab("system");
   assert.match(text(R().querySelector("[data-backup]")), /Printer configuration backed up .*14 files/);

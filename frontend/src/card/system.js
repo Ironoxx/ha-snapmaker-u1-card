@@ -1,7 +1,7 @@
 /** System tab: diagnostics, self test, maintenance and config backup. */
 
 import { DOMAIN, MAINT_LABELS } from "../const.js";
-import { esc, fmtDate, fmtEuro, fmtInt, num } from "../format.js";
+import { esc, fmtDate, fmtInt, fmtMoney, num } from "../format.js";
 import { LANG, tr } from "../i18n.js";
 
 export const SystemMixin = (Base) => class extends Base {
@@ -157,7 +157,7 @@ export const SystemMixin = (Base) => class extends Base {
     const e = this._ents;
     return [
       u.hasEnergy ? this._row(u.inProgress ? tr("Strom aktueller Druck") : tr("Strom letzter Druck"), `<span data-su1="uenergy">${num(u.energy, 2, "kWh")}</span>`, e.energyPrint) : "",
-      u.hasCost ? this._row(u.inProgress ? tr("Kosten aktueller Druck") : tr("Kosten letzter Druck"), `<span data-su1="ucost">${fmtEuro(u.cost)}</span>`, e.costPrint) : "",
+      u.hasCost ? this._row(u.inProgress ? tr("Kosten aktueller Druck") : tr("Kosten letzter Druck"), `<span data-su1="ucost">${fmtMoney(u.cost)}</span>`, e.costPrint) : "",
     ].join("");
   }
 

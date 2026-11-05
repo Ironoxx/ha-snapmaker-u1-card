@@ -58,3 +58,31 @@ async def test_settings_admin_only(hass: HomeAssistant, hass_ws_client, hass_rea
     await ws.send_json({"id": 1, "type": f"{DOMAIN}/settings/get"})
     res = await ws.receive_json()
     assert not res["success"] and res["error"]["code"] == "unauthorized"
+
+
+async def test_settings_currency_and_price_limits(hass: HomeAssistant, hass_ws_client, mock_client) -> None:
+    """Price units follow HA's currency; the limits allow 700 TRY/kg but catch typos."""
+    entry = await _setup(hass)
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": f"{DOMAIN}/settings/get", "language": "en"})
+    res = await ws.receive_json()
+    fields = {f["key"]: f for f in res["result"]["fields"]}
+    assert fields["price_pla"]["unit"] == "€/kg", "test instance runs in EUR"
+
+    hass.config.currency = "TRY"
+    await ws.send_json({"id": 2, "type": f"{DOMAIN}/settings/get", "language": "en"})
+    res = await ws.receive_json()
+    fields = {f["key"]: f for f in res["result"]["fields"]}
+    assert fields["price_pla"]["unit"] == "₺/kg" and fields["price_pla"]["max"] == 100000
+    assert fields["energy_price_fixed"]["unit"] == "₺/kWh" and fields["energy_price_fixed"]["max"] == 1000
+
+    await ws.send_json({"id": 3, "type": f"{DOMAIN}/settings/set", "values": {
+        "filament": {"price_pla": 700}, "power": {"energy_price_fixed": 3.5}}})
+    res = await ws.receive_json()
+    assert res["success"], res
+    await hass.async_block_till_done()
+    assert entry.options["filament_prices"]["PLA"] == 700 and entry.options["energy_price_fixed"] == 3.5
+
+    await ws.send_json({"id": 4, "type": f"{DOMAIN}/settings/set", "values": {"filament": {"price_pla": 150000}}})
+    res = await ws.receive_json()
+    assert not res["success"] and res["error"]["code"] == "invalid"

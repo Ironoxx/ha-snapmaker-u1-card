@@ -156,15 +156,15 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
 
   // 5. Statistics: consumption and cost
   assert.ok(/Strom letzter Druck ?1,23 kWh/.test(text()), "Strom");
-  assert.ok(/Kosten letzter Druck ?0,47 €/.test(text()), "Kosten");
+  assert.ok(/Kosten letzter Druck ?0,47\s€/.test(text()), "Kosten");
 
   // 6. History
   const hist = [...root().querySelectorAll(".hist")];
   assert.strictEqual(hist.length, 2);
-  assert.ok(/Nuss/.test(hist[0].textContent) && /Fertig/.test(hist[0].textContent) && /0,47 €/.test(hist[0].textContent));
+  assert.ok(/Nuss/.test(hist[0].textContent) && /Fertig/.test(hist[0].textContent) && /0,47\s€/.test(hist[0].textContent));
   assert.ok(/12 g/.test(hist[0].textContent) && /1,23 kWh/.test(hist[0].textContent));
   assert.ok(/Abgebrochen/.test(hist[1].textContent));
-  assert.ok(/2 Drucke · 1,2 kWh · 0,47 €/.test(text()), "Summe");
+  assert.ok(/2 Drucke · 1,2 kWh · 0,47\s€/.test(text()), "Summe");
 
   // 7. Timelapses: preview served statically by HA (no proxy, no signature),
   //    player with a signed URL

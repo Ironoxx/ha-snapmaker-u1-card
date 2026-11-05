@@ -9,7 +9,7 @@
  */
 
 import { DOMAIN } from "../const.js";
-import { esc, num } from "../format.js";
+import { esc, fmtMoney, num } from "../format.js";
 import { LANG, tr } from "../i18n.js";
 
 const SEC_ICONS = {
@@ -130,7 +130,7 @@ export const SettingsMixin = (Base) => class extends Base {
           ${f.min !== null && f.min !== undefined ? `min="${f.min}"` : ""} ${f.max !== null && f.max !== undefined ? `max="${f.max}"` : ""}
           step="${f.step || "any"}" placeholder="${sm !== null && sm !== undefined ? esc(num(sm, 2)) : f.required ? "" : tr("leer")}" />
         ${f.unit ? `<span class="t-label">${esc(f.unit)}</span>` : ""}</span>`;
-      if (sm !== null && sm !== undefined) extra = `<small class="cfg-now">${esc(tr("Spoolman: {p} €/kg – hat Vorrang", { p: num(sm, 2) }))}</small>`;
+      if (sm !== null && sm !== undefined) extra = `<small class="cfg-now">${esc(tr("Spoolman: {p}/kg – hat Vorrang", { p: fmtMoney(sm) }))}</small>`;
     } else if (f.type === "select" && f.multiple) {
       const opts = [...new Set([...(f.options || []), ...((Array.isArray(cur) ? cur : []))])];
       const lab = (o) => (f.option_labels && f.option_labels[o]) || o;

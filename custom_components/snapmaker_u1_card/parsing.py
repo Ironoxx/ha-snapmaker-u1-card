@@ -805,6 +805,20 @@ def energy_dashboard_price(prefs: Any, states: Any) -> tuple[float | None, str |
     return None, None
 
 
+# Short symbols for the currency set in Home Assistant (Settings > System > General).
+# Others are shown with their ISO code, which is always unambiguous.
+CURRENCY_SYMBOLS = {
+    "EUR": "€", "USD": "$", "GBP": "£", "TRY": "₺", "JPY": "¥", "CNY": "¥",
+    "INR": "₹", "KRW": "₩", "PLN": "zł", "UAH": "₴",
+}
+
+
+def currency_symbol(code: str | None) -> str:
+    """Display symbol for an ISO currency code; € if Home Assistant has none."""
+    code = (code or "EUR").upper()
+    return CURRENCY_SYMBOLS.get(code, code)
+
+
 def price_per_kwh(state: str | None, unit: str | None) -> float | None:
     """Price entity in currency per kWh; ct/kWh and per MWh are converted."""
     try:

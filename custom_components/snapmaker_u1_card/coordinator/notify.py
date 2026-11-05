@@ -33,6 +33,7 @@ from ..jobs import (
 )
 from ..parsing import (
     ACTIVE_PRINT_STATES,
+    currency_symbol,
     summarize_print,
 )
 
@@ -154,7 +155,7 @@ class NotifyMixin:
             return
         de = self.hass.config.language.lower().startswith("de")
         title = f"Snapmaker U1: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
-        message = notify_message(info, de)
+        message = notify_message(info, de, currency_symbol(self.hass.config.currency))
         data: dict[str, Any] = {"tag": f"{DOMAIN}_{self.config_entry.entry_id}", "group": DOMAIN}
         camera = None if info.get("no_image") else self.camera_entity()
         if info.get("photo"):

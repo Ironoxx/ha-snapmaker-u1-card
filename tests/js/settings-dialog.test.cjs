@@ -41,8 +41,8 @@ const META = {
     { key: "power_sensor", section: "power", type: "entity", domains: ["sensor"], device_class: "power", label: "Leistung", help: "" },
     { key: "auto_off", section: "power", type: "boolean", required: true, default: false, label: "Auto-Aus", help: "" },
     { key: "auto_off_temp", section: "power", type: "number", required: true, default: 50, min: 30, max: 100, step: 1, unit: "°C", label: "Temp", help: "" },
-    { key: "price_pla", section: "filament", type: "number", min: 0, max: 500, step: 0.01, unit: "€/kg", label: "PLA", help: "" },
-    { key: "price_petg", section: "filament", type: "number", min: 0, max: 500, step: 0.01, unit: "€/kg", label: "PETG", help: "" },
+    { key: "price_pla", section: "filament", type: "number", min: 0, max: 100000, step: 0.01, unit: "€/kg", label: "PLA", help: "" },
+    { key: "price_petg", section: "filament", type: "number", min: 0, max: 100000, step: 0.01, unit: "€/kg", label: "PETG", help: "" },
     { key: "notify_events", section: "notify", type: "select", multiple: true, required: true, options: ["complete", "error"], option_labels: { complete: "Fertig", error: "Fehler" }, label: "Ereignisse", help: "" },
     { key: "maint_plate", section: "maintenance", type: "number", required: true, default: 30, min: 0, max: 5000, unit: "h", label: "Druckplatte reinigen (Druckstunden)" },
     { key: "maint_m_plate", section: "maintenance", type: "number", required: true, default: 1, min: 0, max: 36, unit: "mo", label: "Druckplatte reinigen (Monate)" },
@@ -98,7 +98,7 @@ card.addEventListener("hass-notification", (e) => toasts.push(e.detail.message))
   // Spoolman price as hint at PLA
   const pla = D().querySelector('[data-set="filament.price_pla"]');
   assert.strictEqual(pla.placeholder, "18,00");
-  assert.match(pla.closest(".cfg-ctl").textContent, /Spoolman: 18,00 €\/kg – hat Vorrang/);
+  assert.match(pla.closest(".cfg-ctl").textContent, /Spoolman: 18,00\s€\/kg – hat Vorrang/);
   // maintenance as a table: hours and months
   const mrow = D().querySelectorAll(".cfg-maint")[1];
   assert.match(mrow.textContent, /Druckplatte reinigen/);
