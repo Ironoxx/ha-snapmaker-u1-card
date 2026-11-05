@@ -190,3 +190,14 @@ async def test_diagnostics_redacts(hass: HomeAssistant, mock_client, notificatio
     pv = diag["printer_values"]
     assert "extruder" in pv["objects"] and "webhooks" in pv["subscribed"]
     assert isinstance(pv["values"], dict) and isinstance(pv["attrs"], dict)
+
+
+def test_backup_prune_only_own_snapshots(tmp_path) -> None:
+    """Old snapshots are pruned; folders the user put next to them are left alone."""
+    from custom_components.snapmaker_u1_card.backup import _write_snapshot
+
+    for name in ("2026-01-01_000000", "2026-01-02_000000"):
+        (tmp_path / name).mkdir()
+    (tmp_path / "meine-sicherung").mkdir()
+    _write_snapshot(tmp_path, "2026-01-03_000000", {"printer.cfg": b"x"}, keep=2)
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["2026-01-02_000000", "2026-01-03_000000", "meine-sicherung"]

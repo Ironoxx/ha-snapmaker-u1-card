@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import re
 import shutil
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,9 @@ from .const import BACKUP_KEEP, BACKUP_MAX_BYTES
 
 _LOGGER = logging.getLogger(__name__)
 SKIP_SUFFIXES = (".log", ".bak", ".db", ".tmp", ".part")
+
+
+_SNAPSHOT = re.compile(r"^\d{4}-\d{2}-\d{2}_\d{6}$")
 
 
 def _safe(path: str) -> str | None:
@@ -42,7 +46,8 @@ def _write_snapshot(folder: Path, name: str, blobs: dict[str, bytes], keep: int)
         dest = target / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(blob)
-    snapshots = sorted(p for p in folder.iterdir() if p.is_dir())
+    # only our own snapshot folders (YYYY-MM-DD_HHMMSS); anything else in there is left alone
+    snapshots = sorted(p for p in folder.iterdir() if p.is_dir() and _SNAPSHOT.match(p.name))
     for old in snapshots[:-keep] if keep > 0 else []:
         shutil.rmtree(old, ignore_errors=True)
     return target
