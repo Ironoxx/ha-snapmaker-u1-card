@@ -4,6 +4,26 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.2b1
+
+Beta. Changes from the review for the HACS / Home Assistant Marketplace catalogue (thanks to frenck).
+
+- **Card no longer copied to `/config/www`.** The dashboard resource now points to the integration's own path `/snapmaker_u1_card/card/snapmaker-u1-card.js`. On the first start after the update the old `/local/snapmaker_u1_card/…` resource is moved to it, and the old copy of the card file under `/config/www/snapmaker_u1_card/` is removed (only that file; the folder only if it is empty then). Nothing else in `/config/www` is touched.
+- **Your edits are kept.** The status-light blueprint and the Assist sentence files are only written when they are missing, or replaced when they are exactly a version the integration shipped earlier. A file you changed is never overwritten, even with the old `managed` line still in it.
+
+Please check after updating and restarting Home Assistant: the card loads, *Dashboards → Resources* lists only `/snapmaker_u1_card/card/…`, and `/config/www/snapmaker_u1_card/` is gone.
+
+### Deutsch
+
+Beta. Änderungen aus der Prüfung für den Katalog von HACS / Home Assistant Marketplace (danke an frenck).
+
+- **Karte wird nicht mehr nach `/config/www` kopiert.** Die Dashboard-Ressource zeigt jetzt auf den eigenen Pfad der Integration `/snapmaker_u1_card/card/snapmaker-u1-card.js`. Beim ersten Start nach dem Update wird die alte Ressource `/local/snapmaker_u1_card/…` darauf umgestellt und die alte Kopie der Kartendatei unter `/config/www/snapmaker_u1_card/` gelöscht (nur diese Datei, den Ordner nur, wenn er danach leer ist). Sonst wird in `/config/www` nichts angefasst.
+- **Deine Änderungen bleiben.** Der Status-Licht-Blueprint und die Assist-Satzdateien werden nur geschrieben, wenn sie fehlen, oder ersetzt, wenn sie genau einer früher ausgelieferten Version entsprechen. Eine geänderte Datei wird nie überschrieben, auch nicht mit der alten `managed`-Zeile darin.
+
+Bitte nach Update und Neustart von Home Assistant prüfen: Die Karte lädt, unter *Dashboards → Ressourcen* steht nur `/snapmaker_u1_card/card/…`, und `/config/www/snapmaker_u1_card/` ist weg.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.1
 
 Your currency instead of a fixed €, higher price limits and Turkish. Thanks to [@anilgunduzz](https://github.com/anilgunduzz) for the pull request!
