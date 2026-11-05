@@ -24,7 +24,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Read version, already released?
@@ -60,7 +60,7 @@ jobs:
           grep -q "VERSION = \"$V\"" custom_components/snapmaker_u1_card/const.py
           grep -q "CARD_VERSION = \"$V\"" custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js
           grep -q "CARD_VERSION = \"$V\"" frontend/src/const.js
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         if: steps.ver.outputs.exists == 'false'
         with:
           python-version: "3.13"
@@ -68,7 +68,7 @@ jobs:
           cache-dependency-path: requirements_test.txt
       - if: steps.ver.outputs.exists == 'false'
         run: pip install -r requirements_test.txt && ruff check custom_components && pytest -q
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         if: steps.ver.outputs.exists == 'false'
         with:
           node-version: "22"
@@ -89,7 +89,7 @@ jobs:
             echo "::error::CHANGELOG.md has no section '## $V'"; exit 1
           fi
           cat release_notes.md
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         if: steps.ver.outputs.exists == 'false'
         with:
           tag_name: v${{ steps.ver.outputs.version }}
