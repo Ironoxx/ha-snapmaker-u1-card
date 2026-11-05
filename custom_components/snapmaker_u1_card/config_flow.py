@@ -95,15 +95,19 @@ SEC_TIMELAPSE, SEC_MAINT = "timelapse", "maintenance"
 PRICE_FIELDS = [f"price_{k.lower()}" for k in (*FILAMENT_PRICE_KEYS, "OTHER")]
 MAINT_FIELDS = [f"maint_{k}" for k in MAINTENANCE_ITEMS]
 MAINT_MONTH_FIELDS = [f"maint_m_{k}" for k in MAINTENANCE_ITEMS]
+# Price limits fit every currency (700 TRY/kg is a normal filament price,
+# 500 EUR/kg is not) and still catch typos such as an extra zero or two.
+PRICE_MAX_KG = 100_000
+PRICE_MAX_KWH = 1_000
 INT_FIELDS = (CONF_FILES_LIMIT, CONF_AUTO_OFF_TEMP, CONF_AUTO_OFF_DELAY, CONF_SPOOLMAN_LOW, CONF_ARCHIVE_KEEP, CONF_ARCHIVE_MAX, CONF_ARCHIVE_DAYS,
               CONF_ALMOST_DONE, CONF_BED_COOL, CONF_IDLE_OFF)
 
 
-def _box(minimum: float, maximum: float | None, step: float, unit: str | None = None) -> selector.NumberSelector:
-    """Number selector shown as an input box; ``maximum=None`` means no upper limit."""
-    config = selector.NumberSelectorConfig(min=minimum, step=step, mode=selector.NumberSelectorMode.BOX)
-    if maximum is not None:
-        config["max"] = maximum
+def _box(minimum: float, maximum: float, step: float, unit: str | None = None) -> selector.NumberSelector:
+    """Number selector shown as an input box."""
+    config = selector.NumberSelectorConfig(
+        min=minimum, max=maximum, step=step, mode=selector.NumberSelectorMode.BOX
+    )
     if unit:
         config["unit_of_measurement"] = unit
     return selector.NumberSelector(config)
@@ -112,9 +116,8 @@ def _box(minimum: float, maximum: float | None, step: float, unit: str | None = 
 def _options_schema(notify_services: list[str], currency: str | None = None) -> vol.Schema:
     """Options form, grouped into collapsible sections.
 
-    ``currency`` is Home Assistant's currency (``hass.config.currency``); prices
-    have no upper limit because their range depends on it (700 TRY/kg is a
-    normal filament price, 500 EUR/kg is not).
+    ``currency`` is Home Assistant's currency (``hass.config.currency``); it
+    sets the price units here and in the card's settings dialog.
     """
     cur = currency_symbol(currency)
     power = vol.Schema(
@@ -133,7 +136,7 @@ def _options_schema(notify_services: list[str], currency: str | None = None) -> 
             vol.Optional(CONF_ENERGY_PRICE): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["sensor", "input_number", "number"])
             ),
-            vol.Optional(CONF_ENERGY_PRICE_FIXED): _box(0, None, 0.001, f"{cur}/kWh"),
+            vol.Optional(CONF_ENERGY_PRICE_FIXED): _box(0, PRICE_MAX_KWH, 0.001, f"{cur}/kWh"),
             vol.Required(CONF_SHUTDOWN_HOST, default=DEFAULT_SHUTDOWN_HOST): selector.BooleanSelector(),
             vol.Required(CONF_AUTO_ON, default=DEFAULT_AUTO_ON): selector.BooleanSelector(),
             vol.Required(CONF_AUTO_OFF, default=DEFAULT_AUTO_OFF): selector.BooleanSelector(),
@@ -175,7 +178,7 @@ def _options_schema(notify_services: list[str], currency: str | None = None) -> 
             ),
         }
     )
-    filament = vol.Schema({vol.Optional(key): _box(0, None, 0.01, f"{cur}/kg") for key in PRICE_FIELDS})
+    filament = vol.Schema({vol.Optional(key): _box(0, PRICE_MAX_KG, 0.01, f"{cur}/kg") for key in PRICE_FIELDS})
     spoolman = vol.Schema(
         {
             # Empty = spool management off; none of it shows up in the card/integration.
