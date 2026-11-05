@@ -8959,8 +8959,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const tmp = document.createElement("div");
       tmp.innerHTML = html;
       const newFrame = tmp.querySelector(".stage .frame");
-      const oldImg = oldFrame.querySelector(":scope > img[data-live]");
-      const freshImg = newFrame && newFrame.querySelector(":scope > img[data-live]");
+      const liveImg = (frame) => frame && [...frame.children].find((n) => n.matches("img[data-live]"));
+      const oldImg = liveImg(oldFrame);
+      const freshImg = liveImg(newFrame);
       if (!freshImg || !oldImg) return false;
       const path = (node, top) => {
         const out = [];

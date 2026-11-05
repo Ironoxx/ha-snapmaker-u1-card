@@ -102,8 +102,10 @@ export const RenderMixin = (Base) => class extends Base {
     const tmp = document.createElement("div");
     tmp.innerHTML = html;
     const newFrame = tmp.querySelector(".stage .frame");
-    const oldImg = oldFrame.querySelector(":scope > img[data-live]");
-    const freshImg = newFrame && newFrame.querySelector(":scope > img[data-live]");
+    // direct child; no ":scope >" (jsdom 30 does not match it inside a shadow root)
+    const liveImg = (frame) => frame && [...frame.children].find((n) => n.matches("img[data-live]"));
+    const oldImg = liveImg(oldFrame);
+    const freshImg = liveImg(newFrame);
     if (!freshImg || !oldImg) return false;
     const path = (node, top) => {
       const out = [];
