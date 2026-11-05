@@ -47,14 +47,14 @@ Nabu Casa.
 | `backup.py` | Daily backup of the printer configuration |
 | `errors.py` | Firmware exception codes to plain language (German/English) |
 | `machine.py` | Machine controls without HA: flow, bed mesh, top cover (purifier), head pick/park, G-code console rules |
-| `voice.py` | Assist intents and the sentence files they need |
-| `resource.py` | Registers the card as a dashboard resource (second loading path) |
+| `voice.py` | Assist intents and the sentence files they need (written when missing, replaced only while byte-identical to a shipped version, by SHA-256) |
+| `resource.py` | Registers the card as a dashboard resource from the integration's static path `/snapmaker_u1_card/card/` (second loading path); nothing goes to `/config/www` |
 | `i18n.py` | German/English choice for messages created in Python |
 | `sensor.py`, `binary_sensor.py`, `switch.py`, `select.py`, `number.py`, `update.py` | Entities (top cover entities are added once a cover is detected) |
 | `layer_view.py`, `video.py`, `upload.py` | Authenticated HTTP endpoints used by the card |
 | `webrtc_view.py` | Relays the camera-streamer WebRTC signalling (request/answer/candidates) to the paxx12 camera; the video flows browser ↔ printer |
 | `whats_new.py` | One persistent notification with the highlights after an update to a new minor version (texts per version in the module) |
-| `blueprints.py`, `blueprints/` | Copies the shipped automation blueprints (status light) to `config/blueprints/automation/snapmaker_u1_card/` |
+| `blueprints.py`, `blueprints/` | Copies the shipped automation blueprints (status light) to `config/blueprints/automation/snapmaker_u1_card/`; an existing file is only replaced while byte-identical to a shipped version (`SHIPPED` hashes) |
 | `webcam.py` | Camera detection (`live` / `still` / `wake` / `none`), images, wake-up, stream fallback |
 | `camera.py` | Own camera entity: MJPEG pass-through (`live`) or still images (HA builds the stream) |
 | `config_flow.py`, `diagnostics.py` | Setup/options UI and the diagnostics download |

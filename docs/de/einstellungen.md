@@ -95,9 +95,11 @@ Nicht die Integration löschen und neu hinzufügen: Das legt einen neuen Eintrag
 Eine Ressource legst du nicht selbst an; die Integration lädt die Karte auf zwei Wegen:
 
 1. über die Startseite von Home Assistant (`add_extra_js_url`),
-2. als Dashboard-Ressource `/local/snapmaker_u1_card/snapmaker-u1-card.js?v=…`, die die Integration anlegt, aktuell hält und mit der Integration wieder entfernt. Unter *Dashboards → Ressourcen* bitte stehen lassen.
+2. als Dashboard-Ressource `/snapmaker_u1_card/card/snapmaker-u1-card.js?v=…`, die die Integration anlegt, aktuell hält und mit der Integration wieder entfernt. Unter *Dashboards → Ressourcen* bitte stehen lassen.
 
-Der zweite Weg ist nötig, weil Home Assistant Seiten schon ausliefert, bevor eigene Integrationen gestartet sind. Wer in diesem Fenster lädt (Tab oder App während eines Neustarts), sähe sonst „Custom element doesn't exist: snapmaker-u1-card“, bis er neu lädt. Gab es `/config/www` vorher nicht, greift der Weg erst nach einem weiteren Neustart.
+Beides kommt aus der Integration selbst; nach `/config/www` wird nichts kopiert. Bis 2.1.1 lag eine Kopie der Karte unter `/config/www/snapmaker_u1_card/`; seit 2.1.2 verlegt die Integration ihre Ressource auf den neuen Pfad und löscht nur diese alte Kopie ihrer eigenen Datei.
+
+Wird eine Seite geladen, während Home Assistant noch startet (Tab oder App bei einem Neustart), kann bis zum Neuladen „Custom element doesn't exist: snapmaker-u1-card“ erscheinen.
 
 ## Moonraker-Integration (optional)
 

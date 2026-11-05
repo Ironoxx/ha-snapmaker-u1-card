@@ -101,7 +101,7 @@ Above the file list: search (across **all** files on the printer, not only the n
 
 ## Status light (blueprint)
 
-The integration installs the blueprint *Snapmaker U1 – status light* into `config/blueprints/automation/snapmaker_u1_card/`. In *Settings → Automations → Blueprints* create an automation from it: choose the Moonraker sensor *Current print state* and one or more lights (WLED, LED strips, any colour light). Colours for printing (optionally with a WLED effect such as *Breathe*), paused, error/cancelled, finished (for a set time) and idle (off, a colour or unchanged). A copy you edited stays untouched when you remove the line `managed: snapmaker_u1_card` from the file; otherwise updates replace it.
+The integration installs the blueprint *Snapmaker U1 – status light* into `config/blueprints/automation/snapmaker_u1_card/`. In *Settings → Automations → Blueprints* create an automation from it: choose the Moonraker sensor *Current print state* and one or more lights (WLED, LED strips, any colour light). Colours for printing (optionally with a WLED effect such as *Breathe*), paused, error/cancelled, finished (for a set time) and idle (off, a colour or unchanged). An update replaces the file only while it is unchanged; once you edit it, it stays yours. The same applies to the Assist sentence files in `config/custom_sentences/`.
 
 ## Temperature chart
 

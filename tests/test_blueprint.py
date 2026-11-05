@@ -27,13 +27,18 @@ async def test_blueprint_installed_and_updated(hass: HomeAssistant, mock_client)
     await hass.async_block_till_done()
     dst = Path(hass.config.path("blueprints", "automation", "snapmaker_u1_card", "status_light.yaml"))
     assert dst.read_text() == SRC.read_text()
-    # older managed copy -> replaced; own edit without the marker -> kept
-    dst.write_text("# managed: snapmaker_u1_card\nold")
+    # an untouched earlier version (known hash) -> replaced
+    old = SRC.read_text().replace("Version: 3", "Version: 2.9")
+    bp.SHIPPED["status_light.yaml"].add(bp.sha256(old))
+    dst.write_text(old)
     await bp.async_install(hass)
     assert dst.read_text() == SRC.read_text()
-    dst.write_text("# my own version")
-    await bp.async_install(hass)
-    assert dst.read_text() == "# my own version"
+    bp.SHIPPED["status_light.yaml"].discard(bp.sha256(old))
+    # an edited copy -> kept, also with the old "managed" line in it
+    for own in ("# my own version", "# managed: snapmaker_u1_card\nmy edit"):
+        dst.write_text(own)
+        await bp.async_install(hass)
+        assert dst.read_text() == own
 
 
 async def test_status_light_automation(hass: HomeAssistant) -> None:

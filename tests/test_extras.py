@@ -1,5 +1,6 @@
 """Cost before printing, config backup, voice control and diagnostics."""
 
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -129,7 +130,27 @@ def test_sentence_files_respect_user(tmp_path) -> None:
     assert voice._write_sentences(str(tmp_path)) is False, "unveraendert"
     de.write_text("language: de\n# eigene Saetze\n")
     assert voice._write_sentences(str(tmp_path)) is False
-    assert "eigene" in de.read_text(), "ohne Kopfzeile nicht ueberschrieben"
+    assert "eigene" in de.read_text(), "eigene Datei nicht ueberschrieben"
+    # edited but the header kept: still the user's file (hacs/default review)
+    de.write_text(voice.SENTENCES["de"] + "\n# mein Zusatz\n")
+    assert voice._write_sentences(str(tmp_path)) is False
+    assert "mein Zusatz" in de.read_text()
+    # an untouched earlier version is replaced: the 2.1.1 text
+    old = voice.SENTENCES["de"].replace("eigene Aenderungen bleiben erhalten.", "Kopfzeile loeschen, um die Datei selbst zu pflegen.")
+    de.write_text(old)
+    assert voice._write_sentences(str(tmp_path)) is True and de.read_text() == voice.SENTENCES["de"]
+
+
+def test_shipped_hashes_cover_current_files() -> None:
+    """Every shipped text must be listed, or the next update could not replace it."""
+    import hashlib
+
+    from custom_components.snapmaker_u1_card import blueprints
+
+    for lang, text in voice.SENTENCES.items():
+        assert hashlib.sha256(text.encode()).hexdigest() in voice.SHIPPED_SENTENCES[lang], lang
+    src = Path(blueprints.__file__).parent / "blueprints" / "status_light.yaml"
+    assert blueprints.sha256(src.read_text(encoding="utf-8")) in blueprints.SHIPPED["status_light.yaml"]
 
 
 async def _ask(hass, name, lang="de"):

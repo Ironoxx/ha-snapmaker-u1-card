@@ -1,7 +1,6 @@
-# Installed by the Snapmaker U1 Card integration (snapmaker_u1_card).
-# It is copied again when the integration ships a newer version, unless you
-# remove the "managed" line below. Version: 2
-# managed: snapmaker_u1_card
+# Installed by the Snapmaker U1 Card integration (snapmaker_u1_card). Version: 3
+# A newer version only replaces this file while it is unchanged; once you
+# edit it, it stays yours.
 blueprint:
   name: Snapmaker U1 – status light
   description: >-

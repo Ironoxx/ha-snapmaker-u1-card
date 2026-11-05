@@ -101,7 +101,7 @@ Die Erkennung läuft, wenn der Drucker online kommt, wenn Bilder wiederholt ausb
 
 ## Status-Licht (Blueprint)
 
-Die Integration legt den Blueprint *Snapmaker U1 – status light* unter `config/blueprints/automation/snapmaker_u1_card/` an. Unter *Einstellungen → Automationen → Blueprints* daraus eine Automation erstellen: den Moonraker-Sensor *Aktueller Druckstatus* und eine oder mehrere Lampen wählen (WLED, LED-Streifen, jede Farblampe). Farben für druckt (optional mit WLED-Effekt wie *Breathe*), Pause, Fehler/Abbruch, fertig (für eine einstellbare Zeit) und bereit (aus, eine Farbe oder unverändert). Eine selbst geänderte Kopie bleibt erhalten, wenn du die Zeile `managed: snapmaker_u1_card` aus der Datei entfernst; sonst ersetzen Updates sie.
+Die Integration legt den Blueprint *Snapmaker U1 – status light* unter `config/blueprints/automation/snapmaker_u1_card/` an. Unter *Einstellungen → Automationen → Blueprints* daraus eine Automation erstellen: den Moonraker-Sensor *Aktueller Druckstatus* und eine oder mehrere Lampen wählen (WLED, LED-Streifen, jede Farblampe). Farben für druckt (optional mit WLED-Effekt wie *Breathe*), Pause, Fehler/Abbruch, fertig (für eine einstellbare Zeit) und bereit (aus, eine Farbe oder unverändert). Ein Update ersetzt die Datei nur, solange sie unverändert ist; sobald du sie änderst, bleibt sie deine. Dasselbe gilt für die Assist-Satzdateien in `config/custom_sentences/`.
 
 ## Temperaturverlauf
 

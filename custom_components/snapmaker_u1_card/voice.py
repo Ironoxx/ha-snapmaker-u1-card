@@ -2,9 +2,9 @@
 
 The integration registers three intents (status, pause, resume) and writes
 matching sentences to ``/config/custom_sentences/<de|en>/snapmaker_u1_card.yaml``.
-These files belong to the integration (header line ``MARKER``): they are
-updated on every start as long as the header is present. To maintain the
-sentences yourself, delete the header line and the file is left alone.
+A file is written when it is missing, or replaced when it is exactly a
+version this integration shipped earlier (by SHA-256); a file you edited is
+never touched.
 
 Examples: "Wie weit ist der Drucker?", "Pausiere den Drucker",
 "Drucker fortsetzen"; "How far is the printer?", "Pause the printer".
@@ -12,6 +12,7 @@ Examples: "Wie weit ist der Drucker?", "Pausiere den Drucker",
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -31,7 +32,7 @@ MARKER = "# snapmaker_u1_card: automatisch erzeugt"
 FILENAME = f"{DOMAIN}.yaml"
 
 SENTENCES = {
-    "de": f"""{MARKER} – Kopfzeile loeschen, um die Datei selbst zu pflegen.
+    "de": f"""{MARKER} – eigene Aenderungen bleiben erhalten.
 language: "de"
 intents:
   {INTENT_STATUS}:
@@ -59,7 +60,7 @@ intents:
           - "druck fortsetzen"
           - "(drucke|druck) weiter"
 """,
-    "en": f"""{MARKER} – delete this line to maintain the file yourself.
+    "en": f"""{MARKER} – your own changes are kept.
 language: "en"
 intents:
   {INTENT_STATUS}:
@@ -194,14 +195,25 @@ class ActionIntent(_Base):
         return "Druck wird fortgesetzt." if de else "Resuming the print."
 
 
+# SHA-256 of every version of the sentence files shipped so far, per language; add the
+# new hash when SENTENCES changes (a test checks that the current texts are listed).
+SHIPPED_SENTENCES = {
+    "de": {"9e13cb83be91c5d81ca458b7c6c39ae56cedaa8e472a7d7d72f324cf5c61852f",
+           "00f1f9f7493e3393eddf93c34a0b68545058d0e3fd43037cd666891826d249bb"},
+    "en": {"8c47103f10d5bc2a1721deefaed8c108d8caf3f0879f3f8342952aa9d9d7df84",
+           "b164724e5ca323efeb15bd84f3ddea3a41538baa4ad88c1379b40d3c0c33c465"},
+}
+
+
 def _write_sentences(config_dir: str) -> bool:
-    """Write the sentence files owned by the integration (blocking)."""
+    """Write missing sentence files, replace untouched earlier versions (blocking)."""
     changed = False
     for lang, text in SENTENCES.items():
         target = Path(config_dir) / "custom_sentences" / lang / FILENAME
         if target.exists():
             current = target.read_text(encoding="utf-8")
-            if not current.startswith(MARKER) or current == text:
+            digest = hashlib.sha256(current.encode("utf-8")).hexdigest()
+            if current == text or digest not in SHIPPED_SENTENCES.get(lang, set()):
                 continue
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(text, encoding="utf-8")
