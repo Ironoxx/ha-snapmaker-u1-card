@@ -62,7 +62,7 @@ def _field(sec: str, marker: Any, sel: Any) -> dict[str, Any]:
 def describe(hass: HomeAssistant) -> list[dict[str, Any]]:
     """All fields of the options form, in order, per section."""
     fields = []
-    for marker, sec_obj in _options_schema(_notify_services(hass)).schema.items():
+    for marker, sec_obj in _options_schema(_notify_services(hass), hass.config.currency).schema.items():
         sec = str(marker.schema)
         for m, sel in sec_obj.schema.schema.items():
             fields.append(_field(sec, m, sel))
@@ -149,7 +149,7 @@ async def ws_set(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     # required fields then get their default from the schema.
     nested = {sec: {k: v for k, v in vals.items() if v not in (None, "")} for sec, vals in nested.items()}
     try:
-        validated = _options_schema(_notify_services(hass))(nested)
+        validated = _options_schema(_notify_services(hass), hass.config.currency)(nested)
     except vol.Invalid as err:
         path = ".".join(str(p) for p in err.path)
         connection.send_error(msg["id"], "invalid", f"{path}: {err.msg}" if path else str(err.msg))

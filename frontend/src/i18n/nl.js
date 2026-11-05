@@ -526,7 +526,7 @@ export default {
   "Spoolman: {n} Materialien": "Spoolman: {n} materialen",
   "keine Preise": "geen prijzen",
   "keine": "geen",
-  "Spoolman: {p} €/kg – hat Vorrang": "Spoolman: {p} €/kg – heeft voorrang",
+  "Spoolman: {p}/kg – hat Vorrang": "Spoolman: {p}/kg – heeft voorrang",
   "keine verfügbar": "niets beschikbaar",
   "Mon.": "mnd.",
   "Monate": "Maanden",

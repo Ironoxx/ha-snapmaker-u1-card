@@ -16,7 +16,7 @@
  */
 
 import { DOMAIN } from "../const.js";
-import { clamp, esc, fmtEuro } from "../format.js";
+import { clamp, esc, fmtMoney } from "../format.js";
 import { tr } from "../i18n.js";
 
 const SUGGEST_DELAY_MS = 250;
@@ -123,7 +123,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
     });
     sec.querySelectorAll("[data-stockmat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stockmat === f.material)));
     sec.querySelector("[data-stocksum]").textContent =
-      tr("{n} Spulen · {kg} kg", { n, kg: (grams / 1000).toFixed(1) }) + (value > 0 ? ` · ${fmtEuro(value)}` : "");
+      tr("{n} Spulen · {kg} kg", { n, kg: (grams / 1000).toFixed(1) }) + (value > 0 ? ` · ${fmtMoney(value)}` : "");
     sec.querySelector("[data-stockempty]").hidden = n > 0;
   }
 

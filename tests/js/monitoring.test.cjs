@@ -224,7 +224,7 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const mt = R().querySelector(".mat-table");
   assert.ok(mt);
   const cells = [...mt.querySelectorAll("tbody tr")].map((tr) => [...tr.children].map((td) => td.textContent.trim()).join("|"));
-  assert.deepEqual(cells, ["PLA|60|3,20 kg|64,00 €|95 %", "PETG|10|450 g|—|90 %"]);
+  assert.deepEqual(cells, ["PLA|60|3,20 kg|64,00\u00a0€|95 %", "PETG|10|450 g|—|90 %"]);
   assert.match(text(R().querySelector(".colors")), /PLA 1800 g/);
 
   // 8. System: firmware and self test

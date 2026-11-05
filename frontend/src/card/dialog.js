@@ -2,7 +2,7 @@
 
 import { onColor, suggestMapping } from "../color.js";
 import { DOMAIN } from "../const.js";
-import { esc, fixed, fmtEuro, fmtMin } from "../format.js";
+import { esc, fixed, fmtMin, fmtMoney } from "../format.js";
 import { tr } from "../i18n.js";
 
 export const PrintDialogMixin = (Base) => class extends Base {
@@ -251,10 +251,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (f.layers) meta.push(tr("{n} Schichten", { n: f.layers }));
     // Cost before printing (integration: slicer weight x material price + time x average power x energy price)
     const cost = f.cost && f.cost.total != null ? f.cost : null;
-    if (cost) meta.push(`≈ ${fmtEuro(cost.total)}`);
+    if (cost) meta.push(`≈ ${fmtMoney(cost.total)}`);
     const costParts = cost ? [
-      cost.filament != null ? `${tr("Filament")} ${fmtEuro(cost.filament)}` : "",
-      cost.energy != null ? `${tr("Strom")} ${fmtEuro(cost.energy)} (${fixed(cost.energy_kwh, 2)} kWh)` : "",
+      cost.filament != null ? `${tr("Filament")} ${fmtMoney(cost.filament)}` : "",
+      cost.energy != null ? `${tr("Strom")} ${fmtMoney(cost.energy)} (${fixed(cost.energy_kwh, 2)} kWh)` : "",
     ].filter(Boolean) : [];
 
     const rows = g.used.length ? g.used.map((fil) => {

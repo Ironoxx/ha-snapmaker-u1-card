@@ -120,8 +120,9 @@ Rendering rules that matter:
 - The camera stream only runs while the card is visible and not in edit mode;
   browsers allow only six connections per host over HTTP/1.1.
 - UI texts are German in the source and translated with `tr()`; English lives
-  in `EN` in `i18n.js`, Spanish, French, Italian, Dutch and Portuguese in
-  `i18n/<lang>.js` (missing entries fall back to English).
+  in `EN` in `i18n.js`, Spanish, French, Italian, Dutch, Portuguese and Turkish in
+  `i18n/<lang>.js` (missing entries fall back to English). Amounts use Home
+  Assistant's currency (`hass.config.currency`) via `fmtMoney()` in `format.js`.
 
 ## Snapmaker specifics
 

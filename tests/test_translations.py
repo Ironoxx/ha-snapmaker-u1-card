@@ -21,7 +21,7 @@ def _flat(d, prefix=""):
 
 
 def test_languages_present():
-    assert {"de", "en", "es", "fr", "it", "nl", "pt"} <= set(LANGS)
+    assert {"de", "en", "es", "fr", "it", "nl", "pt", "tr"} <= set(LANGS)
 
 
 @pytest.mark.parametrize("lang", LANGS)

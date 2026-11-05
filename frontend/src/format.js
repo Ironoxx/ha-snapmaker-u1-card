@@ -1,9 +1,18 @@
 /** Formatting helpers (numbers, dates, HTML escaping) and thumbnail backgrounds. */
 
-import { LOCALE } from "./i18n.js";
+import { CURRENCY, LOCALE } from "./i18n.js";
 
-export const fmtEuro = (v) => (v === null || v === undefined || Number.isNaN(v) ? "—"
-  : `${Number(v).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`);
+// Amount in Home Assistant's currency (Settings → System → General), formatted
+// for the UI language: "0,47 €", "€0.47", "₺700,00", "¥120".
+export function fmtMoney(v) {
+  if (v === null || v === undefined || Number.isNaN(v)) return "—";
+  try {
+    return Number(v).toLocaleString(LOCALE, { style: "currency", currency: CURRENCY, currencyDisplay: "narrowSymbol" });
+  } catch (e) {
+    // Intl throws a RangeError for codes it does not know; show the code instead of nothing
+    return `${Number(v).toLocaleString(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${CURRENCY}`;
+  }
+}
 // ── Background for thumbnails ──────────────────────────────────────────────
 // A black part disappears on a dark grey background (and a white one on a
 // light one). Measure the average brightness of the opaque pixels and recolour

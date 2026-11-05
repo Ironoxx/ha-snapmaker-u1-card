@@ -86,7 +86,7 @@ from .const import (
     NOTIFY_EVENTS,
     SPOOL_RESTORE_MODES,
 )
-from .parsing import FILAMENT_PRICE_KEYS
+from .parsing import FILAMENT_PRICE_KEYS, currency_symbol
 from .stats import MAINTENANCE_ITEMS, MAINTENANCE_MONTHS
 
 SEC_POWER, SEC_NOTIFY, SEC_FILAMENT, SEC_FILES = "power", "notify", "filament", "files"
@@ -99,18 +99,24 @@ INT_FIELDS = (CONF_FILES_LIMIT, CONF_AUTO_OFF_TEMP, CONF_AUTO_OFF_DELAY, CONF_SP
               CONF_ALMOST_DONE, CONF_BED_COOL, CONF_IDLE_OFF)
 
 
-def _box(minimum: float, maximum: float, step: float, unit: str | None = None) -> selector.NumberSelector:
-    """Number selector shown as an input box."""
-    config = selector.NumberSelectorConfig(
-        min=minimum, max=maximum, step=step, mode=selector.NumberSelectorMode.BOX
-    )
+def _box(minimum: float, maximum: float | None, step: float, unit: str | None = None) -> selector.NumberSelector:
+    """Number selector shown as an input box; ``maximum=None`` means no upper limit."""
+    config = selector.NumberSelectorConfig(min=minimum, step=step, mode=selector.NumberSelectorMode.BOX)
+    if maximum is not None:
+        config["max"] = maximum
     if unit:
         config["unit_of_measurement"] = unit
     return selector.NumberSelector(config)
 
 
-def _options_schema(notify_services: list[str]) -> vol.Schema:
-    """Options form, grouped into collapsible sections."""
+def _options_schema(notify_services: list[str], currency: str | None = None) -> vol.Schema:
+    """Options form, grouped into collapsible sections.
+
+    ``currency`` is Home Assistant's currency (``hass.config.currency``); prices
+    have no upper limit because their range depends on it (700 TRY/kg is a
+    normal filament price, 500 EUR/kg is not).
+    """
+    cur = currency_symbol(currency)
     power = vol.Schema(
         {
             # The printer's power switch: Shelly, KNX, Zigbee plug ... anything
@@ -127,7 +133,7 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             vol.Optional(CONF_ENERGY_PRICE): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain=["sensor", "input_number", "number"])
             ),
-            vol.Optional(CONF_ENERGY_PRICE_FIXED): _box(0, 5, 0.001, "€/kWh"),
+            vol.Optional(CONF_ENERGY_PRICE_FIXED): _box(0, None, 0.001, f"{cur}/kWh"),
             vol.Required(CONF_SHUTDOWN_HOST, default=DEFAULT_SHUTDOWN_HOST): selector.BooleanSelector(),
             vol.Required(CONF_AUTO_ON, default=DEFAULT_AUTO_ON): selector.BooleanSelector(),
             vol.Required(CONF_AUTO_OFF, default=DEFAULT_AUTO_OFF): selector.BooleanSelector(),
@@ -169,7 +175,7 @@ def _options_schema(notify_services: list[str]) -> vol.Schema:
             ),
         }
     )
-    filament = vol.Schema({vol.Optional(key): _box(0, 500, 0.01, "€/kg") for key in PRICE_FIELDS})
+    filament = vol.Schema({vol.Optional(key): _box(0, None, 0.01, f"{cur}/kg") for key in PRICE_FIELDS})
     spoolman = vol.Schema(
         {
             # Empty = spool management off; none of it shows up in the card/integration.
@@ -362,7 +368,7 @@ class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=f"Snapmaker U1 ({self._data[CONF_HOST]})", data=self._data, options=flat
                 )
             errors["base"] = error
-        schema = _options_schema(_notify_services(self.hass))
+        schema = _options_schema(_notify_services(self.hass), self.hass.config.currency)
         if user_input is not None:
             schema = self.add_suggested_values_to_schema(schema, user_input)
         return self.async_show_form(step_id="settings", data_schema=schema, errors=errors)
@@ -405,6 +411,6 @@ class U1OptionsFlow(OptionsFlow):
             step_id="init",
             # Suggested values instead of defaults: this way an entity
             # can also be removed again.
-            data_schema=self.add_suggested_values_to_schema(_options_schema(services), values),
+            data_schema=self.add_suggested_values_to_schema(_options_schema(services, self.hass.config.currency), values),
             errors=errors,
         )

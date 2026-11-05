@@ -2,7 +2,7 @@
 
 import { colorDistance } from "../color.js";
 import { DOMAIN, RESULT } from "../const.js";
-import { clamp, esc, fixed, fmtClock, fmtDate, fmtEuro, fmtInt, fmtMin, num } from "../format.js";
+import { clamp, esc, fixed, fmtClock, fmtDate, fmtInt, fmtMin, fmtMoney, num } from "../format.js";
 import { tr } from "../i18n.js";
 
 export const OverviewMixin = (Base) => class extends Base {
@@ -168,7 +168,7 @@ export const OverviewMixin = (Base) => class extends Base {
       [tr("Dauer"), h.duration ? fmtMin(h.duration / 60) : "—"],
       [tr("Filament"), h.filament_g !== undefined && h.filament_g !== null ? `${Math.round(h.filament_g)} g` : "—"],
       h.energy !== undefined && h.energy !== null ? [tr("Strom"), num(h.energy, 2, "kWh")] : null,
-      h.total_cost !== undefined && h.total_cost !== null ? [tr("Kosten"), fmtEuro(h.total_cost)] : null,
+      h.total_cost !== undefined && h.total_cost !== null ? [tr("Kosten"), fmtMoney(h.total_cost)] : null,
       [tr("Drucke gesamt"), num(d.totalsJobs || (d.stats && d.stats.totals.prints) || 0, 0)],
       [tr("Warteschlange"), fmtInt(q)],
     ].filter(Boolean).map(([k, v]) => this._stat(k, v, "sm")).join("");

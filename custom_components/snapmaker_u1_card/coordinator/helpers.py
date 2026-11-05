@@ -137,7 +137,7 @@ def remaining_seconds(duration: Any, progress: Any) -> float | None:
     return duration * (1 - progress) / progress
 
 
-def notify_message(info: dict[str, Any], de: bool = True) -> str:
+def notify_message(info: dict[str, Any], de: bool = True, currency: str = "€") -> str:
     """Short text for the notification."""
     name = str(info.get("name") or info.get("file") or ("Druck" if de else "Print"))
     if info.get("text"):
@@ -185,7 +185,7 @@ def notify_message(info: dict[str, Any], de: bool = True) -> str:
     if info.get("energy") is not None:
         parts.append(f"{info['energy']:.2f} kWh".replace(".", dec))
     if info.get("total_cost") is not None:
-        parts.append(f"{info['total_cost']:.2f} €".replace(".", dec))
+        parts.append(f"{info['total_cost']:.2f} {currency}".replace(".", dec))
     # One pick of the only head is no change worth mentioning
     if (info.get("switches") or 0) > 1:
         parts.append(f"{info['switches']} {'Kopfwechsel' if de else 'tool changes'}")

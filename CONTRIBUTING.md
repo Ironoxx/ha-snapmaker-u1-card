@@ -43,7 +43,7 @@ npm test                       # card tests in jsdom against the bundle
 - Run `npm run build` and commit the rebuilt bundle; CI fails if it is outdated.
 - New UI text: write it in German in the source, add the English
   translation to `EN` in `frontend/src/i18n.js` and the same key to
-  `frontend/src/i18n/{es,fr,it,nl,pt}.js`. The tests check for German leftovers
+  `frontend/src/i18n/{es,fr,it,nl,pt,tr}.js`. The tests check for German leftovers
   in the English UI and that every language table has all keys.
 - Method names must be unique across the mixins in `frontend/src/card`
   (checked by `tests/js/structure.test.cjs`).
@@ -57,7 +57,7 @@ npm test                       # card tests in jsdom against the bundle
 - New options: config flow sections are `vol.Required` without a default,
   otherwise the frontend reports "Not all required fields are filled in".
 - Translations: change `strings.json`, keep `translations/en.json` identical and
-  the other languages (`de`, `es`, `fr`, `it`, `nl`, `pt`) in sync; a test checks
+  the other languages (`de`, `es`, `fr`, `it`, `nl`, `pt`, `tr`) in sync; a test checks
   keys and placeholders.
 
 ## Releasing

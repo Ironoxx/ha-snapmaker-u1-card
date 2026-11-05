@@ -67,7 +67,7 @@ jobs:
         if: steps.ver.outputs.exists == 'false'
         run: |
           V="${{ steps.ver.outputs.version }}"
-          (cd custom_components/snapmaker_u1_card && zip -qr "$GITHUB_WORKSPACE/snapmaker_u1_card.zip" . -x "__pycache__/*")
+          (cd custom_components/snapmaker_u1_card && zip -qr "$GITHUB_WORKSPACE/snapmaker_u1_card.zip" . -x "*__pycache__/*")
           zip -qr "snapmaker_u1_card-$V-install.zip" custom_components/snapmaker_u1_card -x "*/__pycache__/*"
       - name: Release notes from CHANGELOG.md
         if: steps.ver.outputs.exists == 'false'

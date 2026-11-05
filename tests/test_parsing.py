@@ -437,3 +437,11 @@ def test_slicer_settings_prusa_and_empty():
     assert s["nozzle_temp"] == [215] and s["bed_temp"] == [60] and s["first_layer_height"] == 0.3
     assert p.parse_slicer_settings({}) is None
     assert p.parse_slicer_settings(p.read_settings_block("; just a comment\nG1 X1")) is None
+
+
+def test_currency_symbol():
+    """Units in the options follow Home Assistant's currency, not a fixed €."""
+    assert p.currency_symbol("EUR") == "€"
+    assert p.currency_symbol("try") == "₺"
+    assert p.currency_symbol("CHF") == "CHF"  # no symbol: ISO code
+    assert p.currency_symbol(None) == "€"

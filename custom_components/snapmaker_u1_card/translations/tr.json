@@ -1,0 +1,1113 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Snapmaker U1",
+        "description": "Yazıcının IP adresi veya ana bilgisayar adı. Port 80 orijinal ürün yazılımı, Extended Firmware ve Bespok3d ile çalışır.",
+        "data": {
+          "host": "Ana bilgisayar",
+          "port": "Port",
+          "api_key": "Moonraker API anahtarı (isteğe bağlı)"
+        }
+      },
+      "reconfigure": {
+        "title": "Snapmaker U1",
+        "data": {
+          "host": "Ana bilgisayar",
+          "port": "Port",
+          "api_key": "Moonraker API anahtarı (isteğe bağlı)"
+        }
+      },
+      "settings": {
+        "title": "Ayarlar",
+        "description": "Hepsi isteğe bağlıdır ve daha sonra “Yapılandır” altında değiştirilebilir. Bölümleri genişletin.",
+        "sections": {
+          "power": {
+            "name": "Güç ve enerji",
+            "description": "Her anahtar çalışır: Shelly, KNX, Zigbee priz, …",
+            "data": {
+              "power_switch": "Yazıcı güç anahtarı",
+              "power_sensor": "Güç sensörü (W)",
+              "energy_sensor": "Enerji sayacı (kWh)",
+              "energy_price": "Elektrik fiyatı varlığı",
+              "shutdown_host": "Elektriği kesmeden önce yazıcıyı kapat",
+              "auto_on": "Baskı başlatıldığında otomatik aç",
+              "auto_off": "Baskıdan sonra otomatik kapat",
+              "auto_off_temp": "Otomatik kapanma sıcaklık sınırı",
+              "auto_off_delay": "Baskıdan sonra otomatik kapanma gecikmesi",
+              "idle_off_hours": "Boşta kalınca kapat",
+              "energy_price_fixed": "Sabit elektrik fiyatı"
+            },
+            "data_description": {
+              "power_switch": "Karttaki aç/kapat düğmesi için kullanılır. Yazdırma sırasında kapatma engellenir.",
+              "power_sensor": "Anlık güç tüketimi, genellikle aynı prizden.",
+              "energy_sensor": "Toplam enerji sayacı. Her baskının tüketimi için kullanılır.",
+              "energy_price": "Güncel fiyatı veren sensör veya yardımcı (dinamik tarifeler). Boş = aşağıdaki sabit fiyat veya enerji panosu.",
+              "shutdown_host": "Yazıcıya kapatma komutu gönderir, yazıcı kapanana kadar ve ardından 10 sn bekler, sonra elektriği keser. Yazıcı reddederse, kendi açma/kapama düğmesindeki gibi 10 sn sonra elektriği kesilir.",
+              "auto_on": "Yazıcı kapalıyken karttan baskı başlatmak yazıcıyı açar ve hazır olana kadar bekler (yaklaşık 1–2 dk).",
+              "auto_off": "Biten veya iptal edilen bir baskıdan sonra, tüm ısıtıcılar soğuduğunda.",
+              "auto_off_temp": "Nozullar ve tabla bu sıcaklığın altında olmalıdır.",
+              "auto_off_delay": "Baskının bitişi ile elektriğin kesilmesi arasındaki en kısa süre.",
+              "idle_off_hours": "Baskı ve ısıtma olmadan geçen saat; sonra düzgünce kapatılır ve elektriği kesilir. 0 = kapalı.",
+              "energy_price_fixed": "kWh başına; fiyat varlığı ayarlanmamışsa kullanılır. İkisi de yoksa enerji panosundaki fiyat kullanılır."
+            }
+          },
+          "notify": {
+            "name": "Bildirimler ve kamera",
+            "description": "Telefon bildirimi: baskı sonu, hatalar, duraklatma, mesajlar, ilk katman, neredeyse bitti, az filament.",
+            "data": {
+              "notify_targets": "Bildirim hizmetleri",
+              "notify_events": "Bildirim gönderilecek olaylar",
+              "camera": "Fotoğraf için kamera",
+              "almost_done_minutes": "“Neredeyse bitti” uyarısı",
+              "bed_cool_temp": "“Parça hazır” sıcaklığı",
+              "camera_wake": "Kamerayı uyanık tut",
+              "live_notify_budget": "İlerleme bildirimi: günlük güncelleme sayısı",
+              "live_notify_image": "İlerleme bildirimi: kamera görüntüsü",
+              "notify_click_url": "Dokununca aç"
+            },
+            "data_description": {
+              "notify_targets": "örn. notify.mobile_app_pixel_8. Birden fazla seçilebilir.",
+              "camera": "Companion uygulaması güncel bir görüntü ekler. Geçmişteki sonuç fotoğrafı için de kullanılır.",
+              "almost_done_minutes": "Tahmini bitişten önceki dakika.",
+              "bed_cool_temp": "Biten bir baskıdan sonra mesajın gönderileceği tabla sıcaklığı.",
+              "camera_wake": "Snapmaker uygulaması gibi her 10 sn'de camera.start_monitor gönderir. Orijinal ürün yazılımında kamera görüntüsü duruyorsa gerekir; değiştirilmiş ürün yazılımında genellikle gerekmez.",
+              "live_notify_budget": "Süren ilerleme bildirimi (Android) için telefon başına günlük üst sınır. Companion uygulaması günde yaklaşık 500 bildirime izin verir; bitiş, hata ve duraklatma mesajları buna dahil değildir.",
+              "live_notify_image": "İlerleme bildirimi genişletildiğinde kamera görüntüsünü gösterir (her ilerleme güncellemesinde yenilenir, ek bildirim yok).",
+              "notify_click_url": "Bir bildirime dokunulduğunda açılan pano yolu veya URL, örn. /dashboard-printer/0 veya /lovelace/printer. Boş = uygulamanın varsayılanı."
+            }
+          },
+          "filament": {
+            "name": "Filament fiyatları",
+            "description": "Malzemeye göre kg fiyatı; her baskının filament maliyeti için kullanılır. Spoolman varsa onun fiyatları önceliklidir (her kafadaki makara, yoksa o malzemedeki makaralarınızın ortalaması); bu alanlar yalnızca orada fiyatı olmayan malzemeler için geçerlidir. Atlamak için boş bırakın.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Diğer malzemeler"
+            }
+          },
+          "files": {
+            "name": "Dosyalar",
+            "data": {
+              "files_limit": "En yeni dosya sayısı",
+              "config_backup": "Yazıcı yapılandırmasını yedekle"
+            },
+            "data_description": {
+              "config_backup": "printer.cfg vb. dosyaların /config/snapmaker_u1_backup klasörüne günlük kopyası (yalnızca değiştiğinde, 10 sürüm)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "İsteğe bağlı. Spoolman kullanmıyorsanız URL'yi boş bırakın.",
+            "data": {
+              "spoolman_url": "Spoolman URL'si",
+              "spoolman_deduct": "Her baskıdan sonra kafa başına tüketimi düş",
+              "spoolman_low": "Uyarı sınırı",
+              "spool_restore": "Kafa yeniden yüklendikten sonra son makara"
+            },
+            "data_description": {
+              "spoolman_url": "7912 portlu adres, örn. 192.168.0.10:7912 (Home Assistant eklentisi: homeassistant.local:7912). Boş = kapalı.",
+              "spoolman_deduct": "Baskı kafası başına dilimleyici ağırlığı (iptal edilirse orantılı). Tüketimi zaten başka bir şey kaydediyorsa (örn. Moonraker'ın kendi Spoolman bağlantısı) kapatın, aksi halde iki kez sayılır.",
+              "spoolman_low": "Bir makarada bundan az filament kaldığında kart uyarı gösterir.",
+              "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin."
+            }
+          },
+          "timelapse": {
+            "name": "Timelapse yedekleme",
+            "description": "Yeni timelapse videolarını Home Assistant'ın medya klasörüne (snapmaker_u1) kopyalar. En eskileri daha sonra yazıcıda silinebilir.",
+            "data": {
+              "timelapse_archive": "Timelapse videolarını yedekle",
+              "timelapse_keep": "Yazıcıda tut",
+              "timelapse_archive_max": "Medya klasöründe tut",
+              "timelapse_archive_days": "Şundan eski yedekleri sil"
+            },
+            "data_description": {
+              "timelapse_keep": "Bu kadar en yeni video yazıcıda kalır, daha eskileri yedeklemeden sonra silinir. 0 = asla silme.",
+              "timelapse_archive_max": "Medya klasöründe tutulan en yeni videolar; daha eskileri silinir. 0 = hepsini tut.",
+              "timelapse_archive_days": "Gün; 0 = yaş sınırı yok."
+            }
+          },
+          "maintenance": {
+            "name": "Bakım",
+            "description": "Baskı saati cinsinden aralıklar. 0 = öğeyi gizle.",
+            "data": {
+              "maint_plate": "Baskı tablasını temizle",
+              "maint_nozzle": "Nozulları ve sileceği temizle",
+              "maint_rails": "Doğrusal rayları yağla",
+              "maint_belts": "Kayış gerginliğini kontrol et",
+              "maint_filter": "Hava filtresini değiştir"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Yazıcıya ulaşılamıyor.",
+      "not_u1": "Moonraker yanıt verdi, ancak bu bir Snapmaker U1 değil (print_task_config eksik).",
+      "auto_needs_switch": "Otomatik açma ve otomatik kapama için güç anahtarı gerekir.",
+      "unknown_notify": "Bildirim hizmetlerinden biri mevcut değil.",
+      "spoolman_unreachable": "Bu URL'de Spoolman'a ulaşılamıyor."
+    },
+    "abort": {
+      "already_configured": "Bu yazıcı zaten kurulu.",
+      "reconfigure_successful": "Ayarlar güncellendi."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Snapmaker U1 seçenekleri",
+        "description": "Buradaki her şey isteğe bağlıdır. Kart bunları otomatik olarak alır.",
+        "sections": {
+          "power": {
+            "name": "Güç ve enerji",
+            "description": "Her anahtar çalışır: Shelly, KNX, Zigbee priz, …",
+            "data": {
+              "power_switch": "Yazıcı güç anahtarı",
+              "power_sensor": "Güç sensörü (W)",
+              "energy_sensor": "Enerji sayacı (kWh)",
+              "energy_price": "Elektrik fiyatı varlığı",
+              "shutdown_host": "Elektriği kesmeden önce yazıcıyı kapat",
+              "auto_on": "Baskı başlatıldığında otomatik aç",
+              "auto_off": "Baskıdan sonra otomatik kapat",
+              "auto_off_temp": "Otomatik kapanma sıcaklık sınırı",
+              "auto_off_delay": "Baskıdan sonra otomatik kapanma gecikmesi",
+              "idle_off_hours": "Boşta kalınca kapat",
+              "energy_price_fixed": "Sabit elektrik fiyatı"
+            },
+            "data_description": {
+              "power_switch": "Karttaki aç/kapat düğmesi için kullanılır. Yazdırma sırasında kapatma engellenir.",
+              "power_sensor": "Anlık güç tüketimi, genellikle aynı prizden.",
+              "energy_sensor": "Toplam enerji sayacı. Her baskının tüketimi için kullanılır.",
+              "energy_price": "Güncel fiyatı veren sensör veya yardımcı (dinamik tarifeler). Boş = aşağıdaki sabit fiyat veya enerji panosu.",
+              "shutdown_host": "Yazıcıya kapatma komutu gönderir, yazıcı kapanana kadar ve ardından 10 sn bekler, sonra elektriği keser. Yazıcı reddederse, kendi açma/kapama düğmesindeki gibi 10 sn sonra elektriği kesilir.",
+              "auto_on": "Yazıcı kapalıyken karttan baskı başlatmak yazıcıyı açar ve hazır olana kadar bekler (yaklaşık 1–2 dk).",
+              "auto_off": "Biten veya iptal edilen bir baskıdan sonra, tüm ısıtıcılar soğuduğunda.",
+              "auto_off_temp": "Nozullar ve tabla bu sıcaklığın altında olmalıdır.",
+              "auto_off_delay": "Baskının bitişi ile elektriğin kesilmesi arasındaki en kısa süre.",
+              "idle_off_hours": "Baskı ve ısıtma olmadan geçen saat; sonra düzgünce kapatılır ve elektriği kesilir. 0 = kapalı.",
+              "energy_price_fixed": "kWh başına; fiyat varlığı ayarlanmamışsa kullanılır. İkisi de yoksa enerji panosundaki fiyat kullanılır."
+            }
+          },
+          "notify": {
+            "name": "Bildirimler ve kamera",
+            "description": "Telefon bildirimi: baskı sonu, hatalar, duraklatma, mesajlar, ilk katman, neredeyse bitti, az filament.",
+            "data": {
+              "notify_targets": "Bildirim hizmetleri",
+              "notify_events": "Bildirim gönderilecek olaylar",
+              "camera": "Fotoğraf için kamera",
+              "almost_done_minutes": "“Neredeyse bitti” uyarısı",
+              "bed_cool_temp": "“Parça hazır” sıcaklığı",
+              "camera_wake": "Kamerayı uyanık tut",
+              "live_notify_budget": "İlerleme bildirimi: günlük güncelleme sayısı",
+              "live_notify_image": "İlerleme bildirimi: görüntü",
+              "notify_click_url": "Dokununca aç"
+            },
+            "data_description": {
+              "notify_targets": "örn. notify.mobile_app_pixel_8. Birden fazla seçilebilir.",
+              "camera": "Companion uygulaması güncel bir görüntü ekler. Geçmişteki sonuç fotoğrafı için de kullanılır.",
+              "almost_done_minutes": "Tahmini bitişten önceki dakika.",
+              "bed_cool_temp": "Biten bir baskıdan sonra mesajın gönderileceği tabla sıcaklığı.",
+              "camera_wake": "Snapmaker uygulaması gibi her 10 sn'de camera.start_monitor gönderir. Orijinal ürün yazılımında kamera görüntüsü duruyorsa gerekir; değiştirilmiş ürün yazılımında genellikle gerekmez.",
+              "live_notify_budget": "Süren ilerleme bildirimi (Android) için telefon başına günlük üst sınır. Companion uygulaması günde yaklaşık 500 bildirime izin verir; bitiş, hata ve duraklatma mesajları buna dahil değildir.",
+              "live_notify_image": "İlerleme bildirimi genişletildiğinde görüntü: kamera görüntüsü (her güncellemede yenilenir) veya dilimleyicinin model önizlemesi. Ek bildirim yok.",
+              "notify_click_url": "Bir bildirime dokunulduğunda açılan pano yolu veya URL, örn. /dashboard-printer/0 veya /lovelace/printer. Boş = uygulamanın varsayılanı."
+            }
+          },
+          "filament": {
+            "name": "Filament fiyatları",
+            "description": "Malzemeye göre kg fiyatı; her baskının filament maliyeti için kullanılır. Spoolman varsa onun fiyatları önceliklidir (her kafadaki makara, yoksa o malzemedeki makaralarınızın ortalaması); bu alanlar yalnızca orada fiyatı olmayan malzemeler için geçerlidir. Atlamak için boş bırakın.",
+            "data": {
+              "price_pla": "PLA",
+              "price_petg": "PETG",
+              "price_abs": "ABS",
+              "price_asa": "ASA",
+              "price_tpu": "TPU",
+              "price_pa": "PA",
+              "price_other": "Diğer malzemeler"
+            }
+          },
+          "files": {
+            "name": "Dosyalar",
+            "data": {
+              "files_limit": "En yeni dosya sayısı",
+              "config_backup": "Yazıcı yapılandırmasını yedekle"
+            },
+            "data_description": {
+              "config_backup": "printer.cfg vb. dosyaların /config/snapmaker_u1_backup klasörüne günlük kopyası (yalnızca değiştiğinde, 10 sürüm)."
+            }
+          },
+          "spoolman": {
+            "name": "Spoolman",
+            "description": "İsteğe bağlı. Spoolman kullanmıyorsanız URL'yi boş bırakın.",
+            "data": {
+              "spoolman_url": "Spoolman URL'si",
+              "spoolman_deduct": "Her baskıdan sonra kafa başına tüketimi düş",
+              "spoolman_low": "Uyarı sınırı",
+              "spool_restore": "Kafa yeniden yüklendikten sonra son makara"
+            },
+            "data_description": {
+              "spoolman_url": "7912 portlu adres, örn. 192.168.0.10:7912 (Home Assistant eklentisi: homeassistant.local:7912). Boş = kapalı.",
+              "spoolman_deduct": "Baskı kafası başına dilimleyici ağırlığı (iptal edilirse orantılı). Tüketimi zaten başka bir şey kaydediyorsa (örn. Moonraker'ın kendi Spoolman bağlantısı) kapatın, aksi halde iki kez sayılır.",
+              "spoolman_low": "Bir makarada bundan az filament kaldığında kart uyarı gösterir.",
+              "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin."
+            }
+          },
+          "timelapse": {
+            "name": "Timelapse yedekleme",
+            "description": "Yeni timelapse videolarını Home Assistant'ın medya klasörüne (snapmaker_u1) kopyalar. En eskileri daha sonra yazıcıda silinebilir.",
+            "data": {
+              "timelapse_archive": "Timelapse videolarını yedekle",
+              "timelapse_keep": "Yazıcıda tut",
+              "timelapse_archive_max": "Medya klasöründe tut",
+              "timelapse_archive_days": "Şundan eski yedekleri sil"
+            },
+            "data_description": {
+              "timelapse_keep": "Bu kadar en yeni video yazıcıda kalır, daha eskileri yedeklemeden sonra silinir. 0 = asla silme.",
+              "timelapse_archive_max": "Medya klasöründe tutulan en yeni videolar; daha eskileri silinir. 0 = hepsini tut.",
+              "timelapse_archive_days": "Gün; 0 = yaş sınırı yok."
+            }
+          },
+          "maintenance": {
+            "name": "Bakım",
+            "description": "Baskı saati (h) ve/veya ay (mo) cinsinden aralıklar; hangisine önce ulaşılırsa öğenin zamanı gelir. Ay değerleri Snapmaker'ın U1 bakım kılavuzuna göredir. 0 = kapalı, ikisi de 0 = öğeyi gizle.",
+            "data": {
+              "maint_plate": "Baskı tablasını temizle (baskı saati)",
+              "maint_m_plate": "Baskı tablasını temizle (ay)",
+              "maint_nozzle": "Nozulları ve sileceği temizle (baskı saati)",
+              "maint_m_nozzle": "Nozulları ve sileceği temizle (ay)",
+              "maint_rails": "Doğrusal milleri temizle ve yağla (baskı saati)",
+              "maint_m_rails": "Doğrusal milleri temizle ve yağla (ay)",
+              "maint_belts": "Kayışları kontrol et (baskı saati)",
+              "maint_m_belts": "Kayışları kontrol et (ay)",
+              "maint_filter": "Hava filtresini değiştir (baskı saati)",
+              "maint_m_filter": "Hava filtresini değiştir (ay)",
+              "maint_carbon_rods": "X karbon çubuklarını temizle (baskı saati)",
+              "maint_m_carbon_rods": "X karbon çubuklarını temizle (ay)",
+              "maint_lead_screws": "Z vidalı millerini ve somunlarını yağla (baskı saati)",
+              "maint_m_lead_screws": "Z vidalı millerini ve somunlarını yağla (ay)",
+              "maint_coupling": "Kafa bağlantısının çelik pimleri ve bilyeleri (baskı saati)",
+              "maint_m_coupling": "Kafa bağlantısının çelik pimleri ve bilyeleri (ay)",
+              "maint_pogo": "Kafaların pogo kontaklarını temizle (baskı saati)",
+              "maint_m_pogo": "Kafaların pogo kontaklarını temizle (ay)"
+            }
+          }
+        }
+      }
+    },
+    "error": {
+      "auto_needs_switch": "Otomatik açma ve otomatik kapama için güç anahtarı gerekir.",
+      "unknown_notify": "Bildirim hizmetlerinden biri mevcut değil.",
+      "spoolman_unreachable": "Bu URL'de Spoolman'a ulaşılamıyor."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "filaments": {
+        "name": "Filamentler",
+        "unit_of_measurement": "yüklü"
+      },
+      "slot": {
+        "name": "Yuva {slot}"
+      },
+      "files": {
+        "name": "Baskı dosyaları",
+        "unit_of_measurement": "dosya"
+      },
+      "tool_changes": {
+        "name": "Kafa değişimleri",
+        "unit_of_measurement": "değişim"
+      },
+      "tool_changes_print": {
+        "name": "Kafa değişimleri (baskı)",
+        "unit_of_measurement": "değişim"
+      },
+      "print_energy": {
+        "name": "Enerji (baskı)"
+      },
+      "print_cost": {
+        "name": "Maliyet (baskı)"
+      },
+      "history": {
+        "name": "Baskı geçmişi",
+        "unit_of_measurement": "baskı"
+      },
+      "timelapses": {
+        "name": "Timelapse videoları",
+        "unit_of_measurement": "video"
+      },
+      "queue": {
+        "name": "Kuyruk",
+        "unit_of_measurement": "iş"
+      },
+      "statistics": {
+        "name": "Baskı saati"
+      },
+      "maintenance": {
+        "name": "Zamanı gelen bakım",
+        "unit_of_measurement": "öğe"
+      },
+      "errors": {
+        "name": "Yazıcı mesajları",
+        "unit_of_measurement": "mesaj"
+      },
+      "remaining": {
+        "name": "Kalan süre"
+      },
+      "finish": {
+        "name": "Bitiş zamanı"
+      },
+      "bed_mesh": {
+        "name": "Tabla ağı farkı"
+      },
+      "top_cover": {
+        "name": "Üst kapak",
+        "state": {
+          "idle": "Boşta",
+          "cool": "Kabin soğutuluyor",
+          "preheat": "Kabin ön ısıtılıyor",
+          "hot": "Sıcak kabin",
+          "unknown": "Bilinmiyor"
+        }
+      },
+      "chamber_heater": {
+        "name": "Kabin ısıtıcısı"
+      },
+      "machine": {
+        "name": "Yazıcı değerleri"
+      },
+      "bed_temperature": {
+        "name": "Tabla sıcaklığı"
+      },
+      "nozzle_temperature": {
+        "name": "Nozul {head} sıcaklığı"
+      },
+      "cavity_temperature": {
+        "name": "Kabin sıcaklığı"
+      },
+      "progress": {
+        "name": "İlerleme"
+      },
+      "print_state": {
+        "name": "Baskı durumu",
+        "state": {
+          "standby": "Hazır",
+          "printing": "Yazdırılıyor",
+          "paused": "Duraklatıldı",
+          "complete": "Tamamlandı",
+          "cancelled": "İptal edildi",
+          "error": "Hata"
+        }
+      },
+      "current_layer": {
+        "name": "Katman"
+      },
+      "cpu_temperature": {
+        "name": "CPU sıcaklığı"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Güç"
+      },
+      "auto_replenish": {
+        "name": "Filamenti otomatik tamamla"
+      },
+      "replenish_ignore_color": {
+        "name": "Rengi yok sayarak tamamla"
+      },
+      "entangle_detect": {
+        "name": "Filament dolanma algılama"
+      },
+      "end_led_off": {
+        "name": "Baskıdan sonra ışığı kapat"
+      },
+      "live_notify": {
+        "name": "İlerleme bildirimi (Android)"
+      },
+      "chamber_filter": {
+        "name": "Kabin ısıtıcısı filtresi"
+      }
+    },
+    "binary_sensor": {
+      "live": {
+        "name": "Canlı bağlantı"
+      }
+    },
+    "update": {
+      "firmware": {
+        "name": "Ürün yazılımı"
+      }
+    },
+    "select": {
+      "entangle_sensitivity": {
+        "name": "Dolanma algılama hassasiyeti",
+        "state": {
+          "low": "Düşük",
+          "medium": "Orta",
+          "high": "Yüksek"
+        }
+      },
+      "top_cover_mode": {
+        "name": "Üst kapak modu",
+        "state": {
+          "idle": "Boşta",
+          "cool": "Kabini soğut",
+          "preheat": "Kabini ön ısıt",
+          "hot": "Sıcak kabin"
+        }
+      }
+    },
+    "camera": {
+      "camera": {
+        "name": "Kamera",
+        "state_attributes": {
+          "mode": {
+            "name": "Mod",
+            "state": {
+              "live": "Canlı yayın",
+              "still": "Tek kareler",
+              "wake": "Tek kareler (orijinal, uyandırılmış)",
+              "none": "Kamera yok"
+            }
+          }
+        }
+      },
+      "camera2": {
+        "name": "Kamera 2"
+      }
+    },
+    "number": {
+      "flow_factor": {
+        "name": "Akış"
+      },
+      "top_cover_exhaust": {
+        "name": "Üst kapak egzoz fanı"
+      },
+      "top_cover_inner": {
+        "name": "Üst kapak sirkülasyon fanı"
+      },
+      "chamber_target": {
+        "name": "Kabin ısıtıcısı hedefi"
+      },
+      "bed_target": {
+        "name": "Tabla hedefi"
+      },
+      "nozzle_target": {
+        "name": "Nozul {head} hedefi"
+      },
+      "part_fan": {
+        "name": "Parça soğutma fanı"
+      },
+      "speed_factor": {
+        "name": "Hız çarpanı"
+      },
+      "top_cover_target": {
+        "name": "Üst kapak kabin hedefi"
+      }
+    },
+    "button": {
+      "pause_print": {
+        "name": "Baskıyı duraklat"
+      },
+      "resume_print": {
+        "name": "Baskıya devam et"
+      },
+      "cancel_print": {
+        "name": "Baskıyı iptal et"
+      },
+      "emergency_stop": {
+        "name": "Acil durdurma"
+      },
+      "home": {
+        "name": "Tüm eksenleri sıfırla"
+      }
+    },
+    "light": {
+      "chamber_light": {
+        "name": "Kabin ışığı"
+      },
+      "led": {
+        "name": "LED {name}"
+      }
+    }
+  },
+  "services": {
+    "start_print": {
+      "name": "Baskıyı başlat",
+      "description": "Yazıcıdaki bir baskı dosyasını Snapmaker Orca gibi filament eşlemesiyle başlatır.",
+      "fields": {
+        "filename": {
+          "name": "Dosya",
+          "description": "gcodes klasörüne göre yol."
+        },
+        "mapping": {
+          "name": "Filament eşleme",
+          "description": "Mantıksal filament (T0, T1, ...) → yazıcı yuvası 0-3, YAML eşlemesi olarak örn. 0: 2 ve 1: 0. Boş = otomatik öneri."
+        },
+        "bed_leveling": {
+          "name": "Tabla seviyeleme",
+          "description": "Baskıdan önce otomatik tabla seviyeleme yap."
+        },
+        "flow_calibration": {
+          "name": "Akış kalibrasyonu",
+          "description": "Baskıdan önce akış kalibrasyonu yap."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Timelapse kaydet."
+        },
+        "plate": {
+          "name": "Tabla",
+          "description": "3MF dosyaları için tabla numarası."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        },
+        "pause_layers": {
+          "name": "Katmandan önce duraklat",
+          "description": "Katman listesi (1 = ilk). Yazıcı bu katmanlardan önce duraklar, örn. mıknatıs yerleştirmek için. Bunun için dosyanın PAUSE içeren bir kopyası oluşturulur."
+        }
+      }
+    },
+    "refresh": {
+      "name": "Yenile",
+      "description": "Dosya listesini ve filamentleri hemen yeniden yükle.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "power_on": {
+      "name": "Aç",
+      "description": "Yazıcıyı aç.",
+      "fields": {
+        "wait": {
+          "name": "Hazır olana kadar bekle",
+          "description": "Yalnızca Klipper hazır olduğunda dön (en fazla 4 dk)."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "power_off": {
+      "name": "Güvenli kapat",
+      "description": "Yazıcıyı kapat ve ardından elektriğini kes. Yazdırma sırasında reddedilir.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        },
+        "force": {
+          "name": "Zorla",
+          "description": "Bir baskı çalışıyor olarak kayıtlı olsa bile kapat, örn. yazıcı çöktükten sonra. Yazıcı durumuna göre denetlenmez."
+        }
+      }
+    },
+    "set_spool": {
+      "name": "Makara ata",
+      "description": "Bir baskı kafasına Spoolman makarası atar. spool_id olmadan entegrasyon yeniden otomatik seçer.",
+      "fields": {
+        "slot": {
+          "name": "Baskı kafası",
+          "description": "1-4"
+        },
+        "spool_id": {
+          "name": "Makara kimliği",
+          "description": "Spoolman'daki kimlik; 0 = makara yok. Otomatik için boş bırakın."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "queue_add": {
+      "name": "Kuyruğa ekle",
+      "description": "Eşleme ve seçeneklerle bir baskı planlar. Tabla boşaltıldığında elle başlatılır (queue_start).",
+      "fields": {
+        "filename": {
+          "name": "Dosya",
+          "description": "gcodes klasörüne göre yol."
+        },
+        "mapping": {
+          "name": "Filament eşleme",
+          "description": "Mantıksal filament (T0, T1, ...) → yazıcı yuvası 0-3, YAML eşlemesi olarak örn. 0: 2 ve 1: 0. Boş = otomatik öneri."
+        },
+        "bed_leveling": {
+          "name": "Tabla seviyeleme",
+          "description": "Baskıdan önce otomatik tabla seviyeleme yap."
+        },
+        "flow_calibration": {
+          "name": "Akış kalibrasyonu",
+          "description": "Baskıdan önce akış kalibrasyonu yap."
+        },
+        "timelapse": {
+          "name": "Timelapse",
+          "description": "Timelapse kaydet."
+        },
+        "plate": {
+          "name": "Tabla",
+          "description": "3MF dosyaları için tabla numarası."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        },
+        "pause_layers": {
+          "name": "Katmandan önce duraklat",
+          "description": "Katman listesi (1 = ilk). Yazıcı bu katmanlardan önce duraklar, örn. mıknatıs yerleştirmek için. Bunun için dosyanın PAUSE içeren bir kopyası oluşturulur."
+        }
+      }
+    },
+    "queue_remove": {
+      "name": "Kuyruktan kaldır",
+      "description": "Bir işi kaldırır.",
+      "fields": {
+        "job_id": {
+          "name": "İş",
+          "description": "Kuyruk sensörünün jobs özniteliğindeki kimlik."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "queue_move": {
+      "name": "İşi taşı",
+      "description": "Sırayı değiştirir.",
+      "fields": {
+        "job_id": {
+          "name": "İş",
+          "description": "Kuyruk sensörünün jobs özniteliğindeki kimlik."
+        },
+        "position": {
+          "name": "Konum",
+          "description": "0 = ilk."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "queue_start": {
+      "name": "İşi başlat",
+      "description": "İlk (veya belirtilen) işi başlatır. Önce tablayı boşaltın.",
+      "fields": {
+        "job_id": {
+          "name": "İş",
+          "description": "Boş = ilk iş."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "queue_clear": {
+      "name": "Kuyruğu temizle",
+      "description": "Tüm işleri kaldırır.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "maintenance_done": {
+      "name": "Bakım yapıldı",
+      "description": "Bir bakım öğesinin sayacını sıfırlar.",
+      "fields": {
+        "item": {
+          "name": "Öğe",
+          "description": ""
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "backup_timelapses": {
+      "name": "Timelapse videolarını şimdi yedekle",
+      "description": "Eksik timelapse videolarını medya klasörüne yedekler, ardından yazıcıyı temizler.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "backup_config": {
+      "name": "Yazıcı yapılandırmasını yedekle",
+      "description": "printer.cfg vb. dosyaları yazıcıdan /config/snapmaker_u1_backup klasörüne kopyalar (yalnızca değiştiğinde yeni sürüm).",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "file_details": {
+      "name": "Dosya ayrıntıları",
+      "description": "Bir baskı dosyasının meta verileri ve küçük resmi, eski dosyalar dahil (kartın araması için).",
+      "fields": {
+        "path": {
+          "name": "Dosya",
+          "description": "gcodes klasörüne göre yol, örn. parts/holder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "file_settings": {
+      "name": "Dilimleyici ayarları",
+      "description": "G-code'un ayar bloğundan katman yüksekliği, duvarlar, dolgu, destekler, tabla ve sıcaklıklar.",
+      "fields": {
+        "path": {
+          "name": "Dosya",
+          "description": "gcodes klasörüne göre yol, örn. parts/holder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "delete_file": {
+      "name": "Dosyayı sil",
+      "description": "Yazıcıdaki bir baskı dosyasını siler. Yazdırılırken veya kuyruktayken silinemez.",
+      "fields": {
+        "path": {
+          "name": "Dosya",
+          "description": "gcodes klasörüne göre yol, örn. parts/holder.gcode"
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "move_file": {
+      "name": "Dosyayı yeniden adlandır/taşı",
+      "description": "Yeni ad veya yol; alt klasörler oluşturulur.",
+      "fields": {
+        "source": {
+          "name": "Dosya",
+          "description": "Mevcut yol"
+        },
+        "dest": {
+          "name": "Hedef",
+          "description": "Yeni ad veya yol"
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "self_test": {
+      "name": "Öz test",
+      "description": "Yazıcıyı, canlı bağlantıyı, depolamayı, Moonraker entegrasyonunu, kamerayı, gücü, bildirimleri, Spoolman'ı, Assist'i ve medya klasörünü denetler.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        },
+        "language": {
+          "name": "Dil",
+          "description": "de veya en; boş = Home Assistant dili."
+        }
+      }
+    },
+    "set_preference": {
+      "name": "Yazıcı tercihini ayarla",
+      "description": "Yazıcının bir ürün yazılımı tercihini değiştirir. Baskı sırasında da mümkündür.",
+      "fields": {
+        "preference": {
+          "name": "Tercih",
+          "description": "auto_replenish, replenish_ignore_color, entangle_detect, end_led_off veya entangle_sensitivity."
+        },
+        "value": {
+          "name": "Değer",
+          "description": "true/false; entangle_sensitivity için low, medium veya high."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "set_filament": {
+      "name": "Filamenti ayarla",
+      "description": "Bir baskı kafasının malzemesini, alt türünü, üreticisini ve rengini elle ayarlar, örn. RFID'siz makaralar için. Baskı sırasında yapılamaz.",
+      "fields": {
+        "slot": {
+          "name": "Baskı kafası",
+          "description": "1-4"
+        },
+        "type": {
+          "name": "Malzeme",
+          "description": "örn. PLA, PETG, TPU."
+        },
+        "sub_type": {
+          "name": "Alt tür",
+          "description": "örn. Silk, Mat, HF. Boş = yok."
+        },
+        "vendor": {
+          "name": "Üretici",
+          "description": "örn. Generic."
+        },
+        "color": {
+          "name": "Renk",
+          "description": "Onaltılık renk, örn. #FF0000."
+        },
+        "colors": {
+          "name": "Renkler (çok renkli)",
+          "description": "Çok renkli bir makara için en fazla 5 onaltılık renk (silk dual/tri, gökkuşağı). Renk alanının yerine geçer."
+        },
+        "force": {
+          "name": "Orijinal makaranın üzerine yaz",
+          "description": "Orijinal Snapmaker makarasının RFID verisinin de üzerine yaz."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "camera_wake": {
+      "name": "Kamerayı uyandır",
+      "description": "Bir kez camera.start_monitor gönderir (Snapmaker uygulaması gibi). Kamera görüntüsü durduğunda kart bunu otomatik çağırır.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "exclude_object": {
+      "name": "Nesneyi hariç tut",
+      "description": "Süren baskıdaki bir nesnenin yazdırılmasını durdurur (Klipper EXCLUDE_OBJECT). Geri alınamaz. Kalan son nesne hariç tutulamaz.",
+      "fields": {
+        "name": {
+          "name": "Nesne",
+          "description": "Dosyada tanımlandığı şekliyle ad (EXCLUDE_OBJECT_DEFINE)."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "send_gcode": {
+      "name": "G-code gönder",
+      "description": "Yazıcıda G-code çalıştırır ve yanıtlarını döndürür. Baskı sırasında yalnızca ince ayar komutlarına izin verilir (sıcaklıklar, fanlar, hız, akış, Z ofseti, ışık, üst kapak, sorgular).",
+      "fields": {
+        "script": {
+          "name": "G-code",
+          "description": "Satır başına bir komut, en fazla 20 satır."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "tool_change": {
+      "name": "Kafayı al veya park et",
+      "description": "Bir kafayı taşıyıcıya alır veya mevcut kafayı yuvasına geri koyar. Gerekirse önce X/Y eksenlerini sıfırlar. Baskı sırasında kilitlidir.",
+      "fields": {
+        "head": {
+          "name": "Kafa",
+          "description": "1-4; park için yok sayılır."
+        },
+        "action": {
+          "name": "Eylem",
+          "description": "pick = bu kafayı al, park = mevcut kafayı geri koy."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "weigh_spool": {
+      "name": "Makarayı tart",
+      "description": "Spoolman'daki bir makaranın kalan filamentini terazideki değerden ayarlar. Boş makarayla tartıldıysa (varsayılan) makaranın ağırlığı Spoolman'dan alınır.",
+      "fields": {
+        "slot": {
+          "name": "Kafa",
+          "description": "1-4; bu kafaya atanmış makara."
+        },
+        "spool_id": {
+          "name": "Makara kimliği",
+          "description": "Kafa yerine."
+        },
+        "weight": {
+          "name": "Ağırlık",
+          "description": "Terazinin gösterdiği değer (g)."
+        },
+        "gross": {
+          "name": "Boş makarayla",
+          "description": "Açık = makarayla tartıldı (brüt), kapalı = yalnızca filament."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "machine_command": {
+      "name": "Makine komutu",
+      "description": "Moonraker entegrasyonu olmadan duraklatma, devam, iptal, acil durdurma, eksen sıfırlama, hedef değerler ve anahtarlar.",
+      "fields": {
+        "action": {
+          "name": "Eylem",
+          "description": "pause, resume, cancel, emergency_stop, home, set veya switch."
+        },
+        "target": {
+          "name": "Hedef",
+          "description": "home: all/x/y/z; set: bed_target, extruder1_target, fan_speed, speed_factor, FAN_speed; switch: output_pin_NAME veya led_NAME (FAN, NAME Klipper'daki gibi)."
+        },
+        "value": {
+          "name": "Değer",
+          "description": "set için sayı, switch için on/off."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    },
+    "create_spool": {
+      "name": "Makara oluştur",
+      "description": "Spoolman'da bir makara oluşturur (üretici ve filament varsa yeniden kullanılır, yoksa oluşturulur) ve bir kafaya atar.",
+      "fields": {
+        "slot": {
+          "name": "Kafa",
+          "description": "1-4; yeni makara bu kafaya atanır. Boş = yalnızca oluştur."
+        },
+        "material": {
+          "name": "Malzeme",
+          "description": "örn. PLA, PETG, TPU. Filament kimliği veya katalog girdisiyle gerekmez."
+        },
+        "filament_id": {
+          "name": "Filament kimliği",
+          "description": "Makara için mevcut Spoolman filamenti; üretici, malzeme, ad ve renk buradan alınır."
+        },
+        "external_id": {
+          "name": "Katalog girdisi",
+          "description": "Spoolman kataloğundaki (SpoolmanDB) bir filamentin kimliği; bir kez içe aktarılır, sonra yeniden kullanılır."
+        },
+        "location": {
+          "name": "Konum",
+          "description": "Makaranın saklandığı yer, örn. bir raf veya kurutma kutusu."
+        },
+        "vendor": {
+          "name": "Üretici",
+          "description": "Yoksa Spoolman'da oluşturulur."
+        },
+        "name": {
+          "name": "Ad",
+          "description": "Filament adı, örn. PLA Mat Siyah. Boş = malzeme."
+        },
+        "color": {
+          "name": "Renk",
+          "description": "Onaltılık, örn. #1a1a1a."
+        },
+        "weight": {
+          "name": "Net ağırlık",
+          "description": "Dolu bir makaradaki filament (g)."
+        },
+        "spool_weight": {
+          "name": "Boş makara",
+          "description": "Boş makaranın ağırlığı (g) (tartım için)."
+        },
+        "price": {
+          "name": "Fiyat",
+          "description": "Makaranın fiyatı."
+        },
+        "remaining": {
+          "name": "Kalan",
+          "description": "Kalan filament (g); boş = dolu."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        }
+      }
+    }
+  },
+  "selector": {
+    "spool_restore": {
+      "options": {
+        "ask": "Öner (tek dokunuş)",
+        "auto": "Otomatik ayarla",
+        "off": "Kapalı"
+      }
+    },
+    "notify_events": {
+      "options": {
+        "complete": "Baskı bitti",
+        "cancelled": "Baskı iptal edildi",
+        "error": "Baskı hatası",
+        "paused": "Baskı duraklatıldı (örn. filament bitti)",
+        "alert": "Baskı sırasında yazıcı mesajı",
+        "first_layer": "İlk katman bitti",
+        "almost_done": "Neredeyse bitti",
+        "spool_low": "Yetersiz filament (Spoolman)",
+        "spool_runout": "Makara baskı sırasında bitmek üzere (Spoolman)",
+        "bed_cool": "Parça alınmaya hazır (tabla soğudu)",
+        "maintenance": "Zamanı gelen bakım",
+        "chamber_ready": "Kabin hedefine ulaştı (üst kapak veya kabin ısıtıcısı)"
+      }
+    },
+    "maintenance_item": {
+      "options": {
+        "plate": "Baskı tablasını temizle",
+        "nozzle": "Nozulları ve sileceği temizle",
+        "rails": "Doğrusal milleri temizle ve yağla",
+        "belts": "Kayışları kontrol et",
+        "filter": "Hava filtresini değiştir",
+        "carbon_rods": "X karbon çubuklarını temizle",
+        "lead_screws": "Z vidalı millerini ve somunlarını yağla",
+        "coupling": "Kafa bağlantısının çelik pimleri ve bilyeleri",
+        "pogo": "Kafaların pogo kontaklarını temizle"
+      }
+    },
+    "camera_wake": {
+      "options": {
+        "off": "Kapalı",
+        "printing": "Baskı sırasında",
+        "always": "Yazıcı açıkken her zaman"
+      }
+    },
+    "tool_change_action": {
+      "options": {
+        "pick": "Al",
+        "park": "Park et"
+      }
+    },
+    "live_notify_image": {
+      "options": {
+        "camera": "Kamera görüntüsü",
+        "thumbnail": "Model önizlemesi",
+        "off": "Görüntü yok"
+      }
+    }
+  }
+}
