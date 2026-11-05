@@ -15,13 +15,13 @@ Eine Integration für den Snapmaker U1 in Home Assistant, mit eigener Dashboard-
 **Drucken**
 - Druckstart mit Filamentzuordnung wie in Snapmaker Orca, mit Kostenschätzung, Slicer-Einstellungen der Datei und Warnung, wenn eine Spule nicht reicht
 - Warteschlange, Pause bei Schicht, Nachdruck aus dem Verlauf, Objekte im Druck auslassen
-- Schichtansicht in den Farben der geladenen Spulen, Restzeit am echten Druck kalibriert
+- Schichtansicht in den Farben der geladenen Spulen mit Reglern für Schicht und Fortschritt, G-Code-Vorschau jeder Datei vor dem Druck, Restzeit am echten Druck kalibriert
 
 **Drucker**
 - Alle Werte live vom Drucker: Temperaturen, Lüfter, Licht, Achsen, MCU- und CPU-Last
 - Volle Steuerung: Pause, Abbrechen, Not-Halt, Referenzfahrt, Temperaturen, Lüfter, Geschwindigkeit, Flussrate
 - Temperaturverlauf für Köpfe, Bett, Innenraum, Schrittmotortreiber und CPU
-- Bed-Mesh-Heatmap, G-Code-Konsole, Köpfe aufnehmen und ablegen, Top Cover und Kammerheizung
+- Bed-Mesh-Heatmap, G-Code-Konsole, Köpfe aufnehmen und ablegen, Top-Cover-Modus und Kammerheizung
 
 **Kamera**
 - Zu Hause WebRTC, unterwegs (Nabu Casa) RTSP über Home Assistant, sonst MJPEG oder Standbilder, auch mit der Kamera der Stock-Firmware
@@ -29,7 +29,7 @@ Eine Integration für den Snapmaker U1 in Home Assistant, mit eigener Dashboard-
 
 **Filament und Spoolman**
 - Material, Hersteller und Farbe je Kopf aus Firmware und RFID-Tag, für Spulen ohne Tag von Hand änderbar
-- [Spoolman](https://github.com/Donkie/Spoolman): Spule je Kopf, neue Spulen direkt aus der Karte, Verbrauch je Kopf gebucht, Preise aus Spoolman, SpoolLink
+- [Spoolman](https://github.com/Donkie/Spoolman): eigener Reiter mit dem Bestand, Spule je Kopf, neue Spulen mit Vorschlägen aus dem Spoolman-Katalog, Verbrauch je Kopf gebucht, Preise aus Spoolman, SpoolLink
 
 **Rund um den Drucker**
 - Benachrichtigungen aufs Handy mit Kamerabild und Knöpfen, laufende Fortschrittsanzeige unter Android

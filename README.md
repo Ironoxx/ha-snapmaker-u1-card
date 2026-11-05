@@ -15,13 +15,13 @@ One integration for the Snapmaker U1 in Home Assistant, with its own dashboard c
 **Printing**
 - Start prints with the filament mapping of Snapmaker Orca, including a cost estimate, the file's slicer settings and a warning when a spool will not last
 - Queue, pause at a layer, reprint from the history, exclude objects during a print
-- Layer view in the colours of the loaded spools, remaining time calibrated on the real print
+- Layer view in the colours of the loaded spools with sliders for layer and progress, G-code preview of any file before printing, remaining time calibrated on the real print
 
 **Printer**
 - All values live from the printer: temperatures, fans, light, axes, MCU and CPU load
 - Full control: pause, cancel, emergency stop, homing, temperatures, fans, speed, flow
 - Temperature chart for heads, bed, chamber, stepper drivers and CPU
-- Bed mesh heatmap, G-code console, pick and park heads, top cover and chamber heater
+- Bed mesh heatmap, G-code console, pick and park heads, top cover mode and chamber heater
 
 **Camera**
 - WebRTC at home, RTSP through Home Assistant when away (Nabu Casa), MJPEG or still images as fallback, including the stock firmware camera
@@ -29,7 +29,7 @@ One integration for the Snapmaker U1 in Home Assistant, with its own dashboard c
 
 **Filament and Spoolman**
 - Material, vendor and colour per head from the firmware and RFID tags, editable for spools without a tag
-- [Spoolman](https://github.com/Donkie/Spoolman): spool per head, new spools created from the card, usage booked per head, prices from Spoolman, SpoolLink support
+- [Spoolman](https://github.com/Donkie/Spoolman): own tab with the stock, spool per head, new spools with suggestions from Spoolman's catalogue, usage booked per head, prices from Spoolman, SpoolLink support
 
 **Around the printer**
 - Phone notifications with camera image and buttons, live progress notification on Android
