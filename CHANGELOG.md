@@ -4,6 +4,26 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.1.4b1
+
+Beta. Fix for the live camera.
+
+- **Fixed: printer "offline" in Home Assistant after a while with the camera in live mode** ([#11](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues/11), thanks to [@goldsam328](https://github.com/goldsam328) for the report and analysis). The camera entity's MJPEG stream never closed its connection to the printer, so every view of the camera left one open until Home Assistant had no free connection to the printer left and the status poll timed out. The connection is now closed when the viewer leaves, and the stream itself is passed through correctly.
+- README: installation as clear steps with *Open in HACS* and *Add integration* buttons.
+
+Please check: open and close the dashboard with the camera many times (and the camera entity's dialog); the printer stays online.
+
+### Deutsch
+
+Beta. Fix für die Live-Kamera.
+
+- **Behoben: Drucker in Home Assistant nach einer Weile „offline“, wenn die Kamera im Live-Modus läuft** ([#11](https://github.com/Ironoxx/ha-snapmaker-u1-card/issues/11), danke an [@goldsam328](https://github.com/goldsam328) für Meldung und Analyse). Der MJPEG-Stream der Kamera-Entität schloss seine Verbindung zum Drucker nie; jede Ansicht der Kamera ließ eine offen, bis Home Assistant keine freie Verbindung zum Drucker mehr hatte und die Statusabfrage ins Leere lief. Jetzt wird die Verbindung geschlossen, sobald die Ansicht weg ist, und der Stream selbst wird richtig durchgereicht.
+- README: Installation in klaren Schritten mit Knöpfen *Open in HACS* und *Add integration*.
+
+Bitte prüfen: Dashboard mit Kamera (und den Dialog der Kamera-Entität) oft öffnen und schließen; der Drucker bleibt online.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.3
 
 **Snapmaker U1 Card is officially in HACS!** 🎉 It is now part of the HACS default list: search for *Snapmaker U1 Card* in HACS (on Home Assistant 2026.11 and newer under *Settings → Marketplace*); no custom repository needed any more. Thanks to everyone who tested, reported bugs and contributed! Tested as 2.1.3b1–b3.
