@@ -114,8 +114,14 @@ class U1Camera(U1Entity, Camera):
                 upstream = None
             if upstream is not None and upstream.status < 400 and upstream.headers.get(
                     "Content-Type", "").lower().startswith("multipart/x-mixed-replace"):
-                return await async_aiohttp_proxy_stream(
-                    self.hass, request, upstream, upstream.headers["Content-Type"])
+                # The body (StreamReader), not the response; close the upstream connection
+                # when the viewer leaves, otherwise every view keeps one open and the
+                # session's per-host limit blocks the status poll (issue #11).
+                try:
+                    return await async_aiohttp_proxy_stream(
+                        self.hass, request, upstream.content, upstream.headers["Content-Type"])
+                finally:
+                    upstream.close()
             if upstream is not None:
                 upstream.release()
             cam.stream_failed()

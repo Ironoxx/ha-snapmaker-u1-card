@@ -1,6 +1,7 @@
 """1.5: camera detection (live / still / wake / none) and the own camera entity."""
 
-from unittest.mock import AsyncMock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -315,6 +316,32 @@ async def test_live_stream_falls_back(hass: HomeAssistant, mock_client, notifica
         assert await cam.handle_async_mjpeg_stream(object()) == "still-stream"
     assert coord.webcam.mode == "still"
     still.assert_awaited_once()
+
+
+async def test_live_stream_proxied_and_closed(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Issue #11: the printer's MJPEG body is proxied and the upstream closed when the viewer leaves."""
+    with patch.object(wc.Webcam, "_probe", AsyncMock(return_value=("live", "http://p/s", "http://p/snap"))):
+        entry = await _setup(hass)
+        await _refresh(hass, entry)
+        await hass.async_block_till_done(wait_background_tasks=True)
+    coord = entry.runtime_data
+    from custom_components.snapmaker_u1_card import camera as cam_mod
+    cam = cam_mod.U1Camera(coord)
+    cam.hass = hass
+    cam.entity_id = "camera.test_u1"
+    upstream = MagicMock(status=200, headers={"Content-Type": "multipart/x-mixed-replace;boundary=frame"})
+    proxy = AsyncMock(return_value="proxied")
+    with patch.object(coord.client, "open_stream", AsyncMock(return_value=upstream)), \
+         patch.object(cam_mod, "async_aiohttp_proxy_stream", proxy):
+        assert await cam.handle_async_mjpeg_stream(object()) == "proxied"
+        assert proxy.await_args.args[2] is upstream.content, "the body (StreamReader), not the response"
+        upstream.close.assert_called_once()
+        # viewer gone mid-stream (cancelled): still closed
+        upstream.close.reset_mock()
+        proxy.side_effect = asyncio.CancelledError
+        with pytest.raises(asyncio.CancelledError):
+            await cam.handle_async_mjpeg_stream(object())
+        upstream.close.assert_called_once()
 
 
 async def test_slow_stream_rechecked_soon(no_sleep) -> None:
