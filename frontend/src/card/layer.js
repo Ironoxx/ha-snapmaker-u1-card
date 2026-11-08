@@ -320,14 +320,20 @@ export const LayerViewMixin = (Base) => class extends Base {
     if (ex.objects.length < 2) return "";
     const excluded = new Set(ex.excluded);
     const left = ex.objects.filter((o) => !excluded.has(o.name)).length;
-    return `<div class="t-label">${tr("Objekte – antippen zum Ausschließen")}</div><div class="chip-row">${ex.objects.map((o) => {
+    // 2.2: folded by default to save room; the open state survives the refresh
+    const gone = ex.objects.length - left;
+    return `<details class="obj-box" data-objbox ${this._objOpen ? "open" : ""}>
+      <summary><ha-icon icon="mdi:select-remove"></ha-icon><span>${tr("Objekte ausschließen")}</span>
+        <span class="t-label obj-count">${tr("{n} Objekte", { n: ex.objects.length })}${gone ? ` · ${tr("{n} ausgeschlossen", { n: gone })}` : ""}</span>
+        <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+      <div class="body"><div class="t-label">${tr("Objekte – antippen zum Ausschließen")}</div><div class="chip-row">${ex.objects.map((o) => {
       const off = excluded.has(o.name);
       const cur = !off && o.name === ex.current;
       const last = !off && left <= 1;
       return `<button type="button" class="chip obj-chip${off ? " off" : ""}${cur ? " cur" : ""}" data-obj="${esc(o.name)}"
         ${off || last ? "disabled" : ""} title="${esc(off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen"))}">
         <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon>${esc(o.label || o.name)}</button>`;
-    }).join("")}</div>`;
+    }).join("")}</div></div></details>`;
   }
 
   async _excludeObject(name) {
@@ -414,6 +420,10 @@ export const LayerViewMixin = (Base) => class extends Base {
     this._wireLvControls(root, () => this._lv, (n) => this._lvSeek(n), (full) => this._paintLayer(full));
     if (!root || root._objWired) return;
     root._objWired = true;
+    // toggle does not bubble: capture it on the panel (the list is replaced on every refresh)
+    root.addEventListener("toggle", (e) => {
+      if (e.target && e.target.matches && e.target.matches("[data-objbox]")) this._objOpen = e.target.open;
+    }, true);
     root.addEventListener("click", (e) => {
       if (e.target && e.target.closest && e.target.closest("[data-lvmode]")) { this._toggleLvMode(); return; }
       const el = e.target && e.target.closest ? e.target.closest("[data-obj]") : null;

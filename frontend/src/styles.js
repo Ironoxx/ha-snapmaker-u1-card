@@ -1048,6 +1048,9 @@ export const STYLES = `
   .lv-objs polygon.excl { fill: color-mix(in srgb, var(--u1-error) 14%, transparent); stroke: var(--u1-error); opacity: .8; }
   .lv-objects { display: flex; flex-direction: column; gap: 6px; }
   .lv-objects:empty { display: none; }
+  .obj-box > summary { min-height: 36px; }
+  .obj-box .obj-count { margin-left: auto; }
+  .obj-box > .body { display: flex; flex-direction: column; gap: 6px; }
   .lv-objects .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
   .obj-chip { cursor: pointer; }
   .obj-chip ha-icon { --mdc-icon-size: 16px; }

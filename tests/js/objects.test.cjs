@@ -58,6 +58,12 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const polys = R().querySelectorAll(".lv-objs polygon");
   assert.strictEqual(polys.length, 2, "outlines drawn");
   assert.ok(polys[0].classList.contains("cur") && polys[1].classList.contains("pick"));
+  // 2.2: list folded by default, the open state survives a refresh
+  const box = R().querySelector("[data-objbox]");
+  assert.ok(box && !box.open, "eingeklappt");
+  assert.match(box.querySelector("summary").textContent, /2 Objekte/);
+  box.open = true; box.dispatchEvent(new w.Event("toggle"));
+  assert.strictEqual(card._objOpen, true);
   const chips = R().querySelectorAll(".obj-chip");
   assert.deepStrictEqual([...chips].map((c) => c.textContent.trim()), ["Teil (1)", "Teil (2)"]);
 

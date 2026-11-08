@@ -127,6 +127,9 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escribe un comando; la respuesta de la impresora aparece aquí.",
     "Läuft …": "Ejecutando …",
+    "Objekte ausschließen": "Excluir objetos",
+    "{n} Objekte": "{n} objetos",
+    "{n} ausgeschlossen": "{n} excluidos",
     "Spule zu {p} % voll": "Bobina llena al {p} %",
     "Verbrauch je Kopf": "Consumo por cabezal",
     "Details zum Verbrauch": "Detalles del consumo",
@@ -787,6 +790,9 @@
     "Senden": "Envoyer",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Saisissez une commande ; la réponse de l’imprimante s’affiche ici.",
     "Läuft …": "En cours …",
+    "Objekte ausschließen": "Exclure des objets",
+    "{n} Objekte": "{n} objets",
+    "{n} ausgeschlossen": "{n} exclus",
     "Spule zu {p} % voll": "Bobine pleine à {p} %",
     "Verbrauch je Kopf": "Consommation par tête",
     "Details zum Verbrauch": "Détails de la consommation",
@@ -1447,6 +1453,9 @@
     "Senden": "Invia",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Inserisci un comando; la risposta della stampante appare qui.",
     "Läuft …": "In esecuzione …",
+    "Objekte ausschließen": "Escludi oggetti",
+    "{n} Objekte": "{n} oggetti",
+    "{n} ausgeschlossen": "{n} esclusi",
     "Spule zu {p} % voll": "Bobina piena al {p} %",
     "Verbrauch je Kopf": "Consumo per testina",
     "Details zum Verbrauch": "Dettagli del consumo",
@@ -2107,6 +2116,9 @@
     "Senden": "Versturen",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Voer een commando in; het antwoord van de printer verschijnt hier.",
     "Läuft …": "Bezig …",
+    "Objekte ausschließen": "Objecten uitsluiten",
+    "{n} Objekte": "{n} objecten",
+    "{n} ausgeschlossen": "{n} uitgesloten",
     "Spule zu {p} % voll": "Spoel voor {p} % vol",
     "Verbrauch je Kopf": "Verbruik per kop",
     "Details zum Verbrauch": "Details van het verbruik",
@@ -2767,6 +2779,9 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escreva um comando; a resposta da impressora aparece aqui.",
     "Läuft …": "A executar …",
+    "Objekte ausschließen": "Excluir objetos",
+    "{n} Objekte": "{n} objetos",
+    "{n} ausgeschlossen": "{n} excluídos",
     "Spule zu {p} % voll": "Bobina a {p} %",
     "Verbrauch je Kopf": "Consumo por cabeça",
     "Details zum Verbrauch": "Detalhes do consumo",
@@ -3427,6 +3442,9 @@
     "Senden": "Gönder",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Bir komut girin; yazıcının yanıtı burada görünür.",
     "Läuft …": "Çalışıyor …",
+    "Objekte ausschließen": "Nesneleri hariç tut",
+    "{n} Objekte": "{n} nesne",
+    "{n} ausgeschlossen": "{n} hariç tutuldu",
     "Spule zu {p} % voll": "Makara %{p} dolu",
     "Verbrauch je Kopf": "Kafa başına tüketim",
     "Details zum Verbrauch": "Tüketim ayrıntıları",
@@ -4109,6 +4127,9 @@
     "Senden": "Send",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Enter a command; the printer’s answer appears here.",
     "Läuft …": "Running …",
+    "Objekte ausschließen": "Exclude objects",
+    "{n} Objekte": "{n} objects",
+    "{n} ausgeschlossen": "{n} excluded",
     "Spule zu {p} % voll": "Spool {p} % full",
     "Verbrauch je Kopf": "Usage per head",
     "Details zum Verbrauch": "Usage details",
@@ -7557,14 +7578,19 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (ex.objects.length < 2) return "";
       const excluded = new Set(ex.excluded);
       const left = ex.objects.filter((o) => !excluded.has(o.name)).length;
-      return `<div class="t-label">${tr("Objekte – antippen zum Ausschließen")}</div><div class="chip-row">${ex.objects.map((o) => {
+      const gone = ex.objects.length - left;
+      return `<details class="obj-box" data-objbox ${this._objOpen ? "open" : ""}>
+      <summary><ha-icon icon="mdi:select-remove"></ha-icon><span>${tr("Objekte ausschließen")}</span>
+        <span class="t-label obj-count">${tr("{n} Objekte", { n: ex.objects.length })}${gone ? ` · ${tr("{n} ausgeschlossen", { n: gone })}` : ""}</span>
+        <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+      <div class="body"><div class="t-label">${tr("Objekte – antippen zum Ausschließen")}</div><div class="chip-row">${ex.objects.map((o) => {
         const off = excluded.has(o.name);
         const cur = !off && o.name === ex.current;
         const last = !off && left <= 1;
         return `<button type="button" class="chip obj-chip${off ? " off" : ""}${cur ? " cur" : ""}" data-obj="${esc(o.name)}"
         ${off || last ? "disabled" : ""} title="${esc(off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen"))}">
         <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon>${esc(o.label || o.name)}</button>`;
-      }).join("")}</div>`;
+      }).join("")}</div></div></details>`;
     }
     async _excludeObject(name) {
       const ex = this._exclude();
@@ -7648,6 +7674,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._wireLvControls(root, () => this._lv, (n) => this._lvSeek(n), (full) => this._paintLayer(full));
       if (!root || root._objWired) return;
       root._objWired = true;
+      root.addEventListener("toggle", (e) => {
+        if (e.target && e.target.matches && e.target.matches("[data-objbox]")) this._objOpen = e.target.open;
+      }, true);
       root.addEventListener("click", (e) => {
         if (e.target && e.target.closest && e.target.closest("[data-lvmode]")) {
           this._toggleLvMode();
@@ -9089,6 +9118,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .lv-objs polygon.excl { fill: color-mix(in srgb, var(--u1-error) 14%, transparent); stroke: var(--u1-error); opacity: .8; }
   .lv-objects { display: flex; flex-direction: column; gap: 6px; }
   .lv-objects:empty { display: none; }
+  .obj-box > summary { min-height: 36px; }
+  .obj-box .obj-count { margin-left: auto; }
+  .obj-box > .body { display: flex; flex-direction: column; gap: 6px; }
   .lv-objects .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
   .obj-chip { cursor: pointer; }
   .obj-chip ha-icon { --mdc-icon-size: 16px; }
