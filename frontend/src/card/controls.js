@@ -284,24 +284,51 @@ export const ControlsMixin = (Base) => class extends Base {
     }[d.state] || d.state;
   }
 
-  _spoolSvg(color, active, colors = null) {
+  /**
+   * Spool icon. fill (0–1, from Spoolman: remaining / net weight) sets how thick the
+   * filament ring is, roughly – 10 % left is a thin ring on the core. spinning:
+   * the head is printing right now (turns slowly, still with reduced motion off).
+   */
+  _spoolSvg(color, active, colors = null, fill = null, spinning = false) {
     // Multi-colour spools (silk, rainbow) as segments on the ring.
     const list = colors && colors.length > 1 ? colors : [color];
-    const C = 2 * Math.PI * 17;
+    const known = typeof fill === "number" && Number.isFinite(fill);
+    const f = known ? Math.max(0, Math.min(1, fill)) : null;
+    // core r 12; full spool up to r 27 (flange 28); unknown: the classic ring 12–22
+    const inner = 12.5, outer = f === null ? 22 : inner + Math.max(f > 0 ? 1.6 : 0, f * 14.5);
+    const r = (inner + outer) / 2, w = outer - inner;
+    const C = 2 * Math.PI * r;
     const seg = C / list.length;
-    const ring = list.map((c, k) =>
-      `<circle cx="30" cy="30" r="17" fill="none" stroke="${esc(c)}" stroke-width="10"
+    const ring = w > 0 ? list.map((c, k) =>
+      `<circle cx="30" cy="30" r="${r.toFixed(2)}" fill="none" stroke="${esc(c)}" stroke-width="${w.toFixed(2)}"
         stroke-dasharray="${seg.toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-k * seg).toFixed(2)}"
-        transform="rotate(-90 30 30)"/>`).join("");
-    return `<svg class="spool" viewBox="0 0 60 60" aria-hidden="true">
+        transform="rotate(-90 30 30)"/>`).join("") : "";
+    // three holes in the hub show the turning
+    const holes = [0, 120, 240].map((a) => {
+      const rad = (a - 90) * Math.PI / 180;
+      return `<circle cx="${(30 + 8 * Math.cos(rad)).toFixed(2)}" cy="${(30 + 8 * Math.sin(rad)).toFixed(2)}" r="1.6" fill="var(--u1-panel-highest)"/>`;
+    }).join("");
+    const title = f !== null ? `<title>${tr("Spule zu {p} % voll", { p: Math.round(f * 100) })}</title>` : "";
+    return `<svg class="spool${spinning ? " spin" : ""}" viewBox="0 0 60 60" ${title ? 'role="img"' : 'aria-hidden="true"'} data-fill="${f === null ? "" : Math.round(f * 100)}">
+      ${title}
       <circle cx="30" cy="30" r="28" fill="var(--u1-panel)" stroke="var(--u1-outline)" stroke-width="1.5"/>
-      ${ring}
-      <circle cx="30" cy="30" r="22" fill="none" stroke="var(--u1-on-variant)" stroke-opacity=".35" stroke-width="1"/>
-      <circle cx="30" cy="30" r="19" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>
-      <circle cx="30" cy="30" r="12" fill="var(--u1-panel)"/>
-      <circle cx="30" cy="30" r="5" fill="var(--u1-panel-highest)"/>
+      <g class="spool-rot">
+        ${ring}
+        ${f === null ? `<circle cx="30" cy="30" r="22" fill="none" stroke="var(--u1-on-variant)" stroke-opacity=".35" stroke-width="1"/>
+        <circle cx="30" cy="30" r="19" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>` : ""}
+        <circle cx="30" cy="30" r="12" fill="var(--u1-panel)"/>
+        ${holes}
+        <circle cx="30" cy="30" r="4" fill="var(--u1-panel-highest)"/>
+      </g>
       ${active ? `<circle cx="30" cy="30" r="28" fill="none" stroke="var(--u1-primary)" stroke-width="2.5"/>` : ""}
     </svg>`;
+  }
+
+  /** Spoolman fill level of the spool in head idx (0–1), or null. */
+  _spoolFill(idx) {
+    const sp = this._slotSpool(idx);
+    if (!sp || sp.remaining_weight == null || !(sp.initial_weight > 0)) return null;
+    return sp.remaining_weight / sp.initial_weight;
   }
 
   _slider(opts) {
@@ -312,7 +339,7 @@ export const ControlsMixin = (Base) => class extends Base {
     const mx = max ?? st.attributes.max ?? 100;
     const sp = step ?? st.attributes.step ?? 1;
     const chips = (presets || []).map(
-      (p) => `<button class="preset" data-set="${entity}" data-value="${p}">${p}${unit ? " " + unit : ""}</button>`
+      (p) => `<button class="preset" data-set="${entity}" data-value="${p}" aria-pressed="${Number(value) === Number(p)}">${p}${unit ? " " + unit : ""}</button>`
     ).join("");
     return `
       <div class="ctl" data-lockable>

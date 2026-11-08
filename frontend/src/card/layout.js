@@ -1,6 +1,6 @@
 /** Card frame: header, power chip, alerts, tabs and section layout. */
 
-import { CARD_VERSION, OFFLINE_SECTIONS, SECTIONS, TABLET_SIDE, TABS, TAB_STORE } from "../const.js";
+import { CARD_VERSION, OFFLINE_SECTIONS, TABLET_SIDE, TABS, TAB_STORE } from "../const.js";
 import { esc, num } from "../format.js";
 import { LANG, tr } from "../i18n.js";
 
@@ -89,6 +89,12 @@ export const LayoutMixin = (Base) => class extends Base {
         </div>
         ${extra}`;
     }
+    if (this._cfg.layout === "bare") {
+      // 2.2 building block (snapmaker-u1-section-card): only the chosen sections, in
+      // their order; firmware alerts with the job or camera, no head, no tabs
+      const main = this._cfg.show.includes("job") || this._cfg.show.includes("stage");
+      return `${main ? this._alerts() : ""}${this._layout(this._cfg.show)}${this._cfg.show.includes("stage") ? this._dangerZone() : ""}`;
+    }
     return `
       ${this._head()}
       ${this._versionNotice()}
@@ -157,7 +163,9 @@ export const LayoutMixin = (Base) => class extends Base {
 
   /** Visible tabs for the given sections. */
   _tabs(sections) {
-    return TABS.map((t) => ({ ...t, parts: t.sections.filter((s) => sections.includes(s)) }))
+    const own = this._displayPlace() === "tab";
+    return TABS.map((t) => ({ ...t, parts: t.sections.filter((s) => sections.includes(s)
+      && (s !== "display" || (t.id === "display") === own)) }))
       .filter((t) => t.parts.length);
   }
 
@@ -170,9 +178,9 @@ export const LayoutMixin = (Base) => class extends Base {
     if (!this._spoolman()) sections = sections.filter((s) => s !== "spools");
     if (!this._displayTab()) sections = sections.filter((s) => s !== "display");
     if (!sections.length) return "";
-    if (this._cfg.layout === "scroll") {
-      // Order as before: stage job files toolheads ...
-      return `<div class="layout">${SECTIONS.filter((s) => sections.includes(s)).map((s) => this._section(s)).join("")}</div>`;
+    if (this._cfg.layout === "scroll" || this._cfg.layout === "bare") {
+      // 2.2: in the order of show (default: stage job files toolheads ...)
+      return `<div class="layout${this._cfg.layout === "bare" ? " bare" : ""}">${sections.map((s) => this._section(s)).join("")}</div>`;
     }
     if (this._cfg.layout === "tablet") {
       // Tablet / wall monitor: camera and job stay visible on the left, the

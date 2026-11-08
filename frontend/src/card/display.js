@@ -1,6 +1,7 @@
 /**
  * Printer display (paxx12 mirror, see screen.py), only when the integration found it.
- * display_tab: own tab (default on). display_camera: one more step of the camera switch.
+ * display_place: overview (default, at its real size) | tab (own tab) | off; the older
+ * display_tab: false means off, true a tab. display_camera: one more step of the camera switch.
  * Touch: admins only, switched on with the hand button, off again after the control
  * lock time without input ("off" = 60 s, so it is never left open for good).
  */
@@ -9,6 +10,7 @@ import { DOMAIN } from "../const.js";
 import { tr } from "../i18n.js";
 
 const POLL_MS = 700;        // picture rate while idle
+const POLL_OVERVIEW_MS = 2000; // on the overview with touch off: a calmer rate
 const POLL_TOUCH_MS = 200;  // picture rate right after a touch
 const TOUCH_FAST_MS = 2500; // how long the fast rate lasts
 const MOVE_EVERY_MS = 60;   // throttle for move events
@@ -23,8 +25,16 @@ export const DisplayMixin = (Base) => class extends Base {
     return s && s.width > 0 && s.height > 0 && this._entryData().config_entry_id ? s : null;
   }
 
+  _displayPlace() {
+    const p = this._cfg.display_place;
+    if (p === "overview" || p === "tab" || p === "off") return p;
+    if (this._cfg.display_tab === false) return "off";
+    return this._cfg.display_tab === true ? "tab" : "overview";
+  }
+
+  /** The display section is shown (on the overview or as its own tab). */
   _displayTab() {
-    return this._cfg.display_tab !== false && !!this._screenInfo();
+    return this._displayPlace() !== "off" && !!this._screenInfo();
   }
 
   /** The display as additional "camera" of the stage (only the card's own cameras). */
@@ -41,14 +51,14 @@ export const DisplayMixin = (Base) => class extends Base {
    * phone: as wide as the card allows, and never taller than maxH.
    */
   _displaySize(s, maxH) {
-    return `aspect-ratio:${s.width} / ${s.height};max-width:min(${s.width}px, calc(${maxH} * ${s.width} / ${s.height}))`;
+    return `aspect-ratio:${s.width} / ${s.height};width:${s.width}px;max-width:min(100%, calc(${maxH} * ${s.width} / ${s.height}))`;
   }
 
   _sectionDisplay() {
     const s = this._screenInfo();
     if (!s) return "";
     return `
-      <section class="panel span2 display">
+      <section class="panel display">
         <div class="panel-head">
           <ha-icon icon="mdi:monitor-screenshot"></ha-icon>
           <span class="panel-title">${tr("Druckerdisplay")}</span>
@@ -166,7 +176,9 @@ export const DisplayMixin = (Base) => class extends Base {
     const h = this._hass;
     if (!imgs.length || !h || typeof h.fetchWithAuth !== "function") return; // the card tick starts it again
     const now = Date.now();
-    const every = now - (this._dispTouchAt || 0) < TOUCH_FAST_MS ? POLL_TOUCH_MS : POLL_MS;
+    const fast = now - (this._dispTouchAt || 0) < TOUCH_FAST_MS;
+    const calm = !this._displayTouchOn() && !imgs.some((i) => i.closest('[data-pane="display"]') || i.closest("section.stage"));
+    const every = fast ? POLL_TOUCH_MS : calm ? POLL_OVERVIEW_MS : POLL_MS;
     this._dispTimer = setTimeout(() => this._pollDisplay(), every);
     if (this._dispLoading && now - this._dispLoadStart < LOAD_TIMEOUT_MS) return;
     this._dispLoading = true;

@@ -53,7 +53,8 @@ export const MachineMixin = (Base) => class extends Base {
     const cell = 34, gap = 2, padL = 4, padB = 16;
     const W = padL + cols * (cell + gap), H = rows.length * (cell + gap) + padB;
     const lim = Math.max(0.05, Math.abs(m.min), Math.abs(m.max));
-    const labels = cols <= 10;
+    // heights in the cells (option mesh_values); above 12 columns they no longer fit
+    const labels = this._cfg.mesh_values !== false && cols <= 12;
     const cells = rows.map((row, ri) => row.map((v, ci) => {
       const x = padL + ci * (cell + gap);
       const y = (rows.length - 1 - ri) * (cell + gap);
@@ -62,7 +63,7 @@ export const MachineMixin = (Base) => class extends Base {
       return `<g><title>${esc(`X${ci + 1} Y${ri + 1}: ${meshLabel(v)} mm`)}</title>
         <rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" class="mesh-cell"/>
         <rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" fill="${color}" fill-opacity="${(0.08 + a * 0.8).toFixed(2)}"/>
-        ${labels ? `<text x="${x + cell / 2}" y="${y + cell / 2 + 4}" text-anchor="middle" class="mesh-val">${meshLabel(v)}</text>` : ""}
+        ${labels ? `<text x="${x + cell / 2}" y="${y + cell / 2 + 3.5}" text-anchor="middle" class="mesh-val${a > 0.55 ? " strong" : ""}">${meshLabel(v)}</text>` : ""}
       </g>`;
     }).join("")).join("");
     return `<svg viewBox="0 0 ${W} ${H}" class="mesh-svg" role="img" aria-label="${tr("Höhenprofil des Druckbetts")}">

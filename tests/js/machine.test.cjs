@@ -64,6 +64,10 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   assert.ok(flow, "Flussrate-Regler");
   assert.strictEqual(flow.min, "50");
   assert.ok(R().querySelector('[data-set="number.snapmaker_u1_card_flow"][data-value="95"]'), "Voreinstellung 95 %");
+  // 2.2: speed presets 85 / 100 / 115, the current value is marked
+  const speed = [...R().querySelectorAll('[data-set="number.snapmaker_u1_speed_factor"]')];
+  assert.deepStrictEqual(speed.map((b) => b.dataset.value), ["85", "100", "115"]);
+  assert.deepStrictEqual(speed.map((b) => b.getAttribute("aria-pressed")), ["false", "true", "false"], "100 % markiert");
 
   // 2. Bed mesh: one cell per point, front row at the bottom, values in the cells
   const svg = R().querySelector(".mesh-svg");
@@ -75,6 +79,11 @@ const plain = (v) => JSON.parse(JSON.stringify(v));
   assert.ok(ys[0] > ys[8], "vorne unten");
   assert.deepStrictEqual(vals.slice(0, 3), ["+0.10", "+0.05", "−0.02"]);
   assert.ok(R().textContent.includes("0,200") || R().textContent.includes("0.200"), "Spanne");
+  // mesh_values: false -> colours only
+  assert.strictEqual(card._meshSvg({ ...card._d.mesh, matrix: card._d.mesh.matrix }).includes("mesh-val"), true);
+  card._cfg.mesh_values = false;
+  assert.ok(!card._meshSvg(card._d.mesh).includes("mesh-val"), "Werte abschaltbar");
+  card._cfg.mesh_values = true;
   // Without mesh: hint instead of the heatmap
   const keep = states["sensor.snapmaker_u1_card_bed_mesh_spread"];
   states["sensor.snapmaker_u1_card_bed_mesh_spread"] = { ...keep, state: "unknown", attributes: {} };

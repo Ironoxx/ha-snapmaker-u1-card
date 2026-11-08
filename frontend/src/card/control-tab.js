@@ -181,10 +181,10 @@ export const ControlTabMixin = (Base) => class extends Base {
         </div>
         ${this._slider({
           entity: `number.${this._p("speed_factor")}`, label: tr("Geschwindigkeit"),
-          value: d.speedFactor, unit: "%", presets: [50, 100, 150],
+          value: d.speedFactor, unit: "%", presets: this._cfg.speed_presets,
         })}
         ${this._ents.flow && d.flow !== null ? this._slider({
-          entity: this._ents.flow, label: tr("Flussrate"), value: d.flow, unit: "%", presets: [95, 100, 105],
+          entity: this._ents.flow, label: tr("Flussrate"), value: d.flow, unit: "%", presets: this._cfg.flow_presets,
         }) : ""}
         ${homing}
       </section>`;

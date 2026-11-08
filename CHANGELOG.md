@@ -4,6 +4,56 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.2.0b1
+
+Beta. First part of 2.2: building blocks for your own dashboard and a lot of polish from user ideas.
+
+**Building blocks**
+- New card *Snapmaker U1 – Section* (`custom:snapmaker-u1-section-card`): single sections of the card – camera, print job, heads, bed mesh, console, maintenance … – as cards of their own, to arrange freely in a *Sections* dashboard. Pick the sections in the editor; their order counts. With one section the Home Assistant card frame is the panel itself.
+- `show:` now also sets the order (`layout: scroll` and the section card); new `layout: bare` (only the sections, no head, no tabs).
+
+**Overview**
+- **Printer display on the overview** at its real size, no empty frame around it (paxx12). New option `display_place`: `overview` (default), `tab` (own tab as before) or `off`. On the overview the picture refreshes every 2 s, with touch on as fast as before.
+- **Slicer preview in the running print** next to the file name and progress; the small preview on the camera image is left out when the card shows the job panel.
+- **Spools show their fill level** from Spoolman (remaining / net weight, roughly: 10 % left is a thin ring), and the spool of the printing head turns slowly (off with "reduce motion").
+- **Usage of the last print per head** as bars in the spool colours; tap for the details (Spoolman spool, before → after).
+
+**Controls**
+- Speed quick buttons **85 / 100 / 115 %** (was 50 / 100 / 150), flow 95 / 100 / 105 %; the current value is marked. Own values with `speed_presets` / `flow_presets`.
+- **Bed mesh** uses the width of the panel with readable heights in every cell, up to 12 × 12 points; switch the numbers off with `mesh_values: false`.
+- **Bigger buttons** for touch: lock, display touch, zoom buttons and quick buttons.
+
+**Look**
+- One font: numbers in the card font with even digit widths instead of monospace (monospace only in the G-code console), fewer font sizes, calmer progress figure.
+
+Please check: section card in a sections dashboard, display on the overview, spool levels and the turning spool during a print, the usage chart after a print.
+
+### Deutsch
+
+Beta. Erster Teil von 2.2: Baukasten für das eigene Dashboard und viel Feinschliff aus Ideen der Nutzer.
+
+**Baukasten**
+- Neue Karte *Snapmaker U1 – Bereich* (`custom:snapmaker-u1-section-card`): einzelne Bereiche der Karte – Kamera, Druckauftrag, Köpfe, Bettnivellierung, Konsole, Wartung … – als eigene Karten, frei anzuordnen in einem *Abschnitte*-Dashboard. Bereiche im Editor wählen; die Reihenfolge zählt. Mit einem Bereich ist der Kartenrahmen von Home Assistant selbst das Panel.
+- `show:` legt jetzt auch die Reihenfolge fest (`layout: scroll` und die Bereichs-Karte); neu `layout: bare` (nur die Bereiche, ohne Kopf und Reiter).
+
+**Übersicht**
+- **Druckerdisplay in der Übersicht** in echter Größe, ohne leeren Rahmen drumherum (paxx12). Neue Option `display_place`: `overview` (Standard), `tab` (eigener Reiter wie bisher) oder `off`. In der Übersicht kommt alle 2 s ein neues Bild, mit eingeschaltetem Touch so schnell wie bisher.
+- **Vorschaubild des Slicers im laufenden Druck** neben Dateiname und Fortschritt; das kleine Vorschaubild auf dem Kamerabild entfällt, wenn die Karte das Druckauftrags-Panel zeigt.
+- **Spulen zeigen ihren Füllstand** aus Spoolman (Rest / Nettogewicht, grob: 10 % Rest ist ein dünner Ring), und die Spule des druckenden Kopfs dreht sich langsam (aus bei „Bewegung reduzieren“).
+- **Verbrauch des letzten Drucks je Kopf** als Balken in den Spulenfarben; antippen zeigt die Details (Spoolman-Spule, vorher → nachher).
+
+**Bedienung**
+- Schnellwahl Geschwindigkeit **85 / 100 / 115 %** (bisher 50 / 100 / 150), Flussrate 95 / 100 / 105 %; der aktuelle Wert ist markiert. Eigene Werte mit `speed_presets` / `flow_presets`.
+- **Bettnivellierung** nutzt die Breite des Panels, mit gut lesbaren Höhenwerten in jeder Kachel bis 12 × 12 Messpunkte; die Zahlen lassen sich mit `mesh_values: false` abschalten.
+- **Größere Knöpfe** zum Antippen: Sperre, Display-Touch, Zoom-Knöpfe und Schnellwahl.
+
+**Aussehen**
+- Eine Schrift: Zahlen in der Kartenschrift mit gleich breiten Ziffern statt Monospace (Monospace nur noch in der G-Code-Konsole), weniger Schriftgrößen, ruhigere Fortschrittsanzeige.
+
+Bitte prüfen: Bereichs-Karte in einem Abschnitte-Dashboard, Display in der Übersicht, Füllstand der Spulen und die drehende Spule im Druck, die Verbrauchsgrafik nach einem Druck.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.1.4
 
 Bugfix, tested as 2.1.4b1.

@@ -58,13 +58,17 @@ const ev = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, pointerType: "touc
   assert.ok(!$(card, '[data-tab="display"]'), "no display tab");
   assert.ok(!$(card, "section.display"));
 
-  // mirror found: own tab, panel aspect ratio, no camera involved
+  // mirror found: on the overview (2.2), panel aspect ratio, no camera involved
   states[FILES].attributes.screen = { width: 480, height: 320 };
   card = make();
-  assert.ok($(card, '[data-tab="display"]'), "display tab");
+  assert.ok(!$(card, '[data-tab="display"]'), "no own tab by default");
+  assert.ok($(card, '[data-pane="overview"] section.display'), "display on the overview");
   assert.match($(card, "[data-display]").getAttribute("style"), /aspect-ratio:480 \/ 320/);
-  assert.match($(card, "[data-display]").getAttribute("style"), /max-width:min\(480px, calc\(70vh \* 480 \/ 320\)\)/, "höchstens Originalgröße");
-  card._selectTab("display");
+  assert.match($(card, "[data-display]").getAttribute("style"), /width:480px;max-width:min\(100%, calc\(70vh \* 480 \/ 320\)\)/, "höchstens Originalgröße");
+  // display_place: tab -> own tab as before
+  assert.ok($(make({ display_place: "tab" }), '[data-tab="display"]'), "own tab");
+  assert.ok($(make({ display_tab: true }), '[data-tab="display"]'), "old option display_tab: true");
+  card._tickDisplay();
   await new Promise((r) => setTimeout(r, 0));
   assert.deepStrictEqual(fetched.slice(0, 1), ["/api/snapmaker_u1_card/screen/E1/snapshot"]);
 
@@ -119,11 +123,12 @@ const ev = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, pointerType: "touc
 
   // hide: display removes it like any other section
   card = make({ hide: ["display"] });
-  assert.ok(!$(card, '[data-tab="display"]'));
+  assert.ok(!$(card, "section.display"));
 
-  // display_tab: false -> no tab
+  // display_tab: false (old) / display_place: off -> not shown
   card = make({ display_tab: false });
-  assert.ok(!$(card, '[data-tab="display"]'));
+  assert.ok(!$(card, "section.display"));
+  assert.ok(!$(make({ display_place: "off" }), "section.display"));
   // without display_camera: no camera switch (no second camera here)
   assert.ok(!$(card, "[data-camswitch]"));
 
@@ -156,12 +161,12 @@ const ev = (x, y) => ({ clientX: x, clientY: y, pointerId: 1, pointerType: "touc
   // tablet layout with tab and stage both on the display: one picture loop serves both
   card = make({ display_camera: true, layout: "tablet" });
   step(); step(); // -> display on the stage
-  card._selectTab("display");
+  card._selectTab("overview"); // 2.2: the display section sits on the overview
   assert.strictEqual(card._displayImgs().length, 2);
 
   // removed from the page: the picture loop stops (no timer left behind)
   made.forEach((c) => c.remove());
   assert.ok(made.every((c) => !c._dispTimer));
 
-  console.log("DISPLAY OK – own tab when found, admin touch with hand button, idle off, lock time, pixel mapping, touch order, display_tab, display_camera cycle");
+  console.log("DISPLAY OK – on the overview when found (or own tab), admin touch with hand button, idle off, lock time, pixel mapping, touch order, display_tab, display_camera cycle");
 })().catch((err) => { console.error(err); process.exit(1); });

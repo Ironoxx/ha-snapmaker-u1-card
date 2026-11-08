@@ -19,7 +19,7 @@
  *   network_tracker   device_tracker for a WiFi chip         (off)
  *   printer_image     static image instead of the camera
  *   camera_fit        contain | cover | fill                 (contain)
- *   display_tab       printer display (paxx12) as own tab    (true)
+ *   display_place     printer display (paxx12): overview | tab | off (overview)
  *   display_camera    printer display as one more camera     (false)
  *   camera_height     height of the image area in px         (auto: image aspect ratio)
  *   camera_max_height upper limit for the automatic height   (520)
@@ -32,7 +32,9 @@
  *   stream_check      stream check interval in seconds       (10)
  *   stale_after       "image outdated" after x seconds       (90)
  *   printer_name / printer_brand
- *   layout            tabs | scroll | tablet                 (tabs)
+ *   layout            tabs | scroll | tablet | bare          (tabs)
+ *                     bare: only the sections of show, in that order, no head and
+ *                     no tabs (the building block card snapmaker-u1-section-card)
  *   emergency_stop    show | hold | hide                     (show)
  *   layer_view        part | bed: layer view zoomed or whole plate (part)
  *   bed_image         own background image for the bed view (/local/...)
@@ -48,6 +50,8 @@
  *   controls_lock     off | 30 | 60 | 120 | 300 | manual     (60)
  *   nozzle_presets    [0, 210, 240, 260]
  *   bed_presets       [0, 55, 65, 85]
+ *   speed_presets     [85, 100, 115]; flow_presets [95, 100, 105]
+ *   mesh_values       heights in the bed mesh cells          (true)
  *   files_limit       number of files shown                  (12)
  *   toolheads         per head: name (and material/color as a fallback
  *                     when the integration is missing)
@@ -150,6 +154,9 @@ export class SnapmakerU1Card extends U1Base {
     return { type: "custom:snapmaker-u1-card" };
   }
 
+  /** Defaults a subclass puts under the user's config (the section card). */
+  _defaults() { return {}; }
+
   setConfig(config) {
     this._cfg = {
       camera_mode: "auto",
@@ -170,11 +177,16 @@ export class SnapmakerU1Card extends U1Base {
       show: SECTIONS,
       nozzle_presets: [0, 210, 240, 260],
       bed_presets: [0, 55, 65, 85],
+      speed_presets: [85, 100, 115],
+      flow_presets: [95, 100, 105],
+      mesh_values: true,
       files_limit: 12,
       toolheads: [],
+      ...this._defaults(),
       ...config,
     };
     if (typeof this._cfg.show === "string") this._cfg.show = this._cfg.show.split(/[\s,]+/);
+    if (Array.isArray(this._cfg.show)) this._cfg.show = [...new Set(this._cfg.show)];
     const hide = Array.isArray(this._cfg.hide) ? this._cfg.hide : [];
     this._cfg.show = (this._cfg.show || SECTIONS).filter((s) => SECTIONS.includes(s) && !hide.includes(s));
     if (this._cfg.hide_overlay) this._cfg.camera_overlay = false;
@@ -191,6 +203,8 @@ export class SnapmakerU1Card extends U1Base {
     this._stopStream();
     if (this.shadowRoot) this.shadowRoot.innerHTML = "";
     applyAccent(this, this._cfg.accent_color);
+    // building block with one section: the HA card frame is the panel (no box in a box)
+    this.toggleAttribute("bare-one", this._cfg.layout === "bare" && this._cfg.show.length === 1);
   }
 
   getCardSize() { return 20; }
@@ -318,5 +332,27 @@ export class SnapmakerU1Card extends U1Base {
     if (this._dispTimer) clearTimeout(this._dispTimer);
     this._dispTimer = null;
     this._stopStream();
+  }
+}
+
+
+/**
+ * 2.2 building block: one or more sections of the full card as a card of their own,
+ * to arrange freely in Home Assistant's sections view. Same options as the full card.
+ */
+export class SnapmakerU1SectionCard extends SnapmakerU1Card {
+  static getConfigForm() {
+    return configForm("section");
+  }
+
+  static getStubConfig() {
+    return { type: "custom:snapmaker-u1-section-card", show: ["job"] };
+  }
+
+  _defaults() { return { layout: "bare", show: ["job"] }; }
+
+  getCardSize() { return 6; }
+  getGridOptions() {
+    return { columns: 6, rows: "auto", min_columns: 3 };
   }
 }

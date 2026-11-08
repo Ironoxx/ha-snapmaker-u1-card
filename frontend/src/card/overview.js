@@ -28,7 +28,8 @@ export const OverviewMixin = (Base) => class extends Base {
     const thumbEnt = this._st(this._ents.thumbnail);
     const hud = this._cfg.camera_overlay !== false && d.active && !d.paused && d.state !== "error"
       ? this._hud() : "";
-    const thumb = thumbEnt && thumbEnt.attributes.entity_picture && d.filename
+    // 2.2: the preview sits in the job panel; on the camera only when this card has no job panel
+    const thumb = thumbEnt && thumbEnt.attributes.entity_picture && d.filename && !this._cfg.show.includes("job")
       ? `<div class="thumb${hud ? " top" : ""}"><img src="${thumbEnt.attributes.entity_picture}" alt="${tr("Vorschau")}" /><span>${esc(d.filename)}</span></div>`
       : "";
 
@@ -108,6 +109,12 @@ export const OverviewMixin = (Base) => class extends Base {
       </div>`;
   }
 
+  /** Slicer preview of the running print (camera.<prefix>_thumbnail), or null. */
+  _jobThumb() {
+    const st = this._st(this._ents.thumbnail);
+    return st && st.attributes.entity_picture && this._d.filename ? st.attributes.entity_picture : null;
+  }
+
   _sectionJob() {
     const d = this._d;
     const pct = d.progress;
@@ -115,6 +122,7 @@ export const OverviewMixin = (Base) => class extends Base {
 
     const w = (k, v) => `<span data-su1="${k}">${v}</span>`;
     if (!d.active) return this._sectionLastPrint();
+    const thumb = this._jobThumb();
     const grid = d.active ? [
       this._stat(tr("Schicht"), w("layer", `${d.layer} / ${d.totalLayers}`)),
       this._stat(tr("Restzeit"), w("remain", fmtMin(d.remaining)), "sm"),
@@ -137,12 +145,16 @@ export const OverviewMixin = (Base) => class extends Base {
           <ha-icon icon="mdi:progress-clock"></ha-icon>
           <span class="panel-title">${d.active ? tr("Laufender Druck") : tr("Letzter Druck")}</span>
         </div>
-        <div class="job-file" data-su1="file">${esc(d.filename || "—")}</div>
-        <div class="job-pct-row">
-          <span class="job-pct" data-su1="pct">${fixed(pct, 1)}</span>
-          <span class="t-label">${tr("Prozent")}</span>
+        <div class="job-top">
+          ${thumb ? `<div class="job-thumb"><img src="${esc(thumb)}" alt="${tr("Vorschau")}" /></div>` : ""}
+          <div class="job-main">
+            <div class="job-file" data-su1="file">${esc(d.filename || "—")}</div>
+            <div class="job-pct-row">
+              <span class="job-pct"><span data-su1="pct">${fixed(pct, 1)}</span> %</span>
+            </div>
+            <div class="track" data-tone="${tone}"><i data-su1="bar" style="width:${pct}%"></i></div>
+          </div>
         </div>
-        <div class="track" data-tone="${tone}"><i data-su1="bar" style="width:${pct}%"></i></div>
         <div class="stats">${grid.join("")}</div>
       </section>`;
   }
@@ -189,7 +201,52 @@ export const OverviewMixin = (Base) => class extends Base {
           </div>
         </div>
         <div class="stats">${tiles}</div>
+        ${this._usageChart(h)}
       </section>`;
+  }
+
+  /**
+   * 2.2: filament of the last print per head as bars in the spool colour; a tap
+   * opens the details (Spoolman before → after, cost share). Weights from the
+   * slicer, scaled like the total for cancelled prints.
+   */
+  _usageChart(h) {
+    const fils = (h.filaments || []).filter((f) => f && f.weight > 0 && f.used !== false);
+    if (!fils.length) return "";
+    const total = fils.reduce((a, f) => a + f.weight, 0);
+    const scale = h.filament_g > 0 && total > 0 ? h.filament_g / total : 1;
+    const table = h.map_table || [];
+    const heads = (this._d && this._d.heads) || [];
+    const spools = Array.isArray(h.spools) ? h.spools : [];
+    const rows = fils.map((f, pos) => {
+      const logical = Number.isInteger(f.index) ? f.index : pos;
+      const slot = Number.isInteger(table[logical]) ? table[logical] : logical;
+      const g = f.weight * scale;
+      const sp = spools.find((x) => x.slot === slot);
+      return { slot, g, color: /^#[0-9a-f]{6}$/i.test(f.color || "") ? f.color : "var(--u1-outline)",
+        type: f.type || "", name: (heads[slot] && heads[slot].name) || `${tr("Kopf")} ${slot + 1}`, sp };
+    }).sort((a, b) => b.g - a.g);
+    const max = Math.max(...rows.map((r) => r.g));
+    const open = this._usageOpen ? "true" : "false";
+    const bars = rows.map((r) => `
+        <div class="use-row">
+          <span class="use-name">${esc(r.name)}</span>
+          <span class="use-bar"><i style="width:${Math.max(3, (r.g / max) * 100).toFixed(1)}%;background:${esc(r.color)}"></i></span>
+          <span class="use-g">${num(r.g, r.g < 10 ? 1 : 0, "g")}</span>
+        </div>
+        <div class="use-detail" ${this._usageOpen ? "" : "hidden"}>${esc([
+          r.type,
+          r.sp && r.sp.spool_id ? `${tr("Spule")} #${r.sp.spool_id}` : null,
+          r.sp && typeof r.sp.before === "number" && typeof r.sp.after === "number"
+            ? `${Math.round(r.sp.before)} g → ${Math.round(r.sp.after)} g` : null,
+          r.sp && r.sp.booked === false ? tr("noch nicht in Spoolman gebucht") : null,
+        ].filter(Boolean).join(" · ") || "—")}</div>`).join("");
+    return `<button type="button" class="use-chart" data-usage aria-expanded="${open}"
+        title="${tr("Details zum Verbrauch")}">
+        <span class="use-head"><span class="t-label">${tr("Verbrauch je Kopf")}</span>
+          <ha-icon icon="mdi:chevron-down"></ha-icon></span>
+        ${bars}
+      </button>`;
   }
 
   _sectionHeads() {
@@ -203,7 +260,7 @@ export const OverviewMixin = (Base) => class extends Base {
       return `
         <div class="head-card" data-active="${h.active ? 1 : 0}" data-head="${h.idx}">
           <div class="head-card-top" data-headopen="${h.idx}" title="${tr("Details und Filament bearbeiten")}">
-            ${this._spoolSvg(h.color, h.active, h.colors)}
+            ${this._spoolSvg(h.color, h.active, h.colors, this._spoolFill(h.idx), h.active && !!d.printing && !d.paused)}
             <div style="min-width:0">
               <div class="head-name">${esc(h.name)}${this._headBadge(h)}</div>
               <div class="head-mat">${esc(h.material)}</div>

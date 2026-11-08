@@ -212,6 +212,12 @@ export const RenderMixin = (Base) => class extends Base {
 
     const inp = r.querySelector("input[data-upload]");
     if (inp) inp.addEventListener("change", () => { if (inp.files && inp.files[0]) this._upload(inp.files[0]); inp.value = ""; });
+    // last print: usage chart opens / closes its details (kept across rebuilds)
+    r.querySelectorAll("[data-usage]").forEach((b) => b.addEventListener("click", () => {
+      this._usageOpen = !this._usageOpen;
+      b.setAttribute("aria-expanded", String(this._usageOpen));
+      b.querySelectorAll(".use-detail").forEach((el) => { el.hidden = !this._usageOpen; });
+    }));
     r.querySelectorAll("[data-reprint]").forEach((b) =>
       b.addEventListener("click", () => this._reprint(Number(b.dataset.reprint))));
     r.querySelectorAll("[data-archive]").forEach((b) =>
@@ -468,6 +474,10 @@ export const RenderMixin = (Base) => class extends Base {
         el.value = value;
       }
       set(`n:${id}`, num(value, dec, unit));
+      r.querySelectorAll(`.preset[data-set="${id}"]`).forEach((b) => {
+        const on = String(Number(b.dataset.value) === Number(value));
+        if (b.getAttribute("aria-pressed") !== on) b.setAttribute("aria-pressed", on);
+      });
     });
   }
 };

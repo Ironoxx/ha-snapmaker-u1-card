@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.1.4";
+  var CARD_VERSION = "2.2.0b1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -27,7 +27,8 @@
   ];
   var OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance", "spools"];
   var TABS = [
-    { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "toolheads"] },
+    // 2.2: the printer display sits on the overview (display_place: overview); "tab" keeps its own tab
+    { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "display", "toolheads"] },
     // only with paxx12's display mirror (left out in _layout otherwise)
     { id: "display", icon: "mdi:monitor-screenshot", label: "Display", sections: ["display"] },
     { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "mesh", "motion", "console"] },
@@ -126,6 +127,21 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escribe un comando; la respuesta de la impresora aparece aquí.",
     "Läuft …": "Ejecutando …",
+    "Spule zu {p} % voll": "Bobina llena al {p} %",
+    "Verbrauch je Kopf": "Consumo por cabezal",
+    "Details zum Verbrauch": "Detalles del consumo",
+    "noch nicht in Spoolman gebucht": "aún no registrado en Spoolman",
+    "Spule": "Bobina",
+    "Kopf": "Cabezal",
+    "Höhenwerte in der Bettnivellierung": "Alturas en la nivelación de la cama",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vacío = activado. Muestra la altura medida en cada celda (hasta 12 × 12 puntos).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vacío = en el resumen, a su tamaño real. Solo con el espejo de pantalla del firmware paxx12.",
+    "In der Übersicht": "En el resumen",
+    "Eigener Reiter": "Pestaña propia",
+    "Bereiche": "Secciones",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Qué secciones muestra esta tarjeta, en este orden. Varias tarjetas se pueden colocar libremente en un panel de secciones.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Sección",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Bloque: secciones sueltas de la tarjeta (p. ej. cámara, trabajo de impresión, nivelación) como tarjeta propia, para colocarlas libremente en el panel.",
     "Filament laden / entladen": "Cargar / descargar filamento",
     "Laden": "Cargar",
     "Entladen": "Descargar",
@@ -771,6 +787,21 @@
     "Senden": "Envoyer",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Saisissez une commande ; la réponse de l’imprimante s’affiche ici.",
     "Läuft …": "En cours …",
+    "Spule zu {p} % voll": "Bobine pleine à {p} %",
+    "Verbrauch je Kopf": "Consommation par tête",
+    "Details zum Verbrauch": "Détails de la consommation",
+    "noch nicht in Spoolman gebucht": "pas encore comptabilisé dans Spoolman",
+    "Spule": "Bobine",
+    "Kopf": "Tête",
+    "Höhenwerte in der Bettnivellierung": "Hauteurs dans le nivellement du plateau",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vide = activé. Affiche la hauteur mesurée dans chaque case (jusqu’à 12 × 12 points).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vide = dans l’aperçu, à sa taille réelle. Uniquement avec le miroir d’écran du firmware paxx12.",
+    "In der Übersicht": "Dans l’aperçu",
+    "Eigener Reiter": "Onglet propre",
+    "Bereiche": "Sections",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Quelles sections cette carte affiche, dans cet ordre. Plusieurs cartes peuvent être disposées librement dans un tableau de bord à sections.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Section",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Bloc : des sections de la carte (p. ex. caméra, impression, nivellement) comme carte à part, à disposer librement sur le tableau de bord.",
     "Filament laden / entladen": "Charger / décharger le filament",
     "Laden": "Charger",
     "Entladen": "Décharger",
@@ -1416,6 +1447,21 @@
     "Senden": "Invia",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Inserisci un comando; la risposta della stampante appare qui.",
     "Läuft …": "In esecuzione …",
+    "Spule zu {p} % voll": "Bobina piena al {p} %",
+    "Verbrauch je Kopf": "Consumo per testina",
+    "Details zum Verbrauch": "Dettagli del consumo",
+    "noch nicht in Spoolman gebucht": "non ancora registrato in Spoolman",
+    "Spule": "Bobina",
+    "Kopf": "Testina",
+    "Höhenwerte in der Bettnivellierung": "Altezze nel livellamento del piano",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vuoto = attivo. Mostra l’altezza misurata in ogni cella (fino a 12 × 12 punti).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vuoto = nella panoramica, alla sua dimensione reale. Solo con lo specchio del display del firmware paxx12.",
+    "In der Übersicht": "Nella panoramica",
+    "Eigener Reiter": "Scheda propria",
+    "Bereiche": "Sezioni",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Quali sezioni mostra questa scheda, in questo ordine. Più schede si possono disporre liberamente in una dashboard a sezioni.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Sezione",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Mattoncino: singole sezioni della scheda (es. videocamera, stampa, livellamento) come scheda a sé, da disporre liberamente nella dashboard.",
     "Filament laden / entladen": "Carica / scarica filamento",
     "Laden": "Carica",
     "Entladen": "Scarica",
@@ -2061,6 +2107,21 @@
     "Senden": "Versturen",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Voer een commando in; het antwoord van de printer verschijnt hier.",
     "Läuft …": "Bezig …",
+    "Spule zu {p} % voll": "Spoel voor {p} % vol",
+    "Verbrauch je Kopf": "Verbruik per kop",
+    "Details zum Verbrauch": "Details van het verbruik",
+    "noch nicht in Spoolman gebucht": "nog niet geboekt in Spoolman",
+    "Spule": "Spoel",
+    "Kopf": "Kop",
+    "Höhenwerte in der Bettnivellierung": "Hoogtes in de bednivellering",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Leeg = aan. Toont in elk vak de gemeten hoogte (tot 12 × 12 punten).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Leeg = in het overzicht, op ware grootte. Alleen met de displayspiegel van de paxx12-firmware.",
+    "In der Übersicht": "In het overzicht",
+    "Eigener Reiter": "Eigen tabblad",
+    "Bereiche": "Secties",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Welke secties deze kaart toont, in deze volgorde. Meerdere kaarten kun je vrij schikken in een secties-dashboard.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Sectie",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Bouwsteen: losse secties van de kaart (bijv. camera, printopdracht, bednivellering) als eigen kaart, vrij te schikken op het dashboard.",
     "Filament laden / entladen": "Filament laden / ontladen",
     "Laden": "Laden",
     "Entladen": "Ontladen",
@@ -2706,6 +2767,21 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escreva um comando; a resposta da impressora aparece aqui.",
     "Läuft …": "A executar …",
+    "Spule zu {p} % voll": "Bobina a {p} %",
+    "Verbrauch je Kopf": "Consumo por cabeça",
+    "Details zum Verbrauch": "Detalhes do consumo",
+    "noch nicht in Spoolman gebucht": "ainda não registado no Spoolman",
+    "Spule": "Bobina",
+    "Kopf": "Cabeça",
+    "Höhenwerte in der Bettnivellierung": "Alturas no nivelamento da mesa",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vazio = ligado. Mostra a altura medida em cada célula (até 12 × 12 pontos).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vazio = na vista geral, no tamanho real. Só com o espelho do ecrã do firmware paxx12.",
+    "In der Übersicht": "Na vista geral",
+    "Eigener Reiter": "Separador próprio",
+    "Bereiche": "Secções",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Que secções este cartão mostra, por esta ordem. Vários cartões podem ser dispostos livremente num painel de secções.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Secção",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Bloco: secções do cartão (p. ex. câmara, trabalho de impressão, nivelamento) como cartão próprio, para dispor livremente no painel.",
     "Filament laden / entladen": "Carregar / descarregar filamento",
     "Laden": "Carregar",
     "Entladen": "Descarregar",
@@ -3351,6 +3427,21 @@
     "Senden": "Gönder",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Bir komut girin; yazıcının yanıtı burada görünür.",
     "Läuft …": "Çalışıyor …",
+    "Spule zu {p} % voll": "Makara %{p} dolu",
+    "Verbrauch je Kopf": "Kafa başına tüketim",
+    "Details zum Verbrauch": "Tüketim ayrıntıları",
+    "noch nicht in Spoolman gebucht": "Spoolman’a henüz kaydedilmedi",
+    "Spule": "Makara",
+    "Kopf": "Kafa",
+    "Höhenwerte in der Bettnivellierung": "Tabla seviyelemesinde yükseklikler",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Boş = açık. Her hücrede ölçülen yüksekliği gösterir (12 × 12 noktaya kadar).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Boş = genel bakışta, gerçek boyutunda. Yalnızca paxx12 yazılımının ekran yansıtmasıyla.",
+    "In der Übersicht": "Genel bakışta",
+    "Eigener Reiter": "Kendi sekmesi",
+    "Bereiche": "Bölümler",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Bu kartın hangi bölümleri bu sırayla gösterdiği. Birden çok kart, bölümler panosunda serbestçe yerleştirilebilir.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Bölüm",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Yapı taşı: kartın tek tek bölümleri (ör. kamera, baskı işi, tabla seviyeleme) ayrı kart olarak, panoda serbestçe yerleştirilebilir.",
     "Filament laden / entladen": "Filament yükle / boşalt",
     "Laden": "Yükle",
     "Entladen": "Boşalt",
@@ -4018,6 +4109,21 @@
     "Senden": "Send",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Enter a command; the printer’s answer appears here.",
     "Läuft …": "Running …",
+    "Spule zu {p} % voll": "Spool {p} % full",
+    "Verbrauch je Kopf": "Usage per head",
+    "Details zum Verbrauch": "Usage details",
+    "noch nicht in Spoolman gebucht": "not booked in Spoolman yet",
+    "Spule": "Spool",
+    "Kopf": "Head",
+    "Höhenwerte in der Bettnivellierung": "Heights in the bed mesh",
+    "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Empty = on. Shows the measured height in every cell (up to 12 × 12 points).",
+    "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Empty = on the overview, at its real size. Only with the display mirror of the paxx12 firmware.",
+    "In der Übersicht": "On the overview",
+    "Eigener Reiter": "Own tab",
+    "Bereiche": "Sections",
+    "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.": "Which sections this card shows, in this order. Several cards can be arranged freely in a sections dashboard.",
+    "Snapmaker U1 – Bereich": "Snapmaker U1 – Section",
+    "Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen.": "Building block: single sections of the card (e.g. camera, print job, bed mesh) as a card of their own, to arrange freely on the dashboard.",
     "Filament laden / entladen": "Load / unload filament",
     "Laden": "Load",
     "Entladen": "Unload",
@@ -4697,8 +4803,10 @@
     camera_webrtc: "WebRTC (paxx12-Firmware)",
     camera_ha_stream: "Unterwegs: RTSP über Home Assistant",
     camera_zoom_reset: "Zoom zurücksetzen nach (s)",
-    display_tab: "Druckerdisplay als eigener Reiter",
-    display_camera: "Druckerdisplay als zusätzliche Kamera"
+    display_place: "Druckerdisplay",
+    display_camera: "Druckerdisplay als zusätzliche Kamera",
+    mesh_values: "Höhenwerte in der Bettnivellierung",
+    show: "Bereiche"
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -4715,7 +4823,9 @@
     camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
     camera_ha_stream: "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).",
     camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
-    display_tab: "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.",
+    display_place: "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.",
+    mesh_values: "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).",
+    show: "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.",
     display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
@@ -4726,6 +4836,8 @@
     navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog"
   };
   function configForm(mini) {
+    const section = mini === "section";
+    if (section) mini = false;
     try {
       const ha = document.querySelector("home-assistant");
       if (ha && ha.hass) setLang(ha.hass);
@@ -4750,6 +4862,36 @@
         ]
       ]
     };
+    if (section) {
+      return {
+        schema: [
+          { name: "show", required: true, selector: { select: {
+            multiple: true,
+            mode: "list",
+            reorder: true,
+            options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) }))
+          } } },
+          { name: "accent_color", selector: { color_rgb: {} } },
+          { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
+            ["off", "Aus"],
+            ["30", "30 s"],
+            ["60", "1 min"],
+            ["120", "2 min"],
+            ["300", "5 min"],
+            ["manual", "Bis zum erneuten Sperren"]
+          ]) } } },
+          { name: "mesh_values", selector: { boolean: {} } },
+          { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
+            ["show", "Anzeigen, mit Rückfrage"],
+            ["hold", "Gesichert: 1 s gedrückt halten"],
+            ["hide", "Ausblenden"]
+          ]) } } },
+          advanced
+        ],
+        computeLabel: (s) => FORM_LABELS[s.name] ? tr(FORM_LABELS[s.name]) : void 0,
+        computeHelper: (s) => FORM_HELPERS[s.name] ? tr(FORM_HELPERS[s.name]) : void 0
+      };
+    }
     const schema = mini ? [
       { name: "printer_name", selector: { text: {} } },
       { name: "accent_color", selector: { color_rgb: {} } },
@@ -4780,6 +4922,7 @@
         ["300", "5 min"],
         ["manual", "Bis zum erneuten Sperren"]
       ]) } } },
+      { name: "mesh_values", selector: { boolean: {} } },
       {
         type: "expandable",
         name: "bed_group",
@@ -4819,7 +4962,7 @@
           { name: "camera_ha_stream", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
           { name: "printer_image", selector: { text: {} } },
           { type: "grid", name: "", schema: [
-            { name: "display_tab", selector: { boolean: {} } },
+            { name: "display_place", selector: { select: { mode: "dropdown", options: opts([["overview", "In der Übersicht"], ["tab", "Eigener Reiter"], ["off", "Aus"]]) } } },
             { name: "display_camera", selector: { boolean: {} } }
           ] }
         ]
@@ -5573,22 +5716,46 @@
         error: tr("Fehler")
       }[d.state] || d.state;
     }
-    _spoolSvg(color, active, colors = null) {
+    /**
+     * Spool icon. fill (0–1, from Spoolman: remaining / net weight) sets how thick the
+     * filament ring is, roughly – 10 % left is a thin ring on the core. spinning:
+     * the head is printing right now (turns slowly, still with reduced motion off).
+     */
+    _spoolSvg(color, active, colors = null, fill = null, spinning = false) {
       const list = colors && colors.length > 1 ? colors : [color];
-      const C = 2 * Math.PI * 17;
+      const known = typeof fill === "number" && Number.isFinite(fill);
+      const f = known ? Math.max(0, Math.min(1, fill)) : null;
+      const inner = 12.5, outer = f === null ? 22 : inner + Math.max(f > 0 ? 1.6 : 0, f * 14.5);
+      const r = (inner + outer) / 2, w = outer - inner;
+      const C = 2 * Math.PI * r;
       const seg = C / list.length;
-      const ring = list.map((c, k) => `<circle cx="30" cy="30" r="17" fill="none" stroke="${esc(c)}" stroke-width="10"
+      const ring = w > 0 ? list.map((c, k) => `<circle cx="30" cy="30" r="${r.toFixed(2)}" fill="none" stroke="${esc(c)}" stroke-width="${w.toFixed(2)}"
         stroke-dasharray="${seg.toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-k * seg).toFixed(2)}"
-        transform="rotate(-90 30 30)"/>`).join("");
-      return `<svg class="spool" viewBox="0 0 60 60" aria-hidden="true">
+        transform="rotate(-90 30 30)"/>`).join("") : "";
+      const holes = [0, 120, 240].map((a) => {
+        const rad = (a - 90) * Math.PI / 180;
+        return `<circle cx="${(30 + 8 * Math.cos(rad)).toFixed(2)}" cy="${(30 + 8 * Math.sin(rad)).toFixed(2)}" r="1.6" fill="var(--u1-panel-highest)"/>`;
+      }).join("");
+      const title = f !== null ? `<title>${tr("Spule zu {p} % voll", { p: Math.round(f * 100) })}</title>` : "";
+      return `<svg class="spool${spinning ? " spin" : ""}" viewBox="0 0 60 60" ${title ? 'role="img"' : 'aria-hidden="true"'} data-fill="${f === null ? "" : Math.round(f * 100)}">
+      ${title}
       <circle cx="30" cy="30" r="28" fill="var(--u1-panel)" stroke="var(--u1-outline)" stroke-width="1.5"/>
-      ${ring}
-      <circle cx="30" cy="30" r="22" fill="none" stroke="var(--u1-on-variant)" stroke-opacity=".35" stroke-width="1"/>
-      <circle cx="30" cy="30" r="19" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>
-      <circle cx="30" cy="30" r="12" fill="var(--u1-panel)"/>
-      <circle cx="30" cy="30" r="5" fill="var(--u1-panel-highest)"/>
+      <g class="spool-rot">
+        ${ring}
+        ${f === null ? `<circle cx="30" cy="30" r="22" fill="none" stroke="var(--u1-on-variant)" stroke-opacity=".35" stroke-width="1"/>
+        <circle cx="30" cy="30" r="19" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>` : ""}
+        <circle cx="30" cy="30" r="12" fill="var(--u1-panel)"/>
+        ${holes}
+        <circle cx="30" cy="30" r="4" fill="var(--u1-panel-highest)"/>
+      </g>
       ${active ? `<circle cx="30" cy="30" r="28" fill="none" stroke="var(--u1-primary)" stroke-width="2.5"/>` : ""}
     </svg>`;
+    }
+    /** Spoolman fill level of the spool in head idx (0–1), or null. */
+    _spoolFill(idx) {
+      const sp = this._slotSpool(idx);
+      if (!sp || sp.remaining_weight == null || !(sp.initial_weight > 0)) return null;
+      return sp.remaining_weight / sp.initial_weight;
     }
     _slider(opts) {
       const { entity, label, min, max, step, value, unit, presets, dec } = opts;
@@ -5598,7 +5765,7 @@
       const mx = max ?? st.attributes.max ?? 100;
       const sp = step ?? st.attributes.step ?? 1;
       const chips = (presets || []).map(
-        (p) => `<button class="preset" data-set="${entity}" data-value="${p}">${p}${unit ? " " + unit : ""}</button>`
+        (p) => `<button class="preset" data-set="${entity}" data-value="${p}" aria-pressed="${Number(value) === Number(p)}">${p}${unit ? " " + unit : ""}</button>`
       ).join("");
       return `
       <div class="ctl" data-lockable>
@@ -5706,7 +5873,7 @@
       const img = still ? `<img src="${esc(still)}" style="object-fit:${fit}" alt="Snapmaker U1" />` : `<img data-live style="object-fit:${fit}" alt="${tr("Druckraum")}" />`;
       const thumbEnt = this._st(this._ents.thumbnail);
       const hud = this._cfg.camera_overlay !== false && d.active && !d.paused && d.state !== "error" ? this._hud() : "";
-      const thumb = thumbEnt && thumbEnt.attributes.entity_picture && d.filename ? `<div class="thumb${hud ? " top" : ""}"><img src="${thumbEnt.attributes.entity_picture}" alt="${tr("Vorschau")}" /><span>${esc(d.filename)}</span></div>` : "";
+      const thumb = thumbEnt && thumbEnt.attributes.entity_picture && d.filename && !this._cfg.show.includes("job") ? `<div class="thumb${hud ? " top" : ""}"><img src="${thumbEnt.attributes.entity_picture}" alt="${tr("Vorschau")}" /><span>${esc(d.filename)}</span></div>` : "";
       let overlay = "";
       let dim = "0";
       if (d.paused) {
@@ -5777,12 +5944,18 @@
         <div class="hud-track"><i data-su1="obar" style="width:${d.progress}%"></i></div>
       </div>`;
     }
+    /** Slicer preview of the running print (camera.<prefix>_thumbnail), or null. */
+    _jobThumb() {
+      const st = this._st(this._ents.thumbnail);
+      return st && st.attributes.entity_picture && this._d.filename ? st.attributes.entity_picture : null;
+    }
     _sectionJob() {
       const d = this._d;
       const pct = d.progress;
       const tone = d.state === "error" ? "error" : d.paused ? "warn" : "";
       const w = (k, v) => `<span data-su1="${k}">${v}</span>`;
       if (!d.active) return this._sectionLastPrint();
+      const thumb = this._jobThumb();
       const grid = d.active ? [
         this._stat(tr("Schicht"), w("layer", `${d.layer} / ${d.totalLayers}`)),
         this._stat(tr("Restzeit"), w("remain", fmtMin(d.remaining)), "sm"),
@@ -5804,12 +5977,16 @@
           <ha-icon icon="mdi:progress-clock"></ha-icon>
           <span class="panel-title">${d.active ? tr("Laufender Druck") : tr("Letzter Druck")}</span>
         </div>
-        <div class="job-file" data-su1="file">${esc(d.filename || "—")}</div>
-        <div class="job-pct-row">
-          <span class="job-pct" data-su1="pct">${fixed(pct, 1)}</span>
-          <span class="t-label">${tr("Prozent")}</span>
+        <div class="job-top">
+          ${thumb ? `<div class="job-thumb"><img src="${esc(thumb)}" alt="${tr("Vorschau")}" /></div>` : ""}
+          <div class="job-main">
+            <div class="job-file" data-su1="file">${esc(d.filename || "—")}</div>
+            <div class="job-pct-row">
+              <span class="job-pct"><span data-su1="pct">${fixed(pct, 1)}</span> %</span>
+            </div>
+            <div class="track" data-tone="${tone}"><i data-su1="bar" style="width:${pct}%"></i></div>
+          </div>
         </div>
-        <div class="track" data-tone="${tone}"><i data-su1="bar" style="width:${pct}%"></i></div>
         <div class="stats">${grid.join("")}</div>
       </section>`;
     }
@@ -5855,7 +6032,56 @@
           </div>
         </div>
         <div class="stats">${tiles}</div>
+        ${this._usageChart(h)}
       </section>`;
+    }
+    /**
+     * 2.2: filament of the last print per head as bars in the spool colour; a tap
+     * opens the details (Spoolman before → after, cost share). Weights from the
+     * slicer, scaled like the total for cancelled prints.
+     */
+    _usageChart(h) {
+      const fils = (h.filaments || []).filter((f) => f && f.weight > 0 && f.used !== false);
+      if (!fils.length) return "";
+      const total = fils.reduce((a, f) => a + f.weight, 0);
+      const scale = h.filament_g > 0 && total > 0 ? h.filament_g / total : 1;
+      const table = h.map_table || [];
+      const heads = this._d && this._d.heads || [];
+      const spools = Array.isArray(h.spools) ? h.spools : [];
+      const rows = fils.map((f, pos) => {
+        const logical = Number.isInteger(f.index) ? f.index : pos;
+        const slot = Number.isInteger(table[logical]) ? table[logical] : logical;
+        const g = f.weight * scale;
+        const sp = spools.find((x) => x.slot === slot);
+        return {
+          slot,
+          g,
+          color: /^#[0-9a-f]{6}$/i.test(f.color || "") ? f.color : "var(--u1-outline)",
+          type: f.type || "",
+          name: heads[slot] && heads[slot].name || `${tr("Kopf")} ${slot + 1}`,
+          sp
+        };
+      }).sort((a, b) => b.g - a.g);
+      const max = Math.max(...rows.map((r) => r.g));
+      const open = this._usageOpen ? "true" : "false";
+      const bars = rows.map((r) => `
+        <div class="use-row">
+          <span class="use-name">${esc(r.name)}</span>
+          <span class="use-bar"><i style="width:${Math.max(3, r.g / max * 100).toFixed(1)}%;background:${esc(r.color)}"></i></span>
+          <span class="use-g">${num(r.g, r.g < 10 ? 1 : 0, "g")}</span>
+        </div>
+        <div class="use-detail" ${this._usageOpen ? "" : "hidden"}>${esc([
+        r.type,
+        r.sp && r.sp.spool_id ? `${tr("Spule")} #${r.sp.spool_id}` : null,
+        r.sp && typeof r.sp.before === "number" && typeof r.sp.after === "number" ? `${Math.round(r.sp.before)} g → ${Math.round(r.sp.after)} g` : null,
+        r.sp && r.sp.booked === false ? tr("noch nicht in Spoolman gebucht") : null
+      ].filter(Boolean).join(" · ") || "—")}</div>`).join("");
+      return `<button type="button" class="use-chart" data-usage aria-expanded="${open}"
+        title="${tr("Details zum Verbrauch")}">
+        <span class="use-head"><span class="t-label">${tr("Verbrauch je Kopf")}</span>
+          <ha-icon icon="mdi:chevron-down"></ha-icon></span>
+        ${bars}
+      </button>`;
     }
     _sectionHeads() {
       const d = this._d;
@@ -5866,7 +6092,7 @@
         return `
         <div class="head-card" data-active="${h.active ? 1 : 0}" data-head="${h.idx}">
           <div class="head-card-top" data-headopen="${h.idx}" title="${tr("Details und Filament bearbeiten")}">
-            ${this._spoolSvg(h.color, h.active, h.colors)}
+            ${this._spoolSvg(h.color, h.active, h.colors, this._spoolFill(h.idx), h.active && !!d.printing && !d.paused)}
             <div style="min-width:0">
               <div class="head-name">${esc(h.name)}${this._headBadge(h)}</div>
               <div class="head-mat">${esc(h.material)}</div>
@@ -6490,14 +6716,14 @@
         label: tr("Geschwindigkeit"),
         value: d.speedFactor,
         unit: "%",
-        presets: [50, 100, 150]
+        presets: this._cfg.speed_presets
       })}
         ${this._ents.flow && d.flow !== null ? this._slider({
         entity: this._ents.flow,
         label: tr("Flussrate"),
         value: d.flow,
         unit: "%",
-        presets: [95, 100, 105]
+        presets: this._cfg.flow_presets
       }) : ""}
         ${homing}
       </section>`;
@@ -7674,6 +7900,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         </div>
         ${extra}`;
       }
+      if (this._cfg.layout === "bare") {
+        const main = this._cfg.show.includes("job") || this._cfg.show.includes("stage");
+        return `${main ? this._alerts() : ""}${this._layout(this._cfg.show)}${this._cfg.show.includes("stage") ? this._dangerZone() : ""}`;
+      }
       return `
       ${this._head()}
       ${this._versionNotice()}
@@ -7755,7 +7985,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     /** Visible tabs for the given sections. */
     _tabs(sections) {
-      return TABS.map((t) => ({ ...t, parts: t.sections.filter((s) => sections.includes(s)) })).filter((t) => t.parts.length);
+      const own = this._displayPlace() === "tab";
+      return TABS.map((t) => ({ ...t, parts: t.sections.filter((s) => sections.includes(s) && (s !== "display" || t.id === "display" === own)) })).filter((t) => t.parts.length);
     }
     _activeTab(tabs) {
       return tabs.find((t) => t.id === this._tab) ? this._tab : tabs.length ? tabs[0].id : null;
@@ -7765,8 +7996,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (!this._spoolman()) sections = sections.filter((s) => s !== "spools");
       if (!this._displayTab()) sections = sections.filter((s) => s !== "display");
       if (!sections.length) return "";
-      if (this._cfg.layout === "scroll") {
-        return `<div class="layout">${SECTIONS.filter((s) => sections.includes(s)).map((s) => this._section(s)).join("")}</div>`;
+      if (this._cfg.layout === "scroll" || this._cfg.layout === "bare") {
+        return `<div class="layout${this._cfg.layout === "bare" ? " bare" : ""}">${sections.map((s) => this._section(s)).join("")}</div>`;
       }
       if (this._cfg.layout === "tablet") {
         const side = TABLET_SIDE.filter((s) => sections.includes(s));
@@ -7852,6 +8083,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
     --u1-font: var(--font-family, var(--primary-font-family, system-ui, sans-serif));
     --u1-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", monospace;
+    /* 2.2: numbers in the card font with even digit widths; monospace only for G-code */
+    --u1-num: var(--u1-font);
+    /* type scale: 11 label · 13 small · 14 body · 16 value · 28 hero */
+    --u1-fs-label: 11px; --u1-fs-small: 13px; --u1-fs-body: 14px; --u1-fs-value: 16px; --u1-fs-hero: 28px;
 
     font-family: var(--u1-font);
     color: var(--u1-on);
@@ -7864,6 +8099,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     gap: var(--u1-gap);
     overflow: hidden;
   }
+
+  :host([bare-one]) ha-card { padding: 0; }
+  :host([bare-one]) .layout.bare { grid-template-columns: minmax(0, 1fr); }
+  :host([bare-one]) .layout.bare > .panel { grid-column: auto; }
+  :host([bare-one]) .layout.bare > .panel { background: transparent; }
+  :host([bare-one]) .layout.bare > .panel.stage { border-radius: inherit; }
 
   /* ── Typography (Material type scale) ────────────────────────────────── */
   .t-title {
@@ -7882,7 +8123,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     font-size: var(--md-sys-typescale-body-medium-size, 14px);
     line-height: var(--md-sys-typescale-body-medium-line-height, 20px);
   }
-  .mono { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
+  .mono { font-variant-numeric: tabular-nums; }
+  .con-log { font-family: var(--u1-mono); }
 
   /* ── Header ──────────────────────────────────────────────────────────── */
   .head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -7996,6 +8238,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   /* ── Image area ──────────────────────────────────────────────────────── */
   .stage { padding: 0; overflow: hidden; gap: 0; }
   /* Printer display (paxx12 mirror): own view; touch on = accent border, no page scrolling on it */
+  /* 2.2: the display panel is only as wide as the display itself */
+  section.panel.display { width: fit-content; max-width: 100%; justify-self: start; }
+  section.panel.display [data-display-hint] { max-width: 100%; }
   .display-frame {
     position: relative; width: 100%; margin-inline: auto; overflow: hidden;
     border-radius: var(--u1-r-m); background: #000; touch-action: pan-y;
@@ -8057,11 +8302,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .zoom-ctl { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); z-index: 3;
     display: flex; flex-direction: column; gap: 6px; opacity: .55; transition: opacity var(--u1-motion); }
   .frame:hover .zoom-ctl, .frame.zoomed .zoom-ctl { opacity: 1; }
-  button.zoom-btn { width: 36px; height: 36px; padding: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; box-shadow: none; }
-  button.zoom-btn ha-icon { --mdc-icon-size: 20px; }
+  button.zoom-btn { width: 44px; height: 44px; padding: 0; border-radius: 50%; background: rgba(0,0,0,.55); color: #fff; box-shadow: none; }
+  button.zoom-btn ha-icon { --mdc-icon-size: 22px; }
   button.zoom-btn[hidden] { display: none; }
   .zoom-badge { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 3; padding: 2px 8px; border-radius: var(--u1-r-s);
-    background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-family: var(--u1-mono); }
+    background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-family: var(--u1-num); }
   .zoom-badge[hidden] { display: none; }
   .frame:fullscreen { height: 100% !important; min-height: 0 !important; background: #000; }
   .frame:fullscreen img, .frame:fullscreen video[data-rtc] { object-fit: contain !important; }
@@ -8150,22 +8395,27 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     line-height: 1.25; hyphens: auto; overflow-wrap: anywhere;
   }
   .stat .v {
-    font-family: var(--u1-mono); font-variant-numeric: tabular-nums;
-    font-size: 18px; margin-top: 2px;
+    font-family: var(--u1-num); font-variant-numeric: tabular-nums; font-weight: 500;
+    font-size: var(--u1-fs-value); margin-top: 4px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .stat .v.sm { font-size: 14px; }
+  .stat .v.sm { font-size: var(--u1-fs-value); }
 
   /* ── Progress ────────────────────────────────────────────────────────── */
   .job-file {
-    font-family: var(--u1-mono); font-size: 13px; color: var(--u1-on-variant);
+    font-size: var(--u1-fs-small); font-weight: 500; color: var(--u1-on-variant);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
-  .job-pct-row { display: flex; align-items: baseline; gap: 10px; }
+  .job-pct-row { display: flex; align-items: baseline; gap: 8px; }
+  /* 2.2: slicer preview next to file name and progress */
+  .job-top { display: flex; gap: 14px; align-items: center; min-width: 0; }
+  .job-top > .job-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .job-thumb { flex: 0 0 auto; width: 88px; height: 88px; border-radius: var(--u1-r-m); background: var(--u1-panel-high);
+    display: grid; place-items: center; overflow: hidden; }
+  .job-thumb img { width: 100%; height: 100%; object-fit: contain; }
   .job-pct {
-    font-family: var(--u1-mono); font-variant-numeric: tabular-nums;
-    font-size: var(--md-sys-typescale-display-small-size, 36px);
-    line-height: 1;
+    font-variant-numeric: tabular-nums; font-weight: 500;
+    font-size: var(--u1-fs-hero); line-height: 1;
   }
   .track {
     height: var(--ha-progress-bar-track-height, 8px);
@@ -8182,7 +8432,28 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .track[data-tone="warn"]  > i { background: var(--u1-warn); }
   .track[data-tone="error"] > i { background: var(--u1-error); }
 
+  /* 2.2: filament per head of the last print */
+  button.use-chart { all: unset; box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; width: 100%;
+    margin-top: 12px; padding: 10px 12px; border-radius: var(--u1-r-m); background: var(--u1-panel-high); cursor: pointer; }
+  button.use-chart:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 2px; }
+  .use-head { display: flex; align-items: center; justify-content: space-between; }
+  .use-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); transition: transform var(--u1-motion); }
+  button.use-chart[aria-expanded="true"] .use-head ha-icon { transform: rotate(180deg); }
+  .use-row { display: grid; grid-template-columns: minmax(48px, auto) 1fr auto; align-items: center; gap: 10px;
+    font-size: var(--u1-fs-small); }
+  .use-name { color: var(--u1-on-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .use-bar { height: 10px; border-radius: 5px; background: var(--u1-panel-highest); overflow: hidden; }
+  .use-bar i { display: block; height: 100%; border-radius: inherit;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-on) 28%, transparent); }
+  .use-g { font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; min-width: 44px; }
+  .use-detail { font-size: var(--u1-fs-label); color: var(--u1-on-variant); padding: 0 0 4px 0; }
+
   /* ── Print heads ─────────────────────────────────────────────────────── */
+  /* 2.2: the spool of the printing head turns slowly */
+  svg.spool .spool-rot { transform-origin: 30px 30px; transform-box: view-box; }
+  svg.spool.spin .spool-rot { animation: u1-spool 6s linear infinite; }
+  @keyframes u1-spool { to { transform: rotate(-360deg); } }
+  @media (prefers-reduced-motion: reduce) { svg.spool.spin .spool-rot { animation: none; } }
   .heads { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .head-card {
     background: var(--u1-panel-high); border-radius: var(--u1-r-m);
@@ -8196,7 +8467,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .spool { width: 34px; height: 34px; flex-shrink: 0; }
   .head-name { font-weight: 600; font-size: 14px; }
   .head-mat { font-size: 11px; color: var(--u1-on-variant); }
-  .head-temp { font-family: var(--u1-mono); font-size: 17px; font-variant-numeric: tabular-nums; }
+  .head-temp { font-family: var(--u1-num); font-size: var(--u1-fs-value); font-weight: 500; font-variant-numeric: tabular-nums; }
   .head-temp .tgt { font-size: 12px; color: var(--u1-on-variant); }
   .mini { display: flex; justify-content: space-between; font-size: 11px; color: var(--u1-on-variant); }
   .pill {
@@ -8209,7 +8480,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   /* ── Sliders ─────────────────────────────────────────────────────────── */
   .ctl { display: flex; flex-direction: column; gap: 6px; }
   .ctl-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .ctl-val { font-family: var(--u1-mono); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .ctl-val { font-family: var(--u1-num); font-size: var(--u1-fs-body); font-weight: 500; font-variant-numeric: tabular-nums; }
   input[type="range"] {
     -webkit-appearance: none; appearance: none; width: 100%;
     height: var(--ha-slider-track-size, 8px);
@@ -8231,17 +8502,19 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   input[type="range"]:focus-visible { outline: 3px solid var(--u1-primary); outline-offset: 4px; }
   .presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  .presets .preset { flex: 1 1 0; min-width: 0; padding: 0 4px; white-space: nowrap; }
   .ctl.locked input[type="range"] { pointer-events: none; opacity: .45; }
   .ctl.locked .presets { opacity: .6; }
   button.lock-btn { cursor: pointer; box-shadow: none; gap: 4px; }
-  button.lock-btn ha-icon { --mdc-icon-size: 14px; }
+  button.lock-btn ha-icon { --mdc-icon-size: 18px; }
   button.lock-btn[aria-pressed="true"] { background: color-mix(in srgb, var(--u1-warn) 22%, transparent); color: var(--u1-warn); border-color: transparent; }
   .preset {
-    height: 28px; padding: 0 12px; font-size: 12px;
+    height: 36px; padding: 0 12px; font-size: 13px; font-variant-numeric: tabular-nums;
     border-radius: var(--u1-r-s);
     background: transparent; border: 1px solid var(--u1-outline); color: var(--u1-on-variant);
   }
   .preset:hover { background: var(--u1-panel-highest); color: var(--u1-on); }
+  .preset[aria-pressed="true"] { border-color: var(--u1-primary); color: var(--u1-primary); background: color-mix(in srgb, var(--u1-primary) 12%, transparent); }
 
   /* ── List ────────────────────────────────────────────────────────────── */
   .rows { display: flex; flex-direction: column; }
@@ -8252,7 +8525,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .row:last-child { border-bottom: none; }
   .row .k { color: var(--u1-on-variant); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row .v { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; text-align: right; }
+  .row .v { font-family: var(--u1-num); font-variant-numeric: tabular-nums; text-align: right; }
 
   details { border-radius: var(--u1-r-m); }
   details > summary {
@@ -8287,7 +8560,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .file-thumb img { width: 100%; height: 100%; object-fit: contain; }
   .tsvg { width: 100%; height: auto; display: block; }
   .tsvg .tgrid { stroke: var(--u1-outline); stroke-width: .5; opacity: .5; }
-  .tsvg .tax { font-size: 8px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
+  .tsvg .tax { font-size: 8px; fill: var(--u1-on-variant); font-family: var(--u1-num); }
   .tlegend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--u1-on-variant); margin-top: 4px; }
   .tlegend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
   button.tleg { all: unset; cursor: pointer; display: inline-flex; align-items: center; padding: 2px 4px; border-radius: var(--u1-r-s); font: inherit; color: inherit; }
@@ -8295,10 +8568,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   button.tleg:focus-visible { outline: 2px solid var(--u1-primary); }
   button.tleg[aria-pressed="false"] { opacity: .45; text-decoration: line-through; }
   .mesh { display: flex; flex-direction: column; align-items: center; }
-  .mesh-svg { width: 100%; max-width: 420px; height: auto; display: block; }
-  .mesh-svg .tax { font-size: 9px; fill: var(--u1-on-variant); font-family: var(--u1-mono); }
+  .mesh-svg { width: 100%; max-width: 520px; height: auto; display: block; margin-inline: auto; }
+  .mesh-svg .tax { font-size: 9px; fill: var(--u1-on-variant); font-family: var(--u1-num); }
   .mesh-cell { fill: var(--u1-panel-high); }
-  .mesh-val { font-size: 9px; fill: var(--u1-on); font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
+  .mesh-val { font-size: 9.5px; font-weight: 600; fill: var(--u1-on); font-variant-numeric: tabular-nums; letter-spacing: -.2px; }
+  .mesh-val.strong { fill: #fff; }
   .mesh .tlegend i { height: 10px; width: 10px; opacity: .7; }
   .con-log {
     max-height: 220px; min-height: 64px; overflow-y: auto; padding: 8px 10px; border-radius: var(--u1-r-s);
@@ -8330,7 +8604,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .weigh-form label.check { flex-direction: row; align-items: center; gap: 6px; }
   .weigh-row { display: flex; align-items: center; gap: 8px; }
   .weigh-row input { flex: 1 1 auto; min-width: 0; height: 40px; padding: 0 10px; border-radius: var(--u1-r-s);
-    border: 1px solid var(--u1-outline); background: var(--u1-panel-high); color: var(--u1-on); font-family: var(--u1-mono); font-size: 14px; }
+    border: 1px solid var(--u1-outline); background: var(--u1-panel-high); color: var(--u1-on); font-family: var(--u1-num); font-size: 14px; }
   .head-change { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .head-change .t-label { display: inline-flex; align-items: center; gap: 6px; }
   .head-change .t-label ha-icon { --mdc-icon-size: 18px; }
@@ -8376,7 +8650,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     white-space: normal; word-break: break-word;
   }
-  .file-meta { font-size: 11px; color: var(--u1-on-variant); font-family: var(--u1-mono); }
+  .file-meta { font-size: 11px; color: var(--u1-on-variant); font-family: var(--u1-num); }
 
   .file-dots { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; }
   .file-dots i { width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(0,0,0,.25); }
@@ -8392,7 +8666,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .spool-line ha-icon { --mdc-icon-size: 16px; }
   .spool-top { display: flex; gap: 6px; align-items: baseline; min-width: 0; }
   .spool-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--u1-on); }
-  .spool-rest { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .spool-rest { font-family: var(--u1-num); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .spool-track { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--u1-outline) 40%, transparent); overflow: hidden; }
   .spool-track i { display: block; height: 100%; background: var(--u1-primary); border-radius: 2px; }
   .spool-line[data-low="1"] .spool-track i { background: var(--u1-warn); }
@@ -8597,8 +8871,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   /* ── Power switch ────────────────────────────────────────────────────── */
   button.chip.pwr { cursor: pointer; box-shadow: none; padding: 0 12px; min-width: 0; height: 32px; }
   button.chip.pwr[disabled] { opacity: 1; }
-  button.chip.pwr span { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; }
+  button.chip.pwr span { font-family: var(--u1-num); font-variant-numeric: tabular-nums; }
   .chip.sm { height: 24px; padding: 0 8px; font-size: 12px; }
+  /* buttons in panel heads (lock, display touch …): at least 36 px high, a 44 px touch target */
+  .panel-head button.chip.sm { height: 36px; padding: 0 14px; font-size: 13px; gap: 6px; position: relative; }
+  .panel-head button.chip.sm ha-icon { --mdc-icon-size: 18px; }
+  .panel-head button.chip.sm::after { content: ""; position: absolute; inset: -4px; }
   .offline button { margin-top: 6px; }
   .dlg-note {
     display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px;
@@ -8627,7 +8905,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .hist-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
   .last-print { display: flex; gap: 12px; align-items: center; }
   .last-thumb { width: 64px; height: 64px; }
-  .hist-cost { font-family: var(--u1-mono); font-variant-numeric: tabular-nums; font-size: 13px; }
+  .hist-cost { font-family: var(--u1-num); font-variant-numeric: tabular-nums; font-size: 13px; }
 
   /* ── Timelapses ──────────────────────────────────────────────────────── */
   .tl-thumb { position: relative; aspect-ratio: 16 / 9; height: auto; }
@@ -8714,7 +8992,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     background: var(--u1-panel-high);
   }
   .q-item[data-first="1"] { box-shadow: inset 0 0 0 1px var(--u1-primary); }
-  .q-pos { width: 22px; text-align: center; font-family: var(--u1-mono); color: var(--u1-on-variant); flex-shrink: 0; }
+  .q-pos { width: 22px; text-align: center; font-family: var(--u1-num); color: var(--u1-on-variant); flex-shrink: 0; }
   .q-meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--u1-on-variant); margin-top: 2px; flex-wrap: wrap; }
   .q-meta ha-icon { --mdc-icon-size: 15px; }
   .q-meta .file-dots { margin: 0; }
@@ -9158,6 +9436,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (inp.files && inp.files[0]) this._upload(inp.files[0]);
         inp.value = "";
       });
+      r.querySelectorAll("[data-usage]").forEach((b) => b.addEventListener("click", () => {
+        this._usageOpen = !this._usageOpen;
+        b.setAttribute("aria-expanded", String(this._usageOpen));
+        b.querySelectorAll(".use-detail").forEach((el) => {
+          el.hidden = !this._usageOpen;
+        });
+      }));
       r.querySelectorAll("[data-reprint]").forEach((b) => b.addEventListener("click", () => this._reprint(Number(b.dataset.reprint))));
       r.querySelectorAll("[data-archive]").forEach((b) => b.addEventListener("click", () => this._openArchive(Number(b.dataset.archive))));
       r.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => this._queueAction(b.dataset.q, b.dataset.job, Number(b.dataset.pos))));
@@ -9416,6 +9701,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           el.value = value;
         }
         set(`n:${id}`, num(value, dec, unit));
+        r.querySelectorAll(`.preset[data-set="${id}"]`).forEach((b) => {
+          const on = String(Number(b.dataset.value) === Number(value));
+          if (b.getAttribute("aria-pressed") !== on) b.setAttribute("aria-pressed", on);
+        });
       });
     }
   };
@@ -10604,7 +10893,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const cell = 34, gap = 2, padL = 4, padB = 16;
       const W = padL + cols * (cell + gap), H = rows.length * (cell + gap) + padB;
       const lim = Math.max(0.05, Math.abs(m.min), Math.abs(m.max));
-      const labels = cols <= 10;
+      const labels = this._cfg.mesh_values !== false && cols <= 12;
       const cells = rows.map((row, ri) => row.map((v, ci) => {
         const x = padL + ci * (cell + gap);
         const y = (rows.length - 1 - ri) * (cell + gap);
@@ -10613,7 +10902,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         return `<g><title>${esc(`X${ci + 1} Y${ri + 1}: ${meshLabel(v)} mm`)}</title>
         <rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" class="mesh-cell"/>
         <rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" fill="${color}" fill-opacity="${(0.08 + a * 0.8).toFixed(2)}"/>
-        ${labels ? `<text x="${x + cell / 2}" y="${y + cell / 2 + 4}" text-anchor="middle" class="mesh-val">${meshLabel(v)}</text>` : ""}
+        ${labels ? `<text x="${x + cell / 2}" y="${y + cell / 2 + 3.5}" text-anchor="middle" class="mesh-val${a > 0.55 ? " strong" : ""}">${meshLabel(v)}</text>` : ""}
       </g>`;
       }).join("")).join("");
       return `<svg viewBox="0 0 ${W} ${H}" class="mesh-svg" role="img" aria-label="${tr("Höhenprofil des Druckbetts")}">
@@ -11753,6 +12042,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
   // frontend/src/card/display.js
   var POLL_MS = 700;
+  var POLL_OVERVIEW_MS = 2e3;
   var POLL_TOUCH_MS = 200;
   var TOUCH_FAST_MS = 2500;
   var MOVE_EVERY_MS = 60;
@@ -11765,8 +12055,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const s = st && st.attributes && st.attributes.screen;
       return s && s.width > 0 && s.height > 0 && this._entryData().config_entry_id ? s : null;
     }
+    _displayPlace() {
+      const p = this._cfg.display_place;
+      if (p === "overview" || p === "tab" || p === "off") return p;
+      if (this._cfg.display_tab === false) return "off";
+      return this._cfg.display_tab === true ? "tab" : "overview";
+    }
+    /** The display section is shown (on the overview or as its own tab). */
     _displayTab() {
-      return this._cfg.display_tab !== false && !!this._screenInfo();
+      return this._displayPlace() !== "off" && !!this._screenInfo();
     }
     /** The display as additional "camera" of the stage (only the card's own cameras). */
     _displayAsCamera() {
@@ -11780,13 +12077,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
      * phone: as wide as the card allows, and never taller than maxH.
      */
     _displaySize(s, maxH) {
-      return `aspect-ratio:${s.width} / ${s.height};max-width:min(${s.width}px, calc(${maxH} * ${s.width} / ${s.height}))`;
+      return `aspect-ratio:${s.width} / ${s.height};width:${s.width}px;max-width:min(100%, calc(${maxH} * ${s.width} / ${s.height}))`;
     }
     _sectionDisplay() {
       const s = this._screenInfo();
       if (!s) return "";
       return `
-      <section class="panel span2 display">
+      <section class="panel display">
         <div class="panel-head">
           <ha-icon icon="mdi:monitor-screenshot"></ha-icon>
           <span class="panel-title">${tr("Druckerdisplay")}</span>
@@ -11893,7 +12190,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const h = this._hass;
       if (!imgs.length || !h || typeof h.fetchWithAuth !== "function") return;
       const now = Date.now();
-      const every = now - (this._dispTouchAt || 0) < TOUCH_FAST_MS ? POLL_TOUCH_MS : POLL_MS;
+      const fast = now - (this._dispTouchAt || 0) < TOUCH_FAST_MS;
+      const calm = !this._displayTouchOn() && !imgs.some((i) => i.closest('[data-pane="display"]') || i.closest("section.stage"));
+      const every = fast ? POLL_TOUCH_MS : calm ? POLL_OVERVIEW_MS : POLL_MS;
       this._dispTimer = setTimeout(() => this._pollDisplay(), every);
       if (this._dispLoading && now - this._dispLoadStart < LOAD_TIMEOUT_MS) return;
       this._dispLoading = true;
@@ -12093,6 +12392,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     static getStubConfig() {
       return { type: "custom:snapmaker-u1-card" };
     }
+    /** Defaults a subclass puts under the user's config (the section card). */
+    _defaults() {
+      return {};
+    }
     setConfig(config) {
       this._cfg = {
         camera_mode: "auto",
@@ -12113,11 +12416,16 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         show: SECTIONS,
         nozzle_presets: [0, 210, 240, 260],
         bed_presets: [0, 55, 65, 85],
+        speed_presets: [85, 100, 115],
+        flow_presets: [95, 100, 105],
+        mesh_values: true,
         files_limit: 12,
         toolheads: [],
+        ...this._defaults(),
         ...config
       };
       if (typeof this._cfg.show === "string") this._cfg.show = this._cfg.show.split(/[\s,]+/);
+      if (Array.isArray(this._cfg.show)) this._cfg.show = [...new Set(this._cfg.show)];
       const hide = Array.isArray(this._cfg.hide) ? this._cfg.hide : [];
       this._cfg.show = (this._cfg.show || SECTIONS).filter((s) => SECTIONS.includes(s) && !hide.includes(s));
       if (this._cfg.hide_overlay) this._cfg.camera_overlay = false;
@@ -12134,6 +12442,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._stopStream();
       if (this.shadowRoot) this.shadowRoot.innerHTML = "";
       applyAccent(this, this._cfg.accent_color);
+      this.toggleAttribute("bare-one", this._cfg.layout === "bare" && this._cfg.show.length === 1);
     }
     getCardSize() {
       return 20;
@@ -12253,6 +12562,23 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       this._stopStream();
     }
   };
+  var SnapmakerU1SectionCard = class extends SnapmakerU1Card {
+    static getConfigForm() {
+      return configForm("section");
+    }
+    static getStubConfig() {
+      return { type: "custom:snapmaker-u1-section-card", show: ["job"] };
+    }
+    _defaults() {
+      return { layout: "bare", show: ["job"] };
+    }
+    getCardSize() {
+      return 6;
+    }
+    getGridOptions() {
+      return { columns: 6, rows: "auto", min_columns: 3 };
+    }
+  };
 
   // frontend/src/card/mini.js
   var SnapmakerU1MiniCard = class extends SnapmakerU1Card {
@@ -12347,6 +12673,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     customElements.define(OWN_TYPE, class extends SnapmakerU1Card {
     });
     if (!customElements.get("snapmaker-u1-mini-card")) customElements.define("snapmaker-u1-mini-card", SnapmakerU1MiniCard);
+    if (!customElements.get("snapmaker-u1-section-card")) customElements.define("snapmaker-u1-section-card", SnapmakerU1SectionCard);
     if (!customElements.get("snapmaker-u1-card")) {
       customElements.define("snapmaker-u1-card", SnapmakerU1Card);
     } else {
@@ -12370,6 +12697,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     type: "snapmaker-u1-mini-card",
     name: "Snapmaker U1 Mini",
     description: tr("Kompakt: Status, Fortschritt, Filamente und Netzschalter – ohne Kamera."),
+    preview: true
+  });
+  if (!window.customCards.some((c) => c.type === "snapmaker-u1-section-card")) window.customCards.push({
+    type: "snapmaker-u1-section-card",
+    name: tr("Snapmaker U1 – Bereich"),
+    description: tr("Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen."),
     preview: true
   });
   if (window.__snapmakerU1CardVersion === CARD_VERSION && !window.__snapmakerU1CardLogged) {

@@ -28,7 +28,8 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 
 | Option | Standard | Bedeutung |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander, `tablet` = Kamera, Druckauftrag und Druckköpfe immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander) |
+| `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander (in der Reihenfolge von `show`), `tablet` = Kamera, Druckauftrag und Druckköpfe immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander), `bare` = nur die Bereiche aus `show`, ohne Kopf und Reiter (nutzt die Bereichs-Karte) |
+| `show` | alle | 2.2: welche Bereiche, in dieser Reihenfolge (`stage`, `display`, `layer`, `job`, `queue`, `files`, `toolheads`, `climate`, `mesh`, `motion`, `console`, `system`, `maintenance`, `charts`, `stats`, `history`, `timelapse`, `spools`); `hide` lässt stattdessen Bereiche weg |
 | `layer_view` | `part` | Schichtansicht: `part` = auf das Teil vergrößert, `bed` = Draufsicht auf die ganze Platte mit geparkten Köpfen und Düsen-Marker. Auch direkt in der Schichtansicht umschaltbar (Raster-Knopf, merkt sich der Browser) |
 | `bed_image` | – | eigenes Hintergrundbild für die Draufsicht, z. B. `/local/u1_oben.png` (Datei in `config/www`); ersetzt die gezeichnete Platte und die Köpfe |
 | `bed_image_area` | `0, 0, 270, 270` | welche Druckerkoordinaten in mm das Bild abdeckt (x0, y0, x1, y1). Foto des ganzen Druckers: zwei Punkte ausmessen, z. B. `-40, -30, 310, 360` |
@@ -38,7 +39,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `camera_direct_url` | – | eigene Adresse für den Direktstream |
 | `camera_webrtc` | `auto` | paxx12 Extended Firmware: Kamera per WebRTC (weniger Verzögerung, viel weniger Daten als MJPEG). Die wenigen Signalisierungs-Nachrichten laufen über Home Assistant, das Video direkt zwischen Browser und Drucker – klappt zu Hause und per VPN; kommt in 8 s keine direkte Verbindung zustande, bleibt 10 min MJPEG. `off` = nur MJPEG |
 | `camera_ha_stream` | `auto` | Unterwegs (keine direkte Verbindung, z. B. Nabu Casa): RTSP-Stream über Home Assistant statt MJPEG. Nur mit RTSP (paxx12). `off` = MJPEG |
-| `display_tab` | `true` | Druckerdisplay (Display-Spiegel von paxx12) im eigenen Reiter *Display* |
+| `display_place` | `overview` | 2.2: Druckerdisplay (Display-Spiegel von paxx12) in der Übersicht in echter Größe (`overview`), im eigenen Reiter (`tab`) oder gar nicht (`off`). Das ältere `display_tab: false` heißt weiter aus |
 | `display_camera` | `false` | Druckerdisplay als weitere Stufe des Kamera-Umschalters auf dem Bild (Druckerkamera → USB-Kamera → Display) |
 | `camera_zoom_reset` | `60` | Sekunden ohne Bedienung, bis der Kamera-Zoom auf 1× zurückgeht; `0` = nie. Seite verlassen, App wechseln oder Karte wegscrollen setzt ihn immer zurück |
 | `accent_color` | – | eigene Akzentfarbe für Knöpfe, Regler und Hervorhebungen (`[255, 152, 0]` oder `"#ff9800"`); leer = Hauptfarbe deines Designs. Auch für die Mini-Karte |
@@ -57,11 +58,24 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `timelapse_limit` | `8` | angezeigte Zeitraffer |
 | `files_limit` | `12` | angezeigte Dateien |
 | `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | Schnellwahl-Temperaturen |
+| `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: Schnellwahl für Geschwindigkeit und Flussrate; der aktuelle Wert ist markiert |
+| `mesh_values` | `true` | 2.2: Höhenwerte in den Kacheln der Bettnivellierung (bis 12 × 12 Messpunkte) |
 | `toolheads` | – | Kopfnamen, z. B. `- name: Links` (Material und Farbe kommen vom Drucker) |
 | `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |
 | `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatisch | nur bei mehreren Druckern nötig |
 
 > **Noch eine U1-Karte installiert?** Die Integration [kbaker827/ha-snapmaker-u1](https://github.com/kbaker827/ha-snapmaker-u1) bringt ebenfalls eine Karte `custom:snapmaker-u1-card` mit; wer zuerst lädt, bekommt den Namen. Diese Karte ist deshalb immer auch als `type: custom:snapmaker-u1-card-ironoxx` erreichbar, der Selbsttest weist darauf hin.
+
+### Bereichs-Karte / Baukasten (2.2)
+
+Einzelne Bereiche der Karte als eigene Karten, frei anzuordnen in einem *Abschnitte*-Dashboard: *Karte hinzufügen → Snapmaker U1 – Bereich*, dann im Editor die Bereiche wählen (die Reihenfolge zählt). Gleiche Optionen wie die große Karte.
+
+```yaml
+type: custom:snapmaker-u1-section-card
+show: [mesh]          # z. B. [stage], [job, toolheads], [console] …
+```
+
+Mit einem Bereich ist der Kartenrahmen von Home Assistant selbst das Panel; mehrere stehen untereinander wie bei `layout: scroll`.
 
 ### Mini-Karte
 

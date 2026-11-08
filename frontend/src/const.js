@@ -1,7 +1,7 @@
 /** Constants shared by the card modules. */
 
 export const DOMAIN = "snapmaker_u1_card";
-export const CARD_VERSION = "2.1.4";
+export const CARD_VERSION = "2.2.0b1";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
@@ -13,7 +13,8 @@ export const OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelap
 // Tabs (layout: tabs). A tab appears when at least one of its
 // sections is listed in show.
 export const TABS = [
-  { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "toolheads"] },
+  // 2.2: the printer display sits on the overview (display_place: overview); "tab" keeps its own tab
+  { id: "overview", icon: "mdi:printer-3d", label: "Übersicht", sections: ["stage", "layer", "job", "display", "toolheads"] },
   // only with paxx12's display mirror (left out in _layout otherwise)
   { id: "display", icon: "mdi:monitor-screenshot", label: "Display", sections: ["display"] },
   { id: "control", icon: "mdi:tune-variant", label: "Steuerung", sections: ["climate", "mesh", "motion", "console"] },

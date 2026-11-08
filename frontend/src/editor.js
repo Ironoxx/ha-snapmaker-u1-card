@@ -33,8 +33,10 @@ export const FORM_LABELS = {
   camera_webrtc: "WebRTC (paxx12-Firmware)",
   camera_ha_stream: "Unterwegs: RTSP über Home Assistant",
   camera_zoom_reset: "Zoom zurücksetzen nach (s)",
-  display_tab: "Druckerdisplay als eigener Reiter",
+  display_place: "Druckerdisplay",
   display_camera: "Druckerdisplay als zusätzliche Kamera",
+  mesh_values: "Höhenwerte in der Bettnivellierung",
+  show: "Bereiche",
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -51,7 +53,9 @@ export const FORM_HELPERS = {
   camera_webrtc: "Leer = automatisch: WebRTC, wenn der Drucker es anbietet (weniger Verzögerung und Datenlast). Klappt keine direkte Verbindung (unterwegs ohne VPN), bleibt MJPEG.",
   camera_ha_stream: "Leer = automatisch: Ist keine direkte Verbindung zum Drucker möglich (z. B. Nabu Casa), spielt Home Assistant den RTSP-Stream ab – flüssiger und viel weniger Daten als MJPEG. Nur mit RTSP (paxx12).",
   camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
-  display_tab: "Leer = an. Nur mit dem Display-Spiegel der paxx12-Firmware.",
+  display_place: "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.",
+  mesh_values: "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).",
+  show: "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.",
   display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
@@ -62,7 +66,10 @@ export const FORM_HELPERS = {
   navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog",
 };
 
+/** Form of the card editor: mini = true for the mini card, "section" for the building block card. */
 export function configForm(mini) {
+  const section = mini === "section";
+  if (section) mini = false;
   // Called statically: take the language from the running HA frontend.
   try { const ha = document.querySelector("home-assistant"); if (ha && ha.hass) setLang(ha.hass); } catch (e) { /* ignore */ }
   const opts = (list) => list.map(([value, label]) => ({ value, label: tr(label) }));
@@ -80,6 +87,23 @@ export function configForm(mini) {
       ]),
     ],
   };
+  if (section) {
+    return {
+      schema: [
+        { name: "show", required: true, selector: { select: { multiple: true, mode: "list", reorder: true,
+          options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
+        { name: "accent_color", selector: { color_rgb: {} } },
+        { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
+          ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },
+        { name: "mesh_values", selector: { boolean: {} } },
+        { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
+          ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },
+        advanced,
+      ],
+      computeLabel: (s) => (FORM_LABELS[s.name] ? tr(FORM_LABELS[s.name]) : undefined),
+      computeHelper: (s) => (FORM_HELPERS[s.name] ? tr(FORM_HELPERS[s.name]) : undefined),
+    };
+  }
   const schema = mini ? [
     { name: "printer_name", selector: { text: {} } },
     { name: "accent_color", selector: { color_rgb: {} } },
@@ -98,6 +122,7 @@ export function configForm(mini) {
       ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },
     { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
       ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },
+    { name: "mesh_values", selector: { boolean: {} } },
     {
       type: "expandable", name: "bed_group", flatten: true, title: tr("Draufsicht"), icon: "mdi:grid",
       schema: [
@@ -129,7 +154,7 @@ export function configForm(mini) {
         { name: "camera_ha_stream", selector: { select: { mode: "dropdown", options: opts([["auto", "Automatisch"], ["off", "Aus (MJPEG)"]]) } } },
         { name: "printer_image", selector: { text: {} } },
         { type: "grid", name: "", schema: [
-          { name: "display_tab", selector: { boolean: {} } },
+          { name: "display_place", selector: { select: { mode: "dropdown", options: opts([["overview", "In der Übersicht"], ["tab", "Eigener Reiter"], ["off", "Aus"]]) } } },
           { name: "display_camera", selector: { boolean: {} } },
         ] },
       ],

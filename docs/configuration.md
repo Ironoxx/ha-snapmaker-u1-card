@@ -28,7 +28,8 @@ All options are optional; except head names and presets they can also be set in 
 
 | Option | Default | Meaning |
 |---|---|---|
-| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked, `tablet` = camera, job and print heads always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px) |
+| `layout` | `tabs` | `tabs` = tabs, `scroll` = all sections stacked (in the order of `show`), `tablet` = camera, job and print heads always visible on the left, tabs on the right (tablets, wall monitors; stacks below about 900 px), `bare` = only the sections of `show`, no head and no tabs (the building block card uses it) |
+| `show` | all | 2.2: which sections, in this order (`stage`, `display`, `layer`, `job`, `queue`, `files`, `toolheads`, `climate`, `mesh`, `motion`, `console`, `system`, `maintenance`, `charts`, `stats`, `history`, `timelapse`, `spools`); `hide` leaves sections out instead |
 | `layer_view` | `part` | layer view: `part` = zoomed to the part, `bed` = top view of the whole plate with the parked heads and a nozzle marker. Also switchable in the layer view (grid button, remembered per browser) |
 | `bed_image` | – | own background image for the top view, e.g. `/local/u1_top.png` (file in `config/www`); replaces the drawn plate and heads |
 | `bed_image_area` | `0, 0, 270, 270` | printer coordinates in mm the image covers (x0, y0, x1, y1). Photo of the whole printer: measure two points, e.g. `-40, -30, 310, 360` |
@@ -38,7 +39,7 @@ All options are optional; except head names and presets they can also be set in 
 | `camera_direct_url` | – | own URL for the direct stream |
 | `camera_webrtc` | `auto` | paxx12 Extended Firmware: show the camera over WebRTC (less delay, far less data than MJPEG). The few signalling messages go through Home Assistant, the video directly between browser and printer – works at home and over VPN; if no direct connection comes up within 8 s, MJPEG stays for 10 min. `off` = MJPEG only |
 | `camera_ha_stream` | `auto` | away from home (no direct connection, e.g. Nabu Casa): play the RTSP stream through Home Assistant instead of MJPEG. Only with RTSP (paxx12). `off` = MJPEG |
-| `display_tab` | `true` | printer display (paxx12 display mirror) in its own tab *Display* |
+| `display_place` | `overview` | 2.2: printer display (paxx12 display mirror) on the overview at its real size (`overview`), in its own tab (`tab`) or not at all (`off`). The older `display_tab: false` still means off |
 | `display_camera` | `false` | printer display as one more step of the camera switch button on the image (printer camera → USB camera → display) |
 | `camera_zoom_reset` | `60` | seconds without interaction until the camera zoom goes back to 1×; `0` = never. Leaving the page, switching the app or scrolling the card away always resets it |
 | `accent_color` | – | own accent colour for buttons, sliders and highlights (`[255, 152, 0]` or `"#ff9800"`); empty = your theme's primary colour. Also for the mini card |
@@ -57,11 +58,24 @@ All options are optional; except head names and presets they can also be set in 
 | `timelapse_limit` | `8` | timelapses shown |
 | `files_limit` | `12` | files shown |
 | `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | quick temperature presets |
+| `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: quick buttons for speed and flow; the current value is marked |
+| `mesh_values` | `true` | 2.2: heights in the bed mesh cells (up to 12 × 12 points) |
 | `toolheads` | – | head names, e.g. `- name: Left` (material and colour come from the printer) |
 | `network_tracker` | – | `device_tracker` for a WiFi chip in the header |
 | `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatic | only needed with several printers |
 
 > **Another U1 card installed?** The integration [kbaker827/ha-snapmaker-u1](https://github.com/kbaker827/ha-snapmaker-u1) also ships a card called `custom:snapmaker-u1-card`; whichever loads first gets that name. This card is always available as `type: custom:snapmaker-u1-card-ironoxx` too, and the self test points it out.
+
+### Building block card (2.2)
+
+Single sections of the card as cards of their own, to arrange freely in a *Sections* dashboard: *Add card → Snapmaker U1 – Section*, then pick the sections in the editor (their order counts). Same options as the full card.
+
+```yaml
+type: custom:snapmaker-u1-section-card
+show: [mesh]          # e.g. [stage], [job, toolheads], [console] …
+```
+
+With one section the Home Assistant card frame is the panel itself; with several they stack like `layout: scroll`.
 
 ### Mini card
 

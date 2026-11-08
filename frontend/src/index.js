@@ -8,7 +8,7 @@
 
 import { CARD_VERSION } from "./const.js";
 import { setLang, tr } from "./i18n.js";
-import { SnapmakerU1Card } from "./card/card.js";
+import { SnapmakerU1Card, SnapmakerU1SectionCard } from "./card/card.js";
 import { SnapmakerU1MiniCard } from "./card/mini.js";
 
 // The integration loads the card on two paths (start page and dashboard
@@ -24,6 +24,7 @@ if (!customElements.get(OWN_TYPE)) {
   // One constructor can only be registered under one name: the alias is a subclass.
   customElements.define(OWN_TYPE, class extends SnapmakerU1Card {});
   if (!customElements.get("snapmaker-u1-mini-card")) customElements.define("snapmaker-u1-mini-card", SnapmakerU1MiniCard);
+  if (!customElements.get("snapmaker-u1-section-card")) customElements.define("snapmaker-u1-section-card", SnapmakerU1SectionCard);
   if (!customElements.get("snapmaker-u1-card")) {
     customElements.define("snapmaker-u1-card", SnapmakerU1Card);
   } else {
@@ -49,6 +50,13 @@ if (!window.customCards.some((c) => c.type === "snapmaker-u1-mini-card")) window
   type: "snapmaker-u1-mini-card",
   name: "Snapmaker U1 Mini",
   description: tr("Kompakt: Status, Fortschritt, Filamente und Netzschalter – ohne Kamera."),
+  preview: true,
+});
+
+if (!window.customCards.some((c) => c.type === "snapmaker-u1-section-card")) window.customCards.push({
+  type: "snapmaker-u1-section-card",
+  name: tr("Snapmaker U1 – Bereich"),
+  description: tr("Baukasten: einzelne Bereiche der Karte (z. B. Kamera, Druckauftrag, Bettnivellierung) als eigene Karte, frei im Dashboard anzuordnen."),
   preview: true,
 });
 
