@@ -29,7 +29,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | Option | Standard | Bedeutung |
 |---|---|---|
 | `layout` | `tabs` | `tabs` = Reiter, `scroll` = alle Bereiche untereinander (in der Reihenfolge von `show`), `tablet` = Kamera, Druckauftrag und Druckköpfe immer links sichtbar, Reiter rechts (Tablets, Wandmonitore; unter ca. 900 px untereinander), `bare` = nur die Bereiche aus `show`, ohne Kopf und Reiter (nutzt die Bereichs-Karte) |
-| `show` | alle | 2.2: welche Bereiche, in dieser Reihenfolge (`stage`, `display`, `layer`, `job`, `queue`, `files`, `toolheads`, `climate`, `mesh`, `motion`, `console`, `system`, `maintenance`, `charts`, `stats`, `history`, `timelapse`, `spools`); `hide` lässt stattdessen Bereiche weg |
+| `show` | alle | 2.2: welche Bereiche, in dieser Reihenfolge (`stage`, `display`, `layer`, `job`, `queue`, `files`, `toolheads`, `climate`, `mesh`, `motion`, `console`, `system`, `maintenance`, `charts`, `stats`, `history`, `timelapse`, `spools`, `messages`); `hide` lässt stattdessen Bereiche weg |
 | `layer_view` | `part` | Schichtansicht: `part` = auf das Teil vergrößert, `bed` = Draufsicht auf die ganze Platte mit geparkten Köpfen und Düsen-Marker. Auch direkt in der Schichtansicht umschaltbar (Raster-Knopf, merkt sich der Browser) |
 | `bed_image` | – | eigenes Hintergrundbild für die Draufsicht, z. B. `/local/u1_oben.png` (Datei in `config/www`); ersetzt die gezeichnete Platte und die Köpfe |
 | `bed_image_area` | `0, 0, 270, 270` | welche Druckerkoordinaten in mm das Bild abdeckt (x0, y0, x1, y1). Foto des ganzen Druckers: zwei Punkte ausmessen, z. B. `-40, -30, 310, 360` |
@@ -60,6 +60,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | Schnellwahl-Temperaturen |
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: Schnellwahl für Geschwindigkeit und Flussrate; der aktuelle Wert ist markiert |
 | `mesh_values` | `true` | 2.2: Höhenwerte in den Kacheln der Bettnivellierung (bis 12 × 12 Messpunkte) |
+| `alerts` | mit `stage`/`job` | 2.2, Bereichs-Karte: Meldungen des Druckers oben (`true` immer, `false` nie). Der Bereich `messages` zeigt sie für sich |
 | `toolheads` | – | Kopfnamen, z. B. `- name: Links` (Material und Farbe kommen vom Drucker) |
 | `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |
 | `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatisch | nur bei mehreren Druckern nötig |

@@ -79,9 +79,10 @@ def mock_client():
          patch(f"{API}.components", AsyncMock(return_value=["file_manager", "history"])) as comps, \
          patch(f"{API}.object_list", AsyncMock(return_value=["print_task_config", "extruder", "heater_bed"])) as objs, \
          patch(f"{API}.firmware_version", AsyncMock(return_value="1.6.0")), \
+         patch(f"{API}.firmware_config", AsyncMock(return_value=(404, None))) as fwc, \
          patch(f"{API}.history_totals", AsyncMock(return_value={"total_print_time": 36000.0})):
         yield {"query": q, "download": dl, "start_print": sp, "ready": ready, "files": files, "components": comps,
-               "objects": objs}
+               "objects": objs, "firmware_config": fwc}
 
 
 async def _setup(hass: HomeAssistant) -> MockConfigEntry:

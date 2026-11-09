@@ -403,6 +403,25 @@
           "error": "Fehler"
         }
       },
+      "machine_state": {
+        "name": "Maschinenstatus",
+        "state": {
+          "idle": "Bereit",
+          "printing": "Druckt",
+          "xyz_offset_calibrate": "XYZ-Kalibrierung",
+          "bed_leveling": "Bettnivellierung",
+          "flow_calibration": "Flusskalibrierung",
+          "shaper_calibrate": "Resonanzmessung",
+          "upgrading": "Firmware-Update",
+          "abnormal": "Störung",
+          "screws_tilt_adjust": "Bett ausrichten",
+          "auto_load": "Filament wird geladen",
+          "auto_unload": "Filament wird entladen",
+          "manual_load": "Filament von Hand laden",
+          "park_point_calibration": "Dock-Position kalibrieren",
+          "homing_origin_calibration": "Nullpunkt kalibrieren"
+        }
+      },
       "current_layer": {
         "name": "Schicht"
       },

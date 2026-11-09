@@ -29,6 +29,7 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 | `sensor.…_printer_values` | 2.0: state of Klipper, attributes `values` (all printer values for the card, named like the Moonraker integration's entities: `bed_temperature`, `extruder1_target`, `cavity_fan`, `led_cavity_led` …) and `attrs` (unit, slider range). Not recorded |
 | `sensor.…_bed_temperature`, `sensor.…_nozzle_1_temperature` … `_4_…`, `sensor.…_chamber_temperature` | 2.0: temperatures |
 | `sensor.…_progress`, `sensor.…_print_state`, `sensor.…_layer` | 2.0: progress in %, print state (`standby`, `printing`, `paused`, `complete`, `cancelled`, `error`), current layer (attribute `total_layer`) |
+| `sensor.…_machine_state` | 2.2: what the printer is doing, also outside a print (Snapmaker's `machine_state_manager`): `idle`, `printing`, `xyz_offset_calibrate`, `bed_leveling`, `flow_calibration`, `shaper_calibrate`, `upgrading`, `abnormal`, `screws_tilt_adjust`, `auto_load`, `auto_unload`, `manual_load`, `park_point_calibration`, `homing_origin_calibration`; attributes `action` (current step, e.g. `wait_nozzle_cooling`), `head` (1–4), `needs_user` (the display waits for a confirmation) |
 | `number.…_bed_target`, `number.…_nozzle_1_target` … `_4_…`, `number.…_part_cooling_fan`, `number.…_speed_factor` | 2.0: target temperatures, part fan, speed |
 | `button.…_pause_print`, `…_resume_print`, `…_cancel_print`, `…_emergency_stop`, `…_home_all_axes` | 2.0: print controls and homing |
 | `light.…_chamber_light` | 2.0: chamber light (and further `led` objects of the printer) |
@@ -132,6 +133,8 @@ data:
 ```
 
 `unload` runs the same steps as the firmware's "unload at the end of the print": `AUTO_FEEDING EXTRUDER=<n> UNLOAD=1 STAGE=prepare` (move to the discard position, heat to the filament's temperature) and then `STAGE=doing` (pull back, cut, heater off). `load` sends `AUTO_FEEDING EXTRUDER=<n> LOAD=1`: the feeder pulls in a filament waiting at its inlet; without filament, or with the feeder's auto mode off, the firmware does nothing. The call returns when the printer is done (a few minutes).
+
+2.2: the service checks first (feeder and head sensor): loading needs filament waiting at the feeder and none in the head, unloading needs filament in the head; otherwise it refuses with the reason. Afterwards it checks the head sensor and reports an error if the filament did not come out or in. `tool_change` likewise checks that the head really was picked or parked.
 
 ### `snapmaker_u1_card.machine_command`
 

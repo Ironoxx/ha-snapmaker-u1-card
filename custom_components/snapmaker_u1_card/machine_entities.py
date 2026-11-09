@@ -21,7 +21,7 @@ from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.helpers.entity import EntityCategory
 
 from .coordinator import U1Coordinator
-from .machine_status import HEATERS
+from .machine_status import HEATERS, MAIN_STATES
 from .sensor import U1Entity
 
 PRINT_STATES = ["standby", "printing", "paused", "complete", "cancelled", "error"]
@@ -117,6 +117,38 @@ class PrintStateSensor(U1Entity, SensorEntity):
     def native_value(self) -> str | None:
         state = self.coordinator.data.machine.get("current_print_state")
         return state if state in PRINT_STATES else None
+
+
+class MachineStateSensor(U1Entity, SensorEntity):
+    """2.2: what the printer is doing (Snapmaker machine_state_manager), also outside a print.
+
+    State: idle, printing, xyz_offset_calibrate, bed_leveling, auto_load …;
+    attributes: the current step (action), its head, whether it waits for someone
+    at the printer, and the raw codes.
+    """
+
+    _attr_translation_key = "machine_state"
+    _attr_icon = "mdi:state-machine"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = sorted(set(MAIN_STATES.values()))
+
+    def __init__(self, coordinator: U1Coordinator) -> None:
+        super().__init__(coordinator, "machine_state")
+
+    @property
+    def native_value(self) -> str | None:
+        state = self.coordinator.data.machine.get("machine_state")
+        return state if state in self._attr_options else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        a = self.coordinator.data.machine_attrs.get("machine_state") or {}
+        return {
+            "action": a.get("action"),
+            "head": (a["head"] + 1) if isinstance(a.get("head"), int) else None,
+            "needs_user": bool(a.get("needs_user")),
+            "main_code": a.get("main_code"), "action_code": a.get("action_code"),
+        }
 
 
 class LayerSensor(U1Entity, SensorEntity):

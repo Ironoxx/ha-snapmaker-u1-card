@@ -1,13 +1,13 @@
 /** Constants shared by the card modules. */
 
 export const DOMAIN = "snapmaker_u1_card";
-export const CARD_VERSION = "2.2.0b1";
+export const CARD_VERSION = "2.2.0b2";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 export const SUFFIX = ["", "1", "2", "3"];
 export const SECTIONS = ["stage", "display", "layer", "job", "queue", "files", "toolheads", "climate", "mesh", "motion", "console", "system",
-  "maintenance", "charts", "stats", "history", "timelapse", "spools"];
+  "maintenance", "charts", "stats", "history", "timelapse", "spools", "messages"];
 // Useful while the printer is off (data comes from the integration, not the printer)
 export const OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance", "spools"];
 // Tabs (layout: tabs). A tab appears when at least one of its

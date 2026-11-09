@@ -11,6 +11,32 @@ const OWN_BUTTONS = {
   home_x_axis: ["home", "x"], home_y_axis: ["home", "y"], home_z_axis: ["home", "z"],
 };
 
+// 2.2: Snapmaker machine_state_manager, main state and step (names from machine_status.py)
+export const MACHINE_MAIN = {
+  xyz_offset_calibrate: "XYZ-Kalibrierung", bed_leveling: "Bettnivellierung", flow_calibration: "Flusskalibrierung",
+  shaper_calibrate: "Resonanzmessung", upgrading: "Firmware-Update", abnormal: "Störung",
+  screws_tilt_adjust: "Bett ausrichten", auto_load: "Filament wird geladen", auto_unload: "Filament wird entladen",
+  manual_load: "Filament von Hand laden", park_point_calibration: "Dock-Position kalibrieren",
+  homing_origin_calibration: "Nullpunkt kalibrieren",
+};
+export const MACHINE_STEP = {
+  homing: "Referenzfahrt", detect_plate: "Platte wird erkannt", preheat_chamber: "Kammer heizt vor",
+  print_restore: "Druck wird wiederhergestellt", print_resuming: "Druck wird fortgesetzt",
+  print_replenishing: "Filament wird nachgefüllt", print_switch_checking: "Kopfwechsel wird geprüft",
+  print_auto_feeding: "Filament wird eingezogen", print_preextruding: "Vorextrusion",
+  print_auto_unloading: "Filament wird entladen", print_bed_detecting: "Bett wird geprüft",
+  manual_clean_extruder: "Düse von Hand reinigen", xyz_offset_probe: "Versatz wird gemessen",
+  auto_clean_nozzle: "Düse wird gereinigt", wait_nozzle_cooling: "Düse kühlt ab",
+  bed_leveling: "Bett wird vermessen", bed_preheating: "Bett heizt vor", bed_prescanning: "Bett wird vorab gescannt",
+  flow_calibrating: "Fluss wird gemessen", shaper_calibrating: "Resonanz wird gemessen",
+  reset_to_initial: "Ausgangsstellung", probe_reference_points: "Referenzpunkte werden gemessen",
+  manual_tuning: "Schrauben von Hand einstellen", probing_adjust_verify: "Ergebnis wird geprüft",
+  auto_loading: "Filament wird geladen", auto_unloading: "Filament wird entladen",
+  manual_loading: "Filament von Hand laden", park_point_calibrating: "Dock-Position wird kalibriert",
+  extruder_pick_verify: "Aufnahme wird geprüft", extruder_park_verify: "Ablage wird geprüft",
+  homing_origin_calibrating: "Nullpunkt wird kalibriert",
+};
+
 export const ControlsMixin = (Base) => class extends Base {
   _press(name) {
     const own = this._ownControl() && OWN_BUTTONS[name];
@@ -266,6 +292,10 @@ export const ControlsMixin = (Base) => class extends Base {
     const d = this._d;
     if (!d.online) return "off";
     if (d.state === "error") return "error";
+    const ms = this._machineState();
+    if (ms && ms.main === "abnormal") return "error";
+    if (ms && ms.needsUser) return "warn";
+    if (ms && !d.active && ms.main !== "idle" && ms.main !== "printing") return "active";
     if (d.paused) return "warn";
     if (d.printing) return "active";
     if (d.state === "complete") return "ok";
@@ -278,10 +308,23 @@ export const ControlsMixin = (Base) => class extends Base {
     if (this._isPending("cancel")) return tr("Breche ab …");
     if (this._isPending("pause")) return tr("Pausiere …");
     if (this._isPending("resume")) return tr("Setze fort …");
+    // 2.2: outside a print the firmware says what it is doing (calibration, loading …)
+    const busy = !d.active && this._machineText();
+    if (busy) return busy;
     return {
       printing: tr("Druckt"), standby: tr("Bereit"), complete: tr("Fertig"),
       cancelled: tr("Abgebrochen"), paused: tr("Pausiert"), error: tr("Fehler"),
     }[d.state] || d.state;
+  }
+
+  /** 2.2: "XYZ calibration · nozzle cooling down" from the machine state, or "" when idle. */
+  _machineText(withStep = true) {
+    const ms = this._machineState();
+    if (!ms || ms.main === "idle" || ms.main === "printing") return "";
+    const main = MACHINE_MAIN[ms.main] ? tr(MACHINE_MAIN[ms.main]) : ms.main;
+    let step = withStep && ms.action && ms.action !== "idle" && MACHINE_STEP[ms.action] ? tr(MACHINE_STEP[ms.action]) : "";
+    if (step && ms.head !== null) step += ` (${(this._d.heads[ms.head] || {}).name || `E${ms.head}`})`;
+    return step && step !== main ? `${main} · ${step}` : main;
   }
 
   /**
@@ -309,14 +352,17 @@ export const ControlsMixin = (Base) => class extends Base {
       return `<circle cx="${(30 + 8 * Math.cos(rad)).toFixed(2)}" cy="${(30 + 8 * Math.sin(rad)).toFixed(2)}" r="1.6" fill="var(--u1-panel-highest)"/>`;
     }).join("");
     const title = f !== null ? `<title>${tr("Spule zu {p} % voll", { p: Math.round(f * 100) })}</title>` : "";
+    // 2.2: a light edge around the filament, so black (and on light themes white) spools stand out
+    const edge = w > 0 ? `<circle cx="30" cy="30" r="${(outer + 0.5).toFixed(2)}" fill="none" class="spool-edge" stroke-width="1.2"/>` : "";
     return `<svg class="spool${spinning ? " spin" : ""}" viewBox="0 0 60 60" ${title ? 'role="img"' : 'aria-hidden="true"'} data-fill="${f === null ? "" : Math.round(f * 100)}">
       ${title}
       <circle cx="30" cy="30" r="28" fill="var(--u1-panel)" stroke="var(--u1-outline)" stroke-width="1.5"/>
       <g class="spool-rot">
         ${ring}
+        ${edge}
         ${f === null ? `<circle cx="30" cy="30" r="22" fill="none" stroke="var(--u1-on-variant)" stroke-opacity=".35" stroke-width="1"/>
         <circle cx="30" cy="30" r="19" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>` : ""}
-        <circle cx="30" cy="30" r="12" fill="var(--u1-panel)"/>
+        <circle cx="30" cy="30" r="12" fill="var(--u1-panel)" class="spool-hub"/>
         ${holes}
         <circle cx="30" cy="30" r="4" fill="var(--u1-panel-highest)"/>
       </g>

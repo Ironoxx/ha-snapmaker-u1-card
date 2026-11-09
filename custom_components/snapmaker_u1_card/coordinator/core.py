@@ -716,6 +716,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                 self.firmware["installed"] = await self.client.firmware_version()
             except MoonrakerError:
                 pass
+            await self._detect_paxx()
             try:
                 self._cpu_count = await self.client.cpu_count()
             except MoonrakerError:

@@ -403,6 +403,25 @@
           "error": "Error"
         }
       },
+      "machine_state": {
+        "name": "Estado de la máquina",
+        "state": {
+          "idle": "En espera",
+          "printing": "Imprimiendo",
+          "xyz_offset_calibrate": "Calibración XYZ",
+          "bed_leveling": "Nivelación de la cama",
+          "flow_calibration": "Calibración de flujo",
+          "shaper_calibrate": "Medición de resonancia",
+          "upgrading": "Actualización de firmware",
+          "abnormal": "Fallo",
+          "screws_tilt_adjust": "Alinear la cama",
+          "auto_load": "Cargando filamento",
+          "auto_unload": "Descargando filamento",
+          "manual_load": "Cargar filamento a mano",
+          "park_point_calibration": "Calibrar posición del dock",
+          "homing_origin_calibration": "Calibrar origen"
+        }
+      },
       "current_layer": {
         "name": "Capa"
       },

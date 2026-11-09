@@ -220,12 +220,17 @@ async def test_top_cover_mode_and_chamber_ready(hass: HomeAssistant, mock_client
 async def test_tool_change(hass: HomeAssistant, mock_client, notifications) -> None:
     _machine(mock_client)
     entry = await _setup(hass)
-    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+    coord = entry.runtime_data
+    with patch(f"{API}.gcode", AsyncMock()) as gcode, \
+         patch.object(type(coord), "_head_state", AsyncMock(side_effect=["active", "parked", "parked"])):
         await hass.services.async_call(DOMAIN, "tool_change", {"head": 3}, blocking=True)
         assert gcode.await_args.args[0] == "T2 A0"
         assert gcode.await_args.kwargs["timeout"] >= 120
         await hass.services.async_call(DOMAIN, "tool_change", {"head": 1, "action": "park"}, blocking=True)
         assert gcode.await_args.args[0] == "PARK_EXTRUDER"  # head 1 is on the carriage
+        # 2.2: checked afterwards – head still in the dock -> error instead of silent success
+        with pytest.raises(HomeAssistantError, match="not picked|nicht aufgenommen"):
+            await hass.services.async_call(DOMAIN, "tool_change", {"head": 2}, blocking=True)
         _status(mock_client, "printing", "a.gcode")
         await _refresh(hass, entry)
         calls = gcode.await_count
@@ -250,6 +255,31 @@ async def test_filament(hass: HomeAssistant, mock_client, notifications) -> None
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(DOMAIN, "filament", {"head": 1, "action": "unload"}, blocking=True)
         assert gcode.await_count == calls
+
+
+async def test_filament_checks_before_and_after(hass: HomeAssistant, mock_client, notifications) -> None:
+    """2.2: load/unload only when it can work, and the result is checked."""
+    _machine(mock_client)
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    loaded = {"module": True, "at_feeder": True, "auto": True, "state": "load_finish", "error": "ok", "in_head": True}
+    empty = {"module": True, "at_feeder": False, "auto": True, "state": "wait_insert", "error": "ok", "in_head": False}
+    coord.data.machine = {**coord.data.machine, "filament_feed": {"0": loaded, "1": empty}}
+    with patch(f"{API}.gcode", AsyncMock()) as gcode:
+        with pytest.raises(ServiceValidationError, match="already filament|schon Filament"):
+            await hass.services.async_call(DOMAIN, "filament", {"head": 1, "action": "load"}, blocking=True)
+        with pytest.raises(ServiceValidationError, match="no filament in the head|kein Filament"):
+            await hass.services.async_call(DOMAIN, "filament", {"head": 2, "action": "unload"}, blocking=True)
+        with pytest.raises(ServiceValidationError, match="no filament at the feeder|kein Filament"):
+            await hass.services.async_call(DOMAIN, "filament", {"head": 2, "action": "load"}, blocking=True)
+        gcode.assert_not_awaited()
+        # unload sent, but the sensor still sees filament -> error
+        with patch.object(type(coord), "_feed_now", AsyncMock(return_value={**loaded})), \
+             pytest.raises(HomeAssistantError, match="still in the head|noch im Kopf"):
+            await hass.services.async_call(DOMAIN, "filament", {"head": 1, "action": "unload"}, blocking=True)
+        assert gcode.await_count == 2
+        with patch.object(type(coord), "_feed_now", AsyncMock(return_value={**empty})):
+            await hass.services.async_call(DOMAIN, "filament", {"head": 1, "action": "unload"}, blocking=True)
 
 
 async def test_send_gcode(hass: HomeAssistant, mock_client, notifications) -> None:

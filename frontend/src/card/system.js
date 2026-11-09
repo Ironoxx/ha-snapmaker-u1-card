@@ -90,10 +90,16 @@ export const SystemMixin = (Base) => class extends Base {
     const st = this._st(this._ents && this._ents.firmware);
     if (!st || st.state === "unavailable" || st.state === "unknown") return "—";
     const a = st.attributes || {};
+    // 2.2: paxx12 Extended Firmware: its own version, the Snapmaker base in small print
+    const paxx = a.variant === "paxx12";
+    const name = paxx ? `<span class="fw-variant">paxx12</span> ` : "";
+    // short form in the row: "2.0.0-paxx12-24" (build hash in the entity)
+    const short = (v) => esc(String(v || "?").replace(/-[0-9a-f]{6,}$/i, ""));
+    const base = paxx && a.paxx_version && a.base ? ` <span class="t-label">(${tr("Basis")} ${esc(String(a.base).split("_")[0])})</span>` : "";
     if (st.state === "on" && a.latest_version) {
-      return `${esc(a.installed_version || "?")} <span style="color:var(--u1-warn)">→ ${esc(a.latest_version)} ${tr("verfügbar")}</span>`;
+      return `${name}${short(a.installed_version)} <span style="color:var(--u1-warn)">→ ${short(a.latest_version)} ${tr("verfügbar")}</span>${base}`;
     }
-    return `${esc(a.installed_version || "?")} · ${tr("aktuell")}`;
+    return `${name}${short(a.installed_version)} · ${tr("aktuell")}${base}`;
   }
 
   _selfTestHtml() {

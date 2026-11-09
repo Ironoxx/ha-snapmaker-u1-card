@@ -8,7 +8,19 @@ export const SECTION_LABELS = {
   climate: "Bett & Innenraum", mesh: "Bettnivellierung", motion: "Bewegung", console: "G-Code-Konsole", system: "System & Diagnose",
   stats: "Statistik", history: "Druckhistorie", timelapse: "Zeitraffer",
   queue: "Warteschlange", charts: "Diagramme", maintenance: "Wartung", layer: "Schichtansicht",
-  spools: "Spoolman-Bestand", display: "Druckerdisplay",
+  spools: "Spoolman-Bestand", display: "Druckerdisplay", messages: "Meldungen",
+};
+// 2.2: short description per section for the building block editor (native select)
+export const SECTION_DESC = {
+  stage: "Kamerabild mit Fortschritt und Not-Halt", display: "Touchscreen des Druckers (paxx12)",
+  layer: "aktuelle Schicht, Objekte ausschließen", job: "laufender oder letzter Druck mit Vorschaubild",
+  queue: "Druckaufträge in der Warteschlange", files: "Druckdateien, Druck starten",
+  toolheads: "Köpfe, Filamente, Düsentemperaturen", climate: "Bett, Innenraum, Lüfter, Temperaturverlauf",
+  mesh: "Heatmap mit Höhenwerten", motion: "Position, Tempo, Fluss, Referenzfahrt",
+  console: "G-Code senden, Antworten kopieren", system: "Firmware, Verbindung, Auslastung, Selbsttest",
+  maintenance: "fällige Wartung", charts: "Diagramme der letzten 12 Monate", stats: "Drucke, Zeiten, Kopfwechsel",
+  history: "letzte Drucke mit Kosten", timelapse: "Zeitraffer-Videos", spools: "alle Spulen aus Spoolman",
+  messages: "Fehler und Hinweise des Druckers",
 };
 export const FORM_LABELS = {
   printer_name: "Name", printer_brand: "Marke", layout: "Darstellung", hide: "Bereiche ausblenden",
@@ -37,6 +49,7 @@ export const FORM_LABELS = {
   display_camera: "Druckerdisplay als zusätzliche Kamera",
   mesh_values: "Höhenwerte in der Bettnivellierung",
   show: "Bereiche",
+  alerts: "Meldungen des Druckers oben anzeigen",
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -56,6 +69,7 @@ export const FORM_HELPERS = {
   display_place: "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.",
   mesh_values: "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).",
   show: "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.",
+  alerts: "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.",
   display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
   camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
   camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
@@ -91,7 +105,8 @@ export function configForm(mini) {
     return {
       schema: [
         { name: "show", required: true, selector: { select: { multiple: true, mode: "list", reorder: true,
-          options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
+          options: SECTIONS.map((sec) => ({ value: sec, label: `${tr(SECTION_LABELS[sec])} – ${tr(SECTION_DESC[sec])}` })) } } },
+        { name: "alerts", selector: { boolean: {} } },
         { name: "accent_color", selector: { color_rgb: {} } },
         { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
           ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },

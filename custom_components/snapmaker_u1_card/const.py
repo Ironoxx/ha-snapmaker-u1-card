@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "2.2.0b1"
+VERSION = "2.2.0b2"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -53,6 +53,8 @@ RUNOUT_WARN_MIN = 30  # Spool runs out in less than x min -> push notification
 EVENT_NOTIFY_ACTION = "mobile_app_notification_action"
 # Snapmaker publishes the firmware sources with commits "Release firmware version x.y.z"
 FIRMWARE_REPOS = ("Snapmaker/u1-moonraker", "Snapmaker/u1-klipper")
+# 2.2: paxx12 Extended Firmware (releases "2.0.0-paxx12-24"); the old repo name redirects
+PAXX_REPO = "paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware"
 FIRMWARE_CHECK_S = 24 * 3600
 CONF_ALMOST_DONE = "almost_done_minutes"
 DEFAULT_ALMOST_DONE = 10  # minutes before the end

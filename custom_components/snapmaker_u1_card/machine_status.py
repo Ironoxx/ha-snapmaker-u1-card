@@ -41,7 +41,121 @@ STATIC_FIELDS: dict[str, list[str] | None] = {
     "webhooks": ["state", "state_message"],
     "system_stats": ["sysload", "memavail"],
     "fan": ["speed"],
+    # 2.2: Snapmaker's machine state (what the printer is doing, also outside a print)
+    "machine_state_manager": ["main_state", "action_code"],
+    # 2.2: filament feeders, per head (extruder0 … extruder3)
+    "filament_feed left": None,
+    "filament_feed right": None,
 }
+
+# machine_state_manager (u1-klipper klippy/extras/machine_state_manager.py); Moonraker reports numbers
+MAIN_STATES = {
+    0: "idle", 1: "printing", 2: "xyz_offset_calibrate", 3: "bed_leveling", 4: "flow_calibration",
+    5: "shaper_calibrate", 6: "upgrading", 7: "abnormal", 8: "screws_tilt_adjust", 9: "auto_load",
+    10: "auto_unload", 11: "manual_load", 12: "park_point_calibration", 13: "homing_origin_calibration",
+}
+ACTION_CODES = {
+    0: "idle", 1: "homing", 2: "detect_plate", 3: "preheat_chamber",
+    128: "print_restore", 129: "print_paused", 130: "print_resuming", 131: "print_replenishing",
+    132: "print_switch_checking", 133: "print_auto_feeding", 134: "print_preextruding",
+    135: "print_auto_unloading", 136: "print_bed_detecting",
+    192: "manual_clean_extruder", 193: "manual_clean_extruder", 194: "manual_clean_extruder",
+    195: "manual_clean_extruder", 196: "xyz_offset_probe", 197: "xyz_offset_probe", 198: "xyz_offset_probe",
+    199: "xyz_offset_probe", 200: "auto_clean_nozzle", 201: "wait_nozzle_cooling",
+    256: "bed_leveling", 257: "bed_preheating", 258: "bed_prescanning",
+    320: "flow_calibrating", 321: "flow_calibrating", 322: "flow_calibrating", 323: "flow_calibrating",
+    384: "shaper_calibrating", 512: "reset_to_initial", 513: "probe_reference_points", 514: "manual_tuning",
+    515: "probing_adjust_verify", 576: "auto_loading", 640: "auto_unloading", 704: "manual_loading",
+    768: "park_point_calibrating", 769: "extruder_pick_verify", 770: "extruder_park_verify",
+    832: "homing_origin_calibrating",
+}
+# Steps that wait for someone at the printer (the display asks to confirm)
+NEEDS_USER = {"manual_clean_extruder", "manual_tuning", "park_point_calibrating"}
+# Which head an action code refers to (192–199 per head, 320–323 per head)
+_ACTION_HEAD = {**{192 + i: i for i in range(4)}, **{196 + i: i for i in range(4)}, **{320 + i: i for i in range(4)}}
+
+
+def machine_state(status: dict[str, Any]) -> dict[str, Any] | None:
+    """main_state / action_code as names; None without the object (other firmware)."""
+    msm = status.get("machine_state_manager")
+    if not isinstance(msm, dict):
+        return None
+    def code(v: Any) -> int | None:
+        if isinstance(v, bool):
+            return None
+        if isinstance(v, (int, float)):
+            return int(v)
+        if isinstance(v, str):
+            # tolerate names (enum members as text)
+            name = v.rsplit(".", 1)[-1].strip().upper()
+            for table in (MAIN_STATES, ACTION_CODES):
+                for k, n in table.items():
+                    if n.upper() == name:
+                        return k
+        return None
+    main, action = code(msm.get("main_state")), code(msm.get("action_code"))
+    act = ACTION_CODES.get(action, f"code_{action}") if action is not None else None
+    return {
+        "main": MAIN_STATES.get(main, f"state_{main}") if main is not None else None,
+        "main_code": main, "action": act, "action_code": action,
+        "head": _ACTION_HEAD.get(action) if action is not None else None,
+        "busy": main not in (None, 0),
+        "needs_user": act in NEEDS_USER,
+    }
+
+
+def feeders(status: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """Feeder channel and head sensor per head (0–3) for load/unload checks."""
+    out: dict[int, dict[str, Any]] = {}
+    for side in ("left", "right"):
+        data = status.get(f"filament_feed {side}")
+        if not isinstance(data, dict):
+            continue
+        for key, ch in data.items():
+            if not (isinstance(ch, dict) and key.startswith("extruder")):
+                continue
+            idx = int(key[len("extruder"):] or 0) if key[len("extruder"):].isdigit() or key == "extruder" else None
+            if idx is None or not 0 <= idx <= 3:
+                continue
+            out[idx] = {
+                "module": bool(ch.get("module_exist")),
+                "at_feeder": ch.get("filament_detected") if isinstance(ch.get("filament_detected"), bool) else None,
+                "auto": not ch.get("disable_auto", False),
+                "state": ch.get("channel_state"),
+                "action": ch.get("channel_action_state"),
+                "error": ch.get("channel_error") or "ok",
+            }
+    for idx in range(4):
+        sensor = status.get(f"filament_motion_sensor e{idx}_filament")
+        if isinstance(sensor, dict):
+            entry = out.setdefault(idx, {})
+            det = sensor.get("filament_detected")
+            entry["in_head"] = det if isinstance(det, bool) else None
+            entry["sensor_on"] = bool(sensor.get("enabled", True))
+    return out
+
+
+def filament_check(feed: dict[str, Any] | None, action: str) -> str | None:
+    """Why load/unload of a head is not possible right now; None = possible (or unknown)."""
+    if not feed:
+        return None  # no data (older firmware): do not block
+    if action == "load":
+        if feed.get("module") is False:
+            return "no_feeder"
+        if feed.get("error", "ok") != "ok":
+            return "feeder_error"
+        if feed.get("auto") is False:
+            return "auto_off"
+        if feed.get("in_head") is True or feed.get("state") == "load_finish":
+            return "loaded"
+        if feed.get("at_feeder") is False:
+            return "no_filament"
+        return None
+    if action == "unload":
+        if feed.get("in_head") is False and feed.get("state") != "load_finish":
+            return "empty"
+        return None
+    return None
 
 
 def _split(obj: str) -> tuple[str, str]:
@@ -140,6 +254,12 @@ def build(status: dict[str, Any], extras: dict[str, Any] | None = None) -> tuple
     put("current_display_message", ds.get("message") or None)
 
     put("idle_timeout_state", (status.get("idle_timeout") or {}).get("state"))
+    ms = machine_state(status)
+    if ms:
+        put("machine_state", ms["main"], **{k: ms[k] for k in ("action", "main_code", "action_code", "head", "busy", "needs_user")})
+    feed = feeders(status)
+    if feed:
+        put("filament_feed", {str(k): v for k, v in sorted(feed.items())})
 
     th = status.get("toolhead") or {}
     pos = th.get("position")

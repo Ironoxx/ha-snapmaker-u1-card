@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.2.0b1";
+  var CARD_VERSION = "2.2.0b2";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -23,7 +23,8 @@
     "stats",
     "history",
     "timelapse",
-    "spools"
+    "spools",
+    "messages"
   ];
   var OFFLINE_SECTIONS = ["queue", "files", "charts", "history", "timelapse", "maintenance", "spools"];
   var TABS = [
@@ -127,6 +128,78 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escribe un comando; la respuesta de la impresora aparece aquí.",
     "Läuft …": "Ejecutando …",
+    "Referenzfahrt": "Homing",
+    "XYZ-Kalibrierung": "Calibración XYZ",
+    "Resonanzmessung": "Medición de resonancia",
+    "Firmware-Update": "Actualización de firmware",
+    "Störung": "Fallo",
+    "Bett ausrichten": "Alinear la cama",
+    "Filament wird geladen": "Cargando filamento",
+    "Filament wird entladen": "Descargando filamento",
+    "Filament von Hand laden": "Cargar filamento a mano",
+    "Dock-Position kalibrieren": "Calibrar posición del dock",
+    "Nullpunkt kalibrieren": "Calibrar origen",
+    "Platte wird erkannt": "Detectando placa",
+    "Kammer heizt vor": "Precalentando cámara",
+    "Druck wird wiederhergestellt": "Restaurando impresión",
+    "Druck wird fortgesetzt": "Reanudando impresión",
+    "Filament wird nachgefüllt": "Reponiendo filamento",
+    "Kopfwechsel wird geprüft": "Comprobando cambio de cabezal",
+    "Filament wird eingezogen": "Introduciendo filamento",
+    "Vorextrusion": "Preextrusión",
+    "Bett wird geprüft": "Comprobando cama",
+    "Düse von Hand reinigen": "Limpiar boquilla a mano",
+    "Versatz wird gemessen": "Midiendo desfase",
+    "Düse wird gereinigt": "Limpiando boquilla",
+    "Düse kühlt ab": "Boquilla enfriándose",
+    "Bett wird vermessen": "Midiendo cama",
+    "Bett heizt vor": "Precalentando cama",
+    "Bett wird vorab gescannt": "Escaneo previo de la cama",
+    "Fluss wird gemessen": "Midiendo flujo",
+    "Resonanz wird gemessen": "Midiendo resonancia",
+    "Ausgangsstellung": "Posición inicial",
+    "Referenzpunkte werden gemessen": "Midiendo puntos de referencia",
+    "Schrauben von Hand einstellen": "Ajustar tornillos a mano",
+    "Ergebnis wird geprüft": "Comprobando resultado",
+    "Dock-Position wird kalibriert": "Calibrando posición del dock",
+    "Aufnahme wird geprüft": "Comprobando recogida",
+    "Ablage wird geprüft": "Comprobando aparcado",
+    "Nullpunkt wird kalibriert": "Calibrando origen",
+    "Der Drucker meldet eine Störung.": "La impresora indica un fallo.",
+    "Details stehen am Display des Druckers.": "Los detalles están en la pantalla de la impresora.",
+    "Am Drucker bestätigen": "Confirmar en la impresora",
+    "Einzug {head}: Störung": "Alimentador {head}: fallo",
+    "Meldung der Firmware: {e}": "Mensaje del firmware: {e}",
+    "Meldungen": "Mensajes",
+    "Keine Meldungen": "Sin mensajes",
+    "Kein Einzug für diesen Kopf erkannt.": "No se detectó alimentador para este cabezal.",
+    "Der Einzug meldet eine Störung.": "El alimentador indica un fallo.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "La carga automática está desactivada para este cabezal.",
+    "Im Kopf ist schon Filament.": "Ya hay filamento en el cabezal.",
+    "Am Einzug steckt kein Filament.": "No hay filamento en el alimentador.",
+    "Im Kopf ist kein Filament.": "No hay filamento en el cabezal.",
+    "Basis": "base",
+    "Kamerabild mit Fortschritt und Not-Halt": "cámara con progreso y parada de emergencia",
+    "Touchscreen des Druckers (paxx12)": "pantalla táctil de la impresora (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "capa actual, excluir objetos",
+    "laufender oder letzter Druck mit Vorschaubild": "impresión actual o última con vista previa",
+    "Druckaufträge in der Warteschlange": "trabajos en cola",
+    "Druckdateien, Druck starten": "archivos de impresión, iniciar impresión",
+    "Köpfe, Filamente, Düsentemperaturen": "cabezales, filamentos, temperaturas de boquilla",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "cama, cámara, ventiladores, gráfico de temperatura",
+    "Heatmap mit Höhenwerten": "mapa de calor con alturas",
+    "Position, Tempo, Fluss, Referenzfahrt": "posición, velocidad, flujo, homing",
+    "G-Code senden, Antworten kopieren": "enviar G-code, copiar respuestas",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "firmware, conexión, carga, autotest",
+    "fällige Wartung": "mantenimiento pendiente",
+    "Diagramme der letzten 12 Monate": "gráficos de los últimos 12 meses",
+    "Drucke, Zeiten, Kopfwechsel": "impresiones, tiempos, cambios de cabezal",
+    "letzte Drucke mit Kosten": "impresiones recientes con coste",
+    "Zeitraffer-Videos": "vídeos timelapse",
+    "alle Spulen aus Spoolman": "todas las bobinas de Spoolman",
+    "Fehler und Hinweise des Druckers": "errores y avisos de la impresora",
+    "Meldungen des Druckers oben anzeigen": "Mostrar mensajes de la impresora arriba",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Vacío = solo con cámara o trabajo de impresión. Para todos los mensajes en un sitio está la sección «Mensajes».",
     "Objekte ausschließen": "Excluir objetos",
     "{n} Objekte": "{n} objetos",
     "{n} ausgeschlossen": "{n} excluidos",
@@ -790,6 +863,78 @@
     "Senden": "Envoyer",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Saisissez une commande ; la réponse de l’imprimante s’affiche ici.",
     "Läuft …": "En cours …",
+    "Referenzfahrt": "Prise d’origine",
+    "XYZ-Kalibrierung": "Calibration XYZ",
+    "Resonanzmessung": "Mesure de résonance",
+    "Firmware-Update": "Mise à jour du firmware",
+    "Störung": "Défaut",
+    "Bett ausrichten": "Alignement du plateau",
+    "Filament wird geladen": "Chargement du filament",
+    "Filament wird entladen": "Déchargement du filament",
+    "Filament von Hand laden": "Charger le filament à la main",
+    "Dock-Position kalibrieren": "Calibrer la position du dock",
+    "Nullpunkt kalibrieren": "Calibrer l’origine",
+    "Platte wird erkannt": "Détection du plateau",
+    "Kammer heizt vor": "Préchauffage de la chambre",
+    "Druck wird wiederhergestellt": "Restauration de l’impression",
+    "Druck wird fortgesetzt": "Reprise de l’impression",
+    "Filament wird nachgefüllt": "Réapprovisionnement du filament",
+    "Kopfwechsel wird geprüft": "Vérification du changement de tête",
+    "Filament wird eingezogen": "Alimentation du filament",
+    "Vorextrusion": "Pré-extrusion",
+    "Bett wird geprüft": "Vérification du plateau",
+    "Düse von Hand reinigen": "Nettoyer la buse à la main",
+    "Versatz wird gemessen": "Mesure du décalage",
+    "Düse wird gereinigt": "Nettoyage de la buse",
+    "Düse kühlt ab": "Refroidissement de la buse",
+    "Bett wird vermessen": "Mesure du plateau",
+    "Bett heizt vor": "Préchauffage du plateau",
+    "Bett wird vorab gescannt": "Pré-scan du plateau",
+    "Fluss wird gemessen": "Mesure du débit",
+    "Resonanz wird gemessen": "Mesure de la résonance",
+    "Ausgangsstellung": "Position initiale",
+    "Referenzpunkte werden gemessen": "Mesure des points de référence",
+    "Schrauben von Hand einstellen": "Régler les vis à la main",
+    "Ergebnis wird geprüft": "Vérification du résultat",
+    "Dock-Position wird kalibriert": "Calibrage de la position du dock",
+    "Aufnahme wird geprüft": "Vérification de la prise",
+    "Ablage wird geprüft": "Vérification du dépôt",
+    "Nullpunkt wird kalibriert": "Calibrage de l’origine",
+    "Der Drucker meldet eine Störung.": "L’imprimante signale un défaut.",
+    "Details stehen am Display des Druckers.": "Les détails sont sur l’écran de l’imprimante.",
+    "Am Drucker bestätigen": "Confirmer sur l’imprimante",
+    "Einzug {head}: Störung": "Alimentateur {head} : défaut",
+    "Meldung der Firmware: {e}": "Message du firmware : {e}",
+    "Meldungen": "Messages",
+    "Keine Meldungen": "Aucun message",
+    "Kein Einzug für diesen Kopf erkannt.": "Aucun alimentateur détecté pour cette tête.",
+    "Der Einzug meldet eine Störung.": "L’alimentateur signale un défaut.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "Le chargement automatique est désactivé pour cette tête.",
+    "Im Kopf ist schon Filament.": "Il y a déjà du filament dans la tête.",
+    "Am Einzug steckt kein Filament.": "Pas de filament dans l’alimentateur.",
+    "Im Kopf ist kein Filament.": "Pas de filament dans la tête.",
+    "Basis": "base",
+    "Kamerabild mit Fortschritt und Not-Halt": "caméra avec progression et arrêt d’urgence",
+    "Touchscreen des Druckers (paxx12)": "écran tactile de l’imprimante (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "couche actuelle, exclure des objets",
+    "laufender oder letzter Druck mit Vorschaubild": "impression en cours ou dernière avec aperçu",
+    "Druckaufträge in der Warteschlange": "travaux en file d’attente",
+    "Druckdateien, Druck starten": "fichiers d’impression, lancer une impression",
+    "Köpfe, Filamente, Düsentemperaturen": "têtes, filaments, températures de buse",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "plateau, chambre, ventilateurs, courbe de température",
+    "Heatmap mit Höhenwerten": "carte thermique avec hauteurs",
+    "Position, Tempo, Fluss, Referenzfahrt": "position, vitesse, débit, prise d’origine",
+    "G-Code senden, Antworten kopieren": "envoyer du G-code, copier les réponses",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "firmware, connexion, charge, autotest",
+    "fällige Wartung": "maintenance à faire",
+    "Diagramme der letzten 12 Monate": "graphiques des 12 derniers mois",
+    "Drucke, Zeiten, Kopfwechsel": "impressions, durées, changements de tête",
+    "letzte Drucke mit Kosten": "dernières impressions avec coût",
+    "Zeitraffer-Videos": "vidéos timelapse",
+    "alle Spulen aus Spoolman": "toutes les bobines de Spoolman",
+    "Fehler und Hinweise des Druckers": "erreurs et avis de l’imprimante",
+    "Meldungen des Druckers oben anzeigen": "Afficher les messages de l’imprimante en haut",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Vide = seulement avec caméra ou impression. Pour tous les messages au même endroit, il y a la section « Messages ».",
     "Objekte ausschließen": "Exclure des objets",
     "{n} Objekte": "{n} objets",
     "{n} ausgeschlossen": "{n} exclus",
@@ -1453,6 +1598,78 @@
     "Senden": "Invia",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Inserisci un comando; la risposta della stampante appare qui.",
     "Läuft …": "In esecuzione …",
+    "Referenzfahrt": "Homing",
+    "XYZ-Kalibrierung": "Calibrazione XYZ",
+    "Resonanzmessung": "Misura della risonanza",
+    "Firmware-Update": "Aggiornamento firmware",
+    "Störung": "Guasto",
+    "Bett ausrichten": "Allineamento del piano",
+    "Filament wird geladen": "Caricamento filamento",
+    "Filament wird entladen": "Scarico filamento",
+    "Filament von Hand laden": "Carica filamento a mano",
+    "Dock-Position kalibrieren": "Calibra posizione dock",
+    "Nullpunkt kalibrieren": "Calibra l’origine",
+    "Platte wird erkannt": "Rilevamento piastra",
+    "Kammer heizt vor": "Preriscaldamento camera",
+    "Druck wird wiederhergestellt": "Ripristino stampa",
+    "Druck wird fortgesetzt": "Ripresa stampa",
+    "Filament wird nachgefüllt": "Rifornimento filamento",
+    "Kopfwechsel wird geprüft": "Verifica cambio testina",
+    "Filament wird eingezogen": "Alimentazione filamento",
+    "Vorextrusion": "Pre-estrusione",
+    "Bett wird geprüft": "Verifica piano",
+    "Düse von Hand reinigen": "Pulisci l’ugello a mano",
+    "Versatz wird gemessen": "Misura offset",
+    "Düse wird gereinigt": "Pulizia ugello",
+    "Düse kühlt ab": "Ugello in raffreddamento",
+    "Bett wird vermessen": "Misura piano",
+    "Bett heizt vor": "Preriscaldamento piano",
+    "Bett wird vorab gescannt": "Prescansione piano",
+    "Fluss wird gemessen": "Misura flusso",
+    "Resonanz wird gemessen": "Misura risonanza",
+    "Ausgangsstellung": "Posizione iniziale",
+    "Referenzpunkte werden gemessen": "Misura punti di riferimento",
+    "Schrauben von Hand einstellen": "Regola le viti a mano",
+    "Ergebnis wird geprüft": "Verifica risultato",
+    "Dock-Position wird kalibriert": "Calibrazione posizione dock",
+    "Aufnahme wird geprüft": "Verifica presa",
+    "Ablage wird geprüft": "Verifica deposito",
+    "Nullpunkt wird kalibriert": "Calibrazione origine",
+    "Der Drucker meldet eine Störung.": "La stampante segnala un guasto.",
+    "Details stehen am Display des Druckers.": "I dettagli sono sul display della stampante.",
+    "Am Drucker bestätigen": "Conferma sulla stampante",
+    "Einzug {head}: Störung": "Alimentatore {head}: guasto",
+    "Meldung der Firmware: {e}": "Messaggio del firmware: {e}",
+    "Meldungen": "Messaggi",
+    "Keine Meldungen": "Nessun messaggio",
+    "Kein Einzug für diesen Kopf erkannt.": "Nessun alimentatore rilevato per questa testina.",
+    "Der Einzug meldet eine Störung.": "L’alimentatore segnala un guasto.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "Il caricamento automatico è disattivato per questa testina.",
+    "Im Kopf ist schon Filament.": "C’è già filamento nella testina.",
+    "Am Einzug steckt kein Filament.": "Nessun filamento nell’alimentatore.",
+    "Im Kopf ist kein Filament.": "Nessun filamento nella testina.",
+    "Basis": "base",
+    "Kamerabild mit Fortschritt und Not-Halt": "videocamera con avanzamento e arresto di emergenza",
+    "Touchscreen des Druckers (paxx12)": "touchscreen della stampante (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "strato attuale, escludi oggetti",
+    "laufender oder letzter Druck mit Vorschaubild": "stampa in corso o ultima con anteprima",
+    "Druckaufträge in der Warteschlange": "stampe in coda",
+    "Druckdateien, Druck starten": "file di stampa, avvia stampa",
+    "Köpfe, Filamente, Düsentemperaturen": "testine, filamenti, temperature ugello",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "piano, camera, ventole, grafico temperature",
+    "Heatmap mit Höhenwerten": "mappa di calore con altezze",
+    "Position, Tempo, Fluss, Referenzfahrt": "posizione, velocità, flusso, homing",
+    "G-Code senden, Antworten kopieren": "invia G-code, copia risposte",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "firmware, connessione, carico, autotest",
+    "fällige Wartung": "manutenzione dovuta",
+    "Diagramme der letzten 12 Monate": "grafici degli ultimi 12 mesi",
+    "Drucke, Zeiten, Kopfwechsel": "stampe, tempi, cambi testina",
+    "letzte Drucke mit Kosten": "stampe recenti con costi",
+    "Zeitraffer-Videos": "video timelapse",
+    "alle Spulen aus Spoolman": "tutte le bobine da Spoolman",
+    "Fehler und Hinweise des Druckers": "errori e avvisi della stampante",
+    "Meldungen des Druckers oben anzeigen": "Mostra i messaggi della stampante in alto",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Vuoto = solo con videocamera o stampa. Per tutti i messaggi in un posto c’è la sezione «Messaggi».",
     "Objekte ausschließen": "Escludi oggetti",
     "{n} Objekte": "{n} oggetti",
     "{n} ausgeschlossen": "{n} esclusi",
@@ -2116,6 +2333,78 @@
     "Senden": "Versturen",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Voer een commando in; het antwoord van de printer verschijnt hier.",
     "Läuft …": "Bezig …",
+    "Referenzfahrt": "Referentierit",
+    "XYZ-Kalibrierung": "XYZ-kalibratie",
+    "Resonanzmessung": "Resonantiemeting",
+    "Firmware-Update": "Firmware-update",
+    "Störung": "Storing",
+    "Bett ausrichten": "Bed uitlijnen",
+    "Filament wird geladen": "Filament wordt geladen",
+    "Filament wird entladen": "Filament wordt ontladen",
+    "Filament von Hand laden": "Filament handmatig laden",
+    "Dock-Position kalibrieren": "Dockpositie kalibreren",
+    "Nullpunkt kalibrieren": "Nulpunt kalibreren",
+    "Platte wird erkannt": "Plaat wordt herkend",
+    "Kammer heizt vor": "Kamer warmt voor",
+    "Druck wird wiederhergestellt": "Print wordt hersteld",
+    "Druck wird fortgesetzt": "Print wordt hervat",
+    "Filament wird nachgefüllt": "Filament wordt bijgevuld",
+    "Kopfwechsel wird geprüft": "Kopwissel wordt gecontroleerd",
+    "Filament wird eingezogen": "Filament wordt ingevoerd",
+    "Vorextrusion": "Voorextrusie",
+    "Bett wird geprüft": "Bed wordt gecontroleerd",
+    "Düse von Hand reinigen": "Mondstuk handmatig reinigen",
+    "Versatz wird gemessen": "Offset wordt gemeten",
+    "Düse wird gereinigt": "Mondstuk wordt gereinigd",
+    "Düse kühlt ab": "Mondstuk koelt af",
+    "Bett wird vermessen": "Bed wordt gemeten",
+    "Bett heizt vor": "Bed warmt voor",
+    "Bett wird vorab gescannt": "Bed wordt voorgescand",
+    "Fluss wird gemessen": "Flow wordt gemeten",
+    "Resonanz wird gemessen": "Resonantie wordt gemeten",
+    "Ausgangsstellung": "Beginstand",
+    "Referenzpunkte werden gemessen": "Referentiepunten worden gemeten",
+    "Schrauben von Hand einstellen": "Schroeven handmatig afstellen",
+    "Ergebnis wird geprüft": "Resultaat wordt gecontroleerd",
+    "Dock-Position wird kalibriert": "Dockpositie wordt gekalibreerd",
+    "Aufnahme wird geprüft": "Opname wordt gecontroleerd",
+    "Ablage wird geprüft": "Parkeren wordt gecontroleerd",
+    "Nullpunkt wird kalibriert": "Nulpunt wordt gekalibreerd",
+    "Der Drucker meldet eine Störung.": "De printer meldt een storing.",
+    "Details stehen am Display des Druckers.": "Details staan op het display van de printer.",
+    "Am Drucker bestätigen": "Bevestigen op de printer",
+    "Einzug {head}: Störung": "Invoer {head}: storing",
+    "Meldung der Firmware: {e}": "Melding van de firmware: {e}",
+    "Meldungen": "Meldingen",
+    "Keine Meldungen": "Geen meldingen",
+    "Kein Einzug für diesen Kopf erkannt.": "Geen invoer gevonden voor deze kop.",
+    "Der Einzug meldet eine Störung.": "De invoer meldt een storing.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "Automatisch laden staat uit voor deze kop.",
+    "Im Kopf ist schon Filament.": "Er zit al filament in de kop.",
+    "Am Einzug steckt kein Filament.": "Er zit geen filament in de invoer.",
+    "Im Kopf ist kein Filament.": "Er zit geen filament in de kop.",
+    "Basis": "basis",
+    "Kamerabild mit Fortschritt und Not-Halt": "camera met voortgang en noodstop",
+    "Touchscreen des Druckers (paxx12)": "touchscreen van de printer (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "huidige laag, objecten uitsluiten",
+    "laufender oder letzter Druck mit Vorschaubild": "lopende of laatste print met voorbeeld",
+    "Druckaufträge in der Warteschlange": "printopdrachten in de wachtrij",
+    "Druckdateien, Druck starten": "printbestanden, print starten",
+    "Köpfe, Filamente, Düsentemperaturen": "koppen, filamenten, mondstuktemperaturen",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "bed, kamer, ventilatoren, temperatuurgrafiek",
+    "Heatmap mit Höhenwerten": "heatmap met hoogtes",
+    "Position, Tempo, Fluss, Referenzfahrt": "positie, snelheid, flow, referentierit",
+    "G-Code senden, Antworten kopieren": "G-code sturen, antwoorden kopiëren",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "firmware, verbinding, belasting, zelftest",
+    "fällige Wartung": "onderhoud nodig",
+    "Diagramme der letzten 12 Monate": "grafieken van de laatste 12 maanden",
+    "Drucke, Zeiten, Kopfwechsel": "prints, tijden, kopwissels",
+    "letzte Drucke mit Kosten": "laatste prints met kosten",
+    "Zeitraffer-Videos": "timelapse-video’s",
+    "alle Spulen aus Spoolman": "alle spoelen uit Spoolman",
+    "Fehler und Hinweise des Druckers": "fouten en meldingen van de printer",
+    "Meldungen des Druckers oben anzeigen": "Meldingen van de printer bovenaan tonen",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Leeg = alleen met camera of printopdracht. Voor alle meldingen op één plek is er de sectie ‘Meldingen’.",
     "Objekte ausschließen": "Objecten uitsluiten",
     "{n} Objekte": "{n} objecten",
     "{n} ausgeschlossen": "{n} uitgesloten",
@@ -2779,6 +3068,78 @@
     "Senden": "Enviar",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Escreva um comando; a resposta da impressora aparece aqui.",
     "Läuft …": "A executar …",
+    "Referenzfahrt": "Homing",
+    "XYZ-Kalibrierung": "Calibração XYZ",
+    "Resonanzmessung": "Medição de ressonância",
+    "Firmware-Update": "Atualização de firmware",
+    "Störung": "Falha",
+    "Bett ausrichten": "Alinhar a mesa",
+    "Filament wird geladen": "A carregar filamento",
+    "Filament wird entladen": "A descarregar filamento",
+    "Filament von Hand laden": "Carregar filamento à mão",
+    "Dock-Position kalibrieren": "Calibrar posição da doca",
+    "Nullpunkt kalibrieren": "Calibrar origem",
+    "Platte wird erkannt": "A detetar placa",
+    "Kammer heizt vor": "Câmara a pré-aquecer",
+    "Druck wird wiederhergestellt": "A restaurar impressão",
+    "Druck wird fortgesetzt": "A retomar impressão",
+    "Filament wird nachgefüllt": "A repor filamento",
+    "Kopfwechsel wird geprüft": "A verificar troca de cabeça",
+    "Filament wird eingezogen": "A alimentar filamento",
+    "Vorextrusion": "Pré-extrusão",
+    "Bett wird geprüft": "A verificar mesa",
+    "Düse von Hand reinigen": "Limpar bico à mão",
+    "Versatz wird gemessen": "A medir desvio",
+    "Düse wird gereinigt": "A limpar bico",
+    "Düse kühlt ab": "Bico a arrefecer",
+    "Bett wird vermessen": "A medir mesa",
+    "Bett heizt vor": "Mesa a pré-aquecer",
+    "Bett wird vorab gescannt": "A pré-digitalizar mesa",
+    "Fluss wird gemessen": "A medir fluxo",
+    "Resonanz wird gemessen": "A medir ressonância",
+    "Ausgangsstellung": "Posição inicial",
+    "Referenzpunkte werden gemessen": "A medir pontos de referência",
+    "Schrauben von Hand einstellen": "Ajustar parafusos à mão",
+    "Ergebnis wird geprüft": "A verificar resultado",
+    "Dock-Position wird kalibriert": "A calibrar posição da doca",
+    "Aufnahme wird geprüft": "A verificar recolha",
+    "Ablage wird geprüft": "A verificar estacionamento",
+    "Nullpunkt wird kalibriert": "A calibrar origem",
+    "Der Drucker meldet eine Störung.": "A impressora indica uma falha.",
+    "Details stehen am Display des Druckers.": "Os detalhes estão no ecrã da impressora.",
+    "Am Drucker bestätigen": "Confirmar na impressora",
+    "Einzug {head}: Störung": "Alimentador {head}: falha",
+    "Meldung der Firmware: {e}": "Mensagem do firmware: {e}",
+    "Meldungen": "Mensagens",
+    "Keine Meldungen": "Sem mensagens",
+    "Kein Einzug für diesen Kopf erkannt.": "Nenhum alimentador detetado para esta cabeça.",
+    "Der Einzug meldet eine Störung.": "O alimentador indica uma falha.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "O carregamento automático está desligado para esta cabeça.",
+    "Im Kopf ist schon Filament.": "Já há filamento na cabeça.",
+    "Am Einzug steckt kein Filament.": "Não há filamento no alimentador.",
+    "Im Kopf ist kein Filament.": "Não há filamento na cabeça.",
+    "Basis": "base",
+    "Kamerabild mit Fortschritt und Not-Halt": "câmara com progresso e paragem de emergência",
+    "Touchscreen des Druckers (paxx12)": "ecrã tátil da impressora (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "camada atual, excluir objetos",
+    "laufender oder letzter Druck mit Vorschaubild": "impressão atual ou última com pré-visualização",
+    "Druckaufträge in der Warteschlange": "trabalhos em fila",
+    "Druckdateien, Druck starten": "ficheiros de impressão, iniciar impressão",
+    "Köpfe, Filamente, Düsentemperaturen": "cabeças, filamentos, temperaturas do bico",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "mesa, câmara, ventoinhas, gráfico de temperatura",
+    "Heatmap mit Höhenwerten": "mapa de calor com alturas",
+    "Position, Tempo, Fluss, Referenzfahrt": "posição, velocidade, fluxo, homing",
+    "G-Code senden, Antworten kopieren": "enviar G-code, copiar respostas",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "firmware, ligação, carga, autoteste",
+    "fällige Wartung": "manutenção pendente",
+    "Diagramme der letzten 12 Monate": "gráficos dos últimos 12 meses",
+    "Drucke, Zeiten, Kopfwechsel": "impressões, tempos, trocas de cabeça",
+    "letzte Drucke mit Kosten": "impressões recentes com custo",
+    "Zeitraffer-Videos": "vídeos timelapse",
+    "alle Spulen aus Spoolman": "todas as bobinas do Spoolman",
+    "Fehler und Hinweise des Druckers": "erros e avisos da impressora",
+    "Meldungen des Druckers oben anzeigen": "Mostrar mensagens da impressora no topo",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Vazio = só com câmara ou trabalho de impressão. Para todas as mensagens num só sítio existe a secção «Mensagens».",
     "Objekte ausschließen": "Excluir objetos",
     "{n} Objekte": "{n} objetos",
     "{n} ausgeschlossen": "{n} excluídos",
@@ -3442,6 +3803,78 @@
     "Senden": "Gönder",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Bir komut girin; yazıcının yanıtı burada görünür.",
     "Läuft …": "Çalışıyor …",
+    "Referenzfahrt": "Referans sürüşü",
+    "XYZ-Kalibrierung": "XYZ kalibrasyonu",
+    "Resonanzmessung": "Rezonans ölçümü",
+    "Firmware-Update": "Yazılım güncellemesi",
+    "Störung": "Arıza",
+    "Bett ausrichten": "Tabla hizalama",
+    "Filament wird geladen": "Filament yükleniyor",
+    "Filament wird entladen": "Filament boşaltılıyor",
+    "Filament von Hand laden": "Filamenti elle yükle",
+    "Dock-Position kalibrieren": "Yuva konumunu kalibre et",
+    "Nullpunkt kalibrieren": "Sıfır noktasını kalibre et",
+    "Platte wird erkannt": "Plaka algılanıyor",
+    "Kammer heizt vor": "Hazne ön ısıtılıyor",
+    "Druck wird wiederhergestellt": "Baskı geri yükleniyor",
+    "Druck wird fortgesetzt": "Baskı sürdürülüyor",
+    "Filament wird nachgefüllt": "Filament takviye ediliyor",
+    "Kopfwechsel wird geprüft": "Kafa değişimi kontrol ediliyor",
+    "Filament wird eingezogen": "Filament besleniyor",
+    "Vorextrusion": "Ön ekstrüzyon",
+    "Bett wird geprüft": "Tabla kontrol ediliyor",
+    "Düse von Hand reinigen": "Nozulu elle temizle",
+    "Versatz wird gemessen": "Ofset ölçülüyor",
+    "Düse wird gereinigt": "Nozul temizleniyor",
+    "Düse kühlt ab": "Nozul soğuyor",
+    "Bett wird vermessen": "Tabla ölçülüyor",
+    "Bett heizt vor": "Tabla ön ısıtılıyor",
+    "Bett wird vorab gescannt": "Tabla ön taranıyor",
+    "Fluss wird gemessen": "Akış ölçülüyor",
+    "Resonanz wird gemessen": "Rezonans ölçülüyor",
+    "Ausgangsstellung": "Başlangıç konumu",
+    "Referenzpunkte werden gemessen": "Referans noktaları ölçülüyor",
+    "Schrauben von Hand einstellen": "Vidaları elle ayarla",
+    "Ergebnis wird geprüft": "Sonuç kontrol ediliyor",
+    "Dock-Position wird kalibriert": "Yuva konumu kalibre ediliyor",
+    "Aufnahme wird geprüft": "Alma kontrol ediliyor",
+    "Ablage wird geprüft": "Bırakma kontrol ediliyor",
+    "Nullpunkt wird kalibriert": "Sıfır noktası kalibre ediliyor",
+    "Der Drucker meldet eine Störung.": "Yazıcı bir arıza bildiriyor.",
+    "Details stehen am Display des Druckers.": "Ayrıntılar yazıcının ekranında.",
+    "Am Drucker bestätigen": "Yazıcıda onaylayın",
+    "Einzug {head}: Störung": "Besleyici {head}: arıza",
+    "Meldung der Firmware: {e}": "Yazılım mesajı: {e}",
+    "Meldungen": "Mesajlar",
+    "Keine Meldungen": "Mesaj yok",
+    "Kein Einzug für diesen Kopf erkannt.": "Bu kafa için besleyici bulunamadı.",
+    "Der Einzug meldet eine Störung.": "Besleyici bir arıza bildiriyor.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "Bu kafa için otomatik yükleme kapalı.",
+    "Im Kopf ist schon Filament.": "Kafada zaten filament var.",
+    "Am Einzug steckt kein Filament.": "Besleyicide filament yok.",
+    "Im Kopf ist kein Filament.": "Kafada filament yok.",
+    "Basis": "temel",
+    "Kamerabild mit Fortschritt und Not-Halt": "ilerleme ve acil durdurma ile kamera",
+    "Touchscreen des Druckers (paxx12)": "yazıcının dokunmatik ekranı (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "geçerli katman, nesneleri hariç tut",
+    "laufender oder letzter Druck mit Vorschaubild": "önizlemeli geçerli veya son baskı",
+    "Druckaufträge in der Warteschlange": "kuyruktaki baskı işleri",
+    "Druckdateien, Druck starten": "baskı dosyaları, baskı başlat",
+    "Köpfe, Filamente, Düsentemperaturen": "kafalar, filamentler, nozul sıcaklıkları",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "tabla, hazne, fanlar, sıcaklık grafiği",
+    "Heatmap mit Höhenwerten": "yükseklikli ısı haritası",
+    "Position, Tempo, Fluss, Referenzfahrt": "konum, hız, akış, referans",
+    "G-Code senden, Antworten kopieren": "G-code gönder, yanıtları kopyala",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "yazılım, bağlantı, yük, kendi testi",
+    "fällige Wartung": "yapılması gereken bakım",
+    "Diagramme der letzten 12 Monate": "son 12 ayın grafikleri",
+    "Drucke, Zeiten, Kopfwechsel": "baskılar, süreler, kafa değişimleri",
+    "letzte Drucke mit Kosten": "maliyetli son baskılar",
+    "Zeitraffer-Videos": "hızlandırılmış videolar",
+    "alle Spulen aus Spoolman": "Spoolman’daki tüm makaralar",
+    "Fehler und Hinweise des Druckers": "yazıcı hataları ve uyarıları",
+    "Meldungen des Druckers oben anzeigen": "Yazıcı mesajlarını üstte göster",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Boş = yalnızca kamera veya baskı işi ile. Tüm mesajlar tek yerde için “Mesajlar” bölümü var.",
     "Objekte ausschließen": "Nesneleri hariç tut",
     "{n} Objekte": "{n} nesne",
     "{n} ausgeschlossen": "{n} hariç tutuldu",
@@ -4127,6 +4560,78 @@
     "Senden": "Send",
     "Befehl eingeben, Antwort des Druckers erscheint hier.": "Enter a command; the printer’s answer appears here.",
     "Läuft …": "Running …",
+    "Referenzfahrt": "Homing",
+    "XYZ-Kalibrierung": "XYZ calibration",
+    "Resonanzmessung": "Resonance measurement",
+    "Firmware-Update": "Firmware update",
+    "Störung": "Fault",
+    "Bett ausrichten": "Bed alignment",
+    "Filament wird geladen": "Loading filament",
+    "Filament wird entladen": "Unloading filament",
+    "Filament von Hand laden": "Load filament by hand",
+    "Dock-Position kalibrieren": "Calibrate dock position",
+    "Nullpunkt kalibrieren": "Calibrate home position",
+    "Platte wird erkannt": "Detecting plate",
+    "Kammer heizt vor": "Chamber preheating",
+    "Druck wird wiederhergestellt": "Restoring print",
+    "Druck wird fortgesetzt": "Resuming print",
+    "Filament wird nachgefüllt": "Refilling filament",
+    "Kopfwechsel wird geprüft": "Checking head change",
+    "Filament wird eingezogen": "Feeding filament",
+    "Vorextrusion": "Pre-extrusion",
+    "Bett wird geprüft": "Checking bed",
+    "Düse von Hand reinigen": "Clean nozzle by hand",
+    "Versatz wird gemessen": "Measuring offset",
+    "Düse wird gereinigt": "Cleaning nozzle",
+    "Düse kühlt ab": "Nozzle cooling down",
+    "Bett wird vermessen": "Measuring bed",
+    "Bett heizt vor": "Bed preheating",
+    "Bett wird vorab gescannt": "Pre-scanning bed",
+    "Fluss wird gemessen": "Measuring flow",
+    "Resonanz wird gemessen": "Measuring resonance",
+    "Ausgangsstellung": "Initial position",
+    "Referenzpunkte werden gemessen": "Measuring reference points",
+    "Schrauben von Hand einstellen": "Adjust screws by hand",
+    "Ergebnis wird geprüft": "Checking result",
+    "Dock-Position wird kalibriert": "Calibrating dock position",
+    "Aufnahme wird geprüft": "Checking pick-up",
+    "Ablage wird geprüft": "Checking parking",
+    "Nullpunkt wird kalibriert": "Calibrating home position",
+    "Der Drucker meldet eine Störung.": "The printer reports a fault.",
+    "Details stehen am Display des Druckers.": "Details are on the printer’s display.",
+    "Am Drucker bestätigen": "Confirm at the printer",
+    "Einzug {head}: Störung": "Feeder {head}: fault",
+    "Meldung der Firmware: {e}": "Firmware message: {e}",
+    "Meldungen": "Messages",
+    "Keine Meldungen": "No messages",
+    "Kein Einzug für diesen Kopf erkannt.": "No feeder found for this head.",
+    "Der Einzug meldet eine Störung.": "The feeder reports a fault.",
+    "Automatisches Laden ist für diesen Kopf ausgeschaltet.": "Automatic loading is switched off for this head.",
+    "Im Kopf ist schon Filament.": "There is already filament in the head.",
+    "Am Einzug steckt kein Filament.": "There is no filament at the feeder.",
+    "Im Kopf ist kein Filament.": "There is no filament in the head.",
+    "Basis": "base",
+    "Kamerabild mit Fortschritt und Not-Halt": "camera with progress and emergency stop",
+    "Touchscreen des Druckers (paxx12)": "printer touchscreen (paxx12)",
+    "aktuelle Schicht, Objekte ausschließen": "current layer, exclude objects",
+    "laufender oder letzter Druck mit Vorschaubild": "running or last print with preview",
+    "Druckaufträge in der Warteschlange": "queued print jobs",
+    "Druckdateien, Druck starten": "print files, start a print",
+    "Köpfe, Filamente, Düsentemperaturen": "heads, filaments, nozzle temperatures",
+    "Bett, Innenraum, Lüfter, Temperaturverlauf": "bed, chamber, fans, temperature chart",
+    "Heatmap mit Höhenwerten": "heatmap with heights",
+    "Position, Tempo, Fluss, Referenzfahrt": "position, speed, flow, homing",
+    "G-Code senden, Antworten kopieren": "send G-code, copy answers",
+    "Firmware, Verbindung, Auslastung, Selbsttest": "firmware, connection, load, self test",
+    "fällige Wartung": "maintenance due",
+    "Diagramme der letzten 12 Monate": "charts of the last 12 months",
+    "Drucke, Zeiten, Kopfwechsel": "prints, times, head changes",
+    "letzte Drucke mit Kosten": "recent prints with cost",
+    "Zeitraffer-Videos": "timelapse videos",
+    "alle Spulen aus Spoolman": "all spools from Spoolman",
+    "Fehler und Hinweise des Druckers": "printer errors and notes",
+    "Meldungen des Druckers oben anzeigen": "Show printer messages on top",
+    "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.": "Empty = only with camera or print job. For all messages in one place there is the section “Messages”.",
     "Objekte ausschließen": "Exclude objects",
     "{n} Objekte": "{n} objects",
     "{n} ausgeschlossen": "{n} excluded",
@@ -4788,7 +5293,29 @@
     maintenance: "Wartung",
     layer: "Schichtansicht",
     spools: "Spoolman-Bestand",
-    display: "Druckerdisplay"
+    display: "Druckerdisplay",
+    messages: "Meldungen"
+  };
+  var SECTION_DESC = {
+    stage: "Kamerabild mit Fortschritt und Not-Halt",
+    display: "Touchscreen des Druckers (paxx12)",
+    layer: "aktuelle Schicht, Objekte ausschließen",
+    job: "laufender oder letzter Druck mit Vorschaubild",
+    queue: "Druckaufträge in der Warteschlange",
+    files: "Druckdateien, Druck starten",
+    toolheads: "Köpfe, Filamente, Düsentemperaturen",
+    climate: "Bett, Innenraum, Lüfter, Temperaturverlauf",
+    mesh: "Heatmap mit Höhenwerten",
+    motion: "Position, Tempo, Fluss, Referenzfahrt",
+    console: "G-Code senden, Antworten kopieren",
+    system: "Firmware, Verbindung, Auslastung, Selbsttest",
+    maintenance: "fällige Wartung",
+    charts: "Diagramme der letzten 12 Monate",
+    stats: "Drucke, Zeiten, Kopfwechsel",
+    history: "letzte Drucke mit Kosten",
+    timelapse: "Zeitraffer-Videos",
+    spools: "alle Spulen aus Spoolman",
+    messages: "Fehler und Hinweise des Druckers"
   };
   var FORM_LABELS = {
     printer_name: "Name",
@@ -4827,7 +5354,8 @@
     display_place: "Druckerdisplay",
     display_camera: "Druckerdisplay als zusätzliche Kamera",
     mesh_values: "Höhenwerte in der Bettnivellierung",
-    show: "Bereiche"
+    show: "Bereiche",
+    alerts: "Meldungen des Druckers oben anzeigen"
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -4847,6 +5375,7 @@
     display_place: "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.",
     mesh_values: "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).",
     show: "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.",
+    alerts: "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.",
     display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
     camera_wake: "Leer = an. Bleibt das Bild stehen, schickt die Karte camera.start_monitor an den Drucker (nur solange sie sichtbar ist).",
     camera_mode: "Leer = automatisch (die Kamera-Entität der Integration erkennt Livestream oder Standbilder selbst)",
@@ -4890,8 +5419,9 @@
             multiple: true,
             mode: "list",
             reorder: true,
-            options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) }))
+            options: SECTIONS.map((sec) => ({ value: sec, label: `${tr(SECTION_LABELS[sec])} – ${tr(SECTION_DESC[sec])}` }))
           } } },
+          { name: "alerts", selector: { boolean: {} } },
           { name: "accent_color", selector: { color_rgb: {} } },
           { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
             ["off", "Aus"],
@@ -5153,6 +5683,23 @@
         };
       }
       return this._mach;
+    }
+    /**
+     * 2.2: Snapmaker's machine state (calibration, loading, update …) or null:
+     * {main, action, head (0–3|null), needsUser}.
+     */
+    _machineState() {
+      const m = this._machine();
+      const main = m && m.values.machine_state;
+      if (!main) return null;
+      const a = m.attrs.machine_state || {};
+      return { main, action: a.action || null, head: Number.isInteger(a.head) ? a.head : null, needsUser: !!a.needs_user };
+    }
+    /** 2.2: feeder and head sensor per head ({at_feeder, in_head, state, error, auto, module, sensor_on}). */
+    _feed(idx) {
+      const m = this._machine();
+      const f = m && m.values.filament_feed;
+      return f && typeof f === "object" ? f[String(idx)] || null : null;
     }
     /** Controls through the integration (2.0) instead of the Moonraker integration's entities. */
     _ownControl() {
@@ -5472,6 +6019,53 @@
     home_y_axis: ["home", "y"],
     home_z_axis: ["home", "z"]
   };
+  var MACHINE_MAIN = {
+    xyz_offset_calibrate: "XYZ-Kalibrierung",
+    bed_leveling: "Bettnivellierung",
+    flow_calibration: "Flusskalibrierung",
+    shaper_calibrate: "Resonanzmessung",
+    upgrading: "Firmware-Update",
+    abnormal: "Störung",
+    screws_tilt_adjust: "Bett ausrichten",
+    auto_load: "Filament wird geladen",
+    auto_unload: "Filament wird entladen",
+    manual_load: "Filament von Hand laden",
+    park_point_calibration: "Dock-Position kalibrieren",
+    homing_origin_calibration: "Nullpunkt kalibrieren"
+  };
+  var MACHINE_STEP = {
+    homing: "Referenzfahrt",
+    detect_plate: "Platte wird erkannt",
+    preheat_chamber: "Kammer heizt vor",
+    print_restore: "Druck wird wiederhergestellt",
+    print_resuming: "Druck wird fortgesetzt",
+    print_replenishing: "Filament wird nachgefüllt",
+    print_switch_checking: "Kopfwechsel wird geprüft",
+    print_auto_feeding: "Filament wird eingezogen",
+    print_preextruding: "Vorextrusion",
+    print_auto_unloading: "Filament wird entladen",
+    print_bed_detecting: "Bett wird geprüft",
+    manual_clean_extruder: "Düse von Hand reinigen",
+    xyz_offset_probe: "Versatz wird gemessen",
+    auto_clean_nozzle: "Düse wird gereinigt",
+    wait_nozzle_cooling: "Düse kühlt ab",
+    bed_leveling: "Bett wird vermessen",
+    bed_preheating: "Bett heizt vor",
+    bed_prescanning: "Bett wird vorab gescannt",
+    flow_calibrating: "Fluss wird gemessen",
+    shaper_calibrating: "Resonanz wird gemessen",
+    reset_to_initial: "Ausgangsstellung",
+    probe_reference_points: "Referenzpunkte werden gemessen",
+    manual_tuning: "Schrauben von Hand einstellen",
+    probing_adjust_verify: "Ergebnis wird geprüft",
+    auto_loading: "Filament wird geladen",
+    auto_unloading: "Filament wird entladen",
+    manual_loading: "Filament von Hand laden",
+    park_point_calibrating: "Dock-Position wird kalibriert",
+    extruder_pick_verify: "Aufnahme wird geprüft",
+    extruder_park_verify: "Ablage wird geprüft",
+    homing_origin_calibrating: "Nullpunkt wird kalibriert"
+  };
   var ControlsMixin = (Base) => class extends Base {
     _press(name) {
       const own = this._ownControl() && OWN_BUTTONS[name];
@@ -5717,6 +6311,10 @@
       const d = this._d;
       if (!d.online) return "off";
       if (d.state === "error") return "error";
+      const ms = this._machineState();
+      if (ms && ms.main === "abnormal") return "error";
+      if (ms && ms.needsUser) return "warn";
+      if (ms && !d.active && ms.main !== "idle" && ms.main !== "printing") return "active";
       if (d.paused) return "warn";
       if (d.printing) return "active";
       if (d.state === "complete") return "ok";
@@ -5728,6 +6326,8 @@
       if (this._isPending("cancel")) return tr("Breche ab …");
       if (this._isPending("pause")) return tr("Pausiere …");
       if (this._isPending("resume")) return tr("Setze fort …");
+      const busy = !d.active && this._machineText();
+      if (busy) return busy;
       return {
         printing: tr("Druckt"),
         standby: tr("Bereit"),
@@ -5736,6 +6336,15 @@
         paused: tr("Pausiert"),
         error: tr("Fehler")
       }[d.state] || d.state;
+    }
+    /** 2.2: "XYZ calibration · nozzle cooling down" from the machine state, or "" when idle. */
+    _machineText(withStep = true) {
+      const ms = this._machineState();
+      if (!ms || ms.main === "idle" || ms.main === "printing") return "";
+      const main = MACHINE_MAIN[ms.main] ? tr(MACHINE_MAIN[ms.main]) : ms.main;
+      let step = withStep && ms.action && ms.action !== "idle" && MACHINE_STEP[ms.action] ? tr(MACHINE_STEP[ms.action]) : "";
+      if (step && ms.head !== null) step += ` (${(this._d.heads[ms.head] || {}).name || `E${ms.head}`})`;
+      return step && step !== main ? `${main} · ${step}` : main;
     }
     /**
      * Spool icon. fill (0–1, from Spoolman: remaining / net weight) sets how thick the
@@ -5758,14 +6367,16 @@
         return `<circle cx="${(30 + 8 * Math.cos(rad)).toFixed(2)}" cy="${(30 + 8 * Math.sin(rad)).toFixed(2)}" r="1.6" fill="var(--u1-panel-highest)"/>`;
       }).join("");
       const title = f !== null ? `<title>${tr("Spule zu {p} % voll", { p: Math.round(f * 100) })}</title>` : "";
+      const edge = w > 0 ? `<circle cx="30" cy="30" r="${(outer + 0.5).toFixed(2)}" fill="none" class="spool-edge" stroke-width="1.2"/>` : "";
       return `<svg class="spool${spinning ? " spin" : ""}" viewBox="0 0 60 60" ${title ? 'role="img"' : 'aria-hidden="true"'} data-fill="${f === null ? "" : Math.round(f * 100)}">
       ${title}
       <circle cx="30" cy="30" r="28" fill="var(--u1-panel)" stroke="var(--u1-outline)" stroke-width="1.5"/>
       <g class="spool-rot">
         ${ring}
+        ${edge}
         ${f === null ? `<circle cx="30" cy="30" r="22" fill="none" stroke="var(--u1-on-variant)" stroke-opacity=".35" stroke-width="1"/>
         <circle cx="30" cy="30" r="19" fill="none" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>` : ""}
-        <circle cx="30" cy="30" r="12" fill="var(--u1-panel)"/>
+        <circle cx="30" cy="30" r="12" fill="var(--u1-panel)" class="spool-hub"/>
         ${holes}
         <circle cx="30" cy="30" r="4" fill="var(--u1-panel-highest)"/>
       </g>
@@ -6835,10 +7446,14 @@
       const st = this._st(this._ents && this._ents.firmware);
       if (!st || st.state === "unavailable" || st.state === "unknown") return "—";
       const a = st.attributes || {};
+      const paxx = a.variant === "paxx12";
+      const name = paxx ? `<span class="fw-variant">paxx12</span> ` : "";
+      const short = (v) => esc(String(v || "?").replace(/-[0-9a-f]{6,}$/i, ""));
+      const base = paxx && a.paxx_version && a.base ? ` <span class="t-label">(${tr("Basis")} ${esc(String(a.base).split("_")[0])})</span>` : "";
       if (st.state === "on" && a.latest_version) {
-        return `${esc(a.installed_version || "?")} <span style="color:var(--u1-warn)">→ ${esc(a.latest_version)} ${tr("verfügbar")}</span>`;
+        return `${name}${short(a.installed_version)} <span style="color:var(--u1-warn)">→ ${short(a.latest_version)} ${tr("verfügbar")}</span>${base}`;
       }
-      return `${esc(a.installed_version || "?")} · ${tr("aktuell")}`;
+      return `${name}${short(a.installed_version)} · ${tr("aktuell")}${base}`;
     }
     _selfTestHtml() {
       const t = this._selftest;
@@ -7930,7 +8545,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         ${extra}`;
       }
       if (this._cfg.layout === "bare") {
-        const main = this._cfg.show.includes("job") || this._cfg.show.includes("stage");
+        const main = (this._cfg.show.includes("job") || this._cfg.show.includes("stage") || this._cfg.alerts === true) && this._cfg.alerts !== false && !this._cfg.show.includes("messages");
         return `${main ? this._alerts() : ""}${this._layout(this._cfg.show)}${this._cfg.show.includes("stage") ? this._dangerZone() : ""}`;
       }
       return `
@@ -7959,16 +8574,78 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       </div>`;
     }
     /** Open firmware messages in plain language, visible on every tab. */
-    _alerts() {
-      const errs = this._d.errors || [];
-      if (!errs.length) return "";
+    /**
+     * 2.2: everything the printer wants to tell: firmware errors (exception_manager),
+     * a fault state, a step waiting for someone at the printer, feeder errors.
+     * [{level: "error"|"warn", icon, text, hint, title}]
+     */
+    _messages() {
+      const d = this._d;
+      if (!d || !d.online) return [];
       const key = LANG === "de" ? "de" : "en";
-      return `<div class="alerts">${errs.map((e) => `
-        <div class="alert" data-level="${e.level >= 3 ? "error" : "warn"}" title="${esc(`${e.key} · ${e.message || ""}`)}">
-          <ha-icon icon="${e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert"}"></ha-icon>
-          <div><div class="alert-text">${esc(this._errText(e))}</div>
-          ${e.hint && e.hint[key] ? `<div class="t-label">${esc(e.hint[key])}</div>` : ""}</div>
-        </div>`).join("")}</div>`;
+      const out = (d.errors || []).map((e) => ({
+        level: e.level >= 3 ? "error" : "warn",
+        icon: e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert",
+        text: this._errText(e),
+        hint: e.hint && e.hint[key] ? e.hint[key] : "",
+        title: `${e.key} · ${e.message || ""}`
+      }));
+      const ms = this._machineState();
+      if (ms && ms.main === "abnormal" && !out.length) {
+        out.push({
+          level: "error",
+          icon: "mdi:alert-octagon",
+          text: tr("Der Drucker meldet eine Störung."),
+          hint: tr("Details stehen am Display des Druckers."),
+          title: "machine_state_manager: ABNORMAL"
+        });
+      }
+      if (ms && ms.needsUser) {
+        out.push({
+          level: "warn",
+          icon: "mdi:gesture-tap-button",
+          text: tr("Am Drucker bestätigen"),
+          hint: this._machineText(),
+          title: `machine_state_manager: ${ms.main} / ${ms.action}`
+        });
+      }
+      for (let i = 0; i < 4; i++) {
+        const f = this._feed(i);
+        if (f && f.error && f.error !== "ok") {
+          const head = (d.heads[i] || {}).name || `E${i}`;
+          out.push({
+            level: "warn",
+            icon: "mdi:printer-3d-nozzle-alert",
+            text: tr("Einzug {head}: Störung", { head }),
+            hint: tr("Meldung der Firmware: {e}", { e: f.error }),
+            title: `filament_feed extruder${i}: ${f.error}`
+          });
+        }
+      }
+      return out;
+    }
+    _messagesHtml(list) {
+      return list.map((m) => `
+        <div class="alert" data-level="${m.level}" title="${esc(m.title || "")}">
+          <ha-icon icon="${m.icon}"></ha-icon>
+          <div><div class="alert-text">${esc(m.text)}</div>
+          ${m.hint ? `<div class="t-label">${esc(m.hint)}</div>` : ""}</div>
+        </div>`).join("");
+    }
+    /** Open firmware messages in plain language, visible on every tab. */
+    _alerts() {
+      const list = this._messages();
+      return list.length ? `<div class="alerts">${this._messagesHtml(list)}</div>` : "";
+    }
+    /** 2.2: section "messages" for the building blocks (also when everything is fine). */
+    _sectionMessages() {
+      const list = this._messages();
+      return `
+      <section class="panel">
+        <div class="panel-head"><ha-icon icon="mdi:message-alert-outline"></ha-icon>
+          <span class="panel-title">${tr("Meldungen")}</span></div>
+        ${list.length ? `<div class="alerts">${this._messagesHtml(list)}</div>` : `<div class="t-label"><ha-icon icon="mdi:check-circle-outline" style="--mdc-icon-size:16px;color:var(--u1-ok)"></ha-icon> ${tr("Keine Meldungen")}</div>`}
+      </section>`;
     }
     _section(name) {
       switch (name) {
@@ -8008,6 +8685,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           return this._sectionSpools();
         case "display":
           return this._sectionDisplay();
+        case "messages":
+          return this._sectionMessages();
         default:
           return "";
       }
@@ -8473,9 +9152,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .use-name { color: var(--u1-on-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .use-bar { height: 10px; border-radius: 5px; background: var(--u1-panel-highest); overflow: hidden; }
   .use-bar i { display: block; height: 100%; border-radius: inherit;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-on) 28%, transparent); }
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--u1-on) 40%, transparent); }
   .use-g { font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; min-width: 44px; }
   .use-detail { font-size: var(--u1-fs-label); color: var(--u1-on-variant); padding: 0 0 4px 0; }
+
+  .fw-variant { display: inline-block; padding: 0 6px; border-radius: 6px; font-size: var(--u1-fs-label); font-weight: 600;
+    background: color-mix(in srgb, var(--u1-primary) 18%, transparent); color: var(--u1-primary); }
 
   /* ── Print heads ─────────────────────────────────────────────────────── */
   /* 2.2: the spool of the printing head turns slowly */
@@ -8493,7 +9175,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .head-card[data-active="1"] { border-color: var(--u1-primary); background: var(--u1-panel-highest); }
   .head-card-top { display: flex; align-items: center; gap: 8px; }
-  .spool { width: 34px; height: 34px; flex-shrink: 0; }
+  .spool { width: 42px; height: 42px; flex-shrink: 0; }
+  /* 2.2: contrast edges so dark (or on light themes, white) filament stays visible */
+  svg.spool .spool-edge { stroke: color-mix(in srgb, var(--u1-on) 45%, transparent); }
+  svg.spool .spool-hub { stroke: color-mix(in srgb, var(--u1-on) 35%, transparent); stroke-width: 1.2; }
   .head-name { font-weight: 600; font-size: 14px; }
   .head-mat { font-size: 11px; color: var(--u1-on-variant); }
   .head-temp { font-family: var(--u1-num); font-size: var(--u1-fs-value); font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -8731,7 +9416,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .head-form .picked ha-icon { --mdc-icon-size: 18px; color: var(--u1-primary); }
   .head-form .picked .chip { margin-left: auto; }
   .spool-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--fil); flex-shrink: 0;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-on) 25%, transparent); }
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--u1-on) 45%, transparent); }
   .rfid {
     font-size: 9px; font-weight: 700; letter-spacing: .08em; vertical-align: middle;
     padding: 1px 5px; border-radius: var(--u1-r-full);
@@ -8834,7 +9519,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     background: var(--u1-primary-container); color: var(--u1-on-primary-container); box-shadow: none; }
   button.head-info:hover { background: color-mix(in srgb, var(--u1-on-primary-container) 12%, var(--u1-primary-container)); }
   button.head-info ha-icon { --mdc-icon-size: 16px; }
-  .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }
+  .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--u1-on) 45%, transparent); }
   .head-sub { margin: 12px 0 4px; }
   .head-rfid .row { padding: 4px 0; }
   .head-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
@@ -9143,7 +9828,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .mini-meta ha-icon { --mdc-icon-size: 14px; }
   .mini-fil { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .mini-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center; }
-  .mini-slot .spool { width: 34px; height: 34px; }
+  .mini-slot .spool { width: 38px; height: 38px; }
   .mini-slot[data-empty="1"] { opacity: .5; }
   .mini-mat { font-size: 11px; color: var(--u1-on-variant); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini-g { font-size: 11px; }
@@ -9262,6 +9947,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
         d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
         d.errors.map((e) => e.key).join(","),
+        // 2.2: machine state and feeders (messages, load/unload buttons)
+        (() => {
+          const ms = this._machineState();
+          return ms ? `ms${ms.main}${ms.needsUser}${ms.main !== "idle" && !d.active ? ms.action : ""}` : "noms";
+        })(),
+        [0, 1, 2, 3].map((i) => {
+          const f = this._feed(i);
+          return f ? `${f.error}${f.in_head}${f.at_feeder}${f.state}${f.auto}` : "-";
+        }).join(","),
         d.maint ? d.maint.map((m) => `${m.key}${m.due}${m.progress}${m.done_at || ""}`).join(",") : "nom",
         d.stats ? `${d.stats.hours}|${JSON.stringify(d.stats.totals)}|${this._metric || ""}` : "nos",
         d.timelapses && d.timelapses.archive ? `${d.timelapses.archive.count}${d.timelapses.archive.busy}${d.timelapses.archive.cleanup}${d.timelapses.archive.last_backup}` : "noa",
@@ -11171,20 +11865,39 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       <div class="t-label">${tr("Fährt bei Bedarf vorher X/Y an.")}</div>`;
     }
     // ── Loading / unloading filament (head dialog) ──────────────────────────
+    /**
+     * 2.2: why load/unload of a head is not possible now (same rules as the
+     * integration, machine_status.filament_check); "" = possible or unknown.
+     */
+    _filamentBlocked(idx, action) {
+      const f = this._feed(idx);
+      if (!f) return "";
+      if (action === "load") {
+        if (f.module === false) return tr("Kein Einzug für diesen Kopf erkannt.");
+        if (f.error && f.error !== "ok") return tr("Der Einzug meldet eine Störung.");
+        if (f.auto === false) return tr("Automatisches Laden ist für diesen Kopf ausgeschaltet.");
+        if (f.in_head === true || f.state === "load_finish") return tr("Im Kopf ist schon Filament.");
+        if (f.at_feeder === false) return tr("Am Einzug steckt kein Filament.");
+        return "";
+      }
+      if (f.in_head === false && f.state !== "load_finish") return tr("Im Kopf ist kein Filament.");
+      return "";
+    }
     /** Load / unload buttons; the firmware's own procedure (service filament). */
     _filamentBlock(idx, locked) {
       if (!this._d || !(this._d.headStates || []).length) return "";
       const busy = this._filBusy === idx;
+      const why = { load: this._filamentBlocked(idx, "load"), unload: this._filamentBlocked(idx, "unload") };
+      const btn = (action, icon, label) => `<button type="button" class="tonal" data-filament="${action}"
+          ${locked || busy || why[action] ? "disabled" : ""} title="${esc(why[action] || label)}">
+          <ha-icon icon="${icon}"></ha-icon>${label}</button>`;
+      const reasons = [...new Set([why.load, why.unload].filter(Boolean))];
       return `<div class="t-label head-sub">${tr("Filament laden / entladen")}</div>
       <div class="head-change">
-        <button type="button" class="tonal" data-filament="load" ${locked || busy ? "disabled" : ""}>
-          <ha-icon icon="mdi:tray-arrow-down"></ha-icon>${tr("Laden")}
-        </button>
-        <button type="button" class="tonal" data-filament="unload" ${locked || busy ? "disabled" : ""}>
-          <ha-icon icon="mdi:tray-arrow-up"></ha-icon>${tr("Entladen")}
-        </button>
+        ${btn("load", "mdi:tray-arrow-down", tr("Laden"))}
+        ${btn("unload", "mdi:tray-arrow-up", tr("Entladen"))}
       </div>
-      <div class="t-label">${busy ? tr("Läuft …") : tr("Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.")}</div>`;
+      <div class="t-label">${busy ? tr("Läuft …") : reasons.length ? reasons.map(esc).join(" ") : tr("Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.")}</div>`;
     }
     async _filament(idx, action) {
       const head = this._d && this._d.heads[idx] || { name: `E${idx}` };
@@ -11196,7 +11909,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       })) return false;
       this._filBusy = idx;
       this._toast(action === "unload" ? tr("{head}: Entladen läuft …", { head: head.name }) : tr("{head}: Laden läuft …", { head: head.name }));
-      const ok = await this._call("filament", { head: idx + 1, action });
+      let ok = true;
+      try {
+        await this._hass.callService(DOMAIN, "filament", { head: idx + 1, action, ...this._entryData() }, void 0, false);
+      } catch (err) {
+        ok = false;
+        this._toast(err && (err.message || err.error) || String(err));
+      }
       this._filBusy = null;
       if (ok) this._toast(action === "unload" ? tr("{head} entladen", { head: head.name }) : tr("{head}: Laden fertig", { head: head.name }));
       return ok;
@@ -11207,7 +11926,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         btn.disabled = true;
         btn.classList.add("busy");
       }
-      const ok = await this._call("tool_change", { head: idx + 1, action });
+      let ok = true;
+      try {
+        await this._hass.callService(DOMAIN, "tool_change", { head: idx + 1, action, ...this._entryData() }, void 0, false);
+      } catch (err) {
+        ok = false;
+        this._toast(err && (err.message || err.error) || String(err));
+      }
       if (btn) {
         btn.disabled = false;
         btn.classList.remove("busy");
@@ -12445,7 +13170,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         emergency_stop: "show",
         camera_wake: true,
         camera_direct: "auto",
-        show: SECTIONS,
+        // "messages" is a building block; the full card shows messages above the tabs
+        show: SECTIONS.filter((x) => x !== "messages"),
         nozzle_presets: [0, 210, 240, 260],
         bed_presets: [0, 55, 65, 85],
         speed_presets: [85, 100, 115],
@@ -12459,7 +13185,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (typeof this._cfg.show === "string") this._cfg.show = this._cfg.show.split(/[\s,]+/);
       if (Array.isArray(this._cfg.show)) this._cfg.show = [...new Set(this._cfg.show)];
       const hide = Array.isArray(this._cfg.hide) ? this._cfg.hide : [];
-      this._cfg.show = (this._cfg.show || SECTIONS).filter((s) => SECTIONS.includes(s) && !hide.includes(s));
+      this._cfg.show = (this._cfg.show || SECTIONS.filter((x) => x !== "messages")).filter((s) => SECTIONS.includes(s) && !hide.includes(s));
       if (this._cfg.hide_overlay) this._cfg.camera_overlay = false;
       this._renderKey = null;
       this._lastHash = null;

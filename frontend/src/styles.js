@@ -403,9 +403,12 @@ export const STYLES = `
   .use-name { color: var(--u1-on-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .use-bar { height: 10px; border-radius: 5px; background: var(--u1-panel-highest); overflow: hidden; }
   .use-bar i { display: block; height: 100%; border-radius: inherit;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-on) 28%, transparent); }
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--u1-on) 40%, transparent); }
   .use-g { font-variant-numeric: tabular-nums; font-weight: 500; text-align: right; min-width: 44px; }
   .use-detail { font-size: var(--u1-fs-label); color: var(--u1-on-variant); padding: 0 0 4px 0; }
+
+  .fw-variant { display: inline-block; padding: 0 6px; border-radius: 6px; font-size: var(--u1-fs-label); font-weight: 600;
+    background: color-mix(in srgb, var(--u1-primary) 18%, transparent); color: var(--u1-primary); }
 
   /* ── Print heads ─────────────────────────────────────────────────────── */
   /* 2.2: the spool of the printing head turns slowly */
@@ -423,7 +426,10 @@ export const STYLES = `
   }
   .head-card[data-active="1"] { border-color: var(--u1-primary); background: var(--u1-panel-highest); }
   .head-card-top { display: flex; align-items: center; gap: 8px; }
-  .spool { width: 34px; height: 34px; flex-shrink: 0; }
+  .spool { width: 42px; height: 42px; flex-shrink: 0; }
+  /* 2.2: contrast edges so dark (or on light themes, white) filament stays visible */
+  svg.spool .spool-edge { stroke: color-mix(in srgb, var(--u1-on) 45%, transparent); }
+  svg.spool .spool-hub { stroke: color-mix(in srgb, var(--u1-on) 35%, transparent); stroke-width: 1.2; }
   .head-name { font-weight: 600; font-size: 14px; }
   .head-mat { font-size: 11px; color: var(--u1-on-variant); }
   .head-temp { font-family: var(--u1-num); font-size: var(--u1-fs-value); font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -661,7 +667,7 @@ export const STYLES = `
   .head-form .picked ha-icon { --mdc-icon-size: 18px; color: var(--u1-primary); }
   .head-form .picked .chip { margin-left: auto; }
   .spool-dot { width: 18px; height: 18px; border-radius: 50%; background: var(--fil); flex-shrink: 0;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--u1-on) 25%, transparent); }
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--u1-on) 45%, transparent); }
   .rfid {
     font-size: 9px; font-weight: 700; letter-spacing: .08em; vertical-align: middle;
     padding: 1px 5px; border-radius: var(--u1-r-full);
@@ -764,7 +770,7 @@ export const STYLES = `
     background: var(--u1-primary-container); color: var(--u1-on-primary-container); box-shadow: none; }
   button.head-info:hover { background: color-mix(in srgb, var(--u1-on-primary-container) 12%, var(--u1-primary-container)); }
   button.head-info ha-icon { --mdc-icon-size: 16px; }
-  .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); }
+  .spool-dot.big { width: 32px; height: 32px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--u1-on) 45%, transparent); }
   .head-sub { margin: 12px 0 4px; }
   .head-rfid .row { padding: 4px 0; }
   .head-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
@@ -1073,7 +1079,7 @@ export const STYLES = `
   .mini-meta ha-icon { --mdc-icon-size: 14px; }
   .mini-fil { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .mini-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center; }
-  .mini-slot .spool { width: 34px; height: 34px; }
+  .mini-slot .spool { width: 38px; height: 38px; }
   .mini-slot[data-empty="1"] { opacity: .5; }
   .mini-mat { font-size: 11px; color: var(--u1-on-variant); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini-g { font-size: 11px; }

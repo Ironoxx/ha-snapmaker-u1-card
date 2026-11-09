@@ -403,6 +403,25 @@
           "error": "Errore"
         }
       },
+      "machine_state": {
+        "name": "Stato della macchina",
+        "state": {
+          "idle": "Inattiva",
+          "printing": "In stampa",
+          "xyz_offset_calibrate": "Calibrazione XYZ",
+          "bed_leveling": "Livellamento del piano",
+          "flow_calibration": "Calibrazione del flusso",
+          "shaper_calibrate": "Misura della risonanza",
+          "upgrading": "Aggiornamento firmware",
+          "abnormal": "Guasto",
+          "screws_tilt_adjust": "Allineamento del piano",
+          "auto_load": "Caricamento filamento",
+          "auto_unload": "Scarico filamento",
+          "manual_load": "Carica filamento a mano",
+          "park_point_calibration": "Calibra posizione dock",
+          "homing_origin_calibration": "Calibra l’origine"
+        }
+      },
       "current_layer": {
         "name": "Strato"
       },

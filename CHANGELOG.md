@@ -4,6 +4,58 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.2.0b2
+
+Beta. The printer tells more: what it is doing, what went wrong, which firmware runs – and loading/unloading only when it can work.
+
+**What the printer is doing**
+- New sensor *Machine state* from Snapmaker's own `machine_state_manager`: calibration (XYZ, bed, flow, resonance), loading/unloading, firmware update, fault … with the current step (e.g. *nozzle cooling down*) and head as attributes. The card shows it in the status outside a print, e.g. "XYZ calibration · Nozzle cooling down (Head 2)".
+- **Auto-off and idle-off no longer switch off during a calibration** (thanks to TheKlonko on Reddit for the report): anything the printer does outside a print counts as busy; the after-print delay starts again afterwards. During a firmware update the power is never cut, not even with `force`.
+
+**Messages**
+- New section *Messages* for the building block card: firmware errors, a fault state, a step waiting for a confirmation on the display ("Confirm at the printer") and feeder faults – or "No messages". Section cards with camera or job show them on top as before; option `alerts` for the others.
+
+**Load / unload with checks**
+- The buttons know the feeders: *Load* only when filament waits at the feeder and none is in the head, *Unload* only with filament in the head; otherwise the button is off and says why. The service `filament` refuses the same way.
+- Afterwards the integration checks the head sensor and reports when the filament did not come out or in. Picking and parking a head is checked too. Errors show as a short message in the card instead of a pop-up.
+
+**paxx12 Extended Firmware**
+- Detected via its `/firmware-config/`: the card's system tab shows "paxx12 2.0.0-paxx12-24 · up to date (base 2.0.0)", the self test has its own line, the firmware update entity compares with paxx12's releases (with a note not to use the stock update). Without a login or with the config service off it is still detected, only the version is unknown.
+
+**Also**
+- Spools easier to see: larger, with a light edge so black (and on light themes white) filament stands out; same for the colour dots and the usage bars.
+- Section editor: every section with a short description.
+- Layer view: the object list for excluding is folded by default.
+
+Please check: a calibration (status text, no switch-off), load/unload buttons with an empty and a loaded head, the *Messages* section, firmware line in the system tab and the self test.
+
+### Deutsch
+
+Beta. Der Drucker erzählt mehr: was er gerade macht, was schiefging, welche Firmware läuft – und Laden/Entladen nur, wenn es klappen kann.
+
+**Was der Drucker gerade macht**
+- Neuer Sensor *Maschinenstatus* aus Snapmakers eigenem `machine_state_manager`: Kalibrierung (XYZ, Bett, Fluss, Resonanz), Laden/Entladen, Firmware-Update, Störung … mit dem aktuellen Schritt (z. B. *Düse kühlt ab*) und Kopf als Attribute. Die Karte zeigt das außerhalb eines Drucks im Status, z. B. „XYZ-Kalibrierung · Düse kühlt ab (Kopf 2)“.
+- **Auto-Aus und Leerlauf-Aus schalten nicht mehr während einer Kalibrierung ab** (danke an TheKlonko auf Reddit für die Meldung): alles, was der Drucker außerhalb eines Drucks tut, zählt als beschäftigt; die Wartezeit nach dem Druck beginnt danach neu. Während eines Firmware-Updates wird nie abgeschaltet, auch nicht mit `force`.
+
+**Meldungen**
+- Neuer Bereich *Meldungen* für die Bereichs-Karte: Firmware-Fehler, ein Störungszustand, ein Schritt, der am Display auf eine Bestätigung wartet („Am Drucker bestätigen“), und Störungen am Einzug – oder „Keine Meldungen“. Bereichs-Karten mit Kamera oder Druckauftrag zeigen sie wie bisher oben; für die anderen gibt es die Option `alerts`.
+
+**Laden / Entladen mit Prüfung**
+- Die Knöpfe kennen die Einzüge: *Laden* nur, wenn Filament am Einzug wartet und keins im Kopf ist, *Entladen* nur mit Filament im Kopf; sonst ist der Knopf aus und sagt warum. Der Dienst `filament` lehnt genauso ab.
+- Danach prüft die Integration den Sensor im Kopf und meldet, wenn das Filament nicht raus- bzw. reingekommen ist. Kopf aufnehmen und ablegen wird ebenso geprüft. Fehler erscheinen als kurze Meldung in der Karte statt als Pop-up.
+
+**paxx12 Extended Firmware**
+- Erkannt über ihre `/firmware-config/`: Der System-Reiter zeigt „paxx12 2.0.0-paxx12-24 · aktuell (Basis 2.0.0)“, der Selbsttest hat eine eigene Zeile, die Firmware-Update-Entität vergleicht mit den paxx12-Releases (mit dem Hinweis, nicht das Stock-Update zu nehmen). Ohne Anmeldung oder mit ausgeschaltetem Config-Dienst wird paxx12 trotzdem erkannt, nur die Version fehlt.
+
+**Außerdem**
+- Spulen besser zu erkennen: größer und mit hellem Rand, damit schwarzes (und bei hellem Design weißes) Filament sichtbar bleibt; ebenso die Farbpunkte und die Verbrauchsbalken.
+- Bereichs-Editor: jeder Bereich mit kurzer Beschreibung.
+- Schichtansicht: Die Objektliste zum Ausschließen ist standardmäßig eingeklappt.
+
+Bitte prüfen: eine Kalibrierung (Statustext, kein Abschalten), Laden/Entladen mit leerem und geladenem Kopf, den Bereich *Meldungen*, die Firmware-Zeile im System-Reiter und den Selbsttest.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.2.0b1
 
 Beta. First part of 2.2: building blocks for your own dashboard and a lot of polish from user ideas.

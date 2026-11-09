@@ -47,6 +47,25 @@ export const StateMixin = (Base) => class extends Base {
     return this._mach;
   }
 
+  /**
+   * 2.2: Snapmaker's machine state (calibration, loading, update …) or null:
+   * {main, action, head (0–3|null), needsUser}.
+   */
+  _machineState() {
+    const m = this._machine();
+    const main = m && m.values.machine_state;
+    if (!main) return null;
+    const a = m.attrs.machine_state || {};
+    return { main, action: a.action || null, head: Number.isInteger(a.head) ? a.head : null, needsUser: !!a.needs_user };
+  }
+
+  /** 2.2: feeder and head sensor per head ({at_feeder, in_head, state, error, auto, module, sensor_on}). */
+  _feed(idx) {
+    const m = this._machine();
+    const f = m && m.values.filament_feed;
+    return f && typeof f === "object" ? f[String(idx)] || null : null;
+  }
+
   /** Controls through the integration (2.0) instead of the Moonraker integration's entities. */
   _ownControl() {
     const sv = this._hass && this._hass.services && this._hass.services.snapmaker_u1_card;

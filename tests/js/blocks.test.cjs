@@ -102,4 +102,36 @@ assert.strictEqual(chart.getAttribute("aria-expanded"), "true");
 assert.ok(!chart.querySelector(".use-detail").hidden);
 assert.ok(/#3/.test(chart.textContent) && /140 g → 100 g/.test(chart.textContent), "Spoolman vorher → nachher");
 
+// 4. 2.2b2: machine state (calibration) in the status, messages section, load/unload reasons
+const loaded = { module: true, at_feeder: true, auto: true, state: "load_finish", error: "ok", in_head: true, sensor_on: true };
+const empty = { module: true, at_feeder: false, auto: true, state: "wait", error: "ok", in_head: false, sensor_on: true };
+add("sensor.u1c_druckerwerte", "ready", { entry_id: "E1",
+  values: { machine_state: "xyz_offset_calibrate", filament_feed: { 0: loaded, 1: empty, 2: { ...empty, at_feeder: true }, 3: { ...empty, error: "jam" } } },
+  attrs: { machine_state: { action: "wait_nozzle_cooling", head: 1, needs_user: false } } }, "snapmaker_u1_card", "machine");
+card = make("snapmaker-u1-card", { show: ["toolheads"] });
+assert.match(card._statusLabel(), /^XYZ-Kalibrierung · Düse kühlt ab \(Kopf 2\)$/, card._statusLabel());
+assert.strictEqual(card._statusTone(), "active");
+assert.strictEqual(card._filamentBlocked(0, "load"), "Im Kopf ist schon Filament.");
+assert.strictEqual(card._filamentBlocked(0, "unload"), "");
+assert.strictEqual(card._filamentBlocked(1, "load"), "Am Einzug steckt kein Filament.");
+assert.strictEqual(card._filamentBlocked(1, "unload"), "Im Kopf ist kein Filament.");
+assert.strictEqual(card._filamentBlocked(2, "load"), "");
+assert.strictEqual(card._filamentBlocked(3, "load"), "Der Einzug meldet eine Störung.");
+// feeder fault and a step that needs someone at the printer show up as messages
+let msgs = [...card._messages().map((m) => m.text)];
+assert.deepStrictEqual(msgs, ["Einzug Kopf 4: Störung"]);
+states["sensor.u1c_druckerwerte"].attributes.attrs.machine_state = { action: "manual_tuning", head: null, needs_user: true };
+states["sensor.u1c_druckerwerte"].attributes.values.machine_state = "screws_tilt_adjust";
+card = make("snapmaker-u1-section-card", { show: ["messages"] });
+msgs = [...R(card).querySelectorAll(".alert-text")].map((t) => t.textContent);
+assert.deepStrictEqual(msgs, ["Am Drucker bestätigen", "Einzug Kopf 4: Störung"]);
+assert.strictEqual(card._statusTone(), "warn");
+// nothing to report
+states["sensor.u1c_druckerwerte"].attributes.values = { machine_state: "idle" };
+states["sensor.u1c_druckerwerte"].attributes.attrs = {};
+card = make("snapmaker-u1-section-card", { show: ["messages"] });
+assert.match(R(card).textContent, /Keine Meldungen/);
+assert.ok(!card._machineText(), "idle: no text");
+delete states["sensor.u1c_druckerwerte"];
+
 console.log("BLOCKS OK – section card, order of show, spool fill and turning, usage of the last print");

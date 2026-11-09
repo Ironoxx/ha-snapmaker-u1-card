@@ -403,6 +403,25 @@
           "error": "Fout"
         }
       },
+      "machine_state": {
+        "name": "Machinestatus",
+        "state": {
+          "idle": "Gereed",
+          "printing": "Printen",
+          "xyz_offset_calibrate": "XYZ-kalibratie",
+          "bed_leveling": "Bednivellering",
+          "flow_calibration": "Flowkalibratie",
+          "shaper_calibrate": "Resonantiemeting",
+          "upgrading": "Firmware-update",
+          "abnormal": "Storing",
+          "screws_tilt_adjust": "Bed uitlijnen",
+          "auto_load": "Filament wordt geladen",
+          "auto_unload": "Filament wordt ontladen",
+          "manual_load": "Filament handmatig laden",
+          "park_point_calibration": "Dockpositie kalibreren",
+          "homing_origin_calibration": "Nulpunt kalibreren"
+        }
+      },
       "current_layer": {
         "name": "Laag"
       },

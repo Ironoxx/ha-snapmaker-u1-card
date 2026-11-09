@@ -52,6 +52,7 @@
  *   bed_presets       [0, 55, 65, 85]
  *   speed_presets     [85, 100, 115]; flow_presets [95, 100, 105]
  *   mesh_values       heights in the bed mesh cells          (true)
+ *   alerts            section card: printer messages on top  (with job/stage)
  *   files_limit       number of files shown                  (12)
  *   toolheads         per head: name (and material/color as a fallback
  *                     when the integration is missing)
@@ -174,7 +175,8 @@ export class SnapmakerU1Card extends U1Base {
       emergency_stop: "show",
       camera_wake: true,
       camera_direct: "auto",
-      show: SECTIONS,
+      // "messages" is a building block; the full card shows messages above the tabs
+      show: SECTIONS.filter((x) => x !== "messages"),
       nozzle_presets: [0, 210, 240, 260],
       bed_presets: [0, 55, 65, 85],
       speed_presets: [85, 100, 115],
@@ -188,7 +190,7 @@ export class SnapmakerU1Card extends U1Base {
     if (typeof this._cfg.show === "string") this._cfg.show = this._cfg.show.split(/[\s,]+/);
     if (Array.isArray(this._cfg.show)) this._cfg.show = [...new Set(this._cfg.show)];
     const hide = Array.isArray(this._cfg.hide) ? this._cfg.hide : [];
-    this._cfg.show = (this._cfg.show || SECTIONS).filter((s) => SECTIONS.includes(s) && !hide.includes(s));
+    this._cfg.show = (this._cfg.show || SECTIONS.filter((x) => x !== "messages")).filter((s) => SECTIONS.includes(s) && !hide.includes(s));
     if (this._cfg.hide_overlay) this._cfg.camera_overlay = false;
     this._renderKey = null;
     this._lastHash = null;

@@ -23,6 +23,7 @@
 | `sensor.…_druckerwerte` | 2.0: Zustand von Klipper, Attribute `values` (alle Druckerwerte für die Karte, benannt wie die Entitäten der Moonraker-Integration: `bed_temperature`, `extruder1_target`, `cavity_fan`, `led_cavity_led` …) und `attrs` (Einheit, Reglerbereich). Wird nicht aufgezeichnet |
 | `sensor.…_betttemperatur`, `sensor.…_duse_1_temperatur` … `_4_…`, `sensor.…_innenraumtemperatur` | 2.0: Temperaturen |
 | `sensor.…_fortschritt`, `sensor.…_druckstatus`, `sensor.…_schicht` | 2.0: Fortschritt in %, Druckzustand (`standby`, `printing`, `paused`, `complete`, `cancelled`, `error`), aktuelle Schicht (Attribut `total_layer`) |
+| `sensor.…_maschinenstatus` | 2.2: was der Drucker gerade macht, auch außerhalb eines Drucks (Snapmakers `machine_state_manager`): `idle`, `printing`, `xyz_offset_calibrate`, `bed_leveling`, `flow_calibration`, `shaper_calibrate`, `upgrading`, `abnormal`, `screws_tilt_adjust`, `auto_load`, `auto_unload`, `manual_load`, `park_point_calibration`, `homing_origin_calibration`; Attribute `action` (aktueller Schritt, z. B. `wait_nozzle_cooling`), `head` (1–4), `needs_user` (das Display wartet auf eine Bestätigung) |
 | `number.…_bett_solltemperatur`, `number.…_duse_1_solltemperatur` … `_4_…`, `number.…_bauteillufter`, `number.…_geschwindigkeit` | 2.0: Solltemperaturen, Bauteillüfter, Geschwindigkeit |
 | `button.…_druck_pausieren`, `…_druck_fortsetzen`, `…_druck_abbrechen`, `…_not_halt`, `…_referenzfahrt_alle_achsen` | 2.0: Drucksteuerung und Referenzfahrt |
 | `light.…_innenraumlicht` | 2.0: Innenraumlicht (und weitere `led`-Objekte des Druckers) |
@@ -129,6 +130,8 @@ data:
 ```
 
 `unload` führt dieselben Schritte aus wie „Am Druckende entladen“ der Firmware: `AUTO_FEEDING EXTRUDER=<n> UNLOAD=1 STAGE=prepare` (zur Abwurfposition fahren, auf die Filamenttemperatur heizen) und danach `STAGE=doing` (zurückziehen, abschneiden, Heizung aus). `load` sendet `AUTO_FEEDING EXTRUDER=<n> LOAD=1`: Der Einzug zieht ein am Eingang wartendes Filament ein; ohne Filament oder mit ausgeschaltetem Automatik-Modus des Einzugs tut die Firmware nichts. Der Aufruf kehrt zurück, wenn der Drucker fertig ist (ein paar Minuten).
+
+2.2: Der Dienst prüft vorher (Einzug und Sensor im Kopf): Laden braucht Filament am Einzug und keins im Kopf, Entladen Filament im Kopf; sonst lehnt er mit dem Grund ab. Danach prüft er den Sensor im Kopf und meldet einen Fehler, wenn das Filament nicht raus- bzw. reingekommen ist. `tool_change` prüft ebenso, ob der Kopf wirklich aufgenommen bzw. abgelegt wurde.
 
 ### `snapmaker_u1_card.machine_command`
 

@@ -403,6 +403,25 @@
           "error": "Error"
         }
       },
+      "machine_state": {
+        "name": "Machine state",
+        "state": {
+          "idle": "Idle",
+          "printing": "Printing",
+          "xyz_offset_calibrate": "XYZ calibration",
+          "bed_leveling": "Bed leveling",
+          "flow_calibration": "Flow calibration",
+          "shaper_calibrate": "Resonance measurement",
+          "upgrading": "Firmware update",
+          "abnormal": "Fault",
+          "screws_tilt_adjust": "Bed alignment",
+          "auto_load": "Loading filament",
+          "auto_unload": "Unloading filament",
+          "manual_load": "Load filament by hand",
+          "park_point_calibration": "Calibrate dock position",
+          "homing_origin_calibration": "Calibrate home position"
+        }
+      },
       "current_layer": {
         "name": "Layer"
       },

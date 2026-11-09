@@ -22,13 +22,30 @@ from ..machine import (
     purifier_gcode,
     purifier_mode_gcode,
 )
-from ..machine_status import HOME_AXES, CommandError, set_gcode, switch_gcode
+from ..machine_status import (
+    HOME_AXES,
+    CommandError,
+    feeders,
+    filament_check,
+    set_gcode,
+    switch_gcode,
+)
 from ..parsing import ACTIVE_PRINT_STATES
 
 _LOGGER = logging.getLogger(__name__)
 
 # Head changes and console commands may home X/Y or heat first: give them time.
 LONG_GCODE_S = 180
+
+# 2.2: why loading/unloading is not possible right now (machine_status.filament_check)
+FILAMENT_REASONS = {
+    "no_feeder": ("Kein Einzug für diesen Kopf erkannt.", "No feeder found for this head."),
+    "feeder_error": ("Der Einzug meldet eine Störung.", "The feeder reports a fault."),
+    "auto_off": ("Automatisches Laden ist für diesen Kopf ausgeschaltet.", "Automatic loading is switched off for this head."),
+    "loaded": ("Im Kopf ist schon Filament.", "There is already filament in the head."),
+    "no_filament": ("Am Einzug steckt kein Filament.", "There is no filament at the feeder."),
+    "empty": ("Im Kopf ist kein Filament.", "There is no filament in the head."),
+}
 FILAMENT_GCODE_S = 420
 
 
@@ -116,6 +133,33 @@ class MachineMixin:
             raise ServiceValidationError("action: pick | park")
         _LOGGER.info("Head %s: %s", action, script)
         await self._run_gcode(script, timeout=LONG_GCODE_S)
+        # 2.2: check that it happened (the command returns when the firmware is done)
+        want = "active" if action == "pick" else "parked"
+        state = await self._head_state(head)
+        if state is not None and state != want:
+            raise HomeAssistantError(tr(
+                self.hass, f"Kopf {head + 1} wurde nicht {'aufgenommen' if action == 'pick' else 'abgelegt'}.",
+                f"Head {head + 1} was not {'picked' if action == 'pick' else 'parked'}."))
+
+    async def _head_state(self, head: int) -> str | None:
+        """active / parked / unknown of physical head 0-3, straight from the printer; None if unknown."""
+        name = "extruder" if head == 0 else f"extruder{head}"
+        try:
+            status = await self.client.query_objects(fields={name: ("state",)})
+        except MoonrakerError:
+            return None
+        state = str((status.get(name) or {}).get("state") or "").upper()
+        return {"ACTIVATE": "active", "PARKED": "parked"}.get(state)
+
+    async def _feed_now(self, head: int) -> dict[str, Any] | None:
+        """Feeder and head sensor of head 0-3, straight from the printer."""
+        side = "left" if head < 2 else "right"
+        try:
+            status = await self.client.query_objects(f"filament_feed {side}", fields={
+                f"filament_motion_sensor e{head}_filament": ("filament_detected", "enabled")})
+        except MoonrakerError:
+            return None
+        return feeders(status).get(head)
 
     async def async_filament(self, head: int, action: str) -> None:
         """Load or unload the filament of head 0-3 (machine.filament_gcode).
@@ -130,10 +174,25 @@ class MachineMixin:
             steps = filament_gcode(head, action)
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
+        # 2.2: only when it can work (filament waiting at the feeder / in the head)
+        machine_feed = ((self.data.machine if self.data else {}) or {}).get("filament_feed") or {}
+        reason = filament_check(machine_feed.get(str(head)), action)
+        if reason:
+            de, en = FILAMENT_REASONS[reason]
+            raise ServiceValidationError(tr(self.hass, f"Kopf {head + 1}: {de}", f"Head {head + 1}: {en}"))
         _LOGGER.info("Head %s: filament %s", head + 1, action)
         for script in steps:
             # heating to the filament temperature alone can take minutes
             await self._run_gcode(script, timeout=FILAMENT_GCODE_S)
+        # check the result: filament out of / in the head
+        feed = await self._feed_now(head)
+        inside = feed.get("in_head") if feed else None
+        if action == "unload" and inside is True:
+            raise HomeAssistantError(tr(self.hass, f"Kopf {head + 1}: Entladen hat nicht geklappt, Filament steckt noch im Kopf.",
+                                        f"Head {head + 1}: unloading did not work, the filament is still in the head."))
+        if action == "load" and inside is False:
+            raise HomeAssistantError(tr(self.hass, f"Kopf {head + 1}: Laden hat nicht geklappt, kein Filament im Kopf.",
+                                        f"Head {head + 1}: loading did not work, no filament in the head."))
 
     async def async_console(self, script: str) -> dict[str, Any]:
         """Run console G-code and return the printer's responses.

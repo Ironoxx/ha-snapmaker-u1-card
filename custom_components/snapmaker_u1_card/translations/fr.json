@@ -403,6 +403,25 @@
           "error": "Erreur"
         }
       },
+      "machine_state": {
+        "name": "État de la machine",
+        "state": {
+          "idle": "Inactif",
+          "printing": "Impression",
+          "xyz_offset_calibrate": "Calibration XYZ",
+          "bed_leveling": "Nivellement du plateau",
+          "flow_calibration": "Calibration du débit",
+          "shaper_calibrate": "Mesure de résonance",
+          "upgrading": "Mise à jour du firmware",
+          "abnormal": "Défaut",
+          "screws_tilt_adjust": "Alignement du plateau",
+          "auto_load": "Chargement du filament",
+          "auto_unload": "Déchargement du filament",
+          "manual_load": "Charger le filament à la main",
+          "park_point_calibration": "Calibrer la position du dock",
+          "homing_origin_calibration": "Calibrer l’origine"
+        }
+      },
       "current_layer": {
         "name": "Couche"
       },

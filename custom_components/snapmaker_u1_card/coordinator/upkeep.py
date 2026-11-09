@@ -28,6 +28,7 @@ from ..const import (
     DOMAIN,
     FIRMWARE_CHECK_S,
     FIRMWARE_REPOS,
+    PAXX_REPO,
 )
 from ..i18n import tr
 from ..stats import MAINTENANCE_ITEMS, build_stats, maintenance_label
@@ -35,6 +36,7 @@ from ..stats import MAINTENANCE_ITEMS, build_stats, maintenance_label
 _LOGGER = logging.getLogger(__name__)
 from .helpers import (
     latest_release,
+    parse_firmware_config,
     version_tuple,
 )
 
@@ -155,6 +157,20 @@ class UpkeepMixin:
         add("firmware", None if latest and ver and version_tuple(latest) > version_tuple(ver) else (True if ver else None),
             f"{t('Installiert', 'Installed')} {ver or '?'}"
             + (f", {t('neueste', 'latest')} {latest}" if latest else ""))
+        # 2.2: which firmware (paxx12 Extended Firmware or stock)
+        if self.firmware.get("variant") == "paxx12":
+            paxx = self.firmware.get("paxx") or {}
+            note = {"login": t("Version unbekannt: Firmware-Config braucht eine Anmeldung (Fluidd)",
+                               "Version unknown: Firmware Config needs a login (Fluidd)"),
+                    "service_off": t("Version unbekannt: Firmware-Config-Dienst aus (Advanced Mode einschalten)",
+                                     "Version unknown: Firmware Config service off (enable Advanced Mode)")}.get(paxx.get("note"))
+            add("paxx12", True, t("paxx12 Extended Firmware erkannt", "paxx12 Extended Firmware detected")
+                + (f": {paxx['version']}" if paxx.get("version") else "")
+                + (f" ({t('Basis', 'base')} {paxx['base']})" if paxx.get("base") else "")
+                + (f" – {note}" if note else ""))
+        elif self.firmware.get("variant") == "stock":
+            add("paxx12", None, t("Snapmaker-Firmware (Stock), keine paxx12 Extended Firmware",
+                                  "Snapmaker firmware (stock), no paxx12 Extended Firmware"))
         try:
             space = await self.client.rpc("server.files.get_userdata_space", response_timeout=10)
             free = (space or {}).get("free_space")
@@ -293,6 +309,35 @@ class UpkeepMixin:
         ok = all(c["ok"] is not False for c in checks)
         return {"ok": ok, "time": dt_util.now().isoformat(), "checks": checks}
 
+    # ── paxx12 Extended Firmware (2.2) ─────────────────────────────────────
+    async def _detect_paxx(self) -> None:
+        """Which firmware runs: paxx12 Extended Firmware (its /firmware-config/) or stock.
+
+        Stores ``firmware["variant"]`` (paxx12 | stock) and, with paxx12, its version,
+        Snapmaker base, profile and active slot. Runs once per connection.
+        """
+        try:
+            code, status = await self.client.firmware_config()
+        except MoonrakerError as err:
+            _LOGGER.debug("paxx12 check: %s", err)
+            return
+        if code == 200 and isinstance(status, dict):
+            info = parse_firmware_config(status)
+        elif code in (401, 403, 502):
+            # the page exists, but needs a login or its service is off (advanced mode)
+            info = {"variant": "paxx12", "note": "login" if code in (401, 403) else "service_off"}
+        else:
+            info = {"variant": "stock"}
+        changed = info.get("variant") != self.firmware.get("variant") or info.get("version") != self.firmware.get("paxx", {}).get("version")
+        self.firmware["variant"] = info.pop("variant")
+        self.firmware["paxx"] = info if self.firmware["variant"] == "paxx12" else {}
+        if changed:
+            _LOGGER.info("Firmware: %s %s", self.firmware["variant"], self.firmware["paxx"].get("version") or "")
+            # a different firmware: look up its latest release right away
+            self.firmware.setdefault("latest", {})
+            if isinstance(self.firmware.get("latest"), dict):
+                self.firmware["latest"]["checked"] = 0
+
     # ── Firmware check ─────────────────────────────────────────────────────
     def _start_firmware_check(self) -> None:
         """Check for new firmware in the background, at most once a day."""
@@ -306,8 +351,24 @@ class UpkeepMixin:
         )
 
     async def async_check_firmware(self) -> dict[str, Any] | None:
-        """Latest firmware from Snapmaker's release commits (GitHub, no login)."""
+        """Latest firmware from Snapmaker's release commits (GitHub, no login).
+
+        2.2: with paxx12 also its latest release (GitHub releases of the extended firmware).
+        """
         session = async_get_clientsession(self.hass)
+        if self.firmware.get("variant") == "paxx12":
+            try:
+                async with session.get(
+                    f"https://api.github.com/repos/{PAXX_REPO}/releases/latest",
+                    headers={"Accept": "application/vnd.github+json"}, timeout=aiohttp.ClientTimeout(total=20),
+                ) as resp:
+                    rel = await resp.json() if resp.status == 200 else None
+                if isinstance(rel, dict) and rel.get("tag_name"):
+                    self.firmware["paxx_latest"] = {
+                        "version": str(rel["tag_name"]).lstrip("v"), "url": rel.get("html_url"),
+                        "date": rel.get("published_at")}
+            except Exception as err:  # noqa: BLE001 - the check is an extra
+                _LOGGER.debug("paxx12 release check: %s", err)
         best: dict[str, Any] | None = None
         for repo in FIRMWARE_REPOS:
             try:

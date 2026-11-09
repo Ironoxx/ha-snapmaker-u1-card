@@ -281,20 +281,40 @@ export const MachineMixin = (Base) => class extends Base {
   }
 
   // ── Loading / unloading filament (head dialog) ──────────────────────────
+  /**
+   * 2.2: why load/unload of a head is not possible now (same rules as the
+   * integration, machine_status.filament_check); "" = possible or unknown.
+   */
+  _filamentBlocked(idx, action) {
+    const f = this._feed(idx);
+    if (!f) return "";
+    if (action === "load") {
+      if (f.module === false) return tr("Kein Einzug für diesen Kopf erkannt.");
+      if (f.error && f.error !== "ok") return tr("Der Einzug meldet eine Störung.");
+      if (f.auto === false) return tr("Automatisches Laden ist für diesen Kopf ausgeschaltet.");
+      if (f.in_head === true || f.state === "load_finish") return tr("Im Kopf ist schon Filament.");
+      if (f.at_feeder === false) return tr("Am Einzug steckt kein Filament.");
+      return "";
+    }
+    if (f.in_head === false && f.state !== "load_finish") return tr("Im Kopf ist kein Filament.");
+    return "";
+  }
+
   /** Load / unload buttons; the firmware's own procedure (service filament). */
   _filamentBlock(idx, locked) {
     if (!this._d || !(this._d.headStates || []).length) return "";
     const busy = this._filBusy === idx;
+    const why = { load: this._filamentBlocked(idx, "load"), unload: this._filamentBlocked(idx, "unload") };
+    const btn = (action, icon, label) => `<button type="button" class="tonal" data-filament="${action}"
+          ${locked || busy || why[action] ? "disabled" : ""} title="${esc(why[action] || label)}">
+          <ha-icon icon="${icon}"></ha-icon>${label}</button>`;
+    const reasons = [...new Set([why.load, why.unload].filter(Boolean))];
     return `<div class="t-label head-sub">${tr("Filament laden / entladen")}</div>
       <div class="head-change">
-        <button type="button" class="tonal" data-filament="load" ${locked || busy ? "disabled" : ""}>
-          <ha-icon icon="mdi:tray-arrow-down"></ha-icon>${tr("Laden")}
-        </button>
-        <button type="button" class="tonal" data-filament="unload" ${locked || busy ? "disabled" : ""}>
-          <ha-icon icon="mdi:tray-arrow-up"></ha-icon>${tr("Entladen")}
-        </button>
+        ${btn("load", "mdi:tray-arrow-down", tr("Laden"))}
+        ${btn("unload", "mdi:tray-arrow-up", tr("Entladen"))}
       </div>
-      <div class="t-label">${busy ? tr("Läuft …") : tr("Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.")}</div>`;
+      <div class="t-label">${busy ? tr("Läuft …") : reasons.length ? reasons.map(esc).join(" ") : tr("Wie am Display: Entladen heizt auf die Filamenttemperatur und zieht das Filament zurück, Laden zieht ein eingestecktes Filament ein.")}</div>`;
   }
 
   async _filament(idx, action) {
@@ -306,7 +326,14 @@ export const MachineMixin = (Base) => class extends Base {
     }))) return false;
     this._filBusy = idx;
     this._toast(action === "unload" ? tr("{head}: Entladen läuft …", { head: head.name }) : tr("{head}: Laden läuft …", { head: head.name }));
-    const ok = await this._call("filament", { head: idx + 1, action });
+    let ok = true;
+    try {
+      await this._hass.callService(DOMAIN, "filament", { head: idx + 1, action, ...this._entryData() }, undefined, false);
+    } catch (err) {
+      // the integration checks before and after (2.2): its message says what went wrong
+      ok = false;
+      this._toast((err && (err.message || err.error)) || String(err));
+    }
     this._filBusy = null;
     if (ok) this._toast(action === "unload" ? tr("{head} entladen", { head: head.name }) : tr("{head}: Laden fertig", { head: head.name }));
     return ok;
@@ -315,7 +342,13 @@ export const MachineMixin = (Base) => class extends Base {
   async _headChange(idx, action, btn) {
     const head = (this._d && this._d.heads[idx]) || { name: `E${idx}` };
     if (btn) { btn.disabled = true; btn.classList.add("busy"); }
-    const ok = await this._call("tool_change", { head: idx + 1, action });
+    let ok = true;
+    try {
+      await this._hass.callService(DOMAIN, "tool_change", { head: idx + 1, action, ...this._entryData() }, undefined, false);
+    } catch (err) {
+      ok = false;
+      this._toast((err && (err.message || err.error)) || String(err));
+    }
     if (btn) { btn.disabled = false; btn.classList.remove("busy"); }
     if (ok) this._toast(action === "park" ? tr("{head} abgelegt", { head: head.name }) : tr("{head} aufgenommen", { head: head.name }));
     return ok;

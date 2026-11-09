@@ -55,7 +55,11 @@ class PowerMixin:
         stays standby; calibrations have phases without any heater target (e.g.
         waiting for a nozzle to cool), so the targets alone do not show them.
         """
-        return str((data.machine or {}).get("idle_timeout_state") or "").lower() == "printing"
+        machine = data.machine or {}
+        # 2.2: Snapmaker's machine state names it directly (calibration, loading, update …)
+        if machine.get("machine_state") not in (None, "idle"):
+            return True
+        return str(machine.get("idle_timeout_state") or "").lower() == "printing"
 
     def _check_idle_off(self, data: U1Data) -> None:
         """Idle shutdown: x hours without a print and without heating -> shut down, power off.
@@ -155,9 +159,14 @@ class PowerMixin:
             raise HomeAssistantError(tr(self.hass, "Kein Netzschalter eingerichtet.", "No power switch configured."))
         if self.powering_on:
             raise HomeAssistantError(tr(self.hass, "Der Drucker startet gerade. Bitte warten.", "The printer is booting. Please wait."))
+        data = self.data
+        # Firmware update running: never cut the power, not even with force
+        if data is not None and (data.machine or {}).get("machine_state") == "upgrading":
+            raise HomeAssistantError(tr(
+                self.hass, "Der Drucker installiert gerade ein Firmware-Update. Nicht ausschalten.",
+                "The printer is installing a firmware update. Do not switch it off."))
         if force:
             return
-        data = self.data
         printing = (
             (data is not None and data.print_state in ACTIVE_PRINT_STATES)
             or self._last_state in ACTIVE_PRINT_STATES
@@ -209,7 +218,8 @@ class PowerMixin:
         """Last safety check before switching off: printing, heating or running G-code?"""
         try:
             status = await self.client.query_objects(
-                fields={"print_stats": ("state",), "idle_timeout": ("state",), "heater_bed": ("target",),
+                fields={"print_stats": ("state",), "idle_timeout": ("state",),
+                        "machine_state_manager": ("main_state",), "heater_bed": ("target",),
                         **{name: ("target",) for name in EXTRUDER_OBJECTS}},
             )
         except MoonrakerError:
@@ -218,6 +228,9 @@ class PowerMixin:
             return True
         if str((status.get("idle_timeout") or {}).get("state") or "").lower() == "printing":
             return True  # calibration or macro running
+        main = (status.get("machine_state_manager") or {}).get("main_state")
+        if isinstance(main, (int, float)) and not isinstance(main, bool) and main != 0:
+            return True  # calibration, loading, firmware update …
         return any(
             isinstance(t, (int, float)) and t > 0
             for t in ((status.get(n) or {}).get("target") for n in (*EXTRUDER_OBJECTS, "heater_bed"))

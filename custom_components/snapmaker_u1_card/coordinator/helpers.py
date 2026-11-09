@@ -199,3 +199,40 @@ def _prune_dir(folder: Path, keep: set[str]) -> None:
     for item in folder.iterdir():
         if item.is_file() and item.name not in keep:
             item.unlink(missing_ok=True)
+
+
+PAXX_RE = re.compile(r"\d+\.\d+\.\d+-paxx12-\d+(?:-[0-9a-f]+)?", re.IGNORECASE)
+
+
+def paxx_version_tuple(text: str | None) -> tuple[int, ...]:
+    """Base version plus paxx12 build for comparisons ("2.0.0-paxx12-24-0de1a77" -> (2, 0, 0, 24))."""
+    m = re.search(r"(\d+(?:\.\d+)+)-paxx12-(\d+)", text or "", re.IGNORECASE)
+    return (*(int(x) for x in m.group(1).split(".")), int(m.group(2))) if m else ()
+
+
+def parse_firmware_config(status: Any) -> dict[str, Any]:
+    """paxx12 Extended Firmware: values of /firmware-config/api/status.
+
+    The page groups everything as {key: {title, items: [{label, value}]}}; the
+    labels are matched loosely (Version, Base, Profile, Active Firmware), the
+    paxx12 version also by its pattern ("2.0.0-paxx12-24-0de1a77").
+    """
+    out: dict[str, Any] = {"variant": "paxx12"}
+    items: dict[str, str] = {}
+    for section in status.values() if isinstance(status, dict) else []:
+        if not isinstance(section, dict):
+            continue
+        for item in section.get("items") or []:
+            if isinstance(item, dict) and item.get("label") is not None and item.get("value") not in (None, ""):
+                items.setdefault(str(item["label"]).strip().lower(), str(item["value"]).strip())
+    for value in items.values():
+        m = PAXX_RE.search(value)
+        if m:
+            out["version"] = m.group(0)
+            break
+    if "version" not in out and items.get("version"):
+        out["version"] = items["version"]
+    for key, label in (("base", "base"), ("profile", "profile"), ("slot", "active firmware")):
+        if items.get(label):
+            out[key] = items[label]
+    return out

@@ -545,6 +545,21 @@ async def test_no_auto_or_idle_off_during_calibration(hass: HomeAssistant, mock_
         assert await coord._printing_now() is True
 
 
+async def test_machine_state_busy_and_update_blocks_power_off(hass: HomeAssistant, mock_client) -> None:
+    """2.2: Snapmaker's machine state counts as busy; a firmware update blocks every switch-off."""
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    data = coord.data
+    data.machine = {**data.machine, "machine_state": "bed_leveling", "idle_timeout_state": "Ready"}
+    assert coord._klipper_busy(data) is True
+    data.machine = {**data.machine, "machine_state": "idle"}
+    assert coord._klipper_busy(data) is False
+    data.machine = {**data.machine, "machine_state": "upgrading"}
+    with pytest.raises(HomeAssistantError, match="firmware update|Firmware-Update"):
+        await hass.services.async_call(DOMAIN, "power_off", {"force": True}, blocking=True)
+    assert hass.states.get(SWITCH).state == "on"
+
+
 async def test_running_print_is_saved_periodically(hass: HomeAssistant, mock_client) -> None:
     """The debounce must not postpone saving forever during a long print."""
     entry = await _setup(hass)

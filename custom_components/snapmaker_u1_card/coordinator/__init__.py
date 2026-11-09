@@ -10,6 +10,8 @@ from .helpers import (
     head_index,
     latest_release,
     notify_message,
+    parse_firmware_config,
+    paxx_version_tuple,
     remaining_seconds,
     version_tuple,
 )
@@ -20,6 +22,8 @@ __all__ = [
     "head_index",
     "latest_release",
     "notify_message",
+    "parse_firmware_config",
+    "paxx_version_tuple",
     "remaining_seconds",
     "version_tuple",
 ]

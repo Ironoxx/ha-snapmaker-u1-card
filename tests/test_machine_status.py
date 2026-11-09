@@ -101,3 +101,46 @@ def test_switch_gcode():
     for key in ("output_pin_other", "led_x", "fan_speed", "led_cavity_led\nM112"):
         with pytest.raises(ms.CommandError):
             ms.switch_gcode(key, True, OBJECTS)
+
+
+def test_machine_state_and_feeders() -> None:
+    """2.2: Snapmaker's machine state (numbers over Moonraker) and the feeders per head."""
+    from custom_components.snapmaker_u1_card.machine_status import feeders, filament_check, machine_state
+    assert machine_state({}) is None
+    idle = machine_state({"machine_state_manager": {"main_state": 0, "action_code": 0}})
+    assert idle["main"] == "idle" and idle["busy"] is False and idle["needs_user"] is False
+    cal = machine_state({"machine_state_manager": {"main_state": 2, "action_code": 201}})
+    assert (cal["main"], cal["action"], cal["busy"]) == ("xyz_offset_calibrate", "wait_nozzle_cooling", True)
+    probe = machine_state({"machine_state_manager": {"main_state": 2, "action_code": 198}})
+    assert probe["action"] == "xyz_offset_probe" and probe["head"] == 2
+    assert machine_state({"machine_state_manager": {"main_state": 8, "action_code": 514}})["needs_user"] is True
+    assert machine_state({"machine_state_manager": {"main_state": "MachineMainState.UPGRADING", "action_code": 0}})["main"] == "upgrading"
+    assert machine_state({"machine_state_manager": {"main_state": 99, "action_code": 999}})["main"] == "state_99"
+
+    # as reported by Thomas' printer (all four heads loaded)
+    ch = {"module_exist": True, "filament_detected": True, "disable_auto": False, "channel_state": "load_finish",
+          "channel_error": "ok", "channel_error_state": "none", "channel_action_state": "load_finish"}
+    status = {"filament_feed left": {"extruder1": ch, "extruder0": ch}, "filament_feed right": {"extruder2": ch, "extruder3": ch},
+              **{f"filament_motion_sensor e{i}_filament": {"filament_detected": True, "enabled": True} for i in range(4)}}
+    f = feeders(status)
+    assert sorted(f) == [0, 1, 2, 3]
+    assert f[2] == {"module": True, "at_feeder": True, "auto": True, "state": "load_finish", "action": "load_finish",
+                    "error": "ok", "in_head": True, "sensor_on": True}
+    assert filament_check(f[0], "load") == "loaded"
+    assert filament_check(f[0], "unload") is None
+    empty = {**f[1], "in_head": False, "state": "wait", "at_feeder": False}
+    assert filament_check(empty, "unload") == "empty"
+    assert filament_check(empty, "load") == "no_filament"
+    assert filament_check({**empty, "at_feeder": True}, "load") is None
+    assert filament_check({**empty, "at_feeder": True, "error": "jam"}, "load") == "feeder_error"
+    assert filament_check({**empty, "auto": False}, "load") == "auto_off"
+    assert filament_check(None, "load") is None, "no data: never block"
+
+
+def test_machine_state_in_values() -> None:
+    from custom_components.snapmaker_u1_card.machine_status import build
+    v, a = build({"machine_state_manager": {"main_state": 3, "action_code": 257},
+                  "filament_feed left": {"extruder0": {"module_exist": True, "filament_detected": False}}})
+    assert v["machine_state"] == "bed_leveling" and a["machine_state"]["action"] == "bed_preheating"
+    assert a["machine_state"]["busy"] is True
+    assert v["filament_feed"]["0"]["at_feeder"] is False

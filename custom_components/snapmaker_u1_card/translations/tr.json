@@ -403,6 +403,25 @@
           "error": "Hata"
         }
       },
+      "machine_state": {
+        "name": "Makine durumu",
+        "state": {
+          "idle": "Boşta",
+          "printing": "Yazdırıyor",
+          "xyz_offset_calibrate": "XYZ kalibrasyonu",
+          "bed_leveling": "Tabla seviyeleme",
+          "flow_calibration": "Akış kalibrasyonu",
+          "shaper_calibrate": "Rezonans ölçümü",
+          "upgrading": "Yazılım güncellemesi",
+          "abnormal": "Arıza",
+          "screws_tilt_adjust": "Tabla hizalama",
+          "auto_load": "Filament yükleniyor",
+          "auto_unload": "Filament boşaltılıyor",
+          "manual_load": "Filamenti elle yükle",
+          "park_point_calibration": "Yuva konumunu kalibre et",
+          "homing_origin_calibration": "Sıfır noktasını kalibre et"
+        }
+      },
       "current_layer": {
         "name": "Katman"
       },

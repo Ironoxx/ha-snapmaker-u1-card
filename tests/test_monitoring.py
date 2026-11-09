@@ -313,6 +313,49 @@ async def test_firmware_update_entity(hass: HomeAssistant, mock_client) -> None:
     assert hass.states.get(ent.entity_id).state == "off"
 
 
+async def test_paxx12_detected(hass: HomeAssistant, mock_client) -> None:
+    """2.2: paxx12 Extended Firmware from /firmware-config/api/status (as on Thomas' printer)."""
+    status = {"system": {"title": "System Information", "items": [
+        {"label": "Base", "value": "2.0.0.205_20260914173503"}, {"label": "Version", "value": "2.0.0-paxx12-24-0de1a77"},
+        {"label": "Profile", "value": "extended"}, {"label": "Active Firmware", "value": "B"},
+        {"label": "Device Name", "value": "U1"}]},
+        "wlan": {"title": "WLAN Network", "items": [{"label": "Signal", "value": "-47"}]}}
+    mock_client["firmware_config"].return_value = (200, status)
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    assert coord.firmware["variant"] == "paxx12"
+    assert coord.firmware["paxx"] == {"version": "2.0.0-paxx12-24-0de1a77", "base": "2.0.0.205_20260914173503",
+                                      "profile": "extended", "slot": "B"}
+    ent = next(s for s in hass.states.async_all("update"))
+    assert ent.attributes["installed_version"] == "2.0.0-paxx12-24-0de1a77"
+    assert ent.attributes["title"] == "paxx12 Extended Firmware" and ent.attributes["variant"] == "paxx12"
+    # newer paxx12 release -> update; Snapmaker's stock release is ignored with paxx12
+    coord.firmware["latest"] = {"version": "9.0.0", "checked": time.time()}
+    coord.firmware["paxx_latest"] = {"version": "2.0.0-paxx12-25", "url": "https://github.com/paxx"}
+    coord.async_update_listeners()
+    await hass.async_block_till_done()
+    ent = hass.states.get(ent.entity_id)
+    assert ent.state == "on" and ent.attributes["latest_version"] == "2.0.0-paxx12-25"
+    assert ent.attributes["release_url"] == "https://github.com/paxx"
+    coord.firmware["paxx_latest"] = {"version": "2.0.0-paxx12-24"}
+    coord.async_update_listeners()
+    await hass.async_block_till_done()
+    assert hass.states.get(ent.entity_id).state == "off"
+    with patch(f"{API}.rpc", AsyncMock(return_value={"free_space": 3000, "total_space": 8000})):
+        res = await hass.services.async_call(DOMAIN, "self_test", {}, blocking=True, return_response=True)
+    keys = {c["key"]: c for c in res["checks"]}
+    assert "2.0.0-paxx12-24" in keys["paxx12"]["detail"]
+
+
+async def test_paxx12_without_login_and_stock(hass: HomeAssistant, mock_client) -> None:
+    mock_client["firmware_config"].return_value = (401, None)
+    entry = await _setup(hass)
+    assert entry.runtime_data.firmware["variant"] == "paxx12"
+    assert entry.runtime_data.firmware["paxx"] == {"note": "login"}
+    ent = next(s for s in hass.states.async_all("update"))
+    assert ent.attributes["installed_version"] == "1.6.0", "base version without the paxx12 one"
+
+
 async def test_self_test(hass: HomeAssistant, mock_client, notifications) -> None:
     await _setup(hass, notify_targets=["notify.mobile_app_handy", "notify.weg"])
     hass.config.language = "de"

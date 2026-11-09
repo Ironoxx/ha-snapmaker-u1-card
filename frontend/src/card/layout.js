@@ -92,7 +92,8 @@ export const LayoutMixin = (Base) => class extends Base {
     if (this._cfg.layout === "bare") {
       // 2.2 building block (snapmaker-u1-section-card): only the chosen sections, in
       // their order; firmware alerts with the job or camera, no head, no tabs
-      const main = this._cfg.show.includes("job") || this._cfg.show.includes("stage");
+      const main = (this._cfg.show.includes("job") || this._cfg.show.includes("stage") || this._cfg.alerts === true)
+        && this._cfg.alerts !== false && !this._cfg.show.includes("messages");
       return `${main ? this._alerts() : ""}${this._layout(this._cfg.show)}${this._cfg.show.includes("stage") ? this._dangerZone() : ""}`;
     }
     return `
@@ -125,16 +126,64 @@ export const LayoutMixin = (Base) => class extends Base {
   }
 
   /** Open firmware messages in plain language, visible on every tab. */
-  _alerts() {
-    const errs = this._d.errors || [];
-    if (!errs.length) return "";
+  /**
+   * 2.2: everything the printer wants to tell: firmware errors (exception_manager),
+   * a fault state, a step waiting for someone at the printer, feeder errors.
+   * [{level: "error"|"warn", icon, text, hint, title}]
+   */
+  _messages() {
+    const d = this._d;
+    if (!d || !d.online) return [];
     const key = LANG === "de" ? "de" : "en";
-    return `<div class="alerts">${errs.map((e) => `
-        <div class="alert" data-level="${e.level >= 3 ? "error" : "warn"}" title="${esc(`${e.key} · ${e.message || ""}`)}">
-          <ha-icon icon="${e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert"}"></ha-icon>
-          <div><div class="alert-text">${esc(this._errText(e))}</div>
-          ${e.hint && e.hint[key] ? `<div class="t-label">${esc(e.hint[key])}</div>` : ""}</div>
-        </div>`).join("")}</div>`;
+    const out = (d.errors || []).map((e) => ({
+      level: e.level >= 3 ? "error" : "warn", icon: e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert",
+      text: this._errText(e), hint: e.hint && e.hint[key] ? e.hint[key] : "", title: `${e.key} · ${e.message || ""}`,
+    }));
+    const ms = this._machineState();
+    if (ms && ms.main === "abnormal" && !out.length) {
+      out.push({ level: "error", icon: "mdi:alert-octagon", text: tr("Der Drucker meldet eine Störung."),
+        hint: tr("Details stehen am Display des Druckers."), title: "machine_state_manager: ABNORMAL" });
+    }
+    if (ms && ms.needsUser) {
+      out.push({ level: "warn", icon: "mdi:gesture-tap-button", text: tr("Am Drucker bestätigen"),
+        hint: this._machineText(), title: `machine_state_manager: ${ms.main} / ${ms.action}` });
+    }
+    for (let i = 0; i < 4; i++) {
+      const f = this._feed(i);
+      if (f && f.error && f.error !== "ok") {
+        const head = (d.heads[i] || {}).name || `E${i}`;
+        out.push({ level: "warn", icon: "mdi:printer-3d-nozzle-alert", text: tr("Einzug {head}: Störung", { head }),
+          hint: tr("Meldung der Firmware: {e}", { e: f.error }), title: `filament_feed extruder${i}: ${f.error}` });
+      }
+    }
+    return out;
+  }
+
+  _messagesHtml(list) {
+    return list.map((m) => `
+        <div class="alert" data-level="${m.level}" title="${esc(m.title || "")}">
+          <ha-icon icon="${m.icon}"></ha-icon>
+          <div><div class="alert-text">${esc(m.text)}</div>
+          ${m.hint ? `<div class="t-label">${esc(m.hint)}</div>` : ""}</div>
+        </div>`).join("");
+  }
+
+  /** Open firmware messages in plain language, visible on every tab. */
+  _alerts() {
+    const list = this._messages();
+    return list.length ? `<div class="alerts">${this._messagesHtml(list)}</div>` : "";
+  }
+
+  /** 2.2: section "messages" for the building blocks (also when everything is fine). */
+  _sectionMessages() {
+    const list = this._messages();
+    return `
+      <section class="panel">
+        <div class="panel-head"><ha-icon icon="mdi:message-alert-outline"></ha-icon>
+          <span class="panel-title">${tr("Meldungen")}</span></div>
+        ${list.length ? `<div class="alerts">${this._messagesHtml(list)}</div>`
+          : `<div class="t-label"><ha-icon icon="mdi:check-circle-outline" style="--mdc-icon-size:16px;color:var(--u1-ok)"></ha-icon> ${tr("Keine Meldungen")}</div>`}
+      </section>`;
   }
 
   _section(name) {
@@ -157,6 +206,7 @@ export const LayoutMixin = (Base) => class extends Base {
       case "layer": return this._sectionLayer();
       case "spools": return this._sectionSpools();
       case "display": return this._sectionDisplay();
+      case "messages": return this._sectionMessages();
       default: return "";
     }
   }
