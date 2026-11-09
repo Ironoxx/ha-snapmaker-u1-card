@@ -47,6 +47,16 @@ _LOGGER = logging.getLogger(__name__)
 class PowerMixin:
     """Power switch: switching on, clean shutdown, auto-off and idle-off."""
 
+    @staticmethod
+    def _klipper_busy(data: U1Data) -> bool:
+        """Klipper is executing G-code outside a print (calibration, homing, a macro).
+
+        idle_timeout reports "Printing" while commands run, also when print_stats
+        stays standby; calibrations have phases without any heater target (e.g.
+        waiting for a nozzle to cool), so the targets alone do not show them.
+        """
+        return str((data.machine or {}).get("idle_timeout_state") or "").lower() == "printing"
+
     def _check_idle_off(self, data: U1Data) -> None:
         """Idle shutdown: x hours without a print and without heating -> shut down, power off.
 
@@ -60,7 +70,8 @@ class PowerMixin:
             self._idle_since = None
             return
         busy = (data.print_state in ACTIVE_PRINT_STATES or self._print_state.get("active")
-                or any(t > 0 for t in data.targets) or self.shutting_down or self.powering_on)
+                or any(t > 0 for t in data.targets) or self._klipper_busy(data)
+                or self.shutting_down or self.powering_on)
         if busy or self._idle_since is None:
             self._idle_since = now
             return
@@ -83,6 +94,10 @@ class PowerMixin:
         # A target > 0 means somebody is heating up (e.g. a start on the display
         # while print_stats still reports the old state).
         if any(t > 0 for t in data.targets):
+            return
+        # Calibration or a macro after the print: the delay starts again once it is done
+        if self._klipper_busy(data):
+            self.auto_off_armed = time.time()
             return
         delay = float(self.options.get(CONF_AUTO_OFF_DELAY, DEFAULT_AUTO_OFF_DELAY)) * 60
         limit = float(self.options.get(CONF_AUTO_OFF_TEMP, DEFAULT_AUTO_OFF_TEMP))
@@ -191,16 +206,18 @@ class PowerMixin:
             self.async_update_listeners()
 
     async def _printing_now(self) -> bool:
-        """Last safety check before switching off: is the printer printing or heating?"""
+        """Last safety check before switching off: printing, heating or running G-code?"""
         try:
             status = await self.client.query_objects(
-                fields={"print_stats": ("state",), "heater_bed": ("target",),
+                fields={"print_stats": ("state",), "idle_timeout": ("state",), "heater_bed": ("target",),
                         **{name: ("target",) for name in EXTRUDER_OBJECTS}},
             )
         except MoonrakerError:
             return False  # shut down or unreachable
         if (status.get("print_stats") or {}).get("state") in ACTIVE_PRINT_STATES:
             return True
+        if str((status.get("idle_timeout") or {}).get("state") or "").lower() == "printing":
+            return True  # calibration or macro running
         return any(
             isinstance(t, (int, float)) and t > 0
             for t in ((status.get(n) or {}).get("target") for n in (*EXTRUDER_OBJECTS, "heater_bed"))

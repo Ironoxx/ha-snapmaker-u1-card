@@ -510,6 +510,41 @@ async def test_no_auto_off_while_heaters_have_targets(hass: HomeAssistant, mock_
     assert entry.runtime_data.auto_off_armed is None
 
 
+async def test_no_auto_or_idle_off_during_calibration(hass: HomeAssistant, mock_client) -> None:
+    """Calibration after a print (print_stats standby, phases without heater targets):
+    Klipper's idle_timeout says "Printing" -> no switch-off, the auto-off delay starts
+    again afterwards, the idle clock too (reddit report, stock firmware)."""
+    import time as _time
+    entry = await _setup(hass, auto_off=True, auto_off_delay=15, idle_off_hours=1)
+    coord = entry.runtime_data
+    data = coord.data
+    busy = {**data.machine, "idle_timeout_state": "Printing"}
+    idle = {**data.machine, "idle_timeout_state": "Ready"}
+    off = AsyncMock()
+    with patch.object(type(coord), "async_power_off", off):
+        # auto-off armed long ago, calibration running with all targets 0 and cold nozzles
+        coord.auto_off_armed = _time.time() - 3600
+        data.machine, data.targets, data.temperatures = busy, [0.0] * 5, [25.0] * 5
+        coord._check_auto_off(data)
+        assert coord.auto_off_armed > _time.time() - 5, "delay restarts"
+        coord._check_auto_off(data)
+        data.machine = idle
+        coord._check_auto_off(data)  # delay of 15 min not over yet
+        await hass.async_block_till_done()
+        off.assert_not_called()
+        # idle-off: the clock restarts while Klipper is busy
+        coord._idle_since = _time.time() - 7200
+        data.machine = busy
+        coord._check_idle_off(data)
+        assert coord._idle_since > _time.time() - 5
+        await hass.async_block_till_done()
+        off.assert_not_called()
+    # last check before cutting the power sees the running calibration
+    with patch.object(coord.client, "query_objects", AsyncMock(return_value={
+            "print_stats": {"state": "standby"}, "idle_timeout": {"state": "Printing"}})):
+        assert await coord._printing_now() is True
+
+
 async def test_running_print_is_saved_periodically(hass: HomeAssistant, mock_client) -> None:
     """The debounce must not postpone saving forever during a long print."""
     entry = await _setup(hass)
