@@ -4,6 +4,74 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.2.0
+
+Building blocks for your own dashboard, a printer that tells what it is doing, loading/unloading with checks and paxx12 detection.
+
+**Building blocks**
+- New card *Snapmaker U1 – Section* (`custom:snapmaker-u1-section-card`): single sections of the card – camera, print job, heads, bed mesh, console, maintenance, messages … – as cards of their own, to arrange freely in a *Sections* dashboard. Pick the sections in the editor (each with a short description); their order counts. With one section the Home Assistant card frame is the panel itself.
+- `show:` now also sets the order (`layout: scroll` and the section card); new `layout: bare` (only the sections, no head, no tabs).
+
+**What the printer is doing**
+- New sensor *Machine state* from Snapmaker's own `machine_state_manager`: calibration (XYZ, bed, flow, resonance), loading/unloading, firmware update, fault … with the current step and head as attributes. The card shows it in the status outside a print, e.g. "XYZ calibration · Nozzle cooling down (Head 2)".
+- **Auto-off and idle-off no longer switch off during a calibration** (thanks to TheKlonko on Reddit): anything Klipper does outside a print counts as busy; the after-print delay starts again afterwards. During a firmware update the power is never cut, not even with `force`.
+- New section *Messages*: firmware errors, a fault state, a step waiting for a confirmation on the display ("Confirm at the printer") and feeder faults – or "No messages".
+
+**Load / unload with checks**
+- *Load* only when filament waits at the feeder and none is in the head, *Unload* only with filament in the head; otherwise the button is off and says why. The new service `snapmaker_u1_card.filament` refuses the same way.
+- Afterwards the head sensor is checked; picking and parking a head is checked too. Errors show as a short message in the card instead of a pop-up.
+
+**paxx12 Extended Firmware**
+- Detected via its `/firmware-config/`: the system tab shows "paxx12 2.0.0-paxx12-24 · up to date (base 2.0.0.205)", the self test has its own line, the firmware update entity compares with paxx12's releases (with a note not to use the stock update).
+
+**Overview**
+- **Printer display on the overview** at its real size, no empty frame (paxx12). Option `display_place`: `overview` (default), `tab` or `off`.
+- **Slicer preview in the running print** next to file name and progress.
+- **Spools show their fill level** from Spoolman, larger and with a light edge so black filament stands out; the spool of the printing head turns slowly (off with "reduce motion").
+- **Usage of the last print per head** as bars in the spool colours; tap for the details (Spoolman spool, before → after).
+
+**Controls and look**
+- Speed quick buttons **85 / 100 / 115 %**, flow 95 / 100 / 105 %; current value marked. Own values with `speed_presets` / `flow_presets`.
+- **Bed mesh** uses the panel width with heights in every cell (up to 12 × 12 points); off with `mesh_values: false`.
+- **Bigger buttons** for touch: lock, display touch, zoom and quick buttons.
+- One font with even digit widths (monospace only in the G-code console), fewer font sizes.
+- Layer view: the object list for excluding is folded by default.
+
+### Deutsch
+
+Bausteine für das eigene Dashboard, ein Drucker, der sagt, was er gerade macht, Laden/Entladen mit Prüfung und paxx12-Erkennung.
+
+**Bausteine**
+- Neue Karte *Snapmaker U1 – Bereich* (`custom:snapmaker-u1-section-card`): einzelne Bereiche der Karte – Kamera, Druckauftrag, Köpfe, Bettnivellierung, Konsole, Wartung, Meldungen … – als eigene Karten, frei anzuordnen in einem *Abschnitte*-Dashboard. Bereiche im Editor wählen (jeder mit kurzer Beschreibung); die Reihenfolge zählt. Mit einem Bereich ist der Kartenrahmen von Home Assistant selbst das Panel.
+- `show:` legt jetzt auch die Reihenfolge fest (`layout: scroll` und die Bereichs-Karte); neu `layout: bare` (nur die Bereiche, ohne Kopf und Reiter).
+
+**Was der Drucker gerade macht**
+- Neuer Sensor *Maschinenstatus* aus Snapmakers eigenem `machine_state_manager`: Kalibrierung (XYZ, Bett, Fluss, Resonanz), Laden/Entladen, Firmware-Update, Störung … mit aktuellem Schritt und Kopf als Attribute. Die Karte zeigt das außerhalb eines Drucks im Status, z. B. „XYZ-Kalibrierung · Düse kühlt ab (Kopf 2)“.
+- **Auto-Aus und Leerlauf-Aus schalten nicht mehr während einer Kalibrierung ab** (danke an TheKlonko auf Reddit): alles, was Klipper außerhalb eines Drucks tut, zählt als beschäftigt; die Wartezeit nach dem Druck beginnt danach neu. Während eines Firmware-Updates wird nie abgeschaltet, auch nicht mit `force`.
+- Neuer Bereich *Meldungen*: Firmware-Fehler, ein Störungszustand, ein Schritt, der am Display auf Bestätigung wartet („Am Drucker bestätigen“), und Störungen am Einzug – oder „Keine Meldungen“.
+
+**Laden / Entladen mit Prüfung**
+- *Laden* nur, wenn Filament am Einzug wartet und keins im Kopf ist, *Entladen* nur mit Filament im Kopf; sonst ist der Knopf aus und sagt warum. Der neue Dienst `snapmaker_u1_card.filament` lehnt genauso ab.
+- Danach wird der Sensor im Kopf geprüft; Kopf aufnehmen und ablegen wird ebenso geprüft. Fehler erscheinen als kurze Meldung in der Karte statt als Pop-up.
+
+**paxx12 Extended Firmware**
+- Erkannt über ihre `/firmware-config/`: Der System-Reiter zeigt „paxx12 2.0.0-paxx12-24 · aktuell (Basis 2.0.0.205)“, der Selbsttest hat eine eigene Zeile, die Firmware-Update-Entität vergleicht mit den paxx12-Releases (mit dem Hinweis, nicht das Stock-Update zu nehmen).
+
+**Übersicht**
+- **Druckerdisplay in der Übersicht** in echter Größe, ohne leeren Rahmen (paxx12). Option `display_place`: `overview` (Standard), `tab` oder `off`.
+- **Vorschaubild des Slicers im laufenden Druck** neben Dateiname und Fortschritt.
+- **Spulen zeigen ihren Füllstand** aus Spoolman, größer und mit hellem Rand, damit schwarzes Filament sichtbar bleibt; die Spule des druckenden Kopfs dreht sich langsam (aus bei „Bewegung reduzieren“).
+- **Verbrauch des letzten Drucks je Kopf** als Balken in den Spulenfarben; antippen zeigt die Details (Spoolman-Spule, vorher → nachher).
+
+**Bedienung und Aussehen**
+- Schnellwahl Geschwindigkeit **85 / 100 / 115 %**, Flussrate 95 / 100 / 105 %; aktueller Wert markiert. Eigene Werte mit `speed_presets` / `flow_presets`.
+- **Bettnivellierung** nutzt die Panelbreite, mit Höhenwerten in jeder Kachel (bis 12 × 12 Punkte); abschaltbar mit `mesh_values: false`.
+- **Größere Knöpfe** zum Antippen: Sperre, Display-Touch, Zoom und Schnellwahl.
+- Eine Schrift mit gleich breiten Ziffern (Monospace nur in der G-Code-Konsole), weniger Schriftgrößen.
+- Schichtansicht: Die Objektliste zum Ausschließen ist standardmäßig eingeklappt.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.2.0b2
 
 Beta. The printer tells more: what it is doing, what went wrong, which firmware runs – and loading/unloading only when it can work.

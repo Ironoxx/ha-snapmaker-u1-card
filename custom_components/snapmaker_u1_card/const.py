@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "2.2.0b2"
+VERSION = "2.2.0"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"

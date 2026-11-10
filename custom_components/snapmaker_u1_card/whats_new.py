@@ -111,6 +111,28 @@ Top cover, Panda Breath and DragonBreath are detected automatically; without the
 
 ⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
     },
+    "2.2": {
+        "de": ("Snapmaker U1 Card 2.2 – das ist neu", f"""- **Bausteine:** neue Karte *Snapmaker U1 – Bereich* – Kamera, Druckauftrag, Köpfe, Bettnivellierung, Meldungen … als eigene Karten im Abschnitte-Dashboard
+- **Maschinenstatus:** Kalibrierung, Laden/Entladen, Firmware-Update und Störungen im Status; Auto-Aus schaltet während einer Kalibrierung nicht mehr ab
+- **Laden/Entladen mit Prüfung:** Knöpfe nur, wenn es klappen kann, mit Begründung; danach wird der Sensor im Kopf geprüft
+- **paxx12** wird erkannt, mit Version und Update-Vergleich
+- **Übersicht:** Druckerdisplay in echter Größe, Slicer-Vorschau im Druck, Füllstand der Spulen, Verbrauch des letzten Drucks je Kopf
+- **Bedienung:** Schnellwahl 85/100/115 %, Höhenwerte in der Bettnivellierung, größere Knöpfe, einheitlichere Schrift
+
+Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/releases/tag/v2.2.0)
+
+⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
+        "en": ("Snapmaker U1 Card 2.2 – what's new", f"""- **Building blocks:** new card *Snapmaker U1 – Section* – camera, print job, heads, bed mesh, messages … as cards of their own in a sections dashboard
+- **Machine state:** calibration, loading/unloading, firmware update and faults in the status; auto-off no longer switches off during a calibration
+- **Load/unload with checks:** buttons only when it can work, with the reason; the head sensor is checked afterwards
+- **paxx12** is detected, with version and update comparison
+- **Overview:** printer display at its real size, slicer preview in the print, spool fill levels, usage of the last print per head
+- **Controls:** quick buttons 85/100/115 %, heights in the bed mesh, bigger buttons, more even type
+
+Please reload the dashboard once. All details: [release notes]({GITHUB}/releases/tag/v2.2.0)
+
+⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
+    },
 }
 
 # One-off news, shown once each (key stays in .storage).
