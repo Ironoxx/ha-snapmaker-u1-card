@@ -91,6 +91,16 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   // the last remaining object cannot be excluded
   assert.ok(R().querySelector(`.obj-chip[data-obj="${A}"]`).disabled, "last object locked, bed view, animation, own image");
 
+  // 2.2.1 (#12): name in its own span (cut with ellipsis), full name in the title;
+  // exclude_objects: false hides the list and the outlines
+  const chip = R().querySelector(".obj-chip");
+  assert.ok(chip.querySelector(".obj-name") && /Teil \(1\)|Teil \(2\)/.test(chip.title), chip.title);
+  card._cfg.exclude_objects = false;
+  card._renderKey = null; card._render(); card._paintLayer(true);
+  assert.ok(!R().querySelector("[data-objbox]"), "keine Liste");
+  assert.ok(!R().querySelector(".lv-objs polygon"), "keine Umrisse");
+  card._cfg.exclude_objects = true;
+  card._paintLayer(true);
   // one object only: no list, no clickable outline
   exclude = { objects: [exclude.objects[0]], excluded: [], current: A };
   card._lv.at = 0; card._lv.exKey = null;

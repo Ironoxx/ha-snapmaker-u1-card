@@ -52,7 +52,9 @@ export const OverviewMixin = (Base) => class extends Base {
     }
     // State in the corner instead of a full overlay: the camera stays visible while idle.
     const tone = this._statusTone();
-    const sub = !d.active && (d.display || d.message) ? `<small>${esc(d.display || d.message)}</small>` : "";
+    // 2.2.1: no "Printer is ready" under a calibration or other machine state
+    const subText = this._camSub();
+    const sub = `<small data-su1="camsub"${subText ? "" : " hidden"}>${esc(subText)}</small>`;
     const pill = `<div class="cam-state" data-tone="${tone}" role="status">
         <span class="dot"></span><span class="cam-state-text"><b data-su1="camstate">${this._statusLabel()}</b>${sub}</span>
       </div>`;

@@ -4,6 +4,30 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.2.1b1
+
+Beta. Fixes for 2.2.0.
+
+- **Layer view with many objects no longer breaks the card** (#12, thanks GeeBee93): long object names are cut with "…" (full name on hover), an open object list scrolls inside itself instead of growing, and it can never make its column wider – in Safari it squeezed the camera column. New option `exclude_objects: false` (also in the editor) hides the object list and the outlines completely.
+- Status without repetition: "Resonance test" instead of "Resonance test · Measuring resonance" (same for flow, bed mesh, loading/unloading …).
+- No "Printer is ready" under the status on the camera while a calibration or another machine state runs.
+- System tab: a long firmware value (paxx12) wraps instead of cutting the name to "Firmw…".
+
+Please check: layer view with a print of many parts (list open and closed, `exclude_objects: false`), the status text during a calibration, the firmware line on the phone.
+
+### Deutsch
+
+Beta. Korrekturen für 2.2.0.
+
+- **Schichtansicht mit vielen Objekten zerlegt die Karte nicht mehr** (#12, danke GeeBee93): lange Objektnamen werden mit „…“ gekürzt (voller Name beim Darüberfahren), eine geöffnete Objektliste scrollt in sich, statt zu wachsen, und kann ihre Spalte nie breiter machen – in Safari hat sie die Kameraspalte zusammengedrückt. Neue Option `exclude_objects: false` (auch im Editor) blendet Objektliste und Umrisse ganz aus.
+- Status ohne Wiederholung: „Resonanzmessung“ statt „Resonanzmessung · Resonanz wird gemessen“ (ebenso Fluss, Bettnivellierung, Laden/Entladen …).
+- Kein „Printer is ready“ mehr unter dem Status auf der Kamera, während eine Kalibrierung oder ein anderer Maschinenzustand läuft.
+- System-Reiter: Ein langer Firmware-Wert (paxx12) bricht um, statt den Namen auf „Firmw…“ zu kürzen.
+
+Bitte prüfen: Schichtansicht bei einem Druck mit vielen Teilen (Liste offen und zu, `exclude_objects: false`), den Statustext während einer Kalibrierung, die Firmware-Zeile auf dem Handy.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.2.0
 
 Building blocks for your own dashboard, a printer that tells what it is doing, loading/unloading with checks and paxx12 detection.

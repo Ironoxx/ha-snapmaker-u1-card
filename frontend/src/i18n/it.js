@@ -141,6 +141,8 @@ export default {
   "Kopf": "Testina",
   "Höhenwerte in der Bettnivellierung": "Altezze nel livellamento del piano",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vuoto = attivo. Mostra l’altezza misurata in ogni cella (fino a 12 × 12 punti).",
+  "Objekte ausschließen in der Schichtansicht": "Escludi oggetti nella vista dei layer",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vuoto = attivo. Disattivo: nessun elenco di oggetti né contorni nella vista dei layer – utile con stampe di moltissimi pezzi.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vuoto = nella panoramica, alla sua dimensione reale. Solo con lo specchio del display del firmware paxx12.",
   "In der Übersicht": "Nella panoramica",
   "Eigener Reiter": "Scheda propria",

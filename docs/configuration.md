@@ -60,6 +60,7 @@ All options are optional; except head names and presets they can also be set in 
 | `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | quick temperature presets |
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: quick buttons for speed and flow; the current value is marked |
 | `mesh_values` | `true` | 2.2: heights in the bed mesh cells (up to 12 × 12 points) |
+| `exclude_objects` | `true` | 2.2.1: object list and outlines for excluding objects in the layer view; `false` hides both (prints with very many parts) |
 | `alerts` | with `stage`/`job` | 2.2, section card: printer messages on top (`true` always, `false` never). The section `messages` shows them on its own |
 | `toolheads` | – | head names, e.g. `- name: Left` (material and colour come from the printer) |
 | `network_tracker` | – | `device_tracker` for a WiFi chip in the header |

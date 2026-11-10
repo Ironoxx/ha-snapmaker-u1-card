@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.2.0";
+  var CARD_VERSION = "2.2.1b1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -211,6 +211,8 @@
     "Kopf": "Cabezal",
     "Höhenwerte in der Bettnivellierung": "Alturas en la nivelación de la cama",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vacío = activado. Muestra la altura medida en cada celda (hasta 12 × 12 puntos).",
+    "Objekte ausschließen in der Schichtansicht": "Excluir objetos en la vista de capas",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vacío = activado. Desactivado: sin lista de objetos ni contornos en la vista de capas – útil con impresiones de muchas piezas.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vacío = en el resumen, a su tamaño real. Solo con el espejo de pantalla del firmware paxx12.",
     "In der Übersicht": "En el resumen",
     "Eigener Reiter": "Pestaña propia",
@@ -946,6 +948,8 @@
     "Kopf": "Tête",
     "Höhenwerte in der Bettnivellierung": "Hauteurs dans le nivellement du plateau",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vide = activé. Affiche la hauteur mesurée dans chaque case (jusqu’à 12 × 12 points).",
+    "Objekte ausschließen in der Schichtansicht": "Exclure des objets dans la vue des couches",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vide = activé. Désactivé : ni liste d’objets ni contours dans la vue des couches – utile pour les impressions avec beaucoup de pièces.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vide = dans l’aperçu, à sa taille réelle. Uniquement avec le miroir d’écran du firmware paxx12.",
     "In der Übersicht": "Dans l’aperçu",
     "Eigener Reiter": "Onglet propre",
@@ -1681,6 +1685,8 @@
     "Kopf": "Testina",
     "Höhenwerte in der Bettnivellierung": "Altezze nel livellamento del piano",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vuoto = attivo. Mostra l’altezza misurata in ogni cella (fino a 12 × 12 punti).",
+    "Objekte ausschließen in der Schichtansicht": "Escludi oggetti nella vista dei layer",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vuoto = attivo. Disattivo: nessun elenco di oggetti né contorni nella vista dei layer – utile con stampe di moltissimi pezzi.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vuoto = nella panoramica, alla sua dimensione reale. Solo con lo specchio del display del firmware paxx12.",
     "In der Übersicht": "Nella panoramica",
     "Eigener Reiter": "Scheda propria",
@@ -2416,6 +2422,8 @@
     "Kopf": "Kop",
     "Höhenwerte in der Bettnivellierung": "Hoogtes in de bednivellering",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Leeg = aan. Toont in elk vak de gemeten hoogte (tot 12 × 12 punten).",
+    "Objekte ausschließen in der Schichtansicht": "Objecten uitsluiten in de laagweergave",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Leeg = aan. Uit: geen objectlijst en geen omtrekken in de laagweergave – handig bij prints met heel veel onderdelen.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Leeg = in het overzicht, op ware grootte. Alleen met de displayspiegel van de paxx12-firmware.",
     "In der Übersicht": "In het overzicht",
     "Eigener Reiter": "Eigen tabblad",
@@ -3151,6 +3159,8 @@
     "Kopf": "Cabeça",
     "Höhenwerte in der Bettnivellierung": "Alturas no nivelamento da mesa",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vazio = ligado. Mostra a altura medida em cada célula (até 12 × 12 pontos).",
+    "Objekte ausschließen in der Schichtansicht": "Excluir objetos na vista de camadas",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vazio = ligado. Desligado: sem lista de objetos nem contornos na vista de camadas – útil em impressões com muitas peças.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vazio = na vista geral, no tamanho real. Só com o espelho do ecrã do firmware paxx12.",
     "In der Übersicht": "Na vista geral",
     "Eigener Reiter": "Separador próprio",
@@ -3886,6 +3896,8 @@
     "Kopf": "Kafa",
     "Höhenwerte in der Bettnivellierung": "Tabla seviyelemesinde yükseklikler",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Boş = açık. Her hücrede ölçülen yüksekliği gösterir (12 × 12 noktaya kadar).",
+    "Objekte ausschließen in der Schichtansicht": "Katman görünümünde nesne hariç tutma",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Boş = açık. Kapalı: katman görünümünde nesne listesi ve dış hatlar yok – çok sayıda parçalı baskılarda yardımcı olur.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Boş = genel bakışta, gerçek boyutunda. Yalnızca paxx12 yazılımının ekran yansıtmasıyla.",
     "In der Übersicht": "Genel bakışta",
     "Eigener Reiter": "Kendi sekmesi",
@@ -4643,6 +4655,8 @@
     "Kopf": "Head",
     "Höhenwerte in der Bettnivellierung": "Heights in the bed mesh",
     "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Empty = on. Shows the measured height in every cell (up to 12 × 12 points).",
+    "Objekte ausschließen in der Schichtansicht": "Exclude objects in the layer view",
+    "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Empty = on. Off: no object list and no outlines in the layer view – helps with prints of very many parts.",
     "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Empty = on the overview, at its real size. Only with the display mirror of the paxx12 firmware.",
     "In der Übersicht": "On the overview",
     "Eigener Reiter": "Own tab",
@@ -5354,6 +5368,7 @@
     display_place: "Druckerdisplay",
     display_camera: "Druckerdisplay als zusätzliche Kamera",
     mesh_values: "Höhenwerte in der Bettnivellierung",
+    exclude_objects: "Objekte ausschließen in der Schichtansicht",
     show: "Bereiche",
     alerts: "Meldungen des Druckers oben anzeigen"
   };
@@ -5374,6 +5389,7 @@
     camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
     display_place: "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.",
     mesh_values: "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).",
+    exclude_objects: "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.",
     show: "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.",
     alerts: "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.",
     display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
@@ -5474,6 +5490,7 @@
         ["manual", "Bis zum erneuten Sperren"]
       ]) } } },
       { name: "mesh_values", selector: { boolean: {} } },
+      { name: "exclude_objects", selector: { boolean: {} } },
       {
         type: "expandable",
         name: "bed_group",
@@ -6066,6 +6083,16 @@
     extruder_park_verify: "Ablage wird geprüft",
     homing_origin_calibrating: "Nullpunkt wird kalibriert"
   };
+  var MAIN_STEP = {
+    shaper_calibrate: "shaper_calibrating",
+    flow_calibration: "flow_calibrating",
+    bed_leveling: "bed_leveling",
+    auto_load: "auto_loading",
+    auto_unload: "auto_unloading",
+    manual_load: "manual_loading",
+    park_point_calibration: "park_point_calibrating",
+    homing_origin_calibration: "homing_origin_calibrating"
+  };
   var ControlsMixin = (Base) => class extends Base {
     _press(name) {
       const own = this._ownControl() && OWN_BUTTONS[name];
@@ -6342,9 +6369,17 @@
       const ms = this._machineState();
       if (!ms || ms.main === "idle" || ms.main === "printing") return "";
       const main = MACHINE_MAIN[ms.main] ? tr(MACHINE_MAIN[ms.main]) : ms.main;
-      let step = withStep && ms.action && ms.action !== "idle" && MACHINE_STEP[ms.action] ? tr(MACHINE_STEP[ms.action]) : "";
-      if (step && ms.head !== null) step += ` (${(this._d.heads[ms.head] || {}).name || `E${ms.head}`})`;
-      return step && step !== main ? `${main} · ${step}` : main;
+      const head = ms.head !== null && ms.head !== void 0 ? ` (${(this._d.heads[ms.head] || {}).name || `E${ms.head}`})` : "";
+      const same = MAIN_STEP[ms.main] === ms.action;
+      const step = withStep && !same && ms.action && ms.action !== "idle" && MACHINE_STEP[ms.action] ? tr(MACHINE_STEP[ms.action]) : "";
+      if (!step) return withStep && same ? `${main}${head}` : main;
+      return step !== main ? `${main} · ${step}${head}` : main;
+    }
+    /** Small line under the state on the camera: display / Klipper message, not during a machine state. */
+    _camSub() {
+      const d = this._d;
+      if (!d || d.active || this._machineText(false)) return "";
+      return d.display || d.message || "";
     }
     /**
      * Spool icon. fill (0–1, from Spoolman: remaining / net weight) sets how thick the
@@ -6524,7 +6559,8 @@
       </div>`;
       }
       const tone = this._statusTone();
-      const sub = !d.active && (d.display || d.message) ? `<small>${esc(d.display || d.message)}</small>` : "";
+      const subText = this._camSub();
+      const sub = `<small data-su1="camsub"${subText ? "" : " hidden"}>${esc(subText)}</small>`;
       const pill = `<div class="cam-state" data-tone="${tone}" role="status">
         <span class="dot"></span><span class="cam-state-text"><b data-su1="camstate">${this._statusLabel()}</b>${sub}</span>
       </div>`;
@@ -7980,7 +8016,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }
       const vb = [x0 - pad, -(top + pad), x1 - x0 + 2 * pad, top - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
       const pos = this._lvPos(lv);
-      const ex = lv.preview ? { objects: [], excluded: [], current: null } : this._exclude();
+      const ex = lv.preview || this._cfg.exclude_objects === false ? { objects: [], excluded: [], current: null } : this._exclude();
       const excluded = new Set(ex.excluded);
       const lines = (v.segs || []).map(([tool, pts, off, obj]) => {
         const p = [];
@@ -8190,7 +8226,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     _objectsHtml() {
       const ex = this._exclude();
-      if (ex.objects.length < 2) return "";
+      if (ex.objects.length < 2 || this._cfg.exclude_objects === false) return "";
       const excluded = new Set(ex.excluded);
       const left = ex.objects.filter((o) => !excluded.has(o.name)).length;
       const gone = ex.objects.length - left;
@@ -8203,8 +8239,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const cur = !off && o.name === ex.current;
         const last = !off && left <= 1;
         return `<button type="button" class="chip obj-chip${off ? " off" : ""}${cur ? " cur" : ""}" data-obj="${esc(o.name)}"
-        ${off || last ? "disabled" : ""} title="${esc(off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen"))}">
-        <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon>${esc(o.label || o.name)}</button>`;
+        ${off || last ? "disabled" : ""} title="${esc(`${o.label || o.name} – ${off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen")}`)}">
+        <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon><span class="obj-name">${esc(o.label || o.name)}</span></button>`;
       }).join("")}</div></div></details>`;
     }
     async _excludeObject(name) {
@@ -9239,7 +9275,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .row:last-child { border-bottom: none; }
   .row .k { color: var(--u1-on-variant); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row .v { font-family: var(--u1-num); font-variant-numeric: tabular-nums; text-align: right; }
+  /* 2.2.1: a long value (paxx12 version) wraps instead of cutting the name to "Firmw…" */
+  .row .k { max-width: 60%; flex-shrink: 0; }
+  .row .v { font-family: var(--u1-num); font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 
   details { border-radius: var(--u1-r-m); }
   details > summary {
@@ -9807,7 +9845,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .obj-box .obj-count { margin-left: auto; }
   .obj-box > .body { display: flex; flex-direction: column; gap: 6px; }
   .lv-objects .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
-  .obj-chip { cursor: pointer; }
+  /* 2.2.1 (#12): long names are cut, many objects scroll – the list never widens the card */
+  .lv-panel, .lv-objects, .obj-box { min-width: 0; }
+  .obj-box > .body { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+  .obj-chip { cursor: pointer; max-width: 100%; min-width: 0; }
+  .obj-chip .obj-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .obj-chip ha-icon { --mdc-icon-size: 16px; }
   .obj-chip.cur { border-color: var(--u1-primary); color: var(--u1-primary); }
   .obj-chip.off { text-decoration: line-through; opacity: .6; }
@@ -10300,6 +10342,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       };
       set("status", this._statusLabel());
       set("camstate", this._statusLabel());
+      const camSub = r.querySelector('[data-su1="camsub"]');
+      if (camSub) {
+        const t = this._camSub();
+        if (camSub.textContent !== t) camSub.textContent = t;
+        camSub.hidden = !t;
+      }
       const pwr = r.querySelector('[data-su1="pwr"]');
       if (pwr && d.power) {
         const html = this._powerLabel(d.power);
@@ -13177,6 +13225,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         speed_presets: [85, 100, 115],
         flow_presets: [95, 100, 105],
         mesh_values: true,
+        exclude_objects: true,
         files_limit: 12,
         toolheads: [],
         ...this._defaults(),

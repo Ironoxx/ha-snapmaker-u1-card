@@ -141,6 +141,8 @@ export default {
   "Kopf": "Tête",
   "Höhenwerte in der Bettnivellierung": "Hauteurs dans le nivellement du plateau",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vide = activé. Affiche la hauteur mesurée dans chaque case (jusqu’à 12 × 12 points).",
+  "Objekte ausschließen in der Schichtansicht": "Exclure des objets dans la vue des couches",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vide = activé. Désactivé : ni liste d’objets ni contours dans la vue des couches – utile pour les impressions avec beaucoup de pièces.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vide = dans l’aperçu, à sa taille réelle. Uniquement avec le miroir d’écran du firmware paxx12.",
   "In der Übersicht": "Dans l’aperçu",
   "Eigener Reiter": "Onglet propre",

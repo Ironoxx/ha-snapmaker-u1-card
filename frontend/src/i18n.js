@@ -183,6 +183,8 @@ export const EN = {
   "Kopf": "Head",
   "Höhenwerte in der Bettnivellierung": "Heights in the bed mesh",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Empty = on. Shows the measured height in every cell (up to 12 × 12 points).",
+  "Objekte ausschließen in der Schichtansicht": "Exclude objects in the layer view",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Empty = on. Off: no object list and no outlines in the layer view – helps with prints of very many parts.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Empty = on the overview, at its real size. Only with the display mirror of the paxx12 firmware.",
   "In der Übersicht": "On the overview",
   "Eigener Reiter": "Own tab",

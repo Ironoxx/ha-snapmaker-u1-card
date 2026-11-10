@@ -141,6 +141,8 @@ export default {
   "Kopf": "Kop",
   "Höhenwerte in der Bettnivellierung": "Hoogtes in de bednivellering",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Leeg = aan. Toont in elk vak de gemeten hoogte (tot 12 × 12 punten).",
+  "Objekte ausschließen in der Schichtansicht": "Objecten uitsluiten in de laagweergave",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Leeg = aan. Uit: geen objectlijst en geen omtrekken in de laagweergave – handig bij prints met heel veel onderdelen.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Leeg = in het overzicht, op ware grootte. Alleen met de displayspiegel van de paxx12-firmware.",
   "In der Übersicht": "In het overzicht",
   "Eigener Reiter": "Eigen tabblad",

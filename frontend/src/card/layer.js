@@ -99,7 +99,7 @@ export const LayerViewMixin = (Base) => class extends Base {
     if (img) { [x0, y0, x1, top] = img.area; }
     const vb = [x0 - pad, -(top + pad), x1 - x0 + 2 * pad, top - y0 + 2 * pad].map((n) => n.toFixed(2)).join(" ");
     const pos = this._lvPos(lv);
-    const ex = lv.preview ? { objects: [], excluded: [], current: null } : this._exclude();
+    const ex = lv.preview || this._cfg.exclude_objects === false ? { objects: [], excluded: [], current: null } : this._exclude();
     const excluded = new Set(ex.excluded);
     const lines = (v.segs || []).map(([tool, pts, off, obj]) => {
       const p = [];
@@ -317,7 +317,7 @@ export const LayerViewMixin = (Base) => class extends Base {
 
   _objectsHtml() {
     const ex = this._exclude();
-    if (ex.objects.length < 2) return "";
+    if (ex.objects.length < 2 || this._cfg.exclude_objects === false) return "";
     const excluded = new Set(ex.excluded);
     const left = ex.objects.filter((o) => !excluded.has(o.name)).length;
     // 2.2: folded by default to save room; the open state survives the refresh
@@ -331,8 +331,8 @@ export const LayerViewMixin = (Base) => class extends Base {
       const cur = !off && o.name === ex.current;
       const last = !off && left <= 1;
       return `<button type="button" class="chip obj-chip${off ? " off" : ""}${cur ? " cur" : ""}" data-obj="${esc(o.name)}"
-        ${off || last ? "disabled" : ""} title="${esc(off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen"))}">
-        <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon>${esc(o.label || o.name)}</button>`;
+        ${off || last ? "disabled" : ""} title="${esc(`${o.label || o.name} – ${off ? tr("Ausgeschlossen") : last ? tr("Letztes Objekt") : tr("Ausschließen")}`)}">
+        <ha-icon icon="${off ? "mdi:cancel" : cur ? "mdi:printer-3d-nozzle" : "mdi:cube-outline"}"></ha-icon><span class="obj-name">${esc(o.label || o.name)}</span></button>`;
     }).join("")}</div></div></details>`;
   }
 

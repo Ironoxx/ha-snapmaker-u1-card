@@ -52,6 +52,7 @@
  *   bed_presets       [0, 55, 65, 85]
  *   speed_presets     [85, 100, 115]; flow_presets [95, 100, 105]
  *   mesh_values       heights in the bed mesh cells          (true)
+ *   exclude_objects   object list and outlines in the layer view (true)
  *   alerts            section card: printer messages on top  (with job/stage)
  *   files_limit       number of files shown                  (12)
  *   toolheads         per head: name (and material/color as a fallback
@@ -182,6 +183,7 @@ export class SnapmakerU1Card extends U1Base {
       speed_presets: [85, 100, 115],
       flow_presets: [95, 100, 105],
       mesh_values: true,
+      exclude_objects: true,
       files_limit: 12,
       toolheads: [],
       ...this._defaults(),

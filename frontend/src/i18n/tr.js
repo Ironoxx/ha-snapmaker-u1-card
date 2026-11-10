@@ -141,6 +141,8 @@ export default {
   "Kopf": "Kafa",
   "Höhenwerte in der Bettnivellierung": "Tabla seviyelemesinde yükseklikler",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Boş = açık. Her hücrede ölçülen yüksekliği gösterir (12 × 12 noktaya kadar).",
+  "Objekte ausschließen in der Schichtansicht": "Katman görünümünde nesne hariç tutma",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Boş = açık. Kapalı: katman görünümünde nesne listesi ve dış hatlar yok – çok sayıda parçalı baskılarda yardımcı olur.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Boş = genel bakışta, gerçek boyutunda. Yalnızca paxx12 yazılımının ekran yansıtmasıyla.",
   "In der Übersicht": "Genel bakışta",
   "Eigener Reiter": "Kendi sekmesi",

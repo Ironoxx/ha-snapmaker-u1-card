@@ -141,6 +141,8 @@ export default {
   "Kopf": "Cabeça",
   "Höhenwerte in der Bettnivellierung": "Alturas no nivelamento da mesa",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vazio = ligado. Mostra a altura medida em cada célula (até 12 × 12 pontos).",
+  "Objekte ausschließen in der Schichtansicht": "Excluir objetos na vista de camadas",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vazio = ligado. Desligado: sem lista de objetos nem contornos na vista de camadas – útil em impressões com muitas peças.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vazio = na vista geral, no tamanho real. Só com o espelho do ecrã do firmware paxx12.",
   "In der Übersicht": "Na vista geral",
   "Eigener Reiter": "Separador próprio",

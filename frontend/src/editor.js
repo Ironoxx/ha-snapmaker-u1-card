@@ -48,6 +48,7 @@ export const FORM_LABELS = {
   display_place: "Druckerdisplay",
   display_camera: "Druckerdisplay als zusätzliche Kamera",
   mesh_values: "Höhenwerte in der Bettnivellierung",
+  exclude_objects: "Objekte ausschließen in der Schichtansicht",
   show: "Bereiche",
   alerts: "Meldungen des Druckers oben anzeigen",
 };
@@ -68,6 +69,7 @@ export const FORM_HELPERS = {
   camera_zoom_reset: "Leer = 60 s ohne Bedienung, 0 = nie. Beim Verlassen der Seite oder Wegscrollen geht der Zoom immer zurück.",
   display_place: "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.",
   mesh_values: "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).",
+  exclude_objects: "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.",
   show: "Welche Bereiche diese Karte zeigt, in dieser Reihenfolge. Mehrere Karten lassen sich im Abschnitte-Dashboard frei anordnen.",
   alerts: "Leer = nur mit Kamera oder Druckauftrag. Für alle Meldungen an einem Ort gibt es den Bereich „Meldungen“.",
   display_camera: "Der Knopf „Kamera wechseln“ zeigt dann auch das Display. Nur mit dem Display-Spiegel der paxx12-Firmware.",
@@ -138,6 +140,7 @@ export function configForm(mini) {
     { name: "controls_lock", selector: { select: { mode: "dropdown", options: opts([
       ["off", "Aus"], ["30", "30 s"], ["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["manual", "Bis zum erneuten Sperren"]]) } } },
     { name: "mesh_values", selector: { boolean: {} } },
+    { name: "exclude_objects", selector: { boolean: {} } },
     {
       type: "expandable", name: "bed_group", flatten: true, title: tr("Draufsicht"), icon: "mdi:grid",
       schema: [

@@ -60,6 +60,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `nozzle_presets` / `bed_presets` | `[0,210,240,260]` / `[0,55,65,85]` | Schnellwahl-Temperaturen |
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: Schnellwahl für Geschwindigkeit und Flussrate; der aktuelle Wert ist markiert |
 | `mesh_values` | `true` | 2.2: Höhenwerte in den Kacheln der Bettnivellierung (bis 12 × 12 Messpunkte) |
+| `exclude_objects` | `true` | 2.2.1: Objektliste und Umrisse zum Ausschließen in der Schichtansicht; `false` blendet beides aus (Drucke mit sehr vielen Teilen) |
 | `alerts` | mit `stage`/`job` | 2.2, Bereichs-Karte: Meldungen des Druckers oben (`true` immer, `false` nie). Der Bereich `messages` zeigt sie für sich |
 | `toolheads` | – | Kopfnamen, z. B. `- name: Links` (Material und Farbe kommen vom Drucker) |
 | `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |

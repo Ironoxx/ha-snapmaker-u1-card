@@ -141,6 +141,8 @@ export default {
   "Kopf": "Cabezal",
   "Höhenwerte in der Bettnivellierung": "Alturas en la nivelación de la cama",
   "Leer = an. Zeigt in jeder Kachel die gemessene Höhe (bis 12 × 12 Messpunkte).": "Vacío = activado. Muestra la altura medida en cada celda (hasta 12 × 12 puntos).",
+  "Objekte ausschließen in der Schichtansicht": "Excluir objetos en la vista de capas",
+  "Leer = an. Aus: keine Objektliste und keine Umrisse in der Schichtansicht – hilft bei Drucken mit sehr vielen Teilen.": "Vacío = activado. Desactivado: sin lista de objetos ni contornos en la vista de capas – útil con impresiones de muchas piezas.",
   "Leer = in der Übersicht, in seiner echten Größe. Nur mit dem Display-Spiegel der paxx12-Firmware.": "Vacío = en el resumen, a su tamaño real. Solo con el espejo de pantalla del firmware paxx12.",
   "In der Übersicht": "En el resumen",
   "Eigener Reiter": "Pestaña propia",

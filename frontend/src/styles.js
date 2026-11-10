@@ -490,7 +490,9 @@ export const STYLES = `
   }
   .row:last-child { border-bottom: none; }
   .row .k { color: var(--u1-on-variant); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .row .v { font-family: var(--u1-num); font-variant-numeric: tabular-nums; text-align: right; }
+  /* 2.2.1: a long value (paxx12 version) wraps instead of cutting the name to "Firmw…" */
+  .row .k { max-width: 60%; flex-shrink: 0; }
+  .row .v { font-family: var(--u1-num); font-variant-numeric: tabular-nums; text-align: right; min-width: 0; overflow-wrap: anywhere; }
 
   details { border-radius: var(--u1-r-m); }
   details > summary {
@@ -1058,7 +1060,11 @@ export const STYLES = `
   .obj-box .obj-count { margin-left: auto; }
   .obj-box > .body { display: flex; flex-direction: column; gap: 6px; }
   .lv-objects .chip-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
-  .obj-chip { cursor: pointer; }
+  /* 2.2.1 (#12): long names are cut, many objects scroll – the list never widens the card */
+  .lv-panel, .lv-objects, .obj-box { min-width: 0; }
+  .obj-box > .body { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; }
+  .obj-chip { cursor: pointer; max-width: 100%; min-width: 0; }
+  .obj-chip .obj-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .obj-chip ha-icon { --mdc-icon-size: 16px; }
   .obj-chip.cur { border-color: var(--u1-primary); color: var(--u1-primary); }
   .obj-chip.off { text-decoration: line-through; opacity: .6; }

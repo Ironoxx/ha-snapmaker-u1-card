@@ -350,6 +350,8 @@ export const RenderMixin = (Base) => class extends Base {
 
     set("status", this._statusLabel());
     set("camstate", this._statusLabel());
+    const camSub = r.querySelector('[data-su1="camsub"]');
+    if (camSub) { const t = this._camSub(); if (camSub.textContent !== t) camSub.textContent = t; camSub.hidden = !t; }
     const pwr = r.querySelector('[data-su1="pwr"]');
     if (pwr && d.power) {
       const html = this._powerLabel(d.power);

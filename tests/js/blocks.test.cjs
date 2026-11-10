@@ -117,6 +117,16 @@ assert.strictEqual(card._filamentBlocked(1, "load"), "Am Einzug steckt kein Fila
 assert.strictEqual(card._filamentBlocked(1, "unload"), "Im Kopf ist kein Filament.");
 assert.strictEqual(card._filamentBlocked(2, "load"), "");
 assert.strictEqual(card._filamentBlocked(3, "load"), "Der Einzug meldet eine Störung.");
+// 2.2.1: a step that only repeats the state is left out; no Klipper message under it on the camera
+states["sensor.u1c_druckerwerte"].attributes.values.machine_state = "shaper_calibrate";
+states["sensor.u1c_druckerwerte"].attributes.attrs.machine_state = { action: "shaper_calibrating", head: null, needs_user: false };
+card.hass = hass();
+assert.strictEqual(card._statusLabel(), "Resonanzmessung");
+card._d.message = "Printer is ready";
+assert.strictEqual(card._camSub(), "", "keine Unterzeile während Kalibrierung");
+states["sensor.u1c_druckerwerte"].attributes.values.machine_state = "xyz_offset_calibrate";
+states["sensor.u1c_druckerwerte"].attributes.attrs.machine_state = { action: "wait_nozzle_cooling", head: 1, needs_user: false };
+card.hass = hass();
 // feeder fault and a step that needs someone at the printer show up as messages
 let msgs = [...card._messages().map((m) => m.text)];
 assert.deepStrictEqual(msgs, ["Einzug Kopf 4: Störung"]);

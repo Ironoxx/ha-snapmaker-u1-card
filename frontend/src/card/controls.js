@@ -37,6 +37,13 @@ export const MACHINE_STEP = {
   homing_origin_calibrating: "Nullpunkt wird kalibriert",
 };
 
+// The step that is the state itself – shown only as the state
+const MAIN_STEP = {
+  shaper_calibrate: "shaper_calibrating", flow_calibration: "flow_calibrating", bed_leveling: "bed_leveling",
+  auto_load: "auto_loading", auto_unload: "auto_unloading", manual_load: "manual_loading",
+  park_point_calibration: "park_point_calibrating", homing_origin_calibration: "homing_origin_calibrating",
+};
+
 export const ControlsMixin = (Base) => class extends Base {
   _press(name) {
     const own = this._ownControl() && OWN_BUTTONS[name];
@@ -322,9 +329,19 @@ export const ControlsMixin = (Base) => class extends Base {
     const ms = this._machineState();
     if (!ms || ms.main === "idle" || ms.main === "printing") return "";
     const main = MACHINE_MAIN[ms.main] ? tr(MACHINE_MAIN[ms.main]) : ms.main;
-    let step = withStep && ms.action && ms.action !== "idle" && MACHINE_STEP[ms.action] ? tr(MACHINE_STEP[ms.action]) : "";
-    if (step && ms.head !== null) step += ` (${(this._d.heads[ms.head] || {}).name || `E${ms.head}`})`;
-    return step && step !== main ? `${main} · ${step}` : main;
+    const head = ms.head !== null && ms.head !== undefined ? ` (${(this._d.heads[ms.head] || {}).name || `E${ms.head}`})` : "";
+    // 2.2.1: the step that only repeats the state ("Resonance test · Measuring resonance") is left out
+    const same = MAIN_STEP[ms.main] === ms.action;
+    const step = withStep && !same && ms.action && ms.action !== "idle" && MACHINE_STEP[ms.action] ? tr(MACHINE_STEP[ms.action]) : "";
+    if (!step) return withStep && same ? `${main}${head}` : main;
+    return step !== main ? `${main} · ${step}${head}` : main;
+  }
+
+  /** Small line under the state on the camera: display / Klipper message, not during a machine state. */
+  _camSub() {
+    const d = this._d;
+    if (!d || d.active || this._machineText(false)) return "";
+    return d.display || d.message || "";
   }
 
   /**
