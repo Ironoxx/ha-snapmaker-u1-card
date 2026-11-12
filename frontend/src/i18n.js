@@ -2,7 +2,7 @@
  * Translation of the card's UI texts.
  *
  * German is the source language: tr("Text") returns the text itself in German,
- * otherwise the translation (English in EN, es/fr/it/nl/pt/tr in ./i18n/), falling
+ * otherwise the translation (English in EN, es/fr/it/nl/pt/tr/zh in ./i18n/), falling
  * back to English and then German.
  * Placeholders: tr("Spule #{id}", { id: 3 }). The language follows Home Assistant.
  */
@@ -13,18 +13,22 @@ import it from "./i18n/it.js";
 import nl from "./i18n/nl.js";
 import pt from "./i18n/pt.js";
 import trTR from "./i18n/tr.js";
+import zh from "./i18n/zh.js";
 
 export let LANG = "de";
 export let LOCALE = "de-DE";
 // From hass.config.currency; EUR until the card gets hass (and for older HA without it)
 export let CURRENCY = "EUR";
-// 2.1: more languages; missing entries fall back to English, then German.
-const MORE = { es, fr, it, nl, pt, tr: trTR };
-const LOCALES = { de: "de-DE", es: "es-ES", fr: "fr-FR", it: "it-IT", nl: "nl-NL", pt: "pt-PT", tr: "tr-TR" };
+// Localized UI dictionaries; missing entries fall back to English, then the German source text.
+const MORE = { es, fr, it, nl, pt, tr: trTR, zh };
+const LOCALES = { de: "de-DE", es: "es-ES", fr: "fr-FR", it: "it-IT", nl: "nl-NL", pt: "pt-PT", tr: "tr-TR", zh: "zh-Hans" };
 export function setLang(hass) {
   const l = String((hass && ((hass.locale && hass.locale.language) || hass.language)) || "de").toLowerCase();
   const base = l.split("-")[0];
-  LANG = base === "de" || MORE[base] ? base : "en";
+  // zh-Hans / zh-CN / bare zh use Simplified Chinese; Traditional variants fall back to English.
+  const traditionalChinese = base === "zh" && /^zh-(?:hant|tw|hk|mo)(?:-|$)/.test(l);
+  const candidate = traditionalChinese ? "" : base;
+  LANG = candidate === "de" || MORE[candidate] ? candidate : "en";
   // the region of the HA language when there is one (pt-BR, es-419, nl-BE …), else the default
   LOCALE = l.includes("-") ? l : (LOCALES[LANG] || "en-GB");
   const cur = hass && hass.config && hass.config.currency;
