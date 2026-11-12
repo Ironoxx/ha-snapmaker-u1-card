@@ -287,18 +287,25 @@ class PrintMonitorMixin:
         factor = (remaining / left) if remaining and left > 0 else 1.0
         slots = parse_slots(ptc)
         out: dict[int, dict[str, Any]] = {}
+        # 2.2.2: with SpoolLink or Moonraker's Spoolman the spool is booked during the
+        # print, so Spoolman's remainder already lacks what was used so far; add it back
+        # to get the remainder at the start of the print. Booked at the end: as it is.
+        live = bool(self.spools.spoollink or self.spools.external_booking)
         for head, logicals in heads.items():
             info = self.spools.slot_info(head) or {}
             rest = info.get("remaining_weight")
             if not isinstance(rest, (int, float)):
                 continue
+            used = sum(at["e"][t] * gpmm[t] for t in logicals)
+            start = rest + used if live else rest
             total = sum(at["e_total"][t] * gpmm[t] for t in logicals)
-            if total <= rest:
+            if total <= start:
                 continue
-            t_run = next((row[1] for row in rows if sum(row[2 + t] * gpmm[t] for t in logicals) >= rest), None)
-            if t_run is None:
+            t_run = next((row[1] for row in rows if sum(row[2 + t] * gpmm[t] for t in logicals) >= start), None)
+            # still printing past the computed point: the Spoolman weight is off, no forecast
+            if t_run is None or t_run <= at["t"]:
                 continue
-            minutes = max(0.0, (t_run - at["t"]) * factor / 60)
+            minutes = max(1.0, (t_run - at["t"]) * factor / 60)
             out[head] = {"minutes": round(minutes), "takeover": _takeover(slots, head, ptc)}
             key = f"runout{head}"
             if minutes <= RUNOUT_WARN_MIN and key not in self._events_sent:

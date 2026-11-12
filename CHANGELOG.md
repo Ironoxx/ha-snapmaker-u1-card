@@ -4,6 +4,24 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.2.2b1
+
+Beta. Fix for the spool run-out forecast.
+
+- **"Empty in ~0 min" while the spool is enough:** with SpoolLink (paxx12) or Moonraker's Spoolman the spool is booked during the print, so Spoolman's remainder already lacks what was used so far. The forecast compared it with the filament of the whole print and warned too early. It now adds back what was used, warns only when the rest of the print needs more than is left, and never shows "0 min" for a point that has already passed.
+
+Please check: a print where a spool is low but enough (no warning), and one where it really runs short.
+
+### Deutsch
+
+Beta. Korrektur der Vorhersage „Spule wird leer“.
+
+- **„leer in ~0 min“, obwohl die Spule reicht:** Mit SpoolLink (paxx12) oder dem Spoolman von Moonraker wird schon während des Drucks abgebucht, der Rest in Spoolman ist also bereits um das Verbrauchte kleiner. Die Vorhersage hat ihn mit dem Filament des ganzen Drucks verglichen und zu früh gewarnt. Jetzt wird das Verbrauchte wieder dazugerechnet, gewarnt wird nur, wenn der restliche Druck mehr braucht, als noch da ist, und ein schon vergangener Zeitpunkt erscheint nie als „0 min“.
+
+Bitte prüfen: ein Druck, bei dem eine Spule knapp ist, aber reicht (keine Warnung), und einer, bei dem sie wirklich zu wenig hat.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.2.1
 
 Fixes for 2.2.0, plus everything new in 2.2.

@@ -132,8 +132,9 @@ async def test_remaining_sensors_and_runout(hass: HomeAssistant, mock_client, no
     hass.config.language = "de"
     coord = entry.runtime_data
     st = _status(mock_client, "printing", "sub/new.gcode", print_duration=300)
-    pos = TIMED.encode().index(b"G4")
-    st["virtual_sdcard"] = {"file_position": pos, "progress": 0.5}
+    # middle of the T0 part: 6 of 12 mm (2 of 4 g) used
+    pos = TIMED.encode().index(b"G1 X60 Y60")
+    st["virtual_sdcard"] = {"file_position": pos, "progress": 0.3}
     await _refresh(hass, entry)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert coord.layer_view["status"] == "ready", coord.layer_view
@@ -146,7 +147,7 @@ async def test_remaining_sensors_and_runout(hass: HomeAssistant, mock_client, no
     assert coord.data.remaining == pytest.approx(
         estimate_remaining(coord.layer_view["meta"], pos, 300, 600, begin_duration=begin), rel=0.01)
 
-    # spool on head 1 (T0) has too little: META 4 g PETG (T0) -> 2 g left lasts until halfway
+    # spool on head 1 (T0) has too little: META 4 g PETG (T0), 2 g used, 2.5 g left (booked at the end)
     coord._print_state["active"]["filaments"] = [{"index": 0, "type": "PETG", "weight": 4.0},
                                                  {"index": 1, "type": "PLA", "weight": 6.0}]
     with patch.object(type(coord.spools), "enabled", property(lambda self: True)), \
@@ -161,7 +162,20 @@ async def test_remaining_sensors_and_runout(hass: HomeAssistant, mock_client, no
     assert "Kopf 1" in msgs[0].data["message"] and "pausiert" in msgs[0].data["message"]
     assert [a["action"].split("_")[1] for a in msgs[0].data["data"]["actions"]] == ["PAUSE", "LIGHT"]
     fil = next(s for s in hass.states.async_all("sensor") if "slots" in s.attributes)
-    assert fil.attributes["runout"]["0"]["minutes"] >= 0
+    assert fil.attributes["runout"]["0"]["minutes"] >= 1
+
+    # 2.2.2: SpoolLink books during the print – Spoolman's 2.5 g is what is left after
+    # 2 g used: enough for the remaining 2 g, no warning
+    def runout_with(rest, link):
+        with patch.object(type(coord.spools), "enabled", property(lambda self: True)), \
+             patch.object(type(coord.spools), "spoollink", property(lambda self: link)), \
+             patch.object(type(coord.spools), "slot_info",
+                          lambda self, i: {"name": "Rot", "remaining_weight": rest} if i == 0 else None):
+            return coord._check_runout(st["virtual_sdcard"], coord.data.remaining, {})
+    assert runout_with(2.5, True) == {}
+    assert 0 in runout_with(1.0, True), "1 g left, 2 g still needed: runs out"
+    # already past the computed point (Spoolman weight off): no "0 min"
+    assert runout_with(1.5, False) == {}
 
 
 async def test_takeover_by_auto_replenish() -> None:
