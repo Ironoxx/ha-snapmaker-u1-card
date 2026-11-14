@@ -458,7 +458,7 @@ export default {
   "Laufender Druck": "当前打印",
   "Leer": "空",
   "Letzter Druck": "最后打印",
-  "Licht": "光",
+  "Licht": "照明",
   "Längster Druck": "最长打印时长",
   "Lüfter {v}": "风扇 {v}",
   "MCU Host (Last / Wach)": "MCU 主机（负载 / 唤醒）",

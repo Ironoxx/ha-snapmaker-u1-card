@@ -59,6 +59,7 @@ for (const [source, expected] of [
   ["Spanne (mm)", "跨度（mm）"],
   ["Aufnahme wird geprüft", "正在检查打印头拾取状态"],
   ["Meldungen", "消息"],
+  ["Licht", "照明"],
   ["Einzug {head}: Störung", "进料器 {head}：故障"],
   ["Druck wirklich abbrechen?", "确定要取消打印吗？"],
   ["Der Drucker antwortet nicht. Trotzdem ausschalten?", "打印机无响应。仍要关机并断电吗？"],
