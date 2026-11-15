@@ -28,7 +28,8 @@
 | `button.…_druck_pausieren`, `…_druck_fortsetzen`, `…_druck_abbrechen`, `…_not_halt`, `…_referenzfahrt_alle_achsen` | 2.0: Drucksteuerung und Referenzfahrt |
 | `light.…_innenraumlicht` | 2.0: Innenraumlicht (und weitere `led`-Objekte des Druckers) |
 | `sensor.…_wartung_fallig` | Anzahl fälliger Wartungspunkte, Attribut `items` |
-| `sensor.…_druckermeldungen` | Anzahl offener Firmware-Meldungen, Attribut `errors` mit Text (de/en), Hinweis und Rohcode |
+| `sensor.…_druckermeldungen` | Anzahl offener Firmware-Meldungen, Attribut `errors` mit Text, Hinweis und Rohcode (2.3: Text auf de, en, es, fr, it, nl, pt, tr), Attribut `log` mit den letzten 15 Meldungen (Zeit, Text) |
+| `sensor.…_wlan_signal`, `sensor.…_emmc_verschleiss` | 2.3, nur mit der paxx12 Extended Firmware: WLAN-Signal am Drucker in dBm und verbrauchte Lebensdauer des internen Speichers in % (Attribut `pre_eol`: `normal`, `warning`, `urgent`); Diagnose, alle 5 min |
 | `switch.…_filament_automatisch_nachfullen`, `…_nachfullen_ohne_farbprufung`, `…_verhedderungs_erkennung`, `…_licht_aus_nach_dem_druck` | Firmware-Einstellungen (am Drucker gespeichert) |
 | `select.…_empfindlichkeit_verhedderungs_erkennung` | `low`, `medium`, `high` |
 | `number.…_flussrate` | Flussrate in % (M221, 50–150), auch während des Drucks |
@@ -132,6 +133,25 @@ data:
 `unload` führt dieselben Schritte aus wie „Am Druckende entladen“ der Firmware: `AUTO_FEEDING EXTRUDER=<n> UNLOAD=1 STAGE=prepare` (zur Abwurfposition fahren, auf die Filamenttemperatur heizen) und danach `STAGE=doing` (zurückziehen, abschneiden, Heizung aus). `load` sendet `AUTO_FEEDING EXTRUDER=<n> LOAD=1`: Der Einzug zieht ein am Eingang wartendes Filament ein; ohne Filament oder mit ausgeschaltetem Automatik-Modus des Einzugs tut die Firmware nichts. Der Aufruf kehrt zurück, wenn der Drucker fertig ist (ein paar Minuten).
 
 2.2: Der Dienst prüft vorher (Einzug und Sensor im Kopf): Laden braucht Filament am Einzug und keins im Kopf, Entladen Filament im Kopf; sonst lehnt er mit dem Grund ab. Danach prüft er den Sensor im Kopf und meldet einen Fehler, wenn das Filament nicht raus- bzw. reingekommen ist. `tool_change` prüft ebenso, ob der Kopf wirklich aufgenommen bzw. abgelegt wurde.
+
+### `snapmaker_u1_card.move`
+
+2.3: Kopf von Hand verfahren (auch das Steuerkreuz *Verfahren* im Steuerungs-Reiter der Karte). Im Druck gesperrt und während der Drucker etwas anderes tut (Kalibrierung, Laden); braucht eine Referenzfahrt.
+
+```yaml
+action: snapmaker_u1_card.move
+data:
+  axis: x          # x, y oder z
+  distance: -10    # mm, −100 … 100
+```
+
+```yaml
+action: snapmaker_u1_card.move
+data:
+  position: front  # center (Mitte) oder front (vorne über der Platte)
+```
+
+Die Bewegung bleibt über der Platte (X 0–271, Y 0–270 – hinter Y 270 liegt der Dockbereich; Z mindestens 1 mm). Das Ziel ist absolut und auf diese Grenzen begrenzt; die Bewegung läuft in einem eigenen G-Code-Zustand (`SAVE_GCODE_STATE` … `RESTORE_GCODE_STATE`). Vor einer festen Position fährt die Düse auf 30 mm hoch, wenn sie tiefer steht. Steht der Kopf im Dockbereich, wird abgelehnt (erst referenzieren).
 
 ### `snapmaker_u1_card.machine_command`
 

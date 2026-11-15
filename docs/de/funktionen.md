@@ -105,6 +105,8 @@ Die Erkennung läuft, wenn der Drucker online kommt, wenn Bilder wiederholt ausb
 
 Die Integration legt den Blueprint *Snapmaker U1 – status light* unter `config/blueprints/automation/snapmaker_u1_card/` an. Unter *Einstellungen → Automationen → Blueprints* daraus eine Automation erstellen: den Moonraker-Sensor *Aktueller Druckstatus* und eine oder mehrere Lampen wählen (WLED, LED-Streifen, jede Farblampe). Farben für druckt (optional mit WLED-Effekt wie *Breathe*), Pause, Fehler/Abbruch, fertig (für eine einstellbare Zeit) und bereit (aus, eine Farbe oder unverändert). Ein Update ersetzt die Datei nur, solange sie unverändert ist; sobald du sie änderst, bleibt sie deine. Dasselbe gilt für die Assist-Satzdateien in `config/custom_sentences/`.
 
+2.3 (Blueprint-Version 4): Auf Wunsch **pulsieren** die Lampen am Druckende ein paar Mal, und **Lautsprecher** (`media_player`) spielen einen Ton (eine Datei aus *Medien* wie `media-source://media_source/local/fertig.mp3` oder eine http(s)-URL). Beides ist standardmäßig aus.
+
 ## Temperaturverlauf
 
 Im Reiter *Steuerung*: Ist- und Solltemperatur der aktiven Köpfe und des Betts der letzten 20 Minuten. Die Daten speichert Moonraker ohnehin (`/server/temperature_store`); die Karte holt sie alle 10 s über die Integration, nur solange der Reiter sichtbar ist. Außerdem zu sehen: die CPU-Temperatur des Rechners im Drucker (Moonraker sendet sie jede Sekunde, die Integration zeichnet sie auf), Innenraumluft und die Schrittmotortreiber X/Y (nur bei eingeschalteten Motoren; sonst meldet Klipper keine Treibertemperatur). Ein Tipp auf einen Eintrag der Legende blendet die Linie aus oder ein; die Wahl merkt sich der Browser.

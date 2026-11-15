@@ -105,6 +105,8 @@ Above the file list: search (across **all** files on the printer, not only the n
 
 The integration installs the blueprint *Snapmaker U1 – status light* into `config/blueprints/automation/snapmaker_u1_card/`. In *Settings → Automations → Blueprints* create an automation from it: choose the Moonraker sensor *Current print state* and one or more lights (WLED, LED strips, any colour light). Colours for printing (optionally with a WLED effect such as *Breathe*), paused, error/cancelled, finished (for a set time) and idle (off, a colour or unchanged). An update replaces the file only while it is unchanged; once you edit it, it stays yours. The same applies to the Assist sentence files in `config/custom_sentences/`.
 
+2.3 (blueprint version 4): optionally the lights **pulse** a few times when the print is done, and **speakers** (`media_player`) play a sound (a file from *Media* such as `media-source://media_source/local/done.mp3` or an http(s) URL). Both are off by default.
+
 ## Temperature chart
 
 In the *Control* tab: actual and target temperature of the active heads and the bed over the last 20 minutes. Moonraker stores this data anyway (`/server/temperature_store`); the card fetches it every 10 s through the integration, only while the tab is visible. Also shown: the CPU temperature of the printer's computer (sent by Moonraker once a second, recorded by the integration), chamber air and the X/Y stepper drivers (only while the motors are on; Klipper reports no driver temperature otherwise). Tap an entry in the legend to hide or show its line; the choice is remembered per browser.

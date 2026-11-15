@@ -133,6 +133,34 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 
 ⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
     },
+    "2.3": {
+        "de": ("Snapmaker U1 Card 2.3 – das ist neu", f"""- **Kopf verfahren:** Steuerkreuz für X/Y/Z mit 0,1 / 1 / 10 / 50 mm, „Kopf nach vorne“ und „Mitte“ (Steuerungs-Reiter, Dienst `move`)
+- **Zweite Benachrichtigungsgruppe:** eigene Ziele und Anlässe, unter Android mit eigenem Ton (Einstellungen → Benachrichtigungen – Gruppe 2)
+- **Fortschritt** zählt nur den G-Code – kein Start bei 1 % mehr wegen der Vorschaubilder
+- **Spoolman:** Abbuchung je Spule richtig erkannt; Spulen, die Moonraker nicht bucht, bucht die Integration
+- **Druckermeldungen** auch auf Spanisch, Französisch, Italienisch, Niederländisch, Portugiesisch und Türkisch, dazu ein Verlauf im System-Reiter
+- **Vereinfachtes Chinesisch** für die Karte (danke HYYYQZ)
+- **Status-Licht-Blueprint:** Pulsieren und Ton am Druckende
+- **paxx12:** WLAN-Signal und eMMC-Verschleiß als Diagnose-Sensoren
+- Füllstand der Spulen auch in der Mini-Karte und im Druckdialog
+
+Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/releases/tag/v2.3.0)
+
+⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
+        "en": ("Snapmaker U1 Card 2.3 – what's new", f"""- **Move the head:** X/Y/Z pad with 0.1 / 1 / 10 / 50 mm, "head to the front" and "center" (control tab, service `move`)
+- **Second notification group:** own targets and events, on Android with its own sound (settings → Notifications – group 2)
+- **Progress** counts the G-code only – no more start at 1 % because of the thumbnails
+- **Spoolman:** booking per spool detected correctly; spools Moonraker does not book are booked by the integration
+- **Printer messages** also in Spanish, French, Italian, Dutch, Portuguese and Turkish, plus a history in the system tab
+- **Simplified Chinese** for the card (thanks HYYYQZ)
+- **Status light blueprint:** pulse and sound at the end of a print
+- **paxx12:** WLAN signal and eMMC wear as diagnostic sensors
+- Spool fill level also in the mini card and the print dialog
+
+Please reload the dashboard once. All details: [release notes]({GITHUB}/releases/tag/v2.3.0)
+
+⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
+    },
 }
 
 # One-off news, shown once each (key stays in .storage).

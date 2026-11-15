@@ -23,12 +23,13 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 | `sensor.…_queue` | number of jobs, attribute `jobs` (id, file, mapping, options, pauses) |
 | `sensor.…_print_hours` | total print hours (Moonraker), attributes `months`, `totals`, `top_files` |
 | `sensor.…_maintenance_due` | number of maintenance items due, attribute `items` |
-| `sensor.…_printer_messages` | number of open firmware messages, attribute `errors` with text (de/en), hint and raw code |
+| `sensor.…_printer_messages` | number of open firmware messages, attribute `errors` with text, hint and raw code (2.3: text in de, en, es, fr, it, nl, pt, tr), attribute `log` with the last 15 messages (time, text) |
+| `sensor.…_wlan_signal`, `sensor.…_emmc_wear` | 2.3, only with the paxx12 Extended Firmware: WLAN signal at the printer in dBm and used lifetime of the internal storage in % (attribute `pre_eol`: `normal`, `warning`, `urgent`); diagnostic, every 5 min |
 | `sensor.…_time_remaining` / `sensor.…_finish_time` | remaining time and expected end of the running print |
 | `binary_sensor.…_live_connection` | live subscription to Moonraker up or not |
 | `sensor.…_printer_values` | 2.0: state of Klipper, attributes `values` (all printer values for the card, named like the Moonraker integration's entities: `bed_temperature`, `extruder1_target`, `cavity_fan`, `led_cavity_led` …) and `attrs` (unit, slider range). Not recorded |
 | `sensor.…_bed_temperature`, `sensor.…_nozzle_1_temperature` … `_4_…`, `sensor.…_chamber_temperature` | 2.0: temperatures |
-| `sensor.…_progress`, `sensor.…_print_state`, `sensor.…_layer` | 2.0: progress in %, print state (`standby`, `printing`, `paused`, `complete`, `cancelled`, `error`), current layer (attribute `total_layer`) |
+| `sensor.…_progress`, `sensor.…_print_state`, `sensor.…_layer` | 2.0: progress in % (2.3: within the G-code only, without the slicer's header with its thumbnails and the config block at the end, like Mainsail/Fluidd), print state (`standby`, `printing`, `paused`, `complete`, `cancelled`, `error`), current layer (attribute `total_layer`) |
 | `sensor.…_machine_state` | 2.2: what the printer is doing, also outside a print (Snapmaker's `machine_state_manager`): `idle`, `printing`, `xyz_offset_calibrate`, `bed_leveling`, `flow_calibration`, `shaper_calibrate`, `upgrading`, `abnormal`, `screws_tilt_adjust`, `auto_load`, `auto_unload`, `manual_load`, `park_point_calibration`, `homing_origin_calibration`; attributes `action` (current step, e.g. `wait_nozzle_cooling`), `head` (1–4), `needs_user` (the display waits for a confirmation) |
 | `number.…_bed_target`, `number.…_nozzle_1_target` … `_4_…`, `number.…_part_cooling_fan`, `number.…_speed_factor` | 2.0: target temperatures, part fan, speed |
 | `button.…_pause_print`, `…_resume_print`, `…_cancel_print`, `…_emergency_stop`, `…_home_all_axes` | 2.0: print controls and homing |
@@ -135,6 +136,25 @@ data:
 `unload` runs the same steps as the firmware's "unload at the end of the print": `AUTO_FEEDING EXTRUDER=<n> UNLOAD=1 STAGE=prepare` (move to the discard position, heat to the filament's temperature) and then `STAGE=doing` (pull back, cut, heater off). `load` sends `AUTO_FEEDING EXTRUDER=<n> LOAD=1`: the feeder pulls in a filament waiting at its inlet; without filament, or with the feeder's auto mode off, the firmware does nothing. The call returns when the printer is done (a few minutes).
 
 2.2: the service checks first (feeder and head sensor): loading needs filament waiting at the feeder and none in the head, unloading needs filament in the head; otherwise it refuses with the reason. Afterwards it checks the head sensor and reports an error if the filament did not come out or in. `tool_change` likewise checks that the head really was picked or parked.
+
+### `snapmaker_u1_card.move`
+
+2.3: move the head by hand (also the *Move* pad in the card's control tab). Locked during a print and while the printer runs something else (calibration, loading); needs homed axes.
+
+```yaml
+action: snapmaker_u1_card.move
+data:
+  axis: x          # x, y or z
+  distance: -10    # mm, −100 … 100
+```
+
+```yaml
+action: snapmaker_u1_card.move
+data:
+  position: front  # center or front of the plate
+```
+
+Moves stay over the plate (X 0–271, Y 0–270 – behind Y 270 is the dock zone; Z at least 1 mm). The target is absolute and clamped to these limits; the move runs in its own G-code state (`SAVE_GCODE_STATE` … `RESTORE_GCODE_STATE`). Before a fixed position the nozzle goes up to 30 mm if it is lower. A head standing in the dock zone is refused (home first).
 
 ### `snapmaker_u1_card.machine_command`
 
