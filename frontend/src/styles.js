@@ -1006,6 +1006,15 @@ export const STYLES = `
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
+  /* ── Moving by hand (2.3) ────────────────────────────────────────────── */
+  .jog { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
+  .jog-steps { justify-content: flex-start; flex-wrap: nowrap; }
+  .jog-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .jog-pad { display: grid; grid-template-columns: repeat(3, 44px); grid-template-rows: repeat(3, 44px); gap: 6px; }
+  .jog-z { display: grid; grid-template-rows: 44px 44px 44px; gap: 6px; }
+  .jog-btn { width: 44px; height: 44px; min-width: 44px; padding: 0; justify-content: center; }
+  .jog-mid { display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--u1-on-variant); }
+
   /* ── Layer view ──────────────────────────────────────────────────────── */
   .lv { position: relative; aspect-ratio: 1 / 1; max-height: 360px; width: 100%; border-radius: var(--u1-r-m);
     /* Mid grey: black and white filaments stay visible in light and dark themes */

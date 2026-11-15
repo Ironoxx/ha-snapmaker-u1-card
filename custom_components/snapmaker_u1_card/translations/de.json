@@ -1111,6 +1111,28 @@
           "description": "Nur bei mehreren Druckern nötig."
         }
       }
+    },
+    "move": {
+      "name": "Kopf verfahren",
+      "description": "Verfährt den Kopf von Hand: eine Achse um eine Strecke oder auf eine feste Position (Mitte oder vorne über der Platte; die Düse fährt vorher auf 30 mm hoch). Bleibt über der Platte, braucht eine Referenzfahrt, im Druck gesperrt.",
+      "fields": {
+        "axis": {
+          "name": "Achse",
+          "description": "x, y oder z."
+        },
+        "distance": {
+          "name": "Strecke",
+          "description": "In mm, negativ = andere Richtung."
+        },
+        "position": {
+          "name": "Feste Position",
+          "description": "center oder front – statt Achse und Strecke."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Kamerabild",
         "thumbnail": "Vorschaubild des Modells",
         "off": "Kein Bild"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Mitte der Platte",
+        "front": "Vorne über der Platte"
       }
     }
   }

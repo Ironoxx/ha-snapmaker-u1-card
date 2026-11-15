@@ -1111,6 +1111,28 @@
           "description": "Yalnızca birden fazla yazıcı varsa gerekir."
         }
       }
+    },
+    "move": {
+      "name": "Kafayı hareket ettir",
+      "description": "Kafayı elle hareket ettirir: bir ekseni belirli bir mesafe kadar veya sabit bir konuma (tablanın ortası veya önü; nozul önce 30 mm'ye çıkar). Tablanın üzerinde kalır, eksenlerin sıfırlanmış olması gerekir, baskı sırasında kilitlidir.",
+      "fields": {
+        "axis": {
+          "name": "Eksen",
+          "description": "x, y veya z."
+        },
+        "distance": {
+          "name": "Mesafe",
+          "description": "mm cinsinden, negatif = diğer yön."
+        },
+        "position": {
+          "name": "Sabit konum",
+          "description": "center veya front – eksen ve mesafe yerine."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden fazla yazıcıda gerekli."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Kamera görüntüsü",
         "thumbnail": "Model önizlemesi",
         "off": "Görüntü yok"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Tablanın ortası",
+        "front": "Tablanın önü"
       }
     }
   }

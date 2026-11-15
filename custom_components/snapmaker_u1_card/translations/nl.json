@@ -1111,6 +1111,28 @@
           "description": "Alleen nodig bij meerdere printers."
         }
       }
+    },
+    "move": {
+      "name": "Kop verplaatsen",
+      "description": "Verplaatst de kop met de hand: een as over een afstand, of naar een vaste positie (midden of voor op de plaat; de nozzle gaat eerst omhoog naar 30 mm). Blijft boven de plaat, vereist gehomede assen, geblokkeerd tijdens een print.",
+      "fields": {
+        "axis": {
+          "name": "As",
+          "description": "x, y of z."
+        },
+        "distance": {
+          "name": "Afstand",
+          "description": "In mm, negatief = andere richting."
+        },
+        "position": {
+          "name": "Vaste positie",
+          "description": "center of front – in plaats van as en afstand."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Camerabeeld",
         "thumbnail": "Modelvoorbeeld",
         "off": "Geen beeld"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Midden van de plaat",
+        "front": "Voor op de plaat"
       }
     }
   }

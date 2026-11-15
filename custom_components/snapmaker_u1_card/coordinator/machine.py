@@ -17,6 +17,7 @@ from ..machine import (
     console_responses,
     filament_gcode,
     flow_gcode,
+    move_gcode,
     park_gcode,
     pick_gcode,
     purifier_gcode,
@@ -47,6 +48,14 @@ FILAMENT_REASONS = {
     "empty": ("Im Kopf ist kein Filament.", "There is no filament in the head."),
 }
 FILAMENT_GCODE_S = 420
+MOVE_REASONS = {
+    "not_homed": ("Erst eine Referenzfahrt machen.", "Home the axes first."),
+    "dock": ("Der Kopf steht im Dockbereich hinter der Platte – erst eine Referenzfahrt.",
+             "The head is in the dock zone behind the plate – home first."),
+    "limit": ("Die Achse steht schon an der Grenze.", "The axis is already at its limit."),
+    "invalid": ("Ungültige Bewegung.", "Invalid move."),
+    "busy": ("Der Drucker ist gerade beschäftigt.", "The printer is busy right now."),
+}
 
 
 class MachineMixin:
@@ -193,6 +202,33 @@ class MachineMixin:
         if action == "load" and inside is False:
             raise HomeAssistantError(tr(self.hass, f"Kopf {head + 1}: Laden hat nicht geklappt, kein Filament im Kopf.",
                                         f"Head {head + 1}: loading did not work, no filament in the head."))
+
+    async def async_move(self, axis: str | None = None, distance: float | None = None,
+                         preset: str | None = None) -> None:
+        """2.3: move the head by hand (``axis`` by ``distance`` mm) or to a fixed position.
+
+        Locked during a print and while the printer runs something else (calibration,
+        loading). Position and homed axes come fresh from the printer.
+        """
+        if self.current_print_state() in ACTIVE_PRINT_STATES:
+            raise HomeAssistantError(tr(self.hass, "Verfahren ist während eines Drucks gesperrt.",
+                                        "Moving is locked during a print."))
+        machine = (self.data.machine if self.data else {}) or {}
+        if machine.get("machine_state") not in (None, "idle"):
+            de, en = MOVE_REASONS["busy"]
+            raise ServiceValidationError(tr(self.hass, de, en))
+        try:
+            status = await self.client.query_objects(fields={"toolhead": ("position", "homed_axes")})
+        except MoonrakerError as err:
+            raise HomeAssistantError(str(err)) from err
+        th = (status or {}).get("toolhead") or {}
+        try:
+            script = move_gcode(th.get("position"), th.get("homed_axes"), axis, distance, preset)
+        except ValueError as err:
+            de, en = MOVE_REASONS.get(str(err), MOVE_REASONS["invalid"])
+            raise ServiceValidationError(tr(self.hass, de, en)) from err
+        _LOGGER.debug("Move: %s", script.replace("\n", " | "))
+        await self._run_gcode(script, timeout=60)
 
     async def async_console(self, script: str) -> dict[str, Any]:
         """Run console G-code and return the printer's responses.

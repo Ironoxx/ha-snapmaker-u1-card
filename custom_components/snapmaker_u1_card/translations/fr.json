@@ -1111,6 +1111,28 @@
           "description": "Nécessaire uniquement avec plusieurs imprimantes."
         }
       }
+    },
+    "move": {
+      "name": "Déplacer la tête",
+      "description": "Déplace la tête à la main : un axe d'une distance, ou vers une position fixe (centre ou avant du plateau ; la buse monte d'abord à 30 mm). Reste au-dessus du plateau, nécessite des axes référencés, bloqué pendant une impression.",
+      "fields": {
+        "axis": {
+          "name": "Axe",
+          "description": "x, y ou z."
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "En mm, négatif = l'autre sens."
+        },
+        "position": {
+          "name": "Position fixe",
+          "description": "center ou front – au lieu de l'axe et de la distance."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Uniquement avec plusieurs imprimantes."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Image de la caméra",
         "thumbnail": "Aperçu du modèle",
         "off": "Pas d’image"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Centre du plateau",
+        "front": "Avant du plateau"
       }
     }
   }

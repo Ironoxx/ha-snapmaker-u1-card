@@ -187,6 +187,43 @@ export const ControlTabMixin = (Base) => class extends Base {
           entity: this._ents.flow, label: tr("Flussrate"), value: d.flow, unit: "%", presets: this._cfg.flow_presets,
         }) : ""}
         ${homing}
+        ${d.active ? "" : this._jogHtml()}
       </section>`;
+  }
+
+  /** 2.3: move the head by hand – step, X/Y pad, Z, fixed positions (service snapmaker_u1_card.move). */
+  _jogHtml() {
+    const step = this._jogStep || 10;
+    const steps = [0.1, 1, 10, 50];
+    const btn = (axis, dir, icon, label) => `<button type="button" class="outline jog-btn" data-jog="${axis}" data-dir="${dir}"
+        title="${esc(label)}" aria-label="${esc(label)}"><ha-icon icon="${icon}"></ha-icon></button>`;
+    return `<div class="jog" data-lockable>
+        <div class="t-label">${tr("Verfahren")}</div>
+        <div class="chip-row jog-steps" role="group" aria-label="${tr("Schrittweite")}">${steps.map((s) => `
+          <button type="button" class="preset" data-jogstep="${s}" aria-pressed="${s === step}">${num(s, s < 1 ? 1 : 0)} mm</button>`).join("")}</div>
+        <div class="jog-row">
+          <div class="jog-pad">
+            <span></span>${btn("y", 1, "mdi:arrow-up", tr("Y+ (nach hinten)"))}<span></span>
+            ${btn("x", -1, "mdi:arrow-left", "X−")}<span class="jog-mid">XY</span>${btn("x", 1, "mdi:arrow-right", "X+")}
+            <span></span>${btn("y", -1, "mdi:arrow-down", tr("Y− (nach vorne)"))}<span></span>
+          </div>
+          <div class="jog-z">
+            ${btn("z", 1, "mdi:arrow-up-bold", tr("Z+ (Düse hoch)"))}<span class="jog-mid">Z</span>${btn("z", -1, "mdi:arrow-down-bold", tr("Z− (Düse runter)"))}
+          </div>
+        </div>
+        <div class="switches">
+          <button type="button" class="outline" data-jogpos="front"><ha-icon icon="mdi:arrow-collapse-down"></ha-icon>${tr("Kopf nach vorne")}</button>
+          <button type="button" class="outline" data-jogpos="center"><ha-icon icon="mdi:image-filter-center-focus"></ha-icon>${tr("Mitte")}</button>
+        </div>
+        <div class="t-label">${tr("Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.")}</div>
+      </div>`;
+  }
+
+  async _jog(data) {
+    try {
+      await this._hass.callService(DOMAIN, "move", { ...data, ...this._entryData() }, undefined, false);
+    } catch (err) {
+      this._toast((err && (err.message || err.error)) || String(err));
+    }
   }
 };

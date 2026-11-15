@@ -1111,6 +1111,28 @@
           "description": "Só necessário com várias impressoras."
         }
       }
+    },
+    "move": {
+      "name": "Mover a cabeça",
+      "description": "Move a cabeça à mão: um eixo uma distância, ou para uma posição fixa (centro ou frente da placa; o bico sobe antes a 30 mm). Fica sobre a placa, precisa de eixos referenciados, bloqueado durante a impressão.",
+      "fields": {
+        "axis": {
+          "name": "Eixo",
+          "description": "x, y ou z."
+        },
+        "distance": {
+          "name": "Distância",
+          "description": "Em mm, negativo = a outra direção."
+        },
+        "position": {
+          "name": "Posição fixa",
+          "description": "center ou front – em vez de eixo e distância."
+        },
+        "config_entry_id": {
+          "name": "Impressora",
+          "description": "Só necessário com várias impressoras."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Imagem da câmara",
         "thumbnail": "Pré-visualização do modelo",
         "off": "Sem imagem"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Centro da placa",
+        "front": "Frente da placa"
       }
     }
   }

@@ -378,6 +378,35 @@ filament:
       selector:
         config_entry:
           integration: snapmaker_u1_card
+move:
+  fields:
+    axis:
+      selector:
+        select:
+          options:
+            - x
+            - y
+            - z
+    distance:
+      example: 10
+      selector:
+        number:
+          min: -100
+          max: 100
+          step: 0.1
+          unit_of_measurement: mm
+          mode: box
+    position:
+      selector:
+        select:
+          translation_key: move_position
+          options:
+            - center
+            - front
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
 weigh_spool:
   fields:
     slot:

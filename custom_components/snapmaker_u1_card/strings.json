@@ -1111,6 +1111,28 @@
           "description": "Only needed with several printers."
         }
       }
+    },
+    "move": {
+      "name": "Move the head",
+      "description": "Moves the head by hand: an axis by a distance, or to a fixed position (center or front of the plate; the nozzle first goes up to 30 mm). Stays over the plate, needs homed axes, locked during a print.",
+      "fields": {
+        "axis": {
+          "name": "Axis",
+          "description": "x, y or z."
+        },
+        "distance": {
+          "name": "Distance",
+          "description": "In mm, negative = the other direction."
+        },
+        "position": {
+          "name": "Fixed position",
+          "description": "center or front – instead of axis and distance."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Camera image",
         "thumbnail": "Model preview",
         "off": "No image"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Center of the plate",
+        "front": "Front of the plate"
       }
     }
   }

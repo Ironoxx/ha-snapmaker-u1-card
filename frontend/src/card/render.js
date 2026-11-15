@@ -176,6 +176,16 @@ export const RenderMixin = (Base) => class extends Base {
   _wire() {
     const r = this.shadowRoot.getElementById("u1card");
 
+    // 2.3: moving the head by hand
+    r.querySelectorAll("[data-jogstep]").forEach((b) => b.addEventListener("click", () => {
+      this._jogStep = Number(b.dataset.jogstep);
+      r.querySelectorAll("[data-jogstep]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    }));
+    r.querySelectorAll("[data-jog]").forEach((b) => b.addEventListener("click", () =>
+      this._jog({ axis: b.dataset.jog, distance: Number(b.dataset.dir) * (this._jogStep || 10) })));
+    r.querySelectorAll("[data-jogpos]").forEach((b) => b.addEventListener("click", () =>
+      this._jog({ position: b.dataset.jogpos })));
+
     r.querySelectorAll("[data-act]").forEach((b) =>
       b.addEventListener("click", () => {
         const a = b.dataset.act;

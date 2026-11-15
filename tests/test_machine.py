@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from custom_components.snapmaker_u1_card.machine import (
+    move_gcode,
     blocked_while_printing,
     command_word,
     console_lines,
@@ -415,3 +416,46 @@ async def test_no_chamber_no_entities(hass: HomeAssistant, mock_client, notifica
     await _setup(hass)
     assert hass.states.get("sensor.snapmaker_u1_card_chamber_heater") is None
     assert hass.states.get("number.snapmaker_u1_card_chamber_heater_target") is None
+
+
+def test_move_gcode() -> None:
+    """2.3: hand moves stay over the plate, in their own G-code state."""
+    pos = [100.0, 100.0, 5.0, 0.0]
+    g = move_gcode(pos, "xyz", "x", 10)
+    assert g.splitlines() == ["SAVE_GCODE_STATE NAME=SU1_MOVE", "G90", "G1 X110.00 F6000",
+                              "RESTORE_GCODE_STATE NAME=SU1_MOVE"]
+    assert "G1 Y270.00" in move_gcode(pos, "xyz", "y", 500), "clamped before the dock zone"
+    assert "G1 Z1.00 F600" in move_gcode(pos, "xyz", "z", -50), "1 mm off the plate"
+    with pytest.raises(ValueError, match="limit"):
+        move_gcode([0.0, 100.0, 5.0], "xyz", "x", -1)
+    with pytest.raises(ValueError, match="not_homed"):
+        move_gcode(pos, "xy", "z", 1)
+    with pytest.raises(ValueError, match="dock"):
+        move_gcode([100.0, 300.0, 5.0], "xyz", "x", 1)
+    with pytest.raises(ValueError, match="invalid"):
+        move_gcode(pos, "xyz", "e", 1)
+    # fixed position: first up to 30 mm, then over
+    lines = move_gcode(pos, "xyz", preset="center").splitlines()
+    assert lines[2:4] == ["G1 Z30.00 F600", "G1 X135.00 Y135.00 F6000"]
+    assert "G1 Z" not in move_gcode([10.0, 10.0, 80.0], "xyz", preset="front")
+    with pytest.raises(ValueError, match="not_homed"):
+        move_gcode(pos, "", preset="front")
+
+
+async def test_move_service(hass: HomeAssistant, mock_client, notifications) -> None:
+    _machine(mock_client)
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    th = {"toolhead": {"position": [100.0, 100.0, 5.0, 0.0], "homed_axes": "xyz"}}
+    with patch(f"{API}.gcode", AsyncMock()) as gcode, \
+         patch(f"{API}.query_objects", AsyncMock(return_value=th)):
+        await hass.services.async_call(DOMAIN, "move", {"axis": "x", "distance": -10}, blocking=True)
+        assert "G1 X90.00 F6000" in gcode.await_args.args[0]
+        await hass.services.async_call(DOMAIN, "move", {"position": "front"}, blocking=True)
+        assert "G1 X135.00 Y20.00" in gcode.await_args.args[0]
+        th["toolhead"]["homed_axes"] = ""
+        with pytest.raises(ServiceValidationError, match="Home the axes|Referenzfahrt"):
+            await hass.services.async_call(DOMAIN, "move", {"axis": "y", "distance": 1}, blocking=True)
+        coord.data.machine = {**coord.data.machine, "machine_state": "bed_leveling"}
+        with pytest.raises(ServiceValidationError, match="busy|beschäftigt"):
+            await hass.services.async_call(DOMAIN, "move", {"axis": "y", "distance": 1}, blocking=True)

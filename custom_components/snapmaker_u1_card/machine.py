@@ -280,6 +280,58 @@ def filament_gcode(head: int, action: str) -> list[str]:
     raise ValueError(f"Invalid action {action!r}")
 
 
+# ── Moving the head by hand (2.3) ──────────────────────────────────────────
+# Klipper config of the U1: X 0–271, Y 0–335, Z -6–275 (Z homes at the top). Above
+# Y 270 begins the dock zone behind the plate: hand moves stay over the plate. Z
+# keeps 1 mm off the plate; before a fixed position the nozzle goes up to 30 mm.
+MOVE_LIMITS = {"x": (0.0, 271.0), "y": (0.0, 270.0), "z": (1.0, 275.0)}
+MOVE_FEED = {"x": 6000, "y": 6000, "z": 600}
+MOVE_CLEAR_Z = 30.0
+# front = low Y (the docks are at the back, behind Y 270)
+MOVE_PRESETS = {"center": (135.0, 135.0), "front": (135.0, 20.0)}
+MOVE_STEPS = (0.1, 1.0, 10.0, 50.0)
+
+
+def move_gcode(position: Any, homed: Any, axis: str | None = None, distance: float | None = None,
+               preset: str | None = None) -> str:
+    """G-code for a hand move: ``axis`` by ``distance`` mm, or to ``preset``.
+
+    Absolute target clamped to the limits, in its own G-code state (the print's
+    G90/G91 and feed rate stay as they were). ValueError with a reason key:
+    not_homed, dock, limit, invalid.
+    """
+    if not isinstance(position, (list, tuple)) or len(position) < 3:
+        raise ValueError("not_homed")
+    homed = str(homed or "").lower()
+    x, y, z = (float(v) for v in position[:3])
+    lines: list[str] = []
+    if preset is not None:
+        if preset not in MOVE_PRESETS:
+            raise ValueError("invalid")
+        if not all(a in homed for a in "xyz"):
+            raise ValueError("not_homed")
+        if y > MOVE_LIMITS["y"][1] + 0.5:
+            raise ValueError("dock")
+        tx, ty = MOVE_PRESETS[preset]
+        if z < MOVE_CLEAR_Z:
+            lines.append(f"G1 Z{MOVE_CLEAR_Z:.2f} F{MOVE_FEED['z']}")
+        lines.append(f"G1 X{tx:.2f} Y{ty:.2f} F{MOVE_FEED['x']}")
+    else:
+        if axis not in MOVE_LIMITS or not isinstance(distance, (int, float)) or isinstance(distance, bool) or not distance:
+            raise ValueError("invalid")
+        if axis not in homed:
+            raise ValueError("not_homed")
+        cur = {"x": x, "y": y, "z": z}[axis]
+        if axis in "xy" and y > MOVE_LIMITS["y"][1] + 0.5:
+            raise ValueError("dock")
+        lo, hi = MOVE_LIMITS[axis]
+        target = max(lo, min(hi, cur + float(distance)))
+        if abs(target - cur) < 0.005:
+            raise ValueError("limit")
+        lines.append(f"G1 {axis.upper()}{target:.2f} F{MOVE_FEED[axis]}")
+    return "\n".join(["SAVE_GCODE_STATE NAME=SU1_MOVE", "G90", *lines, "RESTORE_GCODE_STATE NAME=SU1_MOVE"])
+
+
 # ── Nozzles ────────────────────────────────────────────────────────────────
 NOZZLE_TYPES = ("standard", "high_flow")
 

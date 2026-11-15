@@ -136,6 +136,7 @@ class UpkeepMixin:
         """
         de = (language or self.hass.config.language).lower().startswith("de")
         t = (lambda a, b: a) if de else (lambda a, b: b)
+        paxx = self.firmware.get("variant") == "paxx12"
         checks: list[dict[str, Any]] = []
 
         def add(key: str, ok: bool | None, detail: str) -> None:
@@ -213,8 +214,9 @@ class UpkeepMixin:
         rtsp = self.webcam.rtsp_url
         add("camera_rtsp", True if rtsp else None,
             t(f"RTSP: {rtsp} (Home Assistant streamt H.264 selbst)", f"RTSP: {rtsp} (Home Assistant streams H.264 itself)")
-            if rtsp else t("RTSP aus (paxx12: in /firmware-config/ einschaltbar)",
-                           "RTSP off (paxx12: can be enabled in /firmware-config/)"))
+            if rtsp else (t("RTSP aus (in /firmware-config/ einschaltbar)", "RTSP off (can be enabled in /firmware-config/)")
+                          if paxx else t("RTSP aus (gibt es mit der paxx12 Extended Firmware)",
+                                         "RTSP off (available with the paxx12 Extended Firmware)")))
         if self.webcam2.mode in ("live", "still"):
             add("camera2", True, t("Zweite Kamera (USB) gefunden", "Second camera (USB) found")
                 + (f", RTSP {self.webcam2.rtsp_url}" if self.webcam2.rtsp_url else ""))
@@ -275,11 +277,13 @@ class UpkeepMixin:
                 detail = t("Moonraker hat Spoolman, aber ohne SpoolLink: Moonraker bucht nur seine aktive Spule ab, "
                            "die übrigen Spulen bucht die Integration nach dem Druck"
                            + ("" if mgr.deduct else " (Abbuchen ist in den Einstellungen aus)")
-                           + ". Für Live-Abbuchung aller Köpfe SpoolLink in /firmware-config/ einschalten",
+                           + (". Für Live-Abbuchung aller Köpfe SpoolLink in /firmware-config/ einschalten" if paxx
+                              else ". Live-Abbuchung aller Köpfe gibt es mit SpoolLink der paxx12 Extended Firmware"),
                            "Moonraker has Spoolman but no SpoolLink: it only books its active spool, the integration "
                            "books the other spools after the print"
                            + ("" if mgr.deduct else " (booking is off in the settings)")
-                           + ". For live booking of all heads enable SpoolLink in /firmware-config/")
+                           + (". For live booking of all heads enable SpoolLink in /firmware-config/" if paxx
+                              else ". Live booking of all heads comes with SpoolLink of the paxx12 Extended Firmware"))
             elif mgr.external_booking:
                 detail = t("Verbrauch bucht Moonraker (Spoolman im Drucker aktiv), die Integration bucht nicht doppelt",
                            "Moonraker books usage (Spoolman on the printer), the integration does not book twice")

@@ -265,7 +265,7 @@ export const PrintDialogMixin = (Base) => class extends Base {
         return `<button type="button" class="slot-btn" data-map="${fil.index}" data-slot="${s.index}"
             aria-pressed="${on}" ${s.loaded ? "" : "data-empty=\"1\""}
             title="${esc((heads[s.index] || {}).name || tr("Slot {n}", { n: s.index + 1 }))} · ${esc(label)}">
-            ${this._spoolSvg(s.loaded && s.color ? s.color : "var(--u1-outline)", false, s.loaded ? s.colors : null)}
+            ${this._spoolSvg(s.loaded && s.color ? s.color : "var(--u1-outline)", false, s.loaded ? s.colors : null, s.loaded ? this._spoolFill(s.index) : null)}
             <span class="slot-no">${esc((heads[s.index] || {}).name || s.index + 1)}</span>
             <span class="slot-type">${esc(label)}</span>
             ${(() => { const sp = this._slotSpool(s.index); return sp && sp.remaining_weight != null ? `<span class="slot-rest">${Math.round(sp.remaining_weight)} g</span>` : ""; })()}

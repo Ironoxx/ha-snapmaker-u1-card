@@ -173,6 +173,12 @@ FILAMENT_SCHEMA = vol.Schema({
     vol.Required("action"): vol.In(["load", "unload"]),
     vol.Optional(ATTR_ENTRY): cv.string,
 })
+HEAD_MOVE_SCHEMA = vol.All(vol.Schema({
+    vol.Optional("axis"): vol.In(["x", "y", "z"]),
+    vol.Optional("distance"): vol.All(vol.Coerce(float), vol.Range(min=-100, max=100)),
+    vol.Optional("position"): vol.In(["center", "front"]),
+    vol.Optional(ATTR_ENTRY): cv.string,
+}), cv.has_at_least_one_key("position", "axis"))
 POWER_OFF_SCHEMA = vol.Schema(
     {vol.Optional("force", default=False): cv.boolean, vol.Optional(ATTR_ENTRY): cv.string}
 )
@@ -398,6 +404,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             call.data["head"] - 1, call.data["action"])
 
     hass.services.async_register(DOMAIN, "filament", filament, schema=FILAMENT_SCHEMA)
+
+    async def move(call: ServiceCall) -> None:
+        coord = _coordinator(hass, call.data.get(ATTR_ENTRY))
+        if call.data.get("position"):
+            await coord.async_move(preset=call.data["position"])
+        else:
+            await coord.async_move(call.data.get("axis"), call.data.get("distance"))
+
+    hass.services.async_register(DOMAIN, "move", move, schema=HEAD_MOVE_SCHEMA)
 
     async def camera_wake(call: ServiceCall) -> None:
         await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_camera_wake_once()

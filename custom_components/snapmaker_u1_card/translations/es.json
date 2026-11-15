@@ -1111,6 +1111,28 @@
           "description": "Solo necesario con varias impresoras."
         }
       }
+    },
+    "move": {
+      "name": "Mover el cabezal",
+      "description": "Mueve el cabezal a mano: un eje una distancia, o a una posición fija (centro o delante de la placa; la boquilla sube antes a 30 mm). Se queda sobre la placa, necesita ejes referenciados, bloqueado durante la impresión.",
+      "fields": {
+        "axis": {
+          "name": "Eje",
+          "description": "x, y o z."
+        },
+        "distance": {
+          "name": "Distancia",
+          "description": "En mm, negativo = la otra dirección."
+        },
+        "position": {
+          "name": "Posición fija",
+          "description": "center o front – en lugar de eje y distancia."
+        },
+        "config_entry_id": {
+          "name": "Impresora",
+          "description": "Solo necesario con varias impresoras."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Imagen de la cámara",
         "thumbnail": "Vista previa del modelo",
         "off": "Sin imagen"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Centro de la placa",
+        "front": "Delante de la placa"
       }
     }
   }

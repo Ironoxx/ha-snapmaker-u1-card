@@ -47,7 +47,7 @@ export class SnapmakerU1MiniCard extends SnapmakerU1Card {
         const low = sp && sp.remaining_weight != null && sp.remaining_weight < (sm.low || 0);
         return `<span class="mini-slot" data-active="${h.active ? 1 : 0}" data-empty="${h.loaded ? 0 : 1}"
             title="${esc(h.name)}: ${esc(h.material)}">
-          ${this._spoolSvg(h.color, h.active, h.colors)}
+          ${this._spoolSvg(h.color, h.active, h.colors, sm ? this._spoolFill(h.idx) : null, h.active && !!d.printing && !d.paused)}
           <span class="mini-mat">${esc(h.loaded ? h.material : tr("leer"))}</span>
           ${sp && sp.remaining_weight != null ? `<span class="mini-g mono" data-low="${low ? 1 : 0}">${Math.round(sp.remaining_weight)} g</span>` : ""}
         </span>`;

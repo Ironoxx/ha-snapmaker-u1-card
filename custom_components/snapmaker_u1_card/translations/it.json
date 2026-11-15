@@ -1111,6 +1111,28 @@
           "description": "Serve solo con più stampanti."
         }
       }
+    },
+    "move": {
+      "name": "Muovi la testina",
+      "description": "Muove la testina a mano: un asse di una distanza, o in una posizione fissa (centro o davanti al piano; l'ugello sale prima a 30 mm). Resta sopra il piano, richiede assi azzerati, bloccato durante la stampa.",
+      "fields": {
+        "axis": {
+          "name": "Asse",
+          "description": "x, y o z."
+        },
+        "distance": {
+          "name": "Distanza",
+          "description": "In mm, negativo = direzione opposta."
+        },
+        "position": {
+          "name": "Posizione fissa",
+          "description": "center o front – invece di asse e distanza."
+        },
+        "config_entry_id": {
+          "name": "Stampante",
+          "description": "Necessario solo con più stampanti."
+        }
+      }
     }
   },
   "selector": {
@@ -1174,6 +1196,12 @@
         "camera": "Immagine della telecamera",
         "thumbnail": "Anteprima del modello",
         "off": "Nessuna immagine"
+      }
+    },
+    "move_position": {
+      "options": {
+        "center": "Centro del piano",
+        "front": "Davanti al piano"
       }
     }
   }
