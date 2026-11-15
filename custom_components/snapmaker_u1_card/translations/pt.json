@@ -77,6 +77,18 @@
               "notify_click_url": "Caminho do painel ou URL aberto ao tocar numa notificação, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vazio = predefinição da app."
             }
           },
+          "notify_2": {
+            "name": "Notificações – grupo 2",
+            "description": "Segundo grupo opcional com serviços e eventos próprios, p. ex. erros e pausas para outra pessoa ou com outro som. Vazio = desligado.",
+            "data": {
+              "notify_targets_2": "Serviços de notificação",
+              "notify_events_2": "Notificar em"
+            },
+            "data_description": {
+              "notify_targets_2": "Cada serviço recebe uma mensagem apenas uma vez, mesmo que esteja nos dois grupos. No Android, o grupo 2 usa o seu próprio canal de notificação «Snapmaker U1 2» – escolha o som nas definições de notificação do telemóvel.",
+              "notify_events_2": "Eventos deste grupo, independentes do grupo 1."
+            }
+          },
           "filament": {
             "name": "Preços do filamento",
             "description": "Preço por kg por material, para o custo de filamento de cada impressão. Com o Spoolman, os preços dele têm prioridade (a bobina em cada cabeça, senão a média das suas bobinas desse material); estes campos só valem para materiais sem preço lá. Deixe vazio para ignorar.",
@@ -216,6 +228,18 @@
               "live_notify_budget": "Limite máximo para a notificação de progresso contínua (Android) por dia e telemóvel. A app Companion permite cerca de 500 push por dia; as mensagens de fim, erro e pausa não contam aqui.",
               "live_notify_image": "Imagem quando a notificação de progresso é expandida: imagem da câmara (atualizada a cada progresso) ou pré-visualização do modelo do slicer. Sem push extra.",
               "notify_click_url": "Caminho do painel ou URL aberto ao tocar numa notificação, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vazio = predefinição da app."
+            }
+          },
+          "notify_2": {
+            "name": "Notificações – grupo 2",
+            "description": "Segundo grupo opcional com serviços e eventos próprios, p. ex. erros e pausas para outra pessoa ou com outro som. Vazio = desligado.",
+            "data": {
+              "notify_targets_2": "Serviços de notificação",
+              "notify_events_2": "Notificar em"
+            },
+            "data_description": {
+              "notify_targets_2": "Cada serviço recebe uma mensagem apenas uma vez, mesmo que esteja nos dois grupos. No Android, o grupo 2 usa o seu próprio canal de notificação «Snapmaker U1 2» – escolha o som nas definições de notificação do telemóvel.",
+              "notify_events_2": "Eventos deste grupo, independentes do grupo 1."
             }
           },
           "filament": {

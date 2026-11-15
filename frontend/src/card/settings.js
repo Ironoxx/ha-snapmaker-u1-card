@@ -94,8 +94,8 @@ export const SettingsMixin = (Base) => class extends Base {
       return sw ? [this._entityNow(sw).split(":")[0], v("auto_off") ? tr("Auto-Aus") : "", v("auto_on") ? tr("Auto-Ein") : ""]
         .filter(Boolean).join(" · ") : tr("kein Netzschalter");
     }
-    if (sec === "notify") {
-      const n = (v("notify_targets") || []).length;
+    if (sec === "notify" || sec === "notify_2") {
+      const n = (v(sec === "notify" ? "notify_targets" : "notify_targets_2") || []).length;
       return n ? (n === 1 ? tr("1 Ziel") : tr("{n} Ziele", { n })) : tr("keine Benachrichtigungen");
     }
     if (sec === "filament") {

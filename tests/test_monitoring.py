@@ -171,11 +171,13 @@ async def test_remaining_sensors_and_runout(hass: HomeAssistant, mock_client, no
              patch.object(type(coord.spools), "spoollink", property(lambda self: link)), \
              patch.object(type(coord.spools), "slot_info",
                           lambda self, i: {"name": "Rot", "remaining_weight": rest} if i == 0 else None):
+            coord.spools.external_booking = link  # SpoolLink works through Moonraker's [spoolman]
             return coord._check_runout(st["virtual_sdcard"], coord.data.remaining, {})
     assert runout_with(2.5, True) == {}
     assert 0 in runout_with(1.0, True), "1 g left, 2 g still needed: runs out"
     # already past the computed point (Spoolman weight off): no "0 min"
     assert runout_with(1.5, False) == {}
+    coord.spools.external_booking = False
 
 
 async def test_takeover_by_auto_replenish() -> None:
@@ -514,3 +516,28 @@ def test_i18n_follows_ha_language() -> None:
     assert tr(SimpleNamespace(config=SimpleNamespace(language="de-DE")), "Hallo", "Hello") == "Hallo"
     assert tr(SimpleNamespace(config=SimpleNamespace(language="en")), "Hallo", "Hello") == "Hello"
     assert tr(None, "Hallo", "Hello") == "Hello"
+
+
+async def test_progress_within_gcode(hass: HomeAssistant, mock_client) -> None:
+    """2.3: progress without the slicer's header (thumbnails) and config block."""
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    active = {"file": "a.gcode"}
+    meta = {"gcode_start_byte": 1000, "gcode_end_byte": 101000, "size": 104000}
+    with patch(f"{API}.file_metadata", AsyncMock(return_value=meta)):
+        await coord._enrich_active(active)
+    assert active["gcode_bytes"] == [1000, 101000]
+    coord._print_state["active"] = active
+    # Klipper says 1.1 % right after the header: nothing printed yet
+    assert coord._file_progress({"file_position": 1100, "progress": 0.011}) == pytest.approx(0.001)
+    assert coord._file_progress({"file_position": 51000, "progress": 0.49}) == pytest.approx(0.5)
+    assert coord._file_progress({"file_position": 103500, "progress": 0.995}) == 1.0, "config block: done"
+    _status(mock_client, "printing", "a.gcode")["virtual_sdcard"] = {"file_position": 51000, "progress": 0.49}
+    assert coord._build_machine()[0]["progress"] == 50.0
+    # without metadata: Klipper's value
+    coord._print_state["active"] = {"file": "b.gcode"}
+    assert coord._file_progress({"file_position": 1100, "progress": 0.011}) == 0.011
+    bad = {"file": "c.gcode"}
+    with patch(f"{API}.file_metadata", AsyncMock(return_value={"gcode_start_byte": 50, "gcode_end_byte": 50})):
+        await coord._enrich_active(bad)
+    assert "gcode_bytes" not in bad

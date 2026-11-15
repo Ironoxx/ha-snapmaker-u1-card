@@ -321,6 +321,11 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         extras = dict(self._machine_extras)
         if self.live.connected and self.live.cpu_temp is not None:
             extras["cpu_temp"] = (self.live.cpu_temp, {"unit_of_measurement": "°C"})
+        # 2.3: progress within the G-code (without the slicer's header and config block)
+        if (self._print_state.get("active") or {}).get("gcode_bytes"):
+            progress = self._file_progress(status.get("virtual_sdcard") or {})
+            if isinstance(progress, (int, float)):
+                extras["progress"] = (round(progress * 100, 1), {"unit_of_measurement": "%"})
         return machine_build(status, extras)
 
     async def _update_machine_extras(self, print_state: str | None) -> None:
@@ -645,7 +650,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             errors=self._errors,
             queue=list(self.queue.jobs),
             active_head=head_index((status.get("toolhead") or {}).get("extruder")),
-            progress=(status.get("virtual_sdcard") or {}).get("progress"),
+            progress=self._file_progress(status.get("virtual_sdcard") or {}),
             print_duration=stats.get("print_duration"),
             layer=(stats.get("info") or {}).get("current_layer") if isinstance(stats.get("info"), dict) else None,
             total_layers=(stats.get("info") or {}).get("total_layer") if isinstance(stats.get("info"), dict) else None,

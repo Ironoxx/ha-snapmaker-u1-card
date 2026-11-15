@@ -23,6 +23,7 @@ from ..const import (
     CONF_MAINTENANCE,
     CONF_MAINTENANCE_MONTHS,
     CONF_NOTIFY,
+    CONF_NOTIFY2,
     CONF_POWER_SWITCH,
     DEFAULT_BACKUP,
     DOMAIN,
@@ -254,7 +255,8 @@ class UpkeepMixin:
             value = f"{price:.4f}".rstrip("0").rstrip(".") + "/kWh" if price is not None else t("fehlt", "missing")
             add("price", price is not None, f"{label}: {where} = {value}")
         # notifications
-        targets = self.options.get(CONF_NOTIFY) or []
+        targets = list(self.options.get(CONF_NOTIFY) or [])
+        targets += [x for x in self.options.get(CONF_NOTIFY2) or [] if x not in targets]
         if not targets:
             add("notify", None, t("Keine Benachrichtigung eingerichtet", "No notifications set up"))
         for target in targets:
@@ -270,10 +272,14 @@ class UpkeepMixin:
                                f"Spoolman unreachable ({self.spools.client.url}): {self.spools.error or '?'}"))
             mgr = self.spools
             if mgr.external_booking and not mgr.spoollink:
-                detail = t("Moonraker hat Spoolman, aber ohne SpoolLink: Moonraker bucht nur seine eine aktive Spule ab, "
-                           "die Integration bucht nicht doppelt. Für vier Köpfe SpoolLink in /firmware-config/ einschalten",
-                           "Moonraker has Spoolman but no SpoolLink: it only books its one active spool, the integration "
-                           "does not book twice. For four heads enable SpoolLink in /firmware-config/")
+                detail = t("Moonraker hat Spoolman, aber ohne SpoolLink: Moonraker bucht nur seine aktive Spule ab, "
+                           "die übrigen Spulen bucht die Integration nach dem Druck"
+                           + ("" if mgr.deduct else " (Abbuchen ist in den Einstellungen aus)")
+                           + ". Für Live-Abbuchung aller Köpfe SpoolLink in /firmware-config/ einschalten",
+                           "Moonraker has Spoolman but no SpoolLink: it only books its active spool, the integration "
+                           "books the other spools after the print"
+                           + ("" if mgr.deduct else " (booking is off in the settings)")
+                           + ". For live booking of all heads enable SpoolLink in /firmware-config/")
             elif mgr.external_booking:
                 detail = t("Verbrauch bucht Moonraker (Spoolman im Drucker aktiv), die Integration bucht nicht doppelt",
                            "Moonraker books usage (Spoolman on the printer), the integration does not book twice")

@@ -18,12 +18,16 @@ from ..api import (
 from ..const import (
     CONF_AUTO_OFF,
     CONF_NOTIFY,
+    CONF_NOTIFY2,
+    CONF_NOTIFY2_EVENTS,
     CONF_NOTIFY_EVENTS,
     CONF_NOTIFY_URL,
+    DEFAULT_NOTIFY2_EVENTS,
     DEFAULT_NOTIFY_EVENTS,
     DOMAIN,
     EVENT_PRINT_FINISHED,
     HISTORY_SIZE,
+    NOTIFY2_CHANNEL,
     THUMB_URL,
 )
 from ..errors import error_text
@@ -147,11 +151,37 @@ class NotifyMixin:
             return True
         return False
 
+    def _notify_targets(self, event: str) -> list[tuple[str, str | None]]:
+        """(service, Android channel) for ``event`` over both groups, each target once.
+
+        Group 1 as before (job queue and the cancel question always); group 2 (2.3,
+        #15) with its own events and its own Android channel, so it can ring with
+        another sound even on the same phone. The cancel question goes to group 2
+        when it gets "paused" (that is where the Cancel button was).
+        """
+        groups = [
+            (self.options.get(CONF_NOTIFY) or [], self.options.get(CONF_NOTIFY_EVENTS, DEFAULT_NOTIFY_EVENTS),
+             ("queue", "cancel_confirm"), None),
+            (self.options.get(CONF_NOTIFY2) or [], self.options.get(CONF_NOTIFY2_EVENTS, DEFAULT_NOTIFY2_EVENTS),
+             (), NOTIFY2_CHANNEL),
+        ]
+        out: list[tuple[str, str | None]] = []
+        done: set[str] = set()
+        for targets, events, always, channel in groups:
+            wanted = event in events or event in always or (event == "cancel_confirm" and "paused" in events)
+            if not wanted:
+                continue
+            for target in targets:
+                service = str(target).removeprefix("notify.")
+                if service not in done:
+                    done.add(service)
+                    out.append((service, channel))
+        return out
+
     def _notify(self, event: str, info: dict[str, Any]) -> None:
-        """Send a notification for ``event`` if it is enabled in the options."""
-        targets = self.options.get(CONF_NOTIFY) or []
-        events = self.options.get(CONF_NOTIFY_EVENTS, DEFAULT_NOTIFY_EVENTS)
-        if not targets or (event not in events and event not in ("queue", "cancel_confirm")):
+        """Send a notification for ``event`` to the groups that have it enabled."""
+        targets = self._notify_targets(event)
+        if not targets:
             return
         de = self.hass.config.language.lower().startswith("de")
         title = f"Snapmaker U1: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
@@ -174,11 +204,11 @@ class NotifyMixin:
             data["push"] = {"interruption-level": "time-sensitive"}
             data["priority"] = "high"
             data["ttl"] = 0
-        for target in targets:
-            service = str(target).removeprefix("notify.")
+        for service, channel in targets:
+            payload = {**data, "channel": channel} if channel else data
             self.hass.async_create_task(
                 self.hass.services.async_call(
-                    "notify", service, {"title": title, "message": message, "data": data},
+                    "notify", service, {"title": title, "message": message, "data": payload},
                     blocking=False,
                 ),
                 f"{DOMAIN} notify {service}",

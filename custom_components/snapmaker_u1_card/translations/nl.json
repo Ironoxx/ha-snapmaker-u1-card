@@ -77,6 +77,18 @@
               "notify_click_url": "Dashboardpad of URL dat bij tikken op een melding opent, bijv. /dashboard-printer/0 of /lovelace/printer. Leeg = standaard van de app."
             }
           },
+          "notify_2": {
+            "name": "Meldingen – groep 2",
+            "description": "Optionele tweede groep met eigen diensten en gebeurtenissen, bijv. fouten en pauzes naar een andere persoon of met een ander geluid. Leeg = uit.",
+            "data": {
+              "notify_targets_2": "Meldingsdiensten",
+              "notify_events_2": "Melden bij"
+            },
+            "data_description": {
+              "notify_targets_2": "Elke dienst krijgt een melding maar één keer, ook als hij in beide groepen staat. Op Android gebruikt groep 2 een eigen meldingskanaal ‘Snapmaker U1 2’ – kies het geluid in de meldingsinstellingen van de telefoon.",
+              "notify_events_2": "Gebeurtenissen van deze groep, los van groep 1."
+            }
+          },
           "filament": {
             "name": "Filamentprijzen",
             "description": "Prijs per kg per materiaal, gebruikt voor de filamentkosten van elke print. Met Spoolman gaan zijn prijzen voor (de spoel in elke kop, anders het gemiddelde van je spoelen van dat materiaal); deze velden gelden alleen voor materialen zonder prijs daar. Leeg laten om over te slaan.",
@@ -216,6 +228,18 @@
               "live_notify_budget": "Bovengrens voor de doorlopende voortgangsmelding (Android) per dag en telefoon. De Companion-app staat ongeveer 500 pushes per dag toe; berichten over einde, fout en pauze tellen hier niet mee.",
               "live_notify_image": "Beeld als de voortgangsmelding is uitgeklapt: camerabeeld (bij elke update vernieuwd) of het modelvoorbeeld van de slicer. Geen extra pushes.",
               "notify_click_url": "Dashboardpad of URL dat bij tikken op een melding opent, bijv. /dashboard-printer/0 of /lovelace/printer. Leeg = standaard van de app."
+            }
+          },
+          "notify_2": {
+            "name": "Meldingen – groep 2",
+            "description": "Optionele tweede groep met eigen diensten en gebeurtenissen, bijv. fouten en pauzes naar een andere persoon of met een ander geluid. Leeg = uit.",
+            "data": {
+              "notify_targets_2": "Meldingsdiensten",
+              "notify_events_2": "Melden bij"
+            },
+            "data_description": {
+              "notify_targets_2": "Elke dienst krijgt een melding maar één keer, ook als hij in beide groepen staat. Op Android gebruikt groep 2 een eigen meldingskanaal ‘Snapmaker U1 2’ – kies het geluid in de meldingsinstellingen van de telefoon.",
+              "notify_events_2": "Gebeurtenissen van deze groep, los van groep 1."
             }
           },
           "filament": {

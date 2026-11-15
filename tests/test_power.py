@@ -97,12 +97,12 @@ async def test_options_flow_sections(hass: HomeAssistant, mock_client, notificat
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     schema = result["data_schema"].schema
-    assert {str(k) for k in schema} == {"power", "notify", "filament", "spoolman", "files", "timelapse", "maintenance"}
+    assert {str(k) for k in schema} == {"power", "notify", "notify_2", "filament", "spoolman", "files", "timelapse", "maintenance"}
 
     base = {
         "power": {"shutdown_host": True, "auto_on": True, "auto_off": False,
                   "auto_off_temp": 50, "auto_off_delay": 5},
-        "notify": {"notify_events": ["complete"]},
+        "notify": {"notify_events": ["complete"]}, "notify_2": {"notify_events_2": ["error"]},
         "filament": {},
         "files": {"files_limit": 10},
         "spoolman": {"spoolman_deduct": True, "spoolman_low": 100}, "timelapse": {"timelapse_archive": False, "timelapse_keep": 5}, "maintenance": {"maint_plate": 30, "maint_nozzle": 100, "maint_rails": 300, "maint_belts": 500, "maint_filter": 0},
@@ -610,3 +610,35 @@ async def test_gcode_download(hass: HomeAssistant, hass_client, mock_client) -> 
             resp = await client.get(f"{base}/{path}")
             assert resp.status == 404, path
         op.assert_not_awaited()
+
+
+async def test_second_notification_group(hass: HomeAssistant, mock_client, notifications) -> None:
+    """2.3 (#15): group 2 with its own targets, events and Android channel."""
+    second: list[ServiceCall] = []
+
+    async def handler(call: ServiceCall) -> None:
+        second.append(call)
+
+    hass.services.async_register("notify", "mobile_app_tablet", handler)
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["complete", "paused"],
+                         notify_targets_2=["notify.mobile_app_tablet", "notify.mobile_app_handy"],
+                         notify_events_2=["error", "paused"])
+    coord = entry.runtime_data
+    # complete: only group 1
+    coord._notify("complete", {"name": "Teil"})
+    # error: only group 2, both of its targets, own channel
+    coord._notify("error", {"name": "Teil"})
+    # paused: both groups – the phone only once (group 1 wins, no channel)
+    coord._notify("paused", {"name": "Teil"})
+    # cancel question: group 1 always, group 2 because it gets "paused"
+    coord._notify("cancel_confirm", {"name": "Teil"})
+    await hass.async_block_till_done()
+    phone = [c.data["title"].split(": ", 1)[1] for c in notifications]
+    tablet = [c.data["title"].split(": ", 1)[1] for c in second]
+    assert len(phone) == 4 and len(tablet) == 3, (phone, tablet)
+    assert [c.data["data"].get("channel") for c in notifications] == [None, "Snapmaker U1 2", None, None]
+    assert all(c.data["data"]["channel"] == "Snapmaker U1 2" for c in second)
+    # group 2 empty: as before
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "notify_targets_2": []})
+    assert coord._notify_targets("error") == []
+    assert coord._notify_targets("complete") == [("mobile_app_handy", None)]

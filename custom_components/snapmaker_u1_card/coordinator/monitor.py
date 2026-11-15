@@ -251,6 +251,22 @@ class PrintMonitorMixin:
         med = (lambda v: v[len(v) // 2] if v else None)
         return med(factors), med(preps)
 
+    def _file_progress(self, vsd: dict[str, Any], fallback: Any = None) -> Any:
+        """2.3: progress within the G-code only, like Mainsail/Fluidd ("file relative").
+
+        Klipper's ``virtual_sdcard.progress`` is position / file size, so the
+        slicer's header with its thumbnails counts as printed right at the start
+        (a print began at ~1 %) and the config block at the end makes the last
+        percent jump. Moonraker's metadata give where the G-code starts and ends.
+        """
+        progress = vsd.get("progress", fallback)
+        span = (self._print_state.get("active") or {}).get("gcode_bytes")
+        pos = vsd.get("file_position")
+        if not span or not isinstance(pos, (int, float)) or isinstance(pos, bool):
+            return progress
+        start, end = span
+        return max(0.0, min(1.0, (pos - start) / (end - start)))
+
     def _profile(self, active: dict[str, Any]) -> dict[str, Any] | None:
         view = self.layer_view
         if view.get("status") == "ready" and active.get("file") and view.get("file") == active.get("file"):
@@ -287,15 +303,16 @@ class PrintMonitorMixin:
         factor = (remaining / left) if remaining and left > 0 else 1.0
         slots = parse_slots(ptc)
         out: dict[int, dict[str, Any]] = {}
-        # 2.2.2: with SpoolLink or Moonraker's Spoolman the spool is booked during the
-        # print, so Spoolman's remainder already lacks what was used so far; add it back
-        # to get the remainder at the start of the print. Booked at the end: as it is.
-        live = bool(self.spools.spoollink or self.spools.external_booking)
+        # 2.2.2: a spool Moonraker books during the print (SpoolLink, or its active spool)
+        # already lacks what was used so far in Spoolman; add it back to get the
+        # remainder at the start of the print. Booked at the end: as it is.
+        seen = active.get("moonraker_spools") if "moonraker_spools" in active else None
         for head, logicals in heads.items():
             info = self.spools.slot_info(head) or {}
             rest = info.get("remaining_weight")
             if not isinstance(rest, (int, float)):
                 continue
+            live = self.spools.moonraker_books(info.get("id"), seen)
             used = sum(at["e"][t] * gpmm[t] for t in logicals)
             start = rest + used if live else rest
             total = sum(at["e_total"][t] * gpmm[t] for t in logicals)
@@ -406,7 +423,7 @@ class PrintMonitorMixin:
             # Keep current for voice answers etc. (without redrawing)
             ps_all = status.get("print_stats") or {}
             info = ps_all.get("info") if isinstance(ps_all.get("info"), dict) else {}
-            self.data.progress = (status.get("virtual_sdcard") or {}).get("progress", self.data.progress)
+            self.data.progress = self._file_progress(status.get("virtual_sdcard") or {}, self.data.progress)
             self.data.print_duration = ps_all.get("print_duration", self.data.print_duration)
             self.data.layer = info.get("current_layer", self.data.layer)
             self._print_events(status.get("print_stats") or {}, status.get("virtual_sdcard") or {})

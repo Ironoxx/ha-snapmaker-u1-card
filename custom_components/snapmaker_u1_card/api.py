@@ -94,6 +94,11 @@ class MoonrakerClient:
         objs = result.get("objects") if isinstance(result, dict) else None
         return [str(o) for o in objs] if isinstance(objs, list) else []
 
+    async def spoolman_status(self) -> dict[str, Any]:
+        """Moonraker's Spoolman state: ``spool_id`` = the spool it books right now (or None)."""
+        result = await self._get_json("/server/spoolman/status")
+        return result if isinstance(result, dict) else {}
+
     async def components(self) -> list[str]:
         """Loaded Moonraker components (``spoolman`` = Moonraker books usage itself)."""
         result = await self._get_json("/server/info")

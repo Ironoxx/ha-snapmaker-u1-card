@@ -515,7 +515,7 @@ def _delta(start: float | None, end: float | None) -> float | None:
 
 # Fields of the running print that move into the record when it finishes.
 _CARRY = ("name", "thumb", "filaments", "filament_total", "filament_used", "print_duration",
-          "map_table", "spool_ids", "spool_start", "source", "mapping", "options", "pause_layers", "begin_s",
+          "map_table", "spool_ids", "spool_start", "moonraker_spools", "source", "mapping", "options", "pause_layers", "begin_s",
           "slicer_print_s")
 
 

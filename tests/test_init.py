@@ -80,9 +80,10 @@ def mock_client():
          patch(f"{API}.object_list", AsyncMock(return_value=["print_task_config", "extruder", "heater_bed"])) as objs, \
          patch(f"{API}.firmware_version", AsyncMock(return_value="1.6.0")), \
          patch(f"{API}.firmware_config", AsyncMock(return_value=(404, None))) as fwc, \
+         patch(f"{API}.spoolman_status", AsyncMock(return_value={"spoolman_connected": True, "spool_id": None})) as sms, \
          patch(f"{API}.history_totals", AsyncMock(return_value={"total_print_time": 36000.0})):
         yield {"query": q, "download": dl, "start_print": sp, "ready": ready, "files": files, "components": comps,
-               "objects": objs, "firmware_config": fwc}
+               "objects": objs, "firmware_config": fwc, "spoolman_status": sms}
 
 
 async def _setup(hass: HomeAssistant) -> MockConfigEntry:
@@ -170,14 +171,14 @@ async def test_config_flow(hass: HomeAssistant, mock_client) -> None:
         # Second step: all settings right away during setup
         assert result["type"] is FlowResultType.FORM and result["step_id"] == "settings"
         schema = result["data_schema"].schema
-        assert {str(k) for k in schema} == {"power", "notify", "filament", "spoolman", "files", "timelapse", "maintenance"}
+        assert {str(k) for k in schema} == {"power", "notify", "notify_2", "filament", "spoolman", "files", "timelapse", "maintenance"}
         # No section with a default: the frontend would otherwise drop the pre-filled
         # values and report "Not all required fields are filled in".
         for key in schema:
             assert key.default is vol.UNDEFINED, f"Abschnitt {key} hat default"
         settings = {
             "power": {"shutdown_host": True, "auto_on": False, "auto_off": False, "auto_off_temp": 50, "auto_off_delay": 5},
-            "notify": {"notify_events": ["complete"]}, "filament": {"price_pla": 19.5},
+            "notify": {"notify_events": ["complete"]}, "notify_2": {"notify_events_2": ["error"]}, "filament": {"price_pla": 19.5},
             "spoolman": {"spoolman_deduct": True, "spoolman_low": 100}, "files": {"files_limit": 24},
             "timelapse": {"timelapse_archive": True, "timelapse_keep": 3},
             "maintenance": {"maint_plate": 25, "maint_nozzle": 100, "maint_rails": 300, "maint_belts": 500, "maint_filter": 0},

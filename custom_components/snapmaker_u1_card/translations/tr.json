@@ -77,6 +77,18 @@
               "notify_click_url": "Bir bildirime dokunulduğunda açılan pano yolu veya URL, örn. /dashboard-printer/0 veya /lovelace/printer. Boş = uygulamanın varsayılanı."
             }
           },
+          "notify_2": {
+            "name": "Bildirimler – grup 2",
+            "description": "Kendi servisleri ve olaylarıyla isteğe bağlı ikinci grup; örn. hatalar ve duraklamalar başka bir kişiye veya farklı bir sesle. Boş = kapalı.",
+            "data": {
+              "notify_targets_2": "Bildirim servisleri",
+              "notify_events_2": "Bildirim zamanı"
+            },
+            "data_description": {
+              "notify_targets_2": "Her servis, iki grupta da olsa mesajı yalnızca bir kez alır. Android'de grup 2 kendi bildirim kanalını kullanır: „Snapmaker U1 2“ – sesini telefonun bildirim ayarlarından seçin.",
+              "notify_events_2": "Bu grubun olayları, grup 1'den bağımsız."
+            }
+          },
           "filament": {
             "name": "Filament fiyatları",
             "description": "Malzemeye göre kg fiyatı; her baskının filament maliyeti için kullanılır. Spoolman varsa onun fiyatları önceliklidir (her kafadaki makara, yoksa o malzemedeki makaralarınızın ortalaması); bu alanlar yalnızca orada fiyatı olmayan malzemeler için geçerlidir. Atlamak için boş bırakın.",
@@ -216,6 +228,18 @@
               "live_notify_budget": "Süren ilerleme bildirimi (Android) için telefon başına günlük üst sınır. Companion uygulaması günde yaklaşık 500 bildirime izin verir; bitiş, hata ve duraklatma mesajları buna dahil değildir.",
               "live_notify_image": "İlerleme bildirimi genişletildiğinde görüntü: kamera görüntüsü (her güncellemede yenilenir) veya dilimleyicinin model önizlemesi. Ek bildirim yok.",
               "notify_click_url": "Bir bildirime dokunulduğunda açılan pano yolu veya URL, örn. /dashboard-printer/0 veya /lovelace/printer. Boş = uygulamanın varsayılanı."
+            }
+          },
+          "notify_2": {
+            "name": "Bildirimler – grup 2",
+            "description": "Kendi servisleri ve olaylarıyla isteğe bağlı ikinci grup; örn. hatalar ve duraklamalar başka bir kişiye veya farklı bir sesle. Boş = kapalı.",
+            "data": {
+              "notify_targets_2": "Bildirim servisleri",
+              "notify_events_2": "Bildirim zamanı"
+            },
+            "data_description": {
+              "notify_targets_2": "Her servis, iki grupta da olsa mesajı yalnızca bir kez alır. Android'de grup 2 kendi bildirim kanalını kullanır: „Snapmaker U1 2“ – sesini telefonun bildirim ayarlarından seçin.",
+              "notify_events_2": "Bu grubun olayları, grup 1'den bağımsız."
             }
           },
           "filament": {

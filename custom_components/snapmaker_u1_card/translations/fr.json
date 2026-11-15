@@ -77,6 +77,18 @@
               "notify_click_url": "Chemin du tableau de bord ou URL ouvert au toucher d’une notification, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vide = valeur par défaut de l’application."
             }
           },
+          "notify_2": {
+            "name": "Notifications – groupe 2",
+            "description": "Deuxième groupe facultatif avec ses propres services et événements, p. ex. erreurs et pauses vers une autre personne ou avec un autre son. Vide = désactivé.",
+            "data": {
+              "notify_targets_2": "Services de notification",
+              "notify_events_2": "Notifier pour"
+            },
+            "data_description": {
+              "notify_targets_2": "Chaque service reçoit un message une seule fois, même s'il figure dans les deux groupes. Sur Android, le groupe 2 utilise son propre canal de notification « Snapmaker U1 2 » – choisissez son son dans les réglages de notification du téléphone.",
+              "notify_events_2": "Événements de ce groupe, indépendants du groupe 1."
+            }
+          },
           "filament": {
             "name": "Prix du filament",
             "description": "Prix au kg par matériau, pour le coût du filament de chaque impression. Avec Spoolman, ses prix passent en premier (la bobine de chaque tête, sinon la moyenne de vos bobines de ce matériau) ; ces champs ne servent que pour les matériaux sans prix là-bas. Laisser vide pour ignorer.",
@@ -216,6 +228,18 @@
               "live_notify_budget": "Limite pour la notification de progression continue (Android) par jour et par téléphone. L’application Companion autorise environ 500 push par jour ; les messages de fin, d’erreur et de pause ne comptent pas ici.",
               "live_notify_image": "Image quand la notification de progression est dépliée : image de la caméra (mise à jour à chaque progression) ou aperçu du modèle du slicer. Sans push supplémentaire.",
               "notify_click_url": "Chemin du tableau de bord ou URL ouvert au toucher d’une notification, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vide = valeur par défaut de l’application."
+            }
+          },
+          "notify_2": {
+            "name": "Notifications – groupe 2",
+            "description": "Deuxième groupe facultatif avec ses propres services et événements, p. ex. erreurs et pauses vers une autre personne ou avec un autre son. Vide = désactivé.",
+            "data": {
+              "notify_targets_2": "Services de notification",
+              "notify_events_2": "Notifier pour"
+            },
+            "data_description": {
+              "notify_targets_2": "Chaque service reçoit un message une seule fois, même s'il figure dans les deux groupes. Sur Android, le groupe 2 utilise son propre canal de notification « Snapmaker U1 2 » – choisissez son son dans les réglages de notification du téléphone.",
+              "notify_events_2": "Événements de ce groupe, indépendants du groupe 1."
             }
           },
           "filament": {

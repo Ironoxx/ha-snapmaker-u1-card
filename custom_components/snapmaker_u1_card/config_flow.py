@@ -50,6 +50,8 @@ from .const import (
     CONF_MAINTENANCE,
     CONF_MAINTENANCE_MONTHS,
     CONF_NOTIFY,
+    CONF_NOTIFY2,
+    CONF_NOTIFY2_EVENTS,
     CONF_NOTIFY_EVENTS,
     CONF_NOTIFY_URL,
     CONF_POWER_SENSOR,
@@ -75,6 +77,7 @@ from .const import (
     DEFAULT_IDLE_OFF,
     DEFAULT_LIVE_BUDGET,
     DEFAULT_LIVE_IMAGE,
+    DEFAULT_NOTIFY2_EVENTS,
     DEFAULT_NOTIFY_EVENTS,
     DEFAULT_PORT,
     DEFAULT_SHUTDOWN_HOST,
@@ -92,6 +95,7 @@ from .stats import MAINTENANCE_ITEMS, MAINTENANCE_MONTHS
 SEC_POWER, SEC_NOTIFY, SEC_FILAMENT, SEC_FILES = "power", "notify", "filament", "files"
 SEC_SPOOLMAN = "spoolman"
 SEC_TIMELAPSE, SEC_MAINT = "timelapse", "maintenance"
+SEC_NOTIFY2 = "notify_2"
 PRICE_FIELDS = [f"price_{k.lower()}" for k in (*FILAMENT_PRICE_KEYS, "OTHER")]
 MAINT_FIELDS = [f"maint_{k}" for k in MAINTENANCE_ITEMS]
 MAINT_MONTH_FIELDS = [f"maint_m_{k}" for k in MAINTENANCE_ITEMS]
@@ -178,6 +182,23 @@ def _options_schema(notify_services: list[str], currency: str | None = None) -> 
             ),
         }
     )
+    notify2 = vol.Schema(
+        {
+            vol.Optional(CONF_NOTIFY2): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=notify_services, multiple=True, custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Required(CONF_NOTIFY2_EVENTS, default=DEFAULT_NOTIFY2_EVENTS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(NOTIFY_EVENTS), multiple=True,
+                    translation_key="notify_events",
+                    mode=selector.SelectSelectorMode.LIST,
+                )
+            ),
+        }
+    )
     filament = vol.Schema({vol.Optional(key): _box(0, PRICE_MAX_KG, 0.01, f"{cur}/kg") for key in PRICE_FIELDS})
     spoolman = vol.Schema(
         {
@@ -214,6 +235,7 @@ def _options_schema(notify_services: list[str], currency: str | None = None) -> 
         {
             vol.Required(SEC_POWER): section(power, SectionConfig(collapsed=False)),
             vol.Required(SEC_NOTIFY): section(notify, SectionConfig(collapsed=True)),
+            vol.Required(SEC_NOTIFY2): section(notify2, SectionConfig(collapsed=True)),
             vol.Required(SEC_FILAMENT): section(filament, SectionConfig(collapsed=True)),
             # Sections are always Required and without a default: a default ({}) on
             # the section replaces the pre-filled values of its fields in the frontend
@@ -258,7 +280,8 @@ def flatten_options(user_input: dict[str, Any]) -> dict[str, Any]:
         if key in flat:
             flat[key] = int(flat[key])
     # Store with the "notify." prefix so the selector recognises it.
-    flat[CONF_NOTIFY] = [t if t.startswith("notify.") else f"notify.{t}" for t in flat.get(CONF_NOTIFY) or []]
+    for key in (CONF_NOTIFY, CONF_NOTIFY2):
+        flat[key] = [t if t.startswith("notify.") else f"notify.{t}" for t in flat.get(key) or []]
     return flat
 
 
@@ -279,6 +302,7 @@ def nest_options(options: dict[str, Any]) -> dict[str, dict[str, Any]]:
                     CONF_SHUTDOWN_HOST, CONF_AUTO_ON, CONF_AUTO_OFF, CONF_AUTO_OFF_TEMP,
                     CONF_AUTO_OFF_DELAY, CONF_IDLE_OFF),
         SEC_NOTIFY: (CONF_NOTIFY, CONF_NOTIFY_EVENTS, CONF_ALMOST_DONE, CONF_LIVE_BUDGET, CONF_LIVE_IMAGE, CONF_NOTIFY_URL, CONF_BED_COOL, CONF_CAMERA, CONF_CAMERA_WAKE),
+        SEC_NOTIFY2: (CONF_NOTIFY2, CONF_NOTIFY2_EVENTS),
         SEC_FILAMENT: tuple(PRICE_FIELDS),
         SEC_SPOOLMAN: (CONF_SPOOLMAN_URL, CONF_SPOOLMAN_DEDUCT, CONF_SPOOLMAN_LOW, CONF_SPOOL_RESTORE),
         SEC_FILES: (CONF_FILES_LIMIT, CONF_BACKUP),
@@ -297,10 +321,11 @@ async def _validate_options(hass: Any, flat: dict[str, Any]) -> str | None:
     """Validation shared by initial setup and options; returns an error key or None."""
     if (flat.get(CONF_AUTO_OFF) or flat.get(CONF_AUTO_ON)) and not flat.get(CONF_POWER_SWITCH):
         return "auto_needs_switch"
-    if flat.get(CONF_NOTIFY) and not all(
-        hass.services.has_service("notify", t.removeprefix("notify.")) for t in flat[CONF_NOTIFY]
-    ):
-        return "unknown_notify"
+    for key in (CONF_NOTIFY, CONF_NOTIFY2):
+        if flat.get(key) and not all(
+            hass.services.has_service("notify", t.removeprefix("notify.")) for t in flat[key]
+        ):
+            return "unknown_notify"
     if flat.get(CONF_SPOOLMAN_URL):
         try:
             info = await SpoolmanClient(async_get_clientsession(hass), flat[CONF_SPOOLMAN_URL]).info()

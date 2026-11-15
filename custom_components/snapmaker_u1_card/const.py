@@ -17,6 +17,10 @@ CONF_ENERGY_PRICE = "energy_price"  # Price entity (sensor/input_number)
 CONF_AUTO_ON = "auto_on"
 CONF_NOTIFY = "notify_targets"
 CONF_NOTIFY_EVENTS = "notify_events"
+# 2.3 (#15): second group with its own targets, events and Android channel
+CONF_NOTIFY2 = "notify_targets_2"
+CONF_NOTIFY2_EVENTS = "notify_events_2"
+NOTIFY2_CHANNEL = "Snapmaker U1 2"
 CONF_CAMERA = "camera"
 CONF_SPOOLMAN_URL = "spoolman_url"
 CONF_SPOOLMAN_DEDUCT = "spoolman_deduct"
@@ -45,6 +49,8 @@ DEFAULT_AUTO_ON = False
 NOTIFY_EVENTS = ("complete", "cancelled", "error", "paused", "alert", "first_layer", "almost_done",
                  "spool_low", "spool_runout", "bed_cool", "maintenance", "chamber_ready")
 DEFAULT_NOTIFY_EVENTS = ["complete", "error", "paused", "alert", "spool_low", "spool_runout", "maintenance"]
+# Group 2 is meant for what needs someone at the printer (other person or sound)
+DEFAULT_NOTIFY2_EVENTS = ["error", "paused", "alert", "spool_runout"]
 CONF_BED_COOL = "bed_cool_temp"
 DEFAULT_BED_COOL = 35  # °C: the PEI plate releases the part
 CONF_IDLE_OFF = "idle_off_hours"

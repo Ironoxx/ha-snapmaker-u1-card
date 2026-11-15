@@ -73,7 +73,22 @@ class SpoolMixin:
                 for key, sid in active["spool_ids"].items():
                     if key not in start and sid:
                         start[key] = mgr.remaining(sid)
+                # 2.3: which spools Moonraker books itself (its active spool), without SpoolLink
+                if mgr.external_booking and not mgr.spoollink:
+                    await self._note_moonraker_spool(active)
         data.spoolman = self._spoolman_data(data.slots)
+
+    async def _note_moonraker_spool(self, active: dict[str, Any]) -> None:
+        """Remember every spool Moonraker had active during the print (it books those itself)."""
+        try:
+            status = await self.client.spoolman_status()
+        except MoonrakerError:
+            return
+        seen = active.setdefault("moonraker_spools", [])
+        sid = status.get("spool_id")
+        if isinstance(sid, int) and not isinstance(sid, bool) and sid not in seen:
+            seen.append(sid)
+            _LOGGER.debug("Moonraker books spool %s itself", sid)
 
     def _restore_mode(self) -> str:
         return str(self.options.get(CONF_SPOOL_RESTORE, DEFAULT_SPOOL_RESTORE))
@@ -392,6 +407,10 @@ class SpoolMixin:
             {"index": f["index"], "type": f["type"], "color": f["color"], "weight": f["weight"]}
             for f in fils if f.get("used") and f.get("weight")
         ]
+        # 2.3: where the G-code starts and ends (progress without header/config block)
+        start, end = meta.get("gcode_start_byte"), meta.get("gcode_end_byte")
+        if all(isinstance(b, int) and not isinstance(b, bool) for b in (start, end)) and end > start >= 0:
+            active["gcode_bytes"] = [start, end]
         total = meta.get("filament_total")
         if isinstance(total, (int, float)):
             active["filament_total"] = total

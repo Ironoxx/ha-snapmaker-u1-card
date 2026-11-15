@@ -77,6 +77,18 @@
               "notify_click_url": "Dashboard path or URL opened when a notification is tapped, e.g. /dashboard-printer/0 or /lovelace/printer. Empty = the app's default."
             }
           },
+          "notify_2": {
+            "name": "Notifications – group 2",
+            "description": "Optional second group with its own services and events, e.g. errors and pauses to another person or with another sound. Empty = off.",
+            "data": {
+              "notify_targets_2": "Notify services",
+              "notify_events_2": "Notify on"
+            },
+            "data_description": {
+              "notify_targets_2": "Each service gets a message once, even if it is in both groups. On Android, group 2 uses its own notification channel “Snapmaker U1 2” – choose its sound in the phone's notification settings.",
+              "notify_events_2": "Events of this group, independent of group 1."
+            }
+          },
           "filament": {
             "name": "Filament prices",
             "description": "Price per kg by material, used for the filament cost of each print. With Spoolman its prices come first (the spool in each head, else the average of your spools of that material); these fields only apply to materials without a price there. Leave empty to skip.",
@@ -216,6 +228,18 @@
               "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here.",
               "live_notify_image": "Image when the progress notification is expanded: camera image (refreshed with every update) or the slicer's model preview. No extra pushes.",
               "notify_click_url": "Dashboard path or URL opened when a notification is tapped, e.g. /dashboard-printer/0 or /lovelace/printer. Empty = the app's default."
+            }
+          },
+          "notify_2": {
+            "name": "Notifications – group 2",
+            "description": "Optional second group with its own services and events, e.g. errors and pauses to another person or with another sound. Empty = off.",
+            "data": {
+              "notify_targets_2": "Notify services",
+              "notify_events_2": "Notify on"
+            },
+            "data_description": {
+              "notify_targets_2": "Each service gets a message once, even if it is in both groups. On Android, group 2 uses its own notification channel “Snapmaker U1 2” – choose its sound in the phone's notification settings.",
+              "notify_events_2": "Events of this group, independent of group 1."
             }
           },
           "filament": {

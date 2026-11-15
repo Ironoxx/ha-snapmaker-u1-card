@@ -109,6 +109,21 @@ class SpoolManager:
         """Does this integration book usage? Not if Moonraker already does (no double booking)."""
         return self.deduct and not self.external_booking
 
+    def moonraker_books(self, spool_id: Any, seen: list[Any] | None) -> bool:
+        """2.3: does Moonraker book this spool itself (live, every 5 s)?
+
+        Moonraker's [spoolman] books only its one active spool. SpoolLink makes the
+        spool of the printing head active, so with it Moonraker books every head.
+        Without SpoolLink only the spools that were active during the print
+        (``seen``, from /server/spoolman/status); None = not known (older records):
+        as before, Moonraker is assumed to book.
+        """
+        if not self.external_booking:
+            return False
+        if self.spoollink or seen is None:
+            return True
+        return spool_id in seen
+
     def assign(self, slots: list[dict[str, Any]]) -> bool:
         """Update the assignment per head. True = changed (save)."""
         if not self.enabled or not self.online:
@@ -266,16 +281,20 @@ class SpoolManager:
                 "file": record.get("file"), "slot": slot,
             }
             before = start.get(str(slot))
+            # 2.3: per spool – Moonraker without SpoolLink books only its active spool,
+            # the others are booked by the integration (before: nobody booked them)
+            moonraker = self.moonraker_books(spool_id, record.get("moonraker_spools"))
+            ours = self.deduct and not moonraker
             entry: dict[str, Any] = {
                 "slot": slot, "spool_id": spool_id, "grams": item["grams"],
                 # True/False = booked by us (done/pending), "moonraker" = Moonraker books, None = off
-                "booked": False if self.books else ("moonraker" if self.external_booking else None),
+                "booked": False if ours else ("moonraker" if moonraker else None),
                 "before": before,
                 # expected; replaced by Spoolman's value after the booking
                 "after": round(before - item["grams"], 1) if isinstance(before, (int, float)) else None,
             }
             booked.append(entry)
-            if self.books and not any(q["key"] == item["key"] for q in self.queue):
+            if ours and not any(q["key"] == item["key"] for q in self.queue):
                 self.queue.append(item)
         return booked
 

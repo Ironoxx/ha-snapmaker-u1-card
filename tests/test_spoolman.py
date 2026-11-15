@@ -238,7 +238,7 @@ async def test_options_validate_spoolman_url(hass: HomeAssistant, mock_client) -
     entry = await _setup(hass)
     base = {"power": {"shutdown_host": True, "auto_on": False, "auto_off": False,
                       "auto_off_temp": 50, "auto_off_delay": 5},
-            "notify": {"notify_events": ["complete"]}, "filament": {}, "files": {"files_limit": 24},
+            "notify": {"notify_events": ["complete"]}, "notify_2": {"notify_events_2": ["error"]}, "filament": {}, "files": {"files_limit": 24},
             "timelapse": {"timelapse_archive": False, "timelapse_keep": 5},
             "maintenance": {"maint_plate": 30, "maint_nozzle": 100, "maint_rails": 300, "maint_belts": 500, "maint_filter": 0}}
     with patch(f"{SM}.info", AsyncMock(side_effect=MoonrakerConnectionError("nein"))):
@@ -747,3 +747,34 @@ async def test_create_spool_from_catalog(hass: HomeAssistant, mock_client, spool
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(DOMAIN, "create_spool", {"weight": 1000}, blocking=True,
                                            return_response=True)
+
+
+async def test_moonraker_without_spoollink_books_only_its_active_spool(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """2.3: Moonraker's [spoolman] without SpoolLink books its one active spool; the
+    integration books the others (before 2.3 nobody booked them)."""
+    _real_slots(mock_client)
+    mock_client["components"].return_value = ["file_manager", "spoolman"]
+    mock_client["spoolman_status"].return_value = {"spoolman_connected": True, "spool_id": 1}
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    coord = entry.runtime_data
+    await _refresh(hass, entry)
+    mgr = coord.spools
+    assert mgr.external_booking and not mgr.spoollink
+    # the running print notes Moonraker's active spool
+    meta = {"filament_type": "PLA", "filament_colour": "#000000", "filament_weight": [20.0]}
+    with patch(f"{API}.file_metadata", AsyncMock(return_value=meta)):
+        _status(mock_client, "printing", "a.gcode")
+        await _refresh(hass, entry)
+        await _refresh(hass, entry)
+    assert coord._print_state["active"]["moonraker_spools"] == [1]
+    record = {"started": 1, "file": "a.gcode", "result": "complete", "map_table": [0, 2],
+              "filaments": [{"index": 0, "weight": 3.5}, {"index": 1, "weight": 12.0}],
+              "spool_ids": {"0": 1, "2": 4}, "moonraker_spools": [1]}
+    queued = len(mgr.queue)
+    booked = {b["spool_id"]: b["booked"] for b in mgr.book(record)}
+    assert booked == {1: "moonraker", 4: False}
+    assert [(q["spool_id"], q["grams"]) for q in mgr.queue[queued:]] == [(4, 12.0)]
+    # older record without the list: Moonraker is assumed to book everything (as before)
+    old = {**record, "started": 2}
+    del old["moonraker_spools"]
+    assert {b["booked"] for b in mgr.book(old)} == {"moonraker"}
