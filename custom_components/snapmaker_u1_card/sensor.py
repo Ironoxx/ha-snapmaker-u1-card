@@ -63,6 +63,7 @@ async def async_setup_entry(
         LayerSensor,
         MachineSensor,
         MachineStateSensor,
+        PaxxHealthSensor,
         PrintStateSensor,
         ProgressSensor,
         TemperatureSensor,
@@ -80,6 +81,9 @@ async def async_setup_entry(
             out["temp_cpu"] = lambda: TemperatureSensor(coordinator, "cpu")
         if "machine_state" in m:
             out["machine_state"] = lambda: MachineStateSensor(coordinator)
+        for key in ("wifi_signal", "emmc_life_used"):
+            if key in m:
+                out[key] = lambda key=key: PaxxHealthSensor(coordinator, key)
         return out
 
     add_machine(entry, wanted, async_add_entities)

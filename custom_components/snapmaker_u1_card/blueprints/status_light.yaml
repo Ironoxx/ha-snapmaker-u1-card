@@ -1,4 +1,4 @@
-# Installed by the Snapmaker U1 Card integration (snapmaker_u1_card). Version: 3
+# Installed by the Snapmaker U1 Card integration (snapmaker_u1_card). Version: 4
 # A newer version only replaces this file while it is unchanged; once you
 # edit it, it stays yours.
 blueprint:
@@ -55,6 +55,30 @@ blueprint:
       name: Colour when finished
       default: [0, 200, 60]
       selector: { color_rgb: {} }
+    complete_pulse:
+      name: Pulse when finished
+      description: >-
+        How often the lights pulse when the print is done, before the "finished"
+        colour stays. 0 = no pulse. Wie oft die Lampen am Druckende pulsieren.
+      default: 0
+      selector:
+        number: { min: 0, max: 10, mode: slider }
+    complete_players:
+      name: Sound when finished – speakers (optional)
+      description: Media players that play a sound at the end of a print. Lautsprecher für einen Ton am Druckende.
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: media_player
+    complete_sound:
+      name: Sound when finished – file or URL
+      description: >-
+        What the speakers play, e.g. media-source://media_source/local/done.mp3 or an
+        http(s) URL. Empty = no sound.
+      default: ""
+      selector: { text: {} }
     complete_minutes:
       name: Show "finished" for
       description: Minutes, then the idle behaviour applies. 0 = until the next print.
@@ -87,6 +111,9 @@ variables:
   brightness: !input brightness
   effect_printing: !input effect_printing
   complete_minutes: !input complete_minutes
+  complete_pulse: !input complete_pulse
+  complete_players: !input complete_players
+  complete_sound: !input complete_sound
   idle_action: !input idle_action
 
 action:
@@ -123,6 +150,33 @@ action:
               brightness_pct: "{{ brightness }}"
       - conditions: "{{ trigger.to_state.state == 'complete' }}"
         sequence:
+          # Version 4: sound and pulse at the end of the print (both optional)
+          - if: "{{ complete_players | length > 0 and complete_sound | trim != '' }}"
+            then:
+              - service: media_player.play_media
+                continue_on_error: true
+                target:
+                  entity_id: "{{ complete_players }}"
+                data:
+                  media_content_id: "{{ complete_sound | trim }}"
+                  media_content_type: music
+          - repeat:
+              count: "{{ complete_pulse | int(0) }}"
+              sequence:
+                - service: light.turn_on
+                  target: !input lights
+                  data:
+                    rgb_color: !input color_complete
+                    brightness_pct: 100
+                    transition: 0.3
+                - delay: { milliseconds: 600 }
+                - service: light.turn_on
+                  target: !input lights
+                  data:
+                    rgb_color: !input color_complete
+                    brightness_pct: 5
+                    transition: 0.3
+                - delay: { milliseconds: 600 }
           - service: light.turn_on
             target: !input lights
             data:

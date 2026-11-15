@@ -28,7 +28,7 @@ async def test_blueprint_installed_and_updated(hass: HomeAssistant, mock_client)
     dst = Path(hass.config.path("blueprints", "automation", "snapmaker_u1_card", "status_light.yaml"))
     assert dst.read_text() == SRC.read_text()
     # an untouched earlier version (known hash) -> replaced
-    old = SRC.read_text().replace("Version: 3", "Version: 2.9")
+    old = SRC.read_text().replace("Version: 4", "Version: 3.9")
     bp.SHIPPED["status_light.yaml"].add(bp.sha256(old))
     dst.write_text(old)
     await bp.async_install(hass)

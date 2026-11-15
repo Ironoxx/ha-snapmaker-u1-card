@@ -451,6 +451,22 @@
       },
       "cpu_temperature": {
         "name": "CPU temperature"
+      },
+      "wifi_signal": {
+        "name": "WLAN signal"
+      },
+      "emmc_life_used": {
+        "name": "eMMC wear",
+        "state_attributes": {
+          "pre_eol": {
+            "name": "Pre-EOL",
+            "state": {
+              "normal": "Normal",
+              "warning": "Warning",
+              "urgent": "Urgent"
+            }
+          }
+        }
       }
     },
     "switch": {

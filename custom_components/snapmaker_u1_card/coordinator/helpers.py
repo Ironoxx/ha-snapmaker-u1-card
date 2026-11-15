@@ -210,6 +210,42 @@ def paxx_version_tuple(text: str | None) -> tuple[int, ...]:
     return (*(int(x) for x in m.group(1).split(".")), int(m.group(2))) if m else ()
 
 
+def parse_paxx_health(status: Any) -> dict[str, Any]:
+    """2.3: WLAN signal and eMMC wear from paxx12's /firmware-config/api/status.
+
+    Labels from its status functions (02_status_wlan, 04_status_mmc): "Signal"
+    in the "WLAN Network" section (dBm), "eMMC Life Time" ("10% / 20%", the two
+    wear areas; the higher one counts) and "eMMC Pre-EOL" (Normal / Warning / Urgent).
+    """
+    out: dict[str, Any] = {}
+    for section in status.values() if isinstance(status, dict) else []:
+        if not isinstance(section, dict):
+            continue
+        title = str(section.get("title") or "").lower()
+        for item in section.get("items") or []:
+            if not isinstance(item, dict):
+                continue
+            label = str(item.get("label") or "").strip().lower()
+            value = str(item.get("value") or "").strip()
+            if not value:
+                continue
+            if label == "signal" and "wlan" in title:
+                m = re.search(r"-?\d+", value)
+                if m:
+                    out["wifi_signal"] = int(m.group(0))
+            elif label == "emmc life time":
+                used = [int(x) for x in re.findall(r"(\d+)\s*%", value)]
+                if used:
+                    out["emmc_life_used"] = max(used)
+                elif ">100%" in value.replace(" ", ""):
+                    out["emmc_life_used"] = 100
+            elif label == "emmc pre-eol":
+                low = value.lower()
+                out["emmc_pre_eol"] = "normal" if low.startswith("normal") else "warning" if low.startswith("warning") \
+                    else "urgent" if low.startswith("urgent") else None
+    return {k: v for k, v in out.items() if v is not None}
+
+
 def parse_firmware_config(status: Any) -> dict[str, Any]:
     """paxx12 Extended Firmware: values of /firmware-config/api/status.
 

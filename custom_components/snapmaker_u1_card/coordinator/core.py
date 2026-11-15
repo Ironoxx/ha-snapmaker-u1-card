@@ -83,6 +83,7 @@ from .helpers import (
     FILES_PRINTING_S,
     STORE_VERSION,
     head_index,
+    parse_paxx_health,
 )
 from .jobs import PrintJobMixin
 from .machine import MachineMixin
@@ -172,6 +173,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._machine_extras: dict[str, Any] = {}      # values outside Klipper's objects (totals, file data)
         self._machine_slow: dict[str, Any] = {}        # memory, job queue, CPU: refreshed once a minute
         self._machine_slow_at = -1e9
+        self._paxx_health_at = -1e9
+        self._paxx_health: dict[str, Any] = {}
         self._machine_timer: Any = None                # throttles live publishing to once a second
         self._job_totals: dict[str, Any] = {}
         # Firmware: installed (from the printer), latest (GitHub, daily)
@@ -348,6 +351,19 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
                     slow["memory_used"] = (round(mem["used"] / mem["total"] * 100, 1), {"unit_of_measurement": "%"})
             except MoonrakerError:
                 pass
+            # 2.3: paxx12 – WLAN signal and eMMC wear, every 5 minutes
+            if self.firmware.get("variant") == "paxx12" and not (self.firmware.get("paxx") or {}).get("note") \
+                    and now - self._paxx_health_at >= 300:
+                self._paxx_health_at = now
+                try:
+                    code, fwc = await self.client.firmware_config()
+                    if code == 200:
+                        self._paxx_health = parse_paxx_health(fwc)
+                except MoonrakerError:
+                    pass
+            for key, value in self._paxx_health.items():
+                unit = {"wifi_signal": "dBm", "emmc_life_used": "%"}.get(key)
+                slow[key] = (value, {"unit_of_measurement": unit}) if unit else value
             try:
                 state = await self.client.job_queue_state()
                 if state:

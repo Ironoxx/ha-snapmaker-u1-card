@@ -6636,6 +6636,9 @@
         mcuAwake: this._n(`sensor.${P("mcu_awake")}`),
         memory: this._n(`sensor.${P("memory_used")}`),
         cpuTemp: this._n(`sensor.${P("cpu_temp")}`),
+        // 2.3 (paxx12): WLAN signal and eMMC wear
+        wifi: this._n(`sensor.${P("wifi_signal")}`),
+        emmc: this._n(`sensor.${P("emmc_life_used")}`),
         sysLoad: this._n(`sensor.${P("system_load")}`),
         totalsJobs: this._n(`sensor.${P("totals_jobs")}`, 0),
         totalsTime: this._s(`sensor.${P("totals_print_time")}`, "—"),
@@ -8203,6 +8206,8 @@
             ${this._row(tr("MCU Host (Last / Wach)"), `<span data-su1="mcuhost">${num(d.mcuLoad, 2, "%")} / ${num(d.mcuAwake, 2, "%")}</span>`, null, mcuTip)}
             ${heads}
             ${d.cpuTemp !== null ? this._row(tr("CPU-Temperatur"), `<span data-su1="cputemp">${num(d.cpuTemp, 1, "°C")}</span>`, null, tr("Temperatur des Rechners im Drucker (Moonraker).")) : ""}
+            ${d.wifi !== null ? this._row(tr("WLAN-Signal"), `<span data-su1="wifi">${num(d.wifi, 0, "dBm")}</span>`, null, tr("Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.")) : ""}
+            ${d.emmc !== null ? this._row(tr("eMMC-Verschleiß"), `<span data-su1="emmc">${num(d.emmc, 0, "%")}</span>`, null, tr("Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.")) : ""}
             ${this._row(tr("Arbeitsspeicher"), `<span data-su1="mem">${num(d.memory, 1, "%")}</span>`, null, tr("Belegter Arbeitsspeicher des Druckerrechners (ohne Puffer und Cache)."))}
             <div class="row" title="${tr("Load Average über 1 Minute: im Mittel laufende oder wartende Prozesse. Liegt der Wert unter der Zahl der Kerne, ist der Drucker nicht ausgelastet.")}">
               <span class="k">${tr("Systemlast (Ø 1 min)")}</span><span class="v" data-su1="sys">${this._loadText()}</span></div>
@@ -10826,7 +10831,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         `f${this._ents.flow && d.flow !== null}`,
         d.headStates.join(","),
         // stepper driver temperatures only exist while the motors are on (Klipper reports None otherwise)
-        `st${d.stepX !== null}${d.stepY !== null}${d.cpuTemp !== null}`,
+        `st${d.stepX !== null}${d.stepY !== null}${d.cpuTemp !== null}${d.wifi !== null}${d.emmc !== null}`,
         `${this._ents.camera}${this._hasCamera2()}`,
         this._pendingKey()
       ].join("~");
@@ -11219,6 +11224,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       set("mcuhost", `${num(d.mcuLoad, 2, "%")} / ${num(d.mcuAwake, 2, "%")}`);
       set("mem", num(d.memory, 1, "%"));
       set("cputemp", num(d.cpuTemp, 1, "°C"));
+      set("wifi", num(d.wifi, 0, "dBm"));
+      set("emmc", num(d.emmc, 0, "%"));
       set("sys", this._loadText());
       set("stepx", num(d.stepX, 1, "°C"));
       if (d.chamber) {

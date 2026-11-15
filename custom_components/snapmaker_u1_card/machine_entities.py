@@ -17,7 +17,11 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfTemperature,
+)
 from homeassistant.helpers.entity import EntityCategory
 
 from .coordinator import U1Coordinator
@@ -84,6 +88,35 @@ class TemperatureSensor(U1Entity, SensorEntity):
         if self._key in ("cavity", "cpu"):
             return m.get(f"{self._key}_temp")
         return m.get(f"{self._key}_temperature")
+
+
+class PaxxHealthSensor(U1Entity, SensorEntity):
+    """2.3 (paxx12): WLAN signal (dBm) or eMMC wear (% of its life used), diagnostic."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, coordinator: U1Coordinator, key: str) -> None:
+        super().__init__(coordinator, key)
+        self._key = key
+        if key == "wifi_signal":
+            self._attr_translation_key = "wifi_signal"
+            self._attr_device_class = SensorDeviceClass.SIGNAL_STRENGTH
+            self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+        else:
+            self._attr_translation_key = "emmc_life_used"
+            self._attr_icon = "mdi:memory"
+            self._attr_native_unit_of_measurement = PERCENTAGE
+
+    @property
+    def native_value(self) -> int | None:
+        return self.coordinator.data.machine.get(self._key)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        if self._key == "emmc_life_used":
+            return {"pre_eol": self.coordinator.data.machine.get("emmc_pre_eol")}
+        return None
 
 
 class ProgressSensor(U1Entity, SensorEntity):

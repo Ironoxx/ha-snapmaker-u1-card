@@ -335,11 +335,21 @@ async def test_paxx12_detected(hass: HomeAssistant, mock_client) -> None:
         {"label": "Base", "value": "2.0.0.205_20260914173503"}, {"label": "Version", "value": "2.0.0-paxx12-24-0de1a77"},
         {"label": "Profile", "value": "extended"}, {"label": "Active Firmware", "value": "B"},
         {"label": "Device Name", "value": "U1"}]},
-        "wlan": {"title": "WLAN Network", "items": [{"label": "Signal", "value": "-47"}]}}
+        "wlan": {"title": "WLAN Network", "items": [{"label": "Signal", "value": "-47"}]},
+        "mmc": {"title": "eMMC & Performance", "items": [{"label": "eMMC Pre-EOL", "value": "Normal"},
+                                                          {"label": "eMMC Life Time", "value": "10% / 20%"}]}}
     mock_client["firmware_config"].return_value = (200, status)
     entry = await _setup(hass)
     coord = entry.runtime_data
     assert coord.firmware["variant"] == "paxx12"
+    # 2.3: WLAN signal and eMMC wear as diagnostic sensors
+    coord._machine_slow_at = -1e9
+    await coord.async_refresh()
+    await hass.async_block_till_done()
+    assert coord.data.machine["wifi_signal"] == -47 and coord.data.machine["emmc_life_used"] == 20
+    wifi = next(s for s in hass.states.async_all("sensor") if s.entity_id.endswith("_wlan_signal"))
+    emmc = next(s for s in hass.states.async_all("sensor") if s.entity_id.endswith("_emmc_wear"))
+    assert wifi.state == "-47" and emmc.state == "20" and emmc.attributes["pre_eol"] == "normal"
     assert coord.firmware["paxx"] == {"version": "2.0.0-paxx12-24-0de1a77", "base": "2.0.0.205_20260914173503",
                                       "profile": "extended", "slot": "B"}
     ent = next(s for s in hass.states.async_all("update"))
