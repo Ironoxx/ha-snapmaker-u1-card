@@ -732,5 +732,19 @@ export default {
   "Fortschritt": "进度",
   "Live": "实时",
   "Verlauf in der Schicht": "层内进度",
-  "druckt {n}": "正在打印 {n}"
+  "druckt {n}": "正在打印 {n}",
+  "Verfahren": "移动",
+  "Schrittweite": "步长",
+  "Y+ (nach hinten)": "Y+（向后）",
+  "Y− (nach vorne)": "Y−（向前）",
+  "Z+ (Düse hoch)": "Z+（喷嘴上升）",
+  "Z− (Düse runter)": "Z−（喷嘴下降）",
+  "Kopf nach vorne": "打印头移到前方",
+  "Mitte": "居中",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "仅在归零后可用；始终保持在打印板上方。移动到固定位置前，喷嘴会先升到 30 mm。",
+  "Letzte Meldungen": "最近消息",
+  "WLAN-Signal": "WLAN 信号",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "打印机处的信号强度（paxx12）：高于 −60 dBm 为良好，低于 −75 dBm 为较弱。",
+  "eMMC-Verschleiß": "eMMC 磨损",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "内部存储已用寿命（paxx12），以 10% 为步进。"
 };

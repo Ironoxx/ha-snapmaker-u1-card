@@ -733,4 +733,18 @@ export default {
   "Live": "Live",
   "Verlauf in der Schicht": "Avanzamento nello strato",
   "druckt {n}": "in stampa {n}",
+  "Verfahren": "Muovi",
+  "Schrittweite": "Passo",
+  "Y+ (nach hinten)": "Y+ (indietro)",
+  "Y− (nach vorne)": "Y− (avanti)",
+  "Z+ (Düse hoch)": "Z+ (ugello su)",
+  "Z− (Düse runter)": "Z− (ugello giù)",
+  "Kopf nach vorne": "Testina davanti",
+  "Mitte": "Centro",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Solo dopo l'azzeramento; resta sopra il piano. Prima di una posizione fissa l'ugello sale a 30 mm.",
+  "Letzte Meldungen": "Ultimi messaggi",
+  "WLAN-Signal": "Segnale WLAN",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Intensità del segnale alla stampante (paxx12): sopra −60 dBm buona, sotto −75 dBm debole.",
+  "eMMC-Verschleiß": "Usura eMMC",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Vita utile consumata della memoria interna (paxx12), a passi del 10 %."
 };

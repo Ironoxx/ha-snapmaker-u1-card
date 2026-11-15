@@ -733,4 +733,18 @@ export default {
   "Live": "Direct",
   "Verlauf in der Schicht": "Progression dans la couche",
   "druckt {n}": "impression {n}",
+  "Verfahren": "Déplacer",
+  "Schrittweite": "Pas",
+  "Y+ (nach hinten)": "Y+ (vers l'arrière)",
+  "Y− (nach vorne)": "Y− (vers l'avant)",
+  "Z+ (Düse hoch)": "Z+ (buse vers le haut)",
+  "Z− (Düse runter)": "Z− (buse vers le bas)",
+  "Kopf nach vorne": "Tête à l'avant",
+  "Mitte": "Centre",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Uniquement après la prise d'origine ; reste au-dessus du plateau. Avant une position fixe, la buse monte à 30 mm.",
+  "Letzte Meldungen": "Derniers messages",
+  "WLAN-Signal": "Signal WLAN",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Force du signal à l'imprimante (paxx12) : au-dessus de −60 dBm c'est bon, en dessous de −75 dBm faible.",
+  "eMMC-Verschleiß": "Usure eMMC",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Durée de vie utilisée de la mémoire interne (paxx12), par pas de 10 %."
 };

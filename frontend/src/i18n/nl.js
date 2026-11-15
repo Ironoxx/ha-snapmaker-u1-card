@@ -733,4 +733,18 @@ export default {
   "Live": "Live",
   "Verlauf in der Schicht": "Voortgang binnen de laag",
   "druckt {n}": "print {n}",
+  "Verfahren": "Verplaatsen",
+  "Schrittweite": "Stap",
+  "Y+ (nach hinten)": "Y+ (naar achteren)",
+  "Y− (nach vorne)": "Y− (naar voren)",
+  "Z+ (Düse hoch)": "Z+ (nozzle omhoog)",
+  "Z− (Düse runter)": "Z− (nozzle omlaag)",
+  "Kopf nach vorne": "Kop naar voren",
+  "Mitte": "Midden",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Alleen na homen; blijft boven de plaat. Vóór een vaste positie gaat de nozzle eerst naar 30 mm.",
+  "Letzte Meldungen": "Laatste meldingen",
+  "WLAN-Signal": "WLAN-signaal",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Signaalsterkte bij de printer (paxx12): boven −60 dBm goed, onder −75 dBm zwak.",
+  "eMMC-Verschleiß": "eMMC-slijtage",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Verbruikte levensduur van het interne geheugen (paxx12), in stappen van 10 %."
 };

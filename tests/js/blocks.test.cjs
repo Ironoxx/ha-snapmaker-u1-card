@@ -144,4 +144,43 @@ assert.match(R(card).textContent, /Keine Meldungen/);
 assert.ok(!card._machineText(), "idle: no text");
 delete states["sensor.u1c_druckerwerte"];
 
+// 5. 2.3: moving by hand, spool fill in the mini card, message history, error texts per language
+{
+  const calls = [];
+  const c = w.document.createElement("snapmaker-u1-card");
+  c.setConfig({ type: "custom:snapmaker-u1-card", layout: "scroll", show: ["motion"], controls_lock: "off" });
+  w.document.body.appendChild(c);
+  c.hass = { ...hass(), callService: async (...a) => { calls.push(a); } };
+  const root = R(c);
+  assert.strictEqual(root.querySelectorAll("[data-jog]").length, 6, "X/Y/Z buttons");
+  root.querySelector('[data-jogstep="1"]').click();
+  assert.strictEqual(root.querySelector('[data-jogstep="1"]').getAttribute("aria-pressed"), "true");
+  root.querySelector('[data-jog="x"][data-dir="-1"]').click();
+  root.querySelector('[data-jogpos="front"]').click();
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(calls.map((x) => [x[1], x[2]]))),
+    [["move", { axis: "x", distance: -1, config_entry_id: "E1" }], ["move", { position: "front", config_entry_id: "E1" }]]);
+}
+{
+  const c = w.document.createElement("snapmaker-u1-mini-card");
+  c.setConfig({ type: "custom:snapmaker-u1-mini-card" });
+  w.document.body.appendChild(c);
+  c.hass = hass();
+  const fills = [...c.shadowRoot.querySelectorAll("svg.spool")].map((x) => x.dataset.fill);
+  assert.deepStrictEqual(fills.slice(0, 2), ["65", "10"], "mini card: Spoolman fill");
+}
+{
+  const t = { de: "Kein Filament an der Zufuhr (Kopf 1)", en: "No filament at the feeder (head 1)", fr: "Pas de filament à l'alimentation (tête 1)" };
+  add("sensor.u1c_meldungen", "0", { errors: [], log: [{ time: "2026-11-15T10:00:00+00:00", key: "0525-0000-0003", level: 2, message: "", known: true, text: t }] },
+    "snapmaker_u1_card", "errors");
+  const c = make("snapmaker-u1-card", { layout: "scroll", show: ["system"] });
+  const log = R(c).querySelector(".elog");
+  assert.ok(log && !log.open, "history folded");
+  assert.match(log.textContent, /Letzte Meldungen/);
+  assert.match(log.querySelector(".elog-text").textContent, /Kein Filament an der Zufuhr/);
+  const fr = { ...hass(), locale: { language: "fr" } };
+  c.hass = fr; c._renderKey = null; c._render();
+  assert.match(R(c).querySelector(".elog-text").textContent, /Pas de filament/);
+  delete states["sensor.u1c_meldungen"];
+}
+
 console.log("BLOCKS OK – section card, order of show, spool fill and turning, usage of the last print");

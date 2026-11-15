@@ -733,4 +733,18 @@ export default {
   "Live": "En vivo",
   "Verlauf in der Schicht": "Progreso dentro de la capa",
   "druckt {n}": "imprimiendo {n}",
+  "Verfahren": "Mover",
+  "Schrittweite": "Paso",
+  "Y+ (nach hinten)": "Y+ (hacia atrás)",
+  "Y− (nach vorne)": "Y− (hacia delante)",
+  "Z+ (Düse hoch)": "Z+ (boquilla arriba)",
+  "Z− (Düse runter)": "Z− (boquilla abajo)",
+  "Kopf nach vorne": "Cabezal al frente",
+  "Mitte": "Centro",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Solo tras buscar el origen; se queda sobre la placa. Antes de una posición fija la boquilla sube a 30 mm.",
+  "Letzte Meldungen": "Últimos mensajes",
+  "WLAN-Signal": "Señal WLAN",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Intensidad de señal en la impresora (paxx12): por encima de −60 dBm es buena, por debajo de −75 dBm débil.",
+  "eMMC-Verschleiß": "Desgaste eMMC",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Vida útil consumida de la memoria interna (paxx12), en pasos del 10 %."
 };

@@ -741,5 +741,19 @@ export const EN = {
   "Fortschritt": "Progress",
   "Live": "Live",
   "Verlauf in der Schicht": "Progress within the layer",
-  "druckt {n}": "printing {n}"
+  "druckt {n}": "printing {n}",
+  "Verfahren": "Move",
+  "Schrittweite": "Step",
+  "Y+ (nach hinten)": "Y+ (to the back)",
+  "Y− (nach vorne)": "Y− (to the front)",
+  "Z+ (Düse hoch)": "Z+ (nozzle up)",
+  "Z− (Düse runter)": "Z− (nozzle down)",
+  "Kopf nach vorne": "Head to the front",
+  "Mitte": "Center",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Only after homing; stays over the plate. Before a fixed position the nozzle goes up to 30 mm.",
+  "Letzte Meldungen": "Recent messages",
+  "WLAN-Signal": "WLAN signal",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Signal strength at the printer (paxx12): above −60 dBm is good, below −75 dBm weak.",
+  "eMMC-Verschleiß": "eMMC wear",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Used lifetime of the internal storage (paxx12), in steps of 10 %."
 };

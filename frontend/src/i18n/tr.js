@@ -733,4 +733,18 @@ export default {
   "Live": "Canlı",
   "Verlauf in der Schicht": "Katman içindeki ilerleme",
   "druckt {n}": "{n} yazdırılıyor",
+  "Verfahren": "Hareket",
+  "Schrittweite": "Adım",
+  "Y+ (nach hinten)": "Y+ (arkaya)",
+  "Y− (nach vorne)": "Y− (öne)",
+  "Z+ (Düse hoch)": "Z+ (nozul yukarı)",
+  "Z− (Düse runter)": "Z− (nozul aşağı)",
+  "Kopf nach vorne": "Kafa öne",
+  "Mitte": "Orta",
+  "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Yalnızca sıfırlamadan sonra; tablanın üzerinde kalır. Sabit bir konumdan önce nozul 30 mm'ye çıkar.",
+  "Letzte Meldungen": "Son mesajlar",
+  "WLAN-Signal": "WLAN sinyali",
+  "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Yazıcıdaki sinyal gücü (paxx12): −60 dBm üstü iyi, −75 dBm altı zayıf.",
+  "eMMC-Verschleiß": "eMMC aşınması",
+  "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Dahili belleğin kullanılmış ömrü (paxx12), %10'luk adımlarla."
 };

@@ -802,7 +802,21 @@
     "Fortschritt": "Progreso",
     "Live": "En vivo",
     "Verlauf in der Schicht": "Progreso dentro de la capa",
-    "druckt {n}": "imprimiendo {n}"
+    "druckt {n}": "imprimiendo {n}",
+    "Verfahren": "Mover",
+    "Schrittweite": "Paso",
+    "Y+ (nach hinten)": "Y+ (hacia atrás)",
+    "Y− (nach vorne)": "Y− (hacia delante)",
+    "Z+ (Düse hoch)": "Z+ (boquilla arriba)",
+    "Z− (Düse runter)": "Z− (boquilla abajo)",
+    "Kopf nach vorne": "Cabezal al frente",
+    "Mitte": "Centro",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Solo tras buscar el origen; se queda sobre la placa. Antes de una posición fija la boquilla sube a 30 mm.",
+    "Letzte Meldungen": "Últimos mensajes",
+    "WLAN-Signal": "Señal WLAN",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Intensidad de señal en la impresora (paxx12): por encima de −60 dBm es buena, por debajo de −75 dBm débil.",
+    "eMMC-Verschleiß": "Desgaste eMMC",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Vida útil consumida de la memoria interna (paxx12), en pasos del 10 %."
   };
 
   // frontend/src/i18n/fr.js
@@ -1539,7 +1553,21 @@
     "Fortschritt": "Progression",
     "Live": "Direct",
     "Verlauf in der Schicht": "Progression dans la couche",
-    "druckt {n}": "impression {n}"
+    "druckt {n}": "impression {n}",
+    "Verfahren": "Déplacer",
+    "Schrittweite": "Pas",
+    "Y+ (nach hinten)": "Y+ (vers l'arrière)",
+    "Y− (nach vorne)": "Y− (vers l'avant)",
+    "Z+ (Düse hoch)": "Z+ (buse vers le haut)",
+    "Z− (Düse runter)": "Z− (buse vers le bas)",
+    "Kopf nach vorne": "Tête à l'avant",
+    "Mitte": "Centre",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Uniquement après la prise d'origine ; reste au-dessus du plateau. Avant une position fixe, la buse monte à 30 mm.",
+    "Letzte Meldungen": "Derniers messages",
+    "WLAN-Signal": "Signal WLAN",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Force du signal à l'imprimante (paxx12) : au-dessus de −60 dBm c'est bon, en dessous de −75 dBm faible.",
+    "eMMC-Verschleiß": "Usure eMMC",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Durée de vie utilisée de la mémoire interne (paxx12), par pas de 10 %."
   };
 
   // frontend/src/i18n/it.js
@@ -2276,7 +2304,21 @@
     "Fortschritt": "Avanzamento",
     "Live": "Live",
     "Verlauf in der Schicht": "Avanzamento nello strato",
-    "druckt {n}": "in stampa {n}"
+    "druckt {n}": "in stampa {n}",
+    "Verfahren": "Muovi",
+    "Schrittweite": "Passo",
+    "Y+ (nach hinten)": "Y+ (indietro)",
+    "Y− (nach vorne)": "Y− (avanti)",
+    "Z+ (Düse hoch)": "Z+ (ugello su)",
+    "Z− (Düse runter)": "Z− (ugello giù)",
+    "Kopf nach vorne": "Testina davanti",
+    "Mitte": "Centro",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Solo dopo l'azzeramento; resta sopra il piano. Prima di una posizione fissa l'ugello sale a 30 mm.",
+    "Letzte Meldungen": "Ultimi messaggi",
+    "WLAN-Signal": "Segnale WLAN",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Intensità del segnale alla stampante (paxx12): sopra −60 dBm buona, sotto −75 dBm debole.",
+    "eMMC-Verschleiß": "Usura eMMC",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Vita utile consumata della memoria interna (paxx12), a passi del 10 %."
   };
 
   // frontend/src/i18n/nl.js
@@ -3013,7 +3055,21 @@
     "Fortschritt": "Voortgang",
     "Live": "Live",
     "Verlauf in der Schicht": "Voortgang binnen de laag",
-    "druckt {n}": "print {n}"
+    "druckt {n}": "print {n}",
+    "Verfahren": "Verplaatsen",
+    "Schrittweite": "Stap",
+    "Y+ (nach hinten)": "Y+ (naar achteren)",
+    "Y− (nach vorne)": "Y− (naar voren)",
+    "Z+ (Düse hoch)": "Z+ (nozzle omhoog)",
+    "Z− (Düse runter)": "Z− (nozzle omlaag)",
+    "Kopf nach vorne": "Kop naar voren",
+    "Mitte": "Midden",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Alleen na homen; blijft boven de plaat. Vóór een vaste positie gaat de nozzle eerst naar 30 mm.",
+    "Letzte Meldungen": "Laatste meldingen",
+    "WLAN-Signal": "WLAN-signaal",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Signaalsterkte bij de printer (paxx12): boven −60 dBm goed, onder −75 dBm zwak.",
+    "eMMC-Verschleiß": "eMMC-slijtage",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Verbruikte levensduur van het interne geheugen (paxx12), in stappen van 10 %."
   };
 
   // frontend/src/i18n/pt.js
@@ -3750,7 +3806,21 @@
     "Fortschritt": "Progresso",
     "Live": "Ao vivo",
     "Verlauf in der Schicht": "Progresso dentro da camada",
-    "druckt {n}": "a imprimir {n}"
+    "druckt {n}": "a imprimir {n}",
+    "Verfahren": "Mover",
+    "Schrittweite": "Passo",
+    "Y+ (nach hinten)": "Y+ (para trás)",
+    "Y− (nach vorne)": "Y− (para a frente)",
+    "Z+ (Düse hoch)": "Z+ (bico para cima)",
+    "Z− (Düse runter)": "Z− (bico para baixo)",
+    "Kopf nach vorne": "Cabeça para a frente",
+    "Mitte": "Centro",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Só depois da referenciação; fica sobre a placa. Antes de uma posição fixa o bico sobe a 30 mm.",
+    "Letzte Meldungen": "Últimas mensagens",
+    "WLAN-Signal": "Sinal WLAN",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Intensidade do sinal na impressora (paxx12): acima de −60 dBm é bom, abaixo de −75 dBm fraco.",
+    "eMMC-Verschleiß": "Desgaste eMMC",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Vida útil consumida da memória interna (paxx12), em passos de 10 %."
   };
 
   // frontend/src/i18n/tr.js
@@ -4487,7 +4557,21 @@
     "Fortschritt": "İlerleme",
     "Live": "Canlı",
     "Verlauf in der Schicht": "Katman içindeki ilerleme",
-    "druckt {n}": "{n} yazdırılıyor"
+    "druckt {n}": "{n} yazdırılıyor",
+    "Verfahren": "Hareket",
+    "Schrittweite": "Adım",
+    "Y+ (nach hinten)": "Y+ (arkaya)",
+    "Y− (nach vorne)": "Y− (öne)",
+    "Z+ (Düse hoch)": "Z+ (nozul yukarı)",
+    "Z− (Düse runter)": "Z− (nozul aşağı)",
+    "Kopf nach vorne": "Kafa öne",
+    "Mitte": "Orta",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Yalnızca sıfırlamadan sonra; tablanın üzerinde kalır. Sabit bir konumdan önce nozul 30 mm'ye çıkar.",
+    "Letzte Meldungen": "Son mesajlar",
+    "WLAN-Signal": "WLAN sinyali",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Yazıcıdaki sinyal gücü (paxx12): −60 dBm üstü iyi, −75 dBm altı zayıf.",
+    "eMMC-Verschleiß": "eMMC aşınması",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Dahili belleğin kullanılmış ömrü (paxx12), %10'luk adımlarla."
   };
 
   // frontend/src/i18n/zh.js
@@ -5224,7 +5308,21 @@
     "Fortschritt": "进度",
     "Live": "实时",
     "Verlauf in der Schicht": "层内进度",
-    "druckt {n}": "正在打印 {n}"
+    "druckt {n}": "正在打印 {n}",
+    "Verfahren": "移动",
+    "Schrittweite": "步长",
+    "Y+ (nach hinten)": "Y+（向后）",
+    "Y− (nach vorne)": "Y−（向前）",
+    "Z+ (Düse hoch)": "Z+（喷嘴上升）",
+    "Z− (Düse runter)": "Z−（喷嘴下降）",
+    "Kopf nach vorne": "打印头移到前方",
+    "Mitte": "居中",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "仅在归零后可用；始终保持在打印板上方。移动到固定位置前，喷嘴会先升到 30 mm。",
+    "Letzte Meldungen": "最近消息",
+    "WLAN-Signal": "WLAN 信号",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "打印机处的信号强度（paxx12）：高于 −60 dBm 为良好，低于 −75 dBm 为较弱。",
+    "eMMC-Verschleiß": "eMMC 磨损",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "内部存储已用寿命（paxx12），以 10% 为步进。"
   };
 
   // frontend/src/i18n.js
@@ -5987,7 +6085,21 @@
     "Fortschritt": "Progress",
     "Live": "Live",
     "Verlauf in der Schicht": "Progress within the layer",
-    "druckt {n}": "printing {n}"
+    "druckt {n}": "printing {n}",
+    "Verfahren": "Move",
+    "Schrittweite": "Step",
+    "Y+ (nach hinten)": "Y+ (to the back)",
+    "Y− (nach vorne)": "Y− (to the front)",
+    "Z+ (Düse hoch)": "Z+ (nozzle up)",
+    "Z− (Düse runter)": "Z− (nozzle down)",
+    "Kopf nach vorne": "Head to the front",
+    "Mitte": "Center",
+    "Nur nach einer Referenzfahrt; bleibt über der Platte. Vor einer festen Position fährt die Düse auf 30 mm hoch.": "Only after homing; stays over the plate. Before a fixed position the nozzle goes up to 30 mm.",
+    "Letzte Meldungen": "Recent messages",
+    "WLAN-Signal": "WLAN signal",
+    "Signalstärke am Drucker (paxx12): über −60 dBm gut, unter −75 dBm schwach.": "Signal strength at the printer (paxx12): above −60 dBm is good, below −75 dBm weak.",
+    "eMMC-Verschleiß": "eMMC wear",
+    "Verbrauchte Lebensdauer des internen Speichers (paxx12), in 10-%-Schritten.": "Used lifetime of the internal storage (paxx12), in steps of 10 %."
   };
 
   // frontend/src/accent.js
