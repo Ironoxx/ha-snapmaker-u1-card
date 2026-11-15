@@ -1006,6 +1006,16 @@ export const STYLES = `
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
+  /* ── Message history (2.3) ───────────────────────────────────────────── */
+  .elog { padding: 6px 0; border-bottom: 1px solid var(--u1-outline); }
+  .elog > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; min-height: 36px; list-style: none; }
+  .elog > summary::-webkit-details-marker { display: none; }
+  .elog .obj-count { margin-left: auto; }
+  .elog[open] .caret { transform: rotate(180deg); }
+  .elog-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .elog-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: baseline; font-size: 13px; }
+  .elog-item[data-level="error"] .elog-text { color: var(--u1-error); }
+
   /* ── Moving by hand (2.3) ────────────────────────────────────────────── */
   .jog { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
   .jog-steps { justify-content: flex-start; flex-wrap: nowrap; }

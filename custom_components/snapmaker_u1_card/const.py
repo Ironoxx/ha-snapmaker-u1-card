@@ -141,3 +141,6 @@ CONF_CAMERA_WAKE = "camera_wake"
 CAMERA_WAKE_MODES = ("off", "printing", "always")
 DEFAULT_CAMERA_WAKE = "off"
 CAMERA_WAKE_S = 10
+
+# 2.3: firmware messages kept for the system tab
+ERROR_LOG_MAX = 15

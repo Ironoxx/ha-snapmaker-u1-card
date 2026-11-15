@@ -134,10 +134,9 @@ export const LayoutMixin = (Base) => class extends Base {
   _messages() {
     const d = this._d;
     if (!d || !d.online) return [];
-    const key = LANG === "de" ? "de" : "en";
     const out = (d.errors || []).map((e) => ({
       level: e.level >= 3 ? "error" : "warn", icon: e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert",
-      text: this._errText(e), hint: e.hint && e.hint[key] ? e.hint[key] : "", title: `${e.key} · ${e.message || ""}`,
+      text: this._errText(e), hint: e.hint ? (e.hint[LANG] ?? e.hint.en ?? "") : "", title: `${e.key} · ${e.message || ""}`,
     }));
     const ms = this._machineState();
     if (ms && ms.main === "abnormal" && !out.length) {

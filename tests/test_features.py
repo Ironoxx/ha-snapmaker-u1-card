@@ -316,3 +316,22 @@ def test_timelapses_listed_once_across_roots() -> None:
     out = p2.dedupe_timelapses([c, b, a])
     assert [v["path"] for v in out] == ["dog_PLA_20261026162900.mp4", "clip.mp4"]
     assert out[0]["root"] == "timelapse"  # newest first; same file only once
+
+
+def test_error_texts_in_all_languages() -> None:
+    """2.3: every firmware error text and hint exists in es/fr/it/nl/pt/tr."""
+    from custom_components.snapmaker_u1_card.errors import CATALOG, MODULES, describe_error, error_text
+    from custom_components.snapmaker_u1_card.errors_i18n import HEAD, TEXTS
+
+    english = {"Printer"} | {m[1] for m in MODULES.values()}
+    for _de, en, _hd, hint_en in CATALOG.values():
+        english.add(en)
+        if hint_en:
+            english.add(hint_en)
+    for lang, table in TEXTS.items():
+        assert not english - set(table), f"{lang}: missing {sorted(english - set(table))[:3]}"
+        assert lang in HEAD
+    info = describe_error({"id": 525, "index": 1, "code": 3, "level": 2, "message": ""})
+    assert info["text"]["fr"] == "Pas de filament à l'alimentation (tête 2)"
+    assert error_text(info, "es-ES") == "No hay filamento en el alimentador (cabezal 2). Introduce el filamento hasta el tope."
+    assert error_text(info, "zh-Hans").startswith("No filament at the feeder"), "others: English"

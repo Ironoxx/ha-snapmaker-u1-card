@@ -291,6 +291,7 @@ export const StateMixin = (Base) => class extends Base {
       backup: (() => { const st = this._ents && this._ents.maintenance && this._st(this._ents.maintenance);
         return (st && st.attributes && st.attributes.config_backup) || null; })(),
       errors: this._attr("errors", "errors") || [],
+      errorLog: this._attr("errors", "log") || [],
     };
   }
 
@@ -310,7 +311,8 @@ export const StateMixin = (Base) => class extends Base {
   }
 
   _errText(e) {
-    const key = LANG === "de" ? "de" : "en";
+    // 2.3: the integration sends de/en/es/fr/it/nl/pt/tr; others English
+    const key = e.text && e.text[LANG] ? LANG : "en";
     let t = (e.text && e.text[key]) || e.message || "";
     if (!e.known && e.message) t = `${t}: ${e.message}`;
     return t;

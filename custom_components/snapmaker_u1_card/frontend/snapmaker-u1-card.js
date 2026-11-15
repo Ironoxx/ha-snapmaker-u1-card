@@ -6658,7 +6658,8 @@
           const st = this._ents && this._ents.maintenance && this._st(this._ents.maintenance);
           return st && st.attributes && st.attributes.config_backup || null;
         })(),
-        errors: this._attr("errors", "errors") || []
+        errors: this._attr("errors", "errors") || [],
+        errorLog: this._attr("errors", "log") || []
       };
     }
     /** List attribute of one of our sensors; null if the sensor does not exist. */
@@ -6681,7 +6682,7 @@
       };
     }
     _errText(e) {
-      const key = LANG === "de" ? "de" : "en";
+      const key = e.text && e.text[LANG] ? LANG : "en";
       let t = e.text && e.text[key] || e.message || "";
       if (!e.known && e.message) t = `${t}: ${e.message}`;
       return t;
@@ -8208,6 +8209,7 @@
             ${d.stepX !== null ? this._row(tr("Stepper X"), `<span data-su1="stepx">${num(d.stepX, 1, "°C")}</span>`) : ""}
             ${d.stepY !== null ? this._row(tr("Stepper Y"), `<span data-su1="stepy">${num(d.stepY, 1, "°C")}</span>`) : ""}
             ${this._printerSettingsHtml()}
+            ${this._errorLogHtml()}
             ${this._liveNotifyHtml()}
             <div class="selftest-wrap">
               <div class="chip-row" style="justify-content:flex-start">
@@ -8251,6 +8253,18 @@
       <div class="row" title="${esc(hint)}">
         <span class="k">${tr("Fortschritt aufs Handy")}<small class="t-label" style="display:block">${esc(hint)}</small></span>
         <span class="v"><button type="button" class="chip" data-livenotify aria-pressed="${on}"${targets ? "" : " disabled"}>${on ? tr("An") : tr("Aus")}</button></span></div>`;
+    }
+    /** 2.3: the last firmware messages (newest first), folded. */
+    _errorLogHtml() {
+      const log = this._d && this._d.errorLog || [];
+      if (!log.length) return "";
+      const items = log.map((e) => `<li class="elog-item" data-level="${e.level >= 3 ? "error" : "warn"}" title="${esc(`${e.key}${e.message ? ` · ${e.message}` : ""}`)}">
+        <span class="elog-time t-label">${esc(fmtDate(e.time))}</span><span class="elog-text">${esc(this._errText(e))}</span></li>`).join("");
+      return `<details class="elog">
+        <summary><ha-icon icon="mdi:history"></ha-icon><span>${tr("Letzte Meldungen")}</span>
+          <span class="t-label obj-count">${log.length}</span><ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+        <ul class="elog-list">${items}</ul>
+      </details>`;
     }
     _fwText() {
       const st = this._st(this._ents && this._ents.firmware);
@@ -9392,12 +9406,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _messages() {
       const d = this._d;
       if (!d || !d.online) return [];
-      const key = LANG === "de" ? "de" : "en";
       const out = (d.errors || []).map((e) => ({
         level: e.level >= 3 ? "error" : "warn",
         icon: e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert",
         text: this._errText(e),
-        hint: e.hint && e.hint[key] ? e.hint[key] : "",
+        hint: e.hint ? e.hint[LANG] ?? e.hint.en ?? "" : "",
         title: `${e.key} · ${e.message || ""}`
       }));
       const ms = this._machineState();
@@ -10565,6 +10578,16 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
+  /* ── Message history (2.3) ───────────────────────────────────────────── */
+  .elog { padding: 6px 0; border-bottom: 1px solid var(--u1-outline); }
+  .elog > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; min-height: 36px; list-style: none; }
+  .elog > summary::-webkit-details-marker { display: none; }
+  .elog .obj-count { margin-left: auto; }
+  .elog[open] .caret { transform: rotate(180deg); }
+  .elog-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .elog-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: baseline; font-size: 13px; }
+  .elog-item[data-level="error"] .elog-text { color: var(--u1-error); }
+
   /* ── Moving by hand (2.3) ────────────────────────────────────────────── */
   .jog { display: flex; flex-direction: column; gap: 8px; padding-top: 6px; }
   .jog-steps { justify-content: flex-start; flex-wrap: nowrap; }
@@ -10772,6 +10795,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
         d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
         d.errors.map((e) => e.key).join(","),
+        (d.errorLog || []).map((e) => e.time).join(","),
         // 2.2: machine state and feeders (messages, load/unload buttons)
         (() => {
           const ms = this._machineState();
@@ -11739,7 +11763,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           return `<button type="button" class="slot-btn" data-map="${fil.index}" data-slot="${s.index}"
             aria-pressed="${on}" ${s.loaded ? "" : 'data-empty="1"'}
             title="${esc((heads[s.index] || {}).name || tr("Slot {n}", { n: s.index + 1 }))} · ${esc(label)}">
-            ${this._spoolSvg(s.loaded && s.color ? s.color : "var(--u1-outline)", false, s.loaded ? s.colors : null)}
+            ${this._spoolSvg(s.loaded && s.color ? s.color : "var(--u1-outline)", false, s.loaded ? s.colors : null, s.loaded ? this._spoolFill(s.index) : null)}
             <span class="slot-no">${esc((heads[s.index] || {}).name || s.index + 1)}</span>
             <span class="slot-type">${esc(label)}</span>
             ${(() => {
@@ -14221,7 +14245,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const low = sp && sp.remaining_weight != null && sp.remaining_weight < (sm.low || 0);
         return `<span class="mini-slot" data-active="${h.active ? 1 : 0}" data-empty="${h.loaded ? 0 : 1}"
             title="${esc(h.name)}: ${esc(h.material)}">
-          ${this._spoolSvg(h.color, h.active, h.colors)}
+          ${this._spoolSvg(h.color, h.active, h.colors, sm ? this._spoolFill(h.idx) : null, h.active && !!d.printing && !d.paused)}
           <span class="mini-mat">${esc(h.loaded ? h.material : tr("leer"))}</span>
           ${sp && sp.remaining_weight != null ? `<span class="mini-g mono" data-low="${low ? 1 : 0}">${Math.round(sp.remaining_weight)} g</span>` : ""}
         </span>`;

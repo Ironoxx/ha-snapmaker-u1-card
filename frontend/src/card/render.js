@@ -36,6 +36,7 @@ export const RenderMixin = (Base) => class extends Base {
       d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
       d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
       d.errors.map((e) => e.key).join(","),
+      (d.errorLog || []).map((e) => e.time).join(","),
       // 2.2: machine state and feeders (messages, load/unload buttons)
       (() => { const ms = this._machineState(); return ms ? `ms${ms.main}${ms.needsUser}${ms.main !== "idle" && !d.active ? ms.action : ""}` : "noms"; })(),
       [0, 1, 2, 3].map((i) => { const f = this._feed(i); return f ? `${f.error}${f.in_head}${f.at_feeder}${f.state}${f.auto}` : "-"; }).join(","),

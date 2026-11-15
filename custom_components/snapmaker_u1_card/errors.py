@@ -14,6 +14,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .errors_i18n import HEAD, TEXTS
+
 # Module IDs (exception_manager.ExceptionList)
 MODULES: dict[int, tuple[str, str]] = {
     522: ("Bewegungssystem", "Motion system"),
@@ -139,16 +141,24 @@ def describe_error(raw: dict[str, Any]) -> dict[str, Any] | None:
         de, en, hint_de, hint_en = entry
     else:
         de, en, hint_de, hint_en = mod[0], mod[1], "", ""
+    # 2.3: further languages from the English text (missing: English)
+    text = {"de": de, "en": en}
+    hint = {"de": hint_de, "en": hint_en}
+    for lang, table in TEXTS.items():
+        text[lang] = table.get(en, en)
+        hint[lang] = table.get(hint_en, hint_en) if hint_en else ""
     if module in _PER_HEAD and index is not None:
-        de, en = f"{de} (Kopf {index + 1})", f"{en} (head {index + 1})"
+        text["de"], text["en"] = f"{de} (Kopf {index + 1})", f"{en} (head {index + 1})"
+        for lang, word in HEAD.items():
+            text[lang] = f"{text[lang]} ({word.format(n=index + 1)})"
     level = _int(raw.get("level"))
     return {
         "key": f"{module:04d}-{index or 0:04d}-{code:04d}",
         "id": module, "index": index, "code": code, "level": level,
         "known": entry is not None,
         "message": message,
-        "text": {"de": de, "en": en},
-        "hint": {"de": hint_de, "en": hint_en},
+        "text": text,
+        "hint": hint,
     }
 
 
@@ -178,9 +188,10 @@ def collect_errors(status: dict[str, Any]) -> list[dict[str, Any]]:
 
 def error_text(info: dict[str, Any], lang: str) -> str:
     """Plain-language text and hint for a firmware exception in the given language."""
-    key = "de" if lang.lower().startswith("de") else "en"
+    base = lang.lower().split("-")[0]
+    key = base if base in info["text"] else "en"
     text = info["text"][key]
     if not info.get("known") and info.get("message"):
         text = f"{text}: {info['message']}"
-    hint = info["hint"][key]
+    hint = info["hint"].get(key, "")
     return f"{text}. {hint}" if hint else text

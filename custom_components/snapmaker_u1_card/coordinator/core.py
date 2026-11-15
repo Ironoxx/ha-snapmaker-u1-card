@@ -34,6 +34,7 @@ from ..const import (
     DEFAULT_ARCHIVE,
     DEFAULT_SPOOLMAN_DEDUCT,
     DOMAIN,
+    ERROR_LOG_MAX,
     EVENT_NOTIFY_ACTION,
     FILES_INTERVAL,
     STATS_INTERVAL_S,
@@ -207,6 +208,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._webcam_task: Any = None
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
         self._maint_notified: list[str] = []  # maintenance items already announced as due
+        self.error_log: list[dict[str, Any]] = []  # 2.3: the last firmware messages, newest first
         self.chamber_heater: dict[str, Any] | None = None  # Panda Breath / DragonBreath (machine.py)
 
     # ── Options ─────────────────────────────────────────────────────────────
@@ -284,6 +286,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._print_hours = extra.get("print_hours")
         self._backup = dict(extra.get("backup") or {})
         self._maint_notified = [k for k in extra.get("maint_notified") or [] if isinstance(k, str)]
+        self.error_log = [e for e in extra.get("error_log") or [] if isinstance(e, dict)][:ERROR_LOG_MAX]
         self.firmware["latest"] = extra.get("firmware_latest")
         if self.options.get(CONF_ARCHIVE, DEFAULT_ARCHIVE):
             folder = media_root(dict(self.hass.config.media_dirs), self.hass.config.config_dir) / ARCHIVE_DIR
@@ -463,6 +466,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             "print_hours": self._print_hours,
             "backup": self._backup,
             "maint_notified": self._maint_notified,
+            "error_log": self.error_log,
             "firmware_latest": self.firmware.get("latest"),
             "live_notify": self._live_stored(),
             **({"archive": self.archive.as_stored()} if self.archive else {}),

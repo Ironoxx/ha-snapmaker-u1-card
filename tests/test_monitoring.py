@@ -541,3 +541,23 @@ async def test_progress_within_gcode(hass: HomeAssistant, mock_client) -> None:
     with patch(f"{API}.file_metadata", AsyncMock(return_value={"gcode_start_byte": 50, "gcode_end_byte": 50})):
         await coord._enrich_active(bad)
     assert "gcode_bytes" not in bad
+
+
+async def test_error_log(hass: HomeAssistant, mock_client) -> None:
+    """2.3: new firmware messages land in a short history (newest first), kept in the store."""
+    from custom_components.snapmaker_u1_card.const import ERROR_LOG_MAX
+    from custom_components.snapmaker_u1_card.errors import describe_error
+
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    a = describe_error({"id": 525, "index": 0, "code": 3, "level": 2, "message": ""})
+    b = describe_error({"id": 532, "index": 0, "code": 2, "level": 3, "message": "spaghetti"})
+    coord._update_errors([a])
+    coord._update_errors([a])  # still open: not again
+    coord._update_errors([a, b])
+    assert [e["key"] for e in coord.error_log] == [b["key"], a["key"]]
+    assert coord.error_log[0]["text"]["it"] == "Spaghetti rilevati" and "time" in coord.error_log[0]
+    assert coord._stored()["error_log"] == coord.error_log
+    for i in range(ERROR_LOG_MAX + 3):
+        coord._update_errors([describe_error({"id": 531, "index": i, "code": 1, "level": 1, "message": ""})])
+    assert len(coord.error_log) == ERROR_LOG_MAX

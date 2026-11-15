@@ -36,6 +36,7 @@ export const SystemMixin = (Base) => class extends Base {
             ${d.stepX !== null ? this._row(tr("Stepper X"), `<span data-su1="stepx">${num(d.stepX, 1, "°C")}</span>`) : ""}
             ${d.stepY !== null ? this._row(tr("Stepper Y"), `<span data-su1="stepy">${num(d.stepY, 1, "°C")}</span>`) : ""}
             ${this._printerSettingsHtml()}
+            ${this._errorLogHtml()}
             ${this._liveNotifyHtml()}
             <div class="selftest-wrap">
               <div class="chip-row" style="justify-content:flex-start">
@@ -84,6 +85,19 @@ export const SystemMixin = (Base) => class extends Base {
       <div class="row" title="${esc(hint)}">
         <span class="k">${tr("Fortschritt aufs Handy")}<small class="t-label" style="display:block">${esc(hint)}</small></span>
         <span class="v"><button type="button" class="chip" data-livenotify aria-pressed="${on}"${targets ? "" : " disabled"}>${on ? tr("An") : tr("Aus")}</button></span></div>`;
+  }
+
+  /** 2.3: the last firmware messages (newest first), folded. */
+  _errorLogHtml() {
+    const log = (this._d && this._d.errorLog) || [];
+    if (!log.length) return "";
+    const items = log.map((e) => `<li class="elog-item" data-level="${e.level >= 3 ? "error" : "warn"}" title="${esc(`${e.key}${e.message ? ` · ${e.message}` : ""}`)}">
+        <span class="elog-time t-label">${esc(fmtDate(e.time))}</span><span class="elog-text">${esc(this._errText(e))}</span></li>`).join("");
+    return `<details class="elog">
+        <summary><ha-icon icon="mdi:history"></ha-icon><span>${tr("Letzte Meldungen")}</span>
+          <span class="t-label obj-count">${log.length}</span><ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+        <ul class="elog-list">${items}</ul>
+      </details>`;
   }
 
   _fwText() {

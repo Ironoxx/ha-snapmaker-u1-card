@@ -586,7 +586,7 @@ class ErrorsSensor(U1Entity, SensorEntity):
 
     _attr_translation_key = "errors"
     _attr_icon = "mdi:alert-circle-outline"
-    _unrecorded_attributes = frozenset({"errors"})
+    _unrecorded_attributes = frozenset({"errors", "log"})
 
     def __init__(self, coordinator: U1Coordinator) -> None:
         super().__init__(coordinator, "errors")
@@ -597,7 +597,7 @@ class ErrorsSensor(U1Entity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        return {"errors": self.coordinator.data.errors}
+        return {"errors": self.coordinator.data.errors, "log": self.coordinator.error_log}
 
 
 class RemainingSensor(U1Entity, SensorEntity):

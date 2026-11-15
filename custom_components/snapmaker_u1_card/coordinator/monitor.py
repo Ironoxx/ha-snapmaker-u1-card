@@ -10,12 +10,15 @@ import time
 from pathlib import Path
 from typing import Any
 
+from homeassistant.util import dt as dt_util
+
 from ..const import (
     CONF_ALMOST_DONE,
     CONF_BED_COOL,
     DEFAULT_ALMOST_DONE,
     DEFAULT_BED_COOL,
     DOMAIN,
+    ERROR_LOG_MAX,
     LIVE_INTERVAL,
     RUNOUT_WARN_MIN,
     UPDATE_INTERVAL,
@@ -161,6 +164,13 @@ class PrintMonitorMixin:
         self._new_errors = [e for e in errors if e["key"] not in self._error_keys]
         for err in self._new_errors:
             _LOGGER.info("Printer reports: %s (%s, %s)", err["text"]["de"], err["key"], err["message"])
+        if self._new_errors:
+            # 2.3: history for the system tab (texts without hints, kept small)
+            now = dt_util.utcnow().isoformat(timespec="seconds")
+            self.error_log = [{"time": now, "key": e["key"], "level": e["level"], "message": e["message"],
+                               "known": e["known"], "text": e["text"]} for e in self._new_errors] + self.error_log
+            self.error_log = self.error_log[:ERROR_LOG_MAX]
+            self._save()
         self._errors, self._error_keys = errors, keys
 
     def _alert_new(self, errors: list[dict[str, Any]], print_state: str | None, skip: bool) -> None:
