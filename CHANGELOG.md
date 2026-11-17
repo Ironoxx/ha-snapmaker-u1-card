@@ -4,6 +4,56 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.3.0
+
+Moving the head by hand, a second notification group, progress without the slicer's header, Spoolman booking per spool, printer messages in more languages, Simplified Chinese.
+
+**Move the head**
+- New pad *Move* in the control tab: X/Y/Z with 0.1 / 1 / 10 / 50 mm steps, *Head to the front* and *Center*. Only after homing, never during a print or while the printer runs something else; moves stay over the plate (X 0–271, Y 0–270, Z ≥ 1 mm), before a fixed position the nozzle goes up to 30 mm. New service `snapmaker_u1_card.move`.
+
+**Notifications**
+- **Second notification group** (#15, thanks marcopaganini): own `notify` services and own events, e.g. errors and pauses to another person. On Android group 2 uses its own notification channel *Snapmaker U1 2*, so it can ring with another sound even on the same phone. Each service gets a message once. Empty = no change.
+
+**Progress and Spoolman**
+- **Progress counts the G-code only**, like Mainsail/Fluidd: Klipper's value includes the slicer's header with its thumbnails, so a print started at ~1 % and the last percent jumped. Now from Moonraker's `gcode_start_byte`/`gcode_end_byte`.
+- **Spoolman booking per spool:** Moonraker's own Spoolman books only its active spool. Without SpoolLink the integration now notes which spool that was and books the other spools itself after the print (before, nobody booked them). The run-out forecast uses the same knowledge.
+
+**Printer messages**
+- Firmware messages and hints also in **Spanish, French, Italian, Dutch, Portuguese and Turkish** (card and push).
+- **History** of the last 15 messages in the system tab (folded), also as attribute `log` of the printer messages sensor.
+
+**Also**
+- **Simplified Chinese** for the card (#14, thanks HYYYQZ).
+- **Status light blueprint version 4:** optional pulse of the lights and a sound on speakers when the print is done.
+- **paxx12:** WLAN signal and eMMC wear as diagnostic sensors (and in the system tab); hints to `/firmware-config/` (RTSP, SpoolLink) only when paxx12 runs.
+- Spool fill level also in the mini card and in the print dialog.
+
+### Deutsch
+
+Kopf von Hand verfahren, zweite Benachrichtigungsgruppe, Fortschritt ohne Slicer-Kopf, Spoolman-Abbuchung je Spule, Druckermeldungen in mehr Sprachen, vereinfachtes Chinesisch.
+
+**Kopf verfahren**
+- Neues Steuerkreuz *Verfahren* im Steuerungs-Reiter: X/Y/Z in Schritten von 0,1 / 1 / 10 / 50 mm, *Kopf nach vorne* und *Mitte*. Nur nach einer Referenzfahrt, nie während eines Drucks oder während der Drucker etwas anderes tut; die Bewegungen bleiben über der Platte (X 0–271, Y 0–270, Z ≥ 1 mm), vor einer festen Position fährt die Düse auf 30 mm hoch. Neuer Dienst `snapmaker_u1_card.move`.
+
+**Benachrichtigungen**
+- **Zweite Benachrichtigungsgruppe** (#15, danke marcopaganini): eigene `notify`-Dienste und eigene Anlässe, z. B. Fehler und Pausen an eine andere Person. Unter Android nutzt Gruppe 2 den eigenen Benachrichtigungskanal *Snapmaker U1 2* und kann so auch auf demselben Handy mit anderem Ton klingeln. Jeder Dienst bekommt eine Meldung nur einmal. Leer = keine Änderung.
+
+**Fortschritt und Spoolman**
+- **Der Fortschritt zählt nur den G-Code**, wie in Mainsail/Fluidd: Klippers Wert enthält den Kopf des Slicers mit den Vorschaubildern, dadurch begann ein Druck bei ~1 % und das letzte Prozent sprang. Jetzt aus `gcode_start_byte`/`gcode_end_byte` von Moonraker.
+- **Spoolman-Abbuchung je Spule:** Der Spoolman von Moonraker bucht nur seine aktive Spule ab. Ohne SpoolLink merkt sich die Integration jetzt, welche Spule das war, und bucht die übrigen Spulen nach dem Druck selbst ab (bisher hat sie niemand gebucht). Die Leer-Vorhersage nutzt dasselbe Wissen.
+
+**Druckermeldungen**
+- Firmware-Meldungen und Hinweise auch auf **Spanisch, Französisch, Italienisch, Niederländisch, Portugiesisch und Türkisch** (Karte und Push).
+- **Verlauf** der letzten 15 Meldungen im System-Reiter (eingeklappt), auch als Attribut `log` des Druckermeldungen-Sensors.
+
+**Außerdem**
+- **Vereinfachtes Chinesisch** für die Karte (#14, danke HYYYQZ).
+- **Status-Licht-Blueprint Version 4:** auf Wunsch Pulsieren der Lampen und ein Ton über Lautsprecher am Druckende.
+- **paxx12:** WLAN-Signal und eMMC-Verschleiß als Diagnose-Sensoren (und im System-Reiter); Hinweise auf `/firmware-config/` (RTSP, SpoolLink) nur, wenn paxx12 läuft.
+- Füllstand der Spulen auch in der Mini-Karte und im Druckdialog.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.3.0b1
 
 Beta. Moving the head by hand, a second notification group, progress without the slicer's header, Spoolman booking per spool, printer messages in more languages, Simplified Chinese.
