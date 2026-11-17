@@ -111,22 +111,28 @@ assert.ok(!R(single).querySelector(".tabs"), "ein Reiter ohne Leiste");
 // 5. Mini card
 const mini = make("snapmaker-u1-mini-card");
 const mt = R(mini).textContent.replace(/\s+/g, " ");
-assert.match(mt, /nuss/);
-assert.match(mt, /Druckt/);
-assert.match(mt, /44 %/);
+// 2.3.1: tile layout – one line under the name, cycling every 5 s (all infos in its title)
+const msub = () => R(mini).querySelector('[data-su1="minisub"]');
+assert.match(mt, /Druckt · 44 % · /);
+assert.match(msub().title, /nuss/);
+for (let i = 0; i < 5; i++) mini._tickCamera();
+assert.match(msub().textContent, /nuss/, "next info after 5 s");
+assert.ok(msub().classList.contains("swap"), "slides in");
+assert.ok(R(mini).querySelector('.mini-icon[data-state="printing"]'), "icon shows the state");
+assert.match(R(mini).querySelector(".mini-icon").getAttribute("style"), /--p:\s*4[34]/, "progress ring");
 assert.match(mt, /80 g/, "Spoolman-Rest");
 assert.strictEqual(R(mini).querySelector(".mini-g").dataset.low, "1", "Restwarnung");
 assert.ok(!R(mini).querySelector("img[data-live]"), "keine Kamera");
-assert.ok(R(mini).querySelector('[data-act="power"]'), "Netzschalter");
-assert.strictEqual(mini.getCardSize(), 3);
+assert.ok(R(mini).querySelector('button.mini-icon[data-act="power"]'), "Netzschalter am Symbol");
+assert.strictEqual(mini.getCardSize(), 2);
 let more = null;
 mini.addEventListener("hass-more-info", (e) => { more = e.detail.entityId; });
-R(mini).querySelector(".mini-file").click();
+R(mini).querySelector(".mini-name").click();
 assert.strictEqual(more, `sensor.${P}_printer_state`, "Antippen = Statusdialog");
 const miniNav = make("snapmaker-u1-mini-card", { navigation_path: "/drucker/0" });
 let nav = 0;
 w.addEventListener("location-changed", () => { nav++; });
-R(miniNav).querySelector(".mini-file").click();
+R(miniNav).querySelector(".mini-name").click();
 assert.strictEqual(nav, 1);
 assert.strictEqual(w.location.pathname, "/drucker/0");
 
@@ -145,6 +151,7 @@ const miniHide = make("snapmaker-u1-mini-card", { hide_filaments: true });
 assert.ok(!R(miniHide).querySelector(".mini-fil"), "Filamente ausblendbar");
 // The mini card patches the percentage without a rebuild
 states[`sensor.${P}_progress`].state = "50.2"; mini.hass = hass();
+mini._miniIdx = 0; mini._miniPaint(false);
 assert.match(R(mini).textContent.replace(/\s+/g, " "), /50 %/);
 states[`sensor.${P}_progress`].state = "43.6";
 assert.ok(w.customCards.some((c) => c.type === "snapmaker-u1-mini-card"), "Kartenauswahl");

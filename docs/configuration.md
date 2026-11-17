@@ -87,6 +87,8 @@ type: custom:snapmaker-u1-mini-card
 navigation_path: /dashboard-printer/0   # optional: go there on tap, otherwise the status dialog
 ```
 
+2.3.1: compact like Home Assistant's tile card. With a power switch set up, a tap on the **icon** switches the printer on or off (off only when it is not printing, with a confirmation). The line under the name shows the current infos **in turn**, every 5 s (state and power, progress and remaining time, file, end time, layer, a printer message first), cut with "…" when it does not fit; all of them are in its tooltip. While printing, a thin ring around the icon and a bar show the progress. With "reduce motion" nothing moves.
+
 | Option | Default | Meaning |
 |---|---|---|
 | `printer_name` | `U1` | display name |

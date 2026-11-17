@@ -1089,28 +1089,55 @@ export const STYLES = `
   .obj-chip.off { text-decoration: line-through; opacity: .6; }
 
   /* ── Mini card ────────────────────────────────────────────────────────── */
-  .mini-wrap { display: flex; flex-direction: column; gap: 12px; cursor: pointer; }
-  .mini-top { display: flex; align-items: center; gap: 12px; }
-  .mini-top .head-icon { width: 40px; height: 40px; }
-  .mini-top .head-icon ha-icon { --mdc-icon-size: 22px; }
-  .mini-top .head-text { min-width: 0; }
-  .mini-status { margin-top: 2px; }
-  .mini-file { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mini-prog { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-  .mini-prog .track { flex: 1; }
-  .mini-prog .mono { font-weight: 600; min-width: 3.5em; text-align: right; }
-  .mini-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
-  .mini-meta > span { display: inline-flex; align-items: center; gap: 4px; }
-  .mini-meta ha-icon { --mdc-icon-size: 14px; }
+  /* Mini card, 2.3.1: compact like Home Assistant's tile card */
+  :host([mini]) ha-card { padding: 10px 12px; gap: 10px; }
+  .mini-wrap { display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
+  .mini-tile { display: flex; align-items: center; gap: 10px; min-height: 36px; }
+  .mini-icon {
+    --tone: var(--u1-on-variant); --p: 0;
+    position: relative; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer; font: inherit;
+    color: var(--tone); background: color-mix(in srgb, var(--tone) 18%, transparent);
+    transition: color .3s, background-color .3s, transform .15s;
+  }
+  div.mini-icon { cursor: inherit; }
+  .mini-icon ha-icon { --mdc-icon-size: 20px; }
+  button.mini-icon:active:not([disabled]) { transform: scale(.9); }
+  .mini-icon[disabled] { cursor: default; }
+  .mini-icon[data-state="on"] { --tone: var(--u1-ok); }
+  .mini-icon[data-state="printing"] { --tone: var(--u1-primary); }
+  .mini-icon[data-state="paused"], .mini-icon[data-state="busy"] { --tone: var(--u1-warn); }
+  .mini-icon[data-state="error"] { --tone: var(--u1-error); }
+  /* progress as a thin ring around the icon */
+  .mini-icon[data-state="printing"]::before, .mini-icon[data-state="paused"]::before {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%; pointer-events: none;
+    background: conic-gradient(var(--tone) calc(var(--p) * 1%), color-mix(in srgb, var(--tone) 18%, transparent) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    transition: background .6s;
+  }
+  .mini-icon[data-state="busy"] { animation: mini-pulse 1.6s ease-in-out infinite; }
+  @keyframes mini-pulse { 50% { background: color-mix(in srgb, var(--tone) 38%, transparent); } }
+  .mini-info { min-width: 0; flex: 1; }
+  .mini-name { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--u1-on); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-sub { font-size: 12px; line-height: 16px; color: var(--u1-on-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-sub[data-tone="error"] { color: var(--u1-error); }
+  .mini-sub[data-tone="warn"] { color: var(--u1-warn); }
+  .mini-sub.swap { animation: mini-swap .35s ease-out; }
+  @keyframes mini-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .mini-bar { height: 3px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--u1-on-variant) 22%, transparent); }
+  .mini-bar i { display: block; height: 100%; background: var(--u1-primary); transition: width .6s; }
+  .mini-bar[data-tone="warn"] i { background: var(--u1-warn); }
+  .mini-bar[data-tone="error"] i { background: var(--u1-error); }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-sub.swap, .mini-icon[data-state="busy"] { animation: none; }
+  }
   .mini-fil { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .mini-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center; }
-  .mini-slot .spool { width: 38px; height: 38px; }
+  .mini-slot .spool { width: 32px; height: 32px; }
   .mini-slot[data-empty="1"] { opacity: .5; }
   .mini-mat { font-size: 11px; color: var(--u1-on-variant); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini-g { font-size: 11px; }
-  .mini-err { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--u1-error); }
-  .mini-err ha-icon, .mini-q ha-icon { --mdc-icon-size: 16px; flex-shrink: 0; }
-  .mini-q { display: flex; gap: 6px; align-items: center; }
   .mini-g[data-low="1"] { color: var(--u1-warn); }
 
   /* ── Tabs ──────────────────────────────────────────────────────────── */

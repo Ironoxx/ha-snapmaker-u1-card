@@ -271,8 +271,8 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   w.document.body.appendChild(mini);
   mini.hass = hass();
   const mt = text(mini.shadowRoot.getElementById("u1card"));
-  assert.match(mt, /Vorladen: kein Filament erkannt/);
-  assert.match(mt, /Nächster: Box \(\+1\)/);
+  assert.match(mt, /Vorladen: kein Filament erkannt/, "message first");
+  assert.match(mini.shadowRoot.querySelector('[data-su1="minisub"]').title, /Nächster: Box \(\+1\)/);
 
   // 12. English: no German leftovers in any tab, the dialog and the mini card
   lang = "en";

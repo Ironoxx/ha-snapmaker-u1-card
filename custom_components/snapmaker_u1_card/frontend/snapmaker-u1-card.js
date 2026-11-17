@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.3.0";
+  var CARD_VERSION = "2.3.1b1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -10778,28 +10778,55 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .obj-chip.off { text-decoration: line-through; opacity: .6; }
 
   /* ── Mini card ────────────────────────────────────────────────────────── */
-  .mini-wrap { display: flex; flex-direction: column; gap: 12px; cursor: pointer; }
-  .mini-top { display: flex; align-items: center; gap: 12px; }
-  .mini-top .head-icon { width: 40px; height: 40px; }
-  .mini-top .head-icon ha-icon { --mdc-icon-size: 22px; }
-  .mini-top .head-text { min-width: 0; }
-  .mini-status { margin-top: 2px; }
-  .mini-file { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .mini-prog { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-  .mini-prog .track { flex: 1; }
-  .mini-prog .mono { font-weight: 600; min-width: 3.5em; text-align: right; }
-  .mini-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
-  .mini-meta > span { display: inline-flex; align-items: center; gap: 4px; }
-  .mini-meta ha-icon { --mdc-icon-size: 14px; }
+  /* Mini card, 2.3.1: compact like Home Assistant's tile card */
+  :host([mini]) ha-card { padding: 10px 12px; gap: 10px; }
+  .mini-wrap { display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
+  .mini-tile { display: flex; align-items: center; gap: 10px; min-height: 36px; }
+  .mini-icon {
+    --tone: var(--u1-on-variant); --p: 0;
+    position: relative; flex: none; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer; font: inherit;
+    color: var(--tone); background: color-mix(in srgb, var(--tone) 18%, transparent);
+    transition: color .3s, background-color .3s, transform .15s;
+  }
+  div.mini-icon { cursor: inherit; }
+  .mini-icon ha-icon { --mdc-icon-size: 20px; }
+  button.mini-icon:active:not([disabled]) { transform: scale(.9); }
+  .mini-icon[disabled] { cursor: default; }
+  .mini-icon[data-state="on"] { --tone: var(--u1-ok); }
+  .mini-icon[data-state="printing"] { --tone: var(--u1-primary); }
+  .mini-icon[data-state="paused"], .mini-icon[data-state="busy"] { --tone: var(--u1-warn); }
+  .mini-icon[data-state="error"] { --tone: var(--u1-error); }
+  /* progress as a thin ring around the icon */
+  .mini-icon[data-state="printing"]::before, .mini-icon[data-state="paused"]::before {
+    content: ""; position: absolute; inset: -3px; border-radius: 50%; pointer-events: none;
+    background: conic-gradient(var(--tone) calc(var(--p) * 1%), color-mix(in srgb, var(--tone) 18%, transparent) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    transition: background .6s;
+  }
+  .mini-icon[data-state="busy"] { animation: mini-pulse 1.6s ease-in-out infinite; }
+  @keyframes mini-pulse { 50% { background: color-mix(in srgb, var(--tone) 38%, transparent); } }
+  .mini-info { min-width: 0; flex: 1; }
+  .mini-name { font-size: 14px; font-weight: 500; line-height: 20px; color: var(--u1-on); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-sub { font-size: 12px; line-height: 16px; color: var(--u1-on-variant); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-sub[data-tone="error"] { color: var(--u1-error); }
+  .mini-sub[data-tone="warn"] { color: var(--u1-warn); }
+  .mini-sub.swap { animation: mini-swap .35s ease-out; }
+  @keyframes mini-swap { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .mini-bar { height: 3px; border-radius: 2px; overflow: hidden; background: color-mix(in srgb, var(--u1-on-variant) 22%, transparent); }
+  .mini-bar i { display: block; height: 100%; background: var(--u1-primary); transition: width .6s; }
+  .mini-bar[data-tone="warn"] i { background: var(--u1-warn); }
+  .mini-bar[data-tone="error"] i { background: var(--u1-error); }
+  @media (prefers-reduced-motion: reduce) {
+    .mini-sub.swap, .mini-icon[data-state="busy"] { animation: none; }
+  }
   .mini-fil { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .mini-slot { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center; }
-  .mini-slot .spool { width: 38px; height: 38px; }
+  .mini-slot .spool { width: 32px; height: 32px; }
   .mini-slot[data-empty="1"] { opacity: .5; }
   .mini-mat { font-size: 11px; color: var(--u1-on-variant); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .mini-g { font-size: 11px; }
-  .mini-err { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--u1-error); }
-  .mini-err ha-icon, .mini-q ha-icon { --mdc-icon-size: 16px; flex-shrink: 0; }
-  .mini-q { display: flex; gap: 6px; align-items: center; }
   .mini-g[data-low="1"] { color: var(--u1-warn); }
 
   /* ── Tabs ──────────────────────────────────────────────────────────── */
@@ -14329,34 +14356,27 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     setConfig(config) {
       super.setConfig({ ...config, show: [], layout: "mini" });
+      this.setAttribute("mini", "");
     }
     getCardSize() {
-      return 3;
+      return this._cfg && this._cfg.hide_filaments ? 1 : 2;
     }
     getGridOptions() {
       return { columns: 6, rows: "auto", min_columns: 3 };
     }
-    _tickCamera() {
-    }
+    /**
+     * 2.3.1: compact like Home Assistant's tile card. The icon switches the printer
+     * on/off (with a power switch), the line below the name cycles through the
+     * current infos every 5 s and is cut with "…" when it does not fit.
+     */
     _body() {
       const d = this._d;
       const p = d.power;
-      const tone = this._statusTone();
-      const off = !d.online && p && p.available && !p.on;
-      const sub = !d.online ? p && p.shuttingDown ? tr("Drucker fährt herunter") : p && p.poweringOn ? tr("Drucker startet") : off ? tr("Drucker ist aus") : tr("Drucker nicht erreichbar") : null;
-      const job = d.online && d.active ? `
-      <div class="mini-job">
-        <div class="mini-file" data-su1="file">${esc(d.filename || "—")}</div>
-        <div class="mini-prog">
-          <div class="track" data-tone="${d.state === "error" ? "error" : d.paused ? "warn" : ""}"><i data-su1="bar" style="width:${d.progress}%"></i></div>
-          <span class="mono"><span data-su1="opct">${d.progress.toFixed(0)}</span> %</span>
-        </div>
-        <div class="mini-meta t-label">
-          <span><ha-icon icon="mdi:timer-sand"></ha-icon><span data-su1="remain">${fmtMin(d.remaining)}</span></span>
-          <span><ha-icon icon="mdi:flag-checkered"></ha-icon><span data-su1="eta">${fmtClock(d.eta)}</span></span>
-          <span><ha-icon icon="mdi:layers-triple-outline"></ha-icon><span data-su1="layer">${d.layer} / ${d.totalLayers}</span></span>
-        </div>
-      </div>` : "";
+      const items = this._miniItems();
+      const first = items[0] || { text: "" };
+      this._miniIdx = 0;
+      const iconBody = `<ha-icon icon="${p && !p.on && !d.online ? "mdi:power" : "mdi:printer-3d-nozzle"}"></ha-icon>`;
+      const icon = p ? `<button type="button" class="mini-icon" data-act="power" data-su1="miniicon" ${this._miniIconAttrs()}>${iconBody}</button>` : `<div class="mini-icon" data-su1="miniicon" ${this._miniIconAttrs()}>${iconBody}</div>`;
       const sm = this._spoolman();
       const fil = !this._cfg.hide_filaments && d.heads.some((h) => h.loaded || h.material !== "—") ? `
       <div class="mini-fil">${d.heads.map((h) => {
@@ -14371,21 +14391,83 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       }).join("")}</div>` : "";
       return `
       <div class="mini-wrap" data-tap>
-        <div class="mini-top">
-          <div class="head-icon" data-tone="${tone === "error" ? "error" : ""}">
-            <ha-icon icon="mdi:printer-3d-nozzle"></ha-icon>
+        <div class="mini-tile">
+          ${icon}
+          <div class="mini-info">
+            <div class="mini-name">${esc(this._cfg.printer_name)}</div>
+            <div class="mini-sub" data-su1="minisub" data-tone="${first.tone || ""}" title="${esc(items.map((i) => i.text).join(" · "))}">${esc(first.text)}</div>
           </div>
-          <div class="head-text">
-            <div class="t-title">${esc(this._cfg.printer_name)}</div>
-            <div class="t-label mini-status">${sub ? esc(sub) : `<span class="chip sm ${d.printing ? "live" : ""}" data-tone="${{ active: "active", warn: "warn", error: "error", ok: "ok" }[tone] || ""}"><span class="dot"></span><span data-su1="status">${this._statusLabel()}</span></span>`}</div>
-          </div>
-          ${p ? this._powerChip() : ""}
         </div>
-        ${d.online && d.errors.length ? `<div class="mini-err"><ha-icon icon="mdi:alert"></ha-icon><span>${esc(this._errText(d.errors[0]))}</span></div>` : ""}
-        ${job}
+        ${d.online && d.active ? `<div class="mini-bar" data-tone="${d.state === "error" ? "error" : d.paused ? "warn" : ""}"><i data-su1="bar" style="width:${d.progress}%"></i></div>` : ""}
         ${fil}
-        ${d.queue && d.queue.length && !d.active ? `<div class="t-label mini-q"><ha-icon icon="mdi:tray-full"></ha-icon>${tr("Nächster: {name}", { name: d.queue[0].name || d.queue[0].file })}${d.queue.length > 1 ? ` (+${d.queue.length - 1})` : ""}</div>` : ""}
       </div>`;
+    }
+    /** What the line under the name shows, in turn: [{text, tone}]. */
+    _miniItems() {
+      const d = this._d;
+      if (!d) return [];
+      const p = d.power;
+      const watts = p && p.on && p.watts !== null && p.watts !== void 0 ? num(p.watts, 0, "W") : "";
+      const withW = (t) => watts ? `${t} · ${watts}` : t;
+      if (!d.online) {
+        const text = p && p.shuttingDown ? tr("Drucker fährt herunter") : p && p.poweringOn ? tr("Drucker startet") : p && p.available && !p.on ? tr("Drucker ist aus") : tr("Drucker nicht erreichbar");
+        return [{ text: withW(text), tone: p && (p.shuttingDown || p.poweringOn) ? "warn" : "" }];
+      }
+      const out = [];
+      if (d.errors.length) out.push({ text: this._errText(d.errors[0]), tone: "error" });
+      const tone = { active: "active", warn: "warn", error: "error", ok: "ok" }[this._statusTone()] || "";
+      if (d.active) {
+        out.push({ text: `${this._statusLabel()} · ${d.progress.toFixed(0)} % · ${fmtMin(d.remaining)}`, tone });
+        if (d.filename) out.push({ text: d.filename });
+        if (d.eta) out.push({ text: `${tr("Fertig um")} ${fmtClock(d.eta)}` });
+        if (d.totalLayers) out.push({ text: tr("Schicht {n} / {t}", { n: d.layer, t: d.totalLayers }) });
+        if (watts) out.push({ text: watts });
+      } else {
+        out.push({ text: withW(this._statusLabel()), tone });
+        if (d.queue && d.queue.length) {
+          out.push({ text: tr("Nächster: {name}", { name: d.queue[0].name || d.queue[0].file }) + (d.queue.length > 1 ? ` (+${d.queue.length - 1})` : "") });
+        }
+      }
+      return out;
+    }
+    _miniIconAttrs() {
+      const d = this._d;
+      const p = d.power;
+      const busy = p && (p.shuttingDown || p.poweringOn);
+      const state = !d.online ? busy ? "busy" : "off" : d.errors.length || d.state === "error" ? "error" : d.active ? d.paused ? "paused" : "printing" : "on";
+      const title = !p ? "" : !p.available ? tr("Netzschalter nicht erreichbar") : busy ? tr("Bitte warten") : p.on ? tr("Herunterfahren und ausschalten") : tr("Einschalten");
+      return `data-state="${state}" style="--p:${d.active ? Math.round(d.progress) : 0}"${title ? ` title="${esc(title)}" aria-label="${esc(title)}"` : ""}${p && (busy || !p.available) ? " disabled" : ""}`;
+    }
+    /** Every second: current values in the line; every 5 s the next info (slides in). */
+    _tickCamera() {
+      this._miniTick = (this._miniTick || 0) + 1;
+      this._miniPaint(this._miniTick % 5 === 0);
+    }
+    _patch() {
+      super._patch();
+      this._miniPaint(false);
+    }
+    _miniPaint(advance) {
+      const r = this.shadowRoot && this.shadowRoot.getElementById("u1card");
+      const sub = r && r.querySelector('[data-su1="minisub"]');
+      if (!sub || !this._d) return;
+      const items = this._miniItems();
+      const next = advance && items.length > 1;
+      if (next) this._miniIdx = ((this._miniIdx || 0) + 1) % items.length;
+      if (!items.length || (this._miniIdx || 0) >= items.length) this._miniIdx = 0;
+      const it = items[this._miniIdx] || { text: "" };
+      sub.title = items.map((i) => i.text).join(" · ");
+      if (sub.textContent !== it.text || sub.dataset.tone !== (it.tone || "")) {
+        sub.textContent = it.text;
+        sub.dataset.tone = it.tone || "";
+        if (next) {
+          sub.classList.remove("swap");
+          void sub.offsetWidth;
+          sub.classList.add("swap");
+        }
+      }
+      const icon = r.querySelector('[data-su1="miniicon"]');
+      if (icon) icon.style.setProperty("--p", String(this._d.active ? Math.round(this._d.progress) : 0));
     }
     _wire() {
       super._wire();

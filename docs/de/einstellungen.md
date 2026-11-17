@@ -87,6 +87,8 @@ type: custom:snapmaker-u1-mini-card
 navigation_path: /dashboard-drucker/0   # optional: beim Antippen dorthin, sonst Statusdialog
 ```
 
+2.3.1: kompakt wie die Kachel-Karte von Home Assistant. Mit eingerichtetem Netzschalter schaltet ein Tipp auf das **Symbol** den Drucker ein oder aus (aus nur, wenn er nicht druckt, mit Rückfrage). Die Zeile unter dem Namen zeigt die aktuellen Infos **im Wechsel** alle 5 s (Zustand und Leistung, Fortschritt und Restzeit, Datei, Endzeit, Schicht, eine Druckermeldung zuerst) und kürzt mit „…“, wenn es nicht passt; alle stehen auch im Tooltip. Im Druck zeigen ein dünner Ring um das Symbol und ein Balken den Fortschritt. Mit „Bewegung reduzieren“ bewegt sich nichts.
+
 | Option | Standard | Bedeutung |
 |---|---|---|
 | `printer_name` | `U1` | Anzeigename |

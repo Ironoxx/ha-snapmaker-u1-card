@@ -4,6 +4,30 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.3.1b1
+
+Beta. The mini card is compact now, like Home Assistant's tile card.
+
+- **Tap the icon** to switch the printer on or off (with a power switch; off only when it is not printing, with a confirmation, as before).
+- **One line under the name, cycling every 5 s:** state and power, progress and remaining time, file, end time, layer – a printer message comes first. Cut with "…" when it does not fit, all infos in the tooltip; the next one slides in gently (nothing moves with "reduce motion").
+- While printing a thin **ring around the icon** and a bar show the progress; the icon takes the colour of the state (on, printing, paused, error, starting/shutting down pulses softly).
+- Smaller spools in the filament row; less padding overall.
+
+Please check: the mini card on the phone and in a sections dashboard next to a tile card, switching on/off via the icon, the cycling line during a print.
+
+### Deutsch
+
+Beta. Die Mini-Karte ist jetzt kompakt wie die Kachel-Karte von Home Assistant.
+
+- **Tipp auf das Symbol** schaltet den Drucker ein oder aus (mit Netzschalter; aus nur, wenn er nicht druckt, mit Rückfrage wie bisher).
+- **Eine Zeile unter dem Namen, im Wechsel alle 5 s:** Zustand und Leistung, Fortschritt und Restzeit, Datei, Endzeit, Schicht – eine Druckermeldung kommt zuerst. Mit „…“ gekürzt, wenn es nicht passt, alle Infos im Tooltip; die nächste gleitet sanft herein (mit „Bewegung reduzieren“ bewegt sich nichts).
+- Im Druck zeigen ein dünner **Ring um das Symbol** und ein Balken den Fortschritt; das Symbol nimmt die Farbe des Zustands an (an, druckt, Pause, Fehler, Starten/Herunterfahren pulsiert leicht).
+- Kleinere Spulen in der Filamentreihe, insgesamt weniger Rand.
+
+Bitte prüfen: die Mini-Karte auf dem Handy und in einem Abschnitte-Dashboard neben einer Kachel-Karte, Ein-/Ausschalten über das Symbol, die wechselnde Zeile im Druck.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.3.0
 
 Moving the head by hand, a second notification group, progress without the slicer's header, Spoolman booking per spool, printer messages in more languages, Simplified Chinese.
