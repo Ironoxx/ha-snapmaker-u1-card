@@ -6,7 +6,7 @@
 
 ## Integration settings
 
-During setup a second step with all settings follows right after the address. Later they are under *Devices & services → Snapmaker U1 Card → Configure*. All fields are optional; the card picks them up automatically.
+During setup you choose after the address (2.4): **step by step** (power → notifications → Spoolman, each page can be skipped, everything else with its defaults; at the end a short list of next steps) or **all settings on one page**. Later they are under *Devices & services → Snapmaker U1 Card → Configure*. All fields are optional; the card picks them up automatically.
 
 | Section | Fields |
 |---|---|
@@ -22,6 +22,8 @@ During setup a second step with all settings follows right after the address. La
 ## Settings in the card
 
 Admins find *System → Settings* in the card: the integration's settings (power, notifications, filament prices, Spoolman, files, timelapse backup, maintenance) grouped by topic, with the current value next to each chosen entity and the Spoolman price next to each filament price. It is the same as *Settings → Devices & services → Snapmaker U1 Card → Configure*, with the same checks; only changed sections are saved and the integration then reloads briefly. Card options (layout, camera display …) stay in the card editor because they belong to the dashboard.
+
+2.4: **Dashboard template** creates a whole new dashboard from section cards – *Full* (camera, print job, heads, control, files), *Minimal* (mini card and camera) or *Maintenance & diagnostics* (messages, maintenance, bed mesh, system, console) – that you then edit in Home Assistant like any other. With the paxx12 Extended Firmware, **paxx12 settings** shows its own settings (RTSP, SpoolLink, …) read only; changing them stays on its `/firmware-config/` page.
 
 ## Card options
 
@@ -62,6 +64,28 @@ All options are optional; except head names and presets they can also be set in 
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: quick buttons for speed and flow; the current value is marked |
 | `mesh_values` | `true` | 2.2: heights in the bed mesh cells (up to 12 × 12 points) |
 | `exclude_objects` | `true` | 2.2.1: object list and outlines for excluding objects in the layer view; `false` hides both (prints with very many parts) |
+| `clock` | `false` | 2.4: clock (hours:minutes, HA time format) on the right of the header; hidden on narrow cards |
+| `buttons` | – | 2.4: up to 4 own buttons next to *Light*: `name`, `icon`, `show` (`idle` = before, `printing` = during, `finished` = after the print; default all), `tap_action`, `hold_action` (Home Assistant's actions: navigate, perform-action, more-info, url …) |
+| `light_entities` | – | 2.4: further lights/switches that follow the light button, e.g. a WLED strip |
+
+```yaml
+type: custom:snapmaker-u1-card
+clock: true
+buttons:
+  - name: Dashboard
+    icon: mdi:home
+    tap_action:
+      action: navigate
+      navigation_path: /dash/main
+  - name: WLED
+    icon: mdi:led-strip-variant
+    show: [printing, finished]
+    tap_action:
+      action: perform-action
+      perform_action: light.toggle
+      target:
+        entity_id: light.wled
+```
 | `alerts` | with `stage`/`job` | 2.2, section card: printer messages on top (`true` always, `false` never). The section `messages` shows them on its own |
 | `toolheads` | – | head names, e.g. `- name: Left` (material and colour come from the printer) |
 | `network_tracker` | – | `device_tracker` for a WiFi chip in the header |

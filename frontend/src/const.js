@@ -1,7 +1,7 @@
 /** Constants shared by the card modules. */
 
 export const DOMAIN = "snapmaker_u1_card";
-export const CARD_VERSION = "2.3.1b1";
+export const CARD_VERSION = "2.4.0b1";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 

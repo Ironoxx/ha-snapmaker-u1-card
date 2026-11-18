@@ -46,7 +46,7 @@ class SpoolManager:
         self.spools: list[dict[str, Any]] = []
         self.online = False
         self.error: str | None = None
-        self._fetched = 0.0
+        self._fetched = float("-inf")  # 2.4: due right away, also shortly after the host booted
         self.just_booked: list[dict[str, Any]] = []  # for the history, picked up by the coordinator
         # paxx12 SpoolLink: spool per head from print_task_config.filament_spool_id (None = not present)
         self.printer_ids: list[int] | None = None
@@ -79,7 +79,7 @@ class SpoolManager:
         return self.enabled and time.monotonic() - self._fetched >= interval
 
     def force(self) -> None:
-        self._fetched = 0.0
+        self._fetched = float("-inf")
 
     async def async_refresh(self) -> bool:
         """Fetch spools and retry pending bookings. True = state changed."""

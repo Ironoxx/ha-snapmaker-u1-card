@@ -183,4 +183,32 @@ delete states["sensor.u1c_druckerwerte"];
   delete states["sensor.u1c_meldungen"];
 }
 
+// 6. 2.4 (#16): clock and own buttons (options, off by default), further lights with the light button
+{
+  let c = make("snapmaker-u1-card", { layout: "scroll", show: ["stage"] });
+  assert.ok(!R(c).querySelector(".head-clock"), "no clock by default");
+  assert.ok(!R(c).querySelector("[data-ubtn]"), "no own buttons by default");
+  const calls = [], actions = [];
+  c = w.document.createElement("snapmaker-u1-card");
+  c.setConfig({ type: "custom:snapmaker-u1-card", layout: "scroll", show: ["stage"], clock: true, light_entities: ["light.wled"],
+    buttons: [{ name: "Home", icon: "mdi:home", tap_action: { action: "navigate", navigation_path: "/dash/main" } },
+      { name: "Nur im Druck", show: ["printing"] }, { name: "Fertig", show: ["finished"] }, { name: "B4" }, { name: "zu viel" }] });
+  w.document.body.appendChild(c);
+  c.hass = { ...hass(), locale: { language: "de", time_format: "24" }, callService: async (...x) => { calls.push(x); } };
+  c.addEventListener("hass-action", (e) => actions.push(e.detail));
+  assert.match(R(c).querySelector(".head-clock").textContent, /^\d{2}:\d{2}$/, "HH:MM");
+  const names = [...R(c).querySelectorAll("[data-ubtn]")].map((b) => b.textContent.trim());
+  assert.deepStrictEqual(names, ["Home", "B4"], "standby: not the print-only/finished ones, max 4");
+  R(c).querySelector('[data-ubtn="0"]').click();
+  assert.strictEqual(actions[0].action, "tap");
+  assert.strictEqual(actions[0].config.tap_action.navigation_path, "/dash/main");
+  c._toggleLight();
+  assert.ok(calls.some((x) => x[0] === "homeassistant" && JSON.stringify(x[2].entity_id) === JSON.stringify(["light.wled"])), "WLED follows");
+  states[`sensor.${P}_current_print_state`].state = "printing";
+  c.hass = { ...hass(), locale: { language: "de", time_format: "24" } };
+  const during = [...R(c).querySelectorAll("[data-ubtn]")].map((b) => b.textContent.trim());
+  assert.deepStrictEqual(during, ["Home", "Nur im Druck", "B4"]);
+  states[`sensor.${P}_current_print_state`].state = "standby";
+}
+
 console.log("BLOCKS OK – section card, order of show, spool fill and turning, usage of the last print");

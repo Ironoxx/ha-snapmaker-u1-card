@@ -41,6 +41,8 @@ Das Attribut `head_states` von `sensor.…_filamente` sagt pro Kopf, ob er `park
 
 Die Slot-Sensoren tragen zusätzlich das Attribut `rfid` mit den Daten des Spulen-Chips.
 
+2.4: **`event.…_druckereignis`** feuert bei jedem Anlass, den die Benachrichtigungen kennen – `complete`, `cancelled`, `error`, `paused`, `alert`, `first_layer`, `almost_done`, `spool_low`, `spool_runout`, `bed_cool`, `maintenance`, `chamber_ready` – mit `name`, `file`, `message`, unabhängig davon, ob Benachrichtigungen eingerichtet sind. In einer Automation: Auslöser *Entität → Druckereignis*, Bedingung auf den Ereignistyp (oder Zustands-Auslöser mit Attribut `event_type`).
+
 Ereignis `snapmaker_u1_card_print_finished` bei jedem Druckende, mit `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost` – für eigene Automationen.
 
 ## Dienste

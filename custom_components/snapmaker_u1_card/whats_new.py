@@ -161,6 +161,34 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 
 ⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
     },
+    "2.4": {
+        "de": ("Snapmaker U1 Card 2.4 – das ist neu", f"""- **Geführte Einrichtung** Schritt für Schritt (Strom, Benachrichtigungen, Spoolman)
+- **Dashboard-Vorlagen:** Voll, Minimal oder Wartung & Diagnose per Knopf (Karte → Einstellungen)
+- **Uhr und eigene Knöpfe** in der großen Karte (Karten-Editor, Standard aus); Knöpfe mit Home-Assistant-Aktionen, je nach Druckphase sichtbar
+- **Licht-Knopf** schaltet auf Wunsch weitere Lampen mit (z. B. WLED)
+- **Druckereignis-Entität** für eigene Automationen (fertig, Pause, Fehler, Spule leer …)
+- **Mini-Karte** kompakt wie die Kachel-Karte: Symbol = Netzschalter, wechselnde Infozeile
+- **Selbsttest** prüft mehr: Netzschalter, Spule je Kopf, Uhrzeit des Druckers, Wartung, paxx12, Blueprint
+- **paxx12-Einstellungen** zum Ansehen in den Karten-Einstellungen
+- **Kollidierende Kartennamen** (andere Karte „snapmaker-u1-card“) erscheinen unter Reparaturen
+
+Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/releases/tag/v2.4.0)
+
+⭐ [Projekt auf GitHub]({GITHUB}) · ☕ [Kaffee auf Ko-fi]({KOFI})"""),
+        "en": ("Snapmaker U1 Card 2.4 – what's new", f"""- **Guided setup** step by step (power, notifications, Spoolman)
+- **Dashboard templates:** Full, Minimal or Maintenance & diagnostics with one tap (card → Settings)
+- **Clock and own buttons** in the full card (card editor, off by default); buttons with Home Assistant actions, shown per print phase
+- **Light button** can switch further lights too (e.g. WLED)
+- **Print event entity** for your own automations (finished, paused, error, spool runs out …)
+- **Mini card** compact like the tile card: icon = power switch, cycling info line
+- **Self test** checks more: power switch, spool per head, printer clock, maintenance, paxx12, blueprint
+- **paxx12 settings** to view in the card's settings
+- **Colliding card names** (another "snapmaker-u1-card") show up under Repairs
+
+Please reload the dashboard once. All details: [release notes]({GITHUB}/releases/tag/v2.4.0)
+
+⭐ [Project on GitHub]({GITHUB}) · ☕ [Coffee on Ko-fi]({KOFI})"""),
+    },
 }
 
 # One-off news, shown once each (key stays in .storage).

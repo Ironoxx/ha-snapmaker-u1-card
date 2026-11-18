@@ -778,3 +778,19 @@ async def test_moonraker_without_spoollink_books_only_its_active_spool(hass: Hom
     old = {**record, "started": 2}
     del old["moonraker_spools"]
     assert {b["booked"] for b in mgr.book(old)} == {"moonraker"}
+
+
+def test_due_right_after_boot() -> None:
+    """2.4: time.monotonic() counts from the host's boot – right after it, Spoolman is still due
+    (this made a test fail now and then on a freshly started machine)."""
+    from unittest.mock import MagicMock
+
+    from custom_components.snapmaker_u1_card.spools import SpoolManager
+
+    mgr = SpoolManager.__new__(SpoolManager)
+    mgr.client = MagicMock()
+    mgr._fetched = float("-inf")
+    with patch("custom_components.snapmaker_u1_card.spools.time.monotonic", return_value=12.0):
+        assert mgr.due(300)
+        mgr.force()
+        assert mgr.due(300)

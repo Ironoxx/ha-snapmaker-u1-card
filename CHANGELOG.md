@@ -4,6 +4,62 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.4.0b1
+
+Beta. Guided setup, dashboard templates, clock and own buttons, a print event entity, the compact mini card and a broader self test.
+
+**Setup and dashboards**
+- **Guided setup:** after the address, choose *step by step* (power → notifications → Spoolman, each page can be skipped, everything else with its defaults, a list of next steps at the end) or all settings on one page as before.
+- **Dashboard templates** in the card's settings: *Full*, *Minimal* or *Maintenance & diagnostics* creates a new sections dashboard from section cards, editable in Home Assistant afterwards (admins).
+- **paxx12 settings** (RTSP, SpoolLink, …) to view in the card's settings; changing them stays on paxx12's `/firmware-config/`.
+
+**Card**
+- **Clock** on the right of the header (#16, thanks donjo3): hours and minutes in your HA time format, hidden on narrow cards. Option `clock`, off by default.
+- **Own buttons** (#16): up to 4 next to *Light*, with Home Assistant's actions (`tap_action`/`hold_action`: navigate, perform action/script, more-info, URL), each shown before, during and/or after the print. Option `buttons`, none by default; set up in the card editor.
+- **Light button** switches further lights along (option `light_entities`, e.g. a WLED strip).
+- **Mini card** compact like Home Assistant's tile card: tap the icon to switch the printer on/off, one line cycling through the infos every 5 s, progress ring.
+
+**Automations**
+- New **print event entity**: fires on finished, cancelled, error, paused, message, first layer, almost done, spool low / runs out, part removable, maintenance, chamber warm – with name, file and message, also without notifications set up. Trigger your own automations on it (WLED, announcements …).
+
+**Self test and repairs**
+- **Colliding card names:** when another card also calls itself `custom:snapmaker-u1-card` (sergey08/snapmaker-u1-card, kbaker827/ha-snapmaker-u1), a repair notice says so and how to use `custom:snapmaker-u1-card-ironoxx`; the mini and section cards show it too.
+- The self test also checks: power switch and power meter, a matching spool on every loaded head, paxx12 WLAN signal and eMMC wear, the printer's clock against Home Assistant, maintenance due, the status light blueprint, and whether the browser still runs an old card.
+
+**Also**
+- Spoolman is refreshed right away after a host restart (before, it could wait up to the refresh interval when the host had only just booted).
+
+Please check: guided setup (e.g. a second test entry), a dashboard template, clock and a button with `navigate` on the tablet, the print event in an automation, the self test.
+
+### Deutsch
+
+Beta. Geführte Einrichtung, Dashboard-Vorlagen, Uhr und eigene Knöpfe, eine Druckereignis-Entität, die kompakte Mini-Karte und ein breiterer Selbsttest.
+
+**Einrichtung und Dashboards**
+- **Geführte Einrichtung:** Nach der Adresse wählst du *Schritt für Schritt* (Strom → Benachrichtigungen → Spoolman, jede Seite überspringbar, alles andere mit Standardwerten, zum Schluss eine Liste der nächsten Schritte) oder wie bisher alle Einstellungen auf einer Seite.
+- **Dashboard-Vorlagen** in den Einstellungen der Karte: *Voll*, *Minimal* oder *Wartung & Diagnose* legt ein neues Abschnitte-Dashboard aus Bereichs-Karten an, danach in Home Assistant bearbeitbar (Admins).
+- **paxx12-Einstellungen** (RTSP, SpoolLink, …) zum Ansehen in den Einstellungen der Karte; geändert wird weiter auf `/firmware-config/` von paxx12.
+
+**Karte**
+- **Uhr** rechts in der Kopfzeile (#16, danke donjo3): Stunden und Minuten im Zeitformat deines HA, auf schmalen Karten ausgeblendet. Option `clock`, standardmäßig aus.
+- **Eigene Knöpfe** (#16): bis zu 4 neben *Licht*, mit den Aktionen von Home Assistant (`tap_action`/`hold_action`: navigieren, Aktion/Skript, Details, URL), jeweils vor, während und/oder nach dem Druck sichtbar. Option `buttons`, standardmäßig keine; im Karten-Editor einstellbar.
+- **Licht-Knopf** schaltet weitere Lampen mit (Option `light_entities`, z. B. eine WLED-Leiste).
+- **Mini-Karte** kompakt wie die Kachel-Karte von Home Assistant: Tipp aufs Symbol schaltet den Drucker ein/aus, eine Zeile wechselt alle 5 s durch die Infos, Fortschrittsring.
+
+**Automationen**
+- Neue **Druckereignis-Entität**: feuert bei fertig, abgebrochen, Fehler, Pause, Meldung, erste Schicht, gleich fertig, Spule knapp / wird leer, Teil entnehmbar, Wartung, Kammer warm – mit Name, Datei und Meldung, auch ohne eingerichtete Benachrichtigungen. Darauf lassen sich eigene Automationen auslösen (WLED, Ansagen …).
+
+**Selbsttest und Reparaturen**
+- **Kollidierende Kartennamen:** Heißt eine andere Karte ebenfalls `custom:snapmaker-u1-card` (sergey08/snapmaker-u1-card, kbaker827/ha-snapmaker-u1), sagt ein Reparatur-Hinweis das und wie man `custom:snapmaker-u1-card-ironoxx` nutzt; Mini- und Bereichs-Karten zeigen es ebenfalls.
+- Der Selbsttest prüft zusätzlich: Netzschalter und Leistungsmesser, eine passende Spule an jedem geladenen Kopf, paxx12-WLAN-Signal und eMMC-Verschleiß, die Uhr des Druckers gegen Home Assistant, fällige Wartung, den Status-Licht-Blueprint und ob im Browser noch eine alte Karte läuft.
+
+**Außerdem**
+- Spoolman wird nach einem Neustart sofort abgefragt (vorher konnte es kurz nach dem Hochfahren des Rechners bis zum Abfrage-Intervall dauern).
+
+Bitte prüfen: geführte Einrichtung (z. B. ein zweiter Test-Eintrag), eine Dashboard-Vorlage, Uhr und ein Knopf mit `navigate` auf dem Tablet, das Druckereignis in einer Automation, den Selbsttest.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.3.1b1
 
 Beta. The mini card is compact now, like Home Assistant's tile card.

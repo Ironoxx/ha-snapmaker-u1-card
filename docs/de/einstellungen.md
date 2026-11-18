@@ -6,7 +6,7 @@
 
 ## Einstellungen der Integration
 
-Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen Einstellungen. Später stehen sie unter *Geräte & Dienste → Snapmaker U1 Card → Konfigurieren*. Alle Felder sind freiwillig, die Karte übernimmt sie automatisch.
+Bei der Einrichtung wählst du nach der Adresse (2.4): **Schritt für Schritt** (Strom → Benachrichtigungen → Spoolman, jede Seite überspringbar, alles andere mit den Standardwerten; zum Schluss eine kurze Liste der nächsten Schritte) oder **alle Einstellungen auf einer Seite**. Später stehen sie unter *Geräte & Dienste → Snapmaker U1 Card → Konfigurieren*. Alle Felder sind freiwillig, die Karte übernimmt sie automatisch.
 
 | Abschnitt | Felder |
 |---|---|
@@ -22,6 +22,8 @@ Bei der Einrichtung kommt nach der Adresse direkt ein zweiter Schritt mit allen 
 ## Einstellungen in der Karte
 
 Admins finden in der Karte *System → Einstellungen*: die Einstellungen der Integration (Strom, Benachrichtigungen, Filamentpreise, Spoolman, Dateien, Zeitraffer-Sicherung, Wartung) nach Themen gegliedert, mit dem aktuellen Wert neben jeder gewählten Entität und dem Spoolman-Preis neben jedem Filamentpreis. Das ist dasselbe wie *Einstellungen → Geräte & Dienste → Snapmaker U1 Card → Konfigurieren*, mit denselben Prüfungen; gespeichert werden nur geänderte Bereiche, danach lädt die Integration kurz neu. Kartenoptionen (Layout, Kameradarstellung …) bleiben im Karten-Editor, weil sie zum Dashboard gehören.
+
+2.4: **Dashboard-Vorlage** legt ein ganzes neues Dashboard aus Bereichs-Karten an – *Voll* (Kamera, Druckauftrag, Köpfe, Steuerung, Dateien), *Minimal* (Mini-Karte und Kamera) oder *Wartung & Diagnose* (Meldungen, Wartung, Bettnivellierung, System, Konsole) –, das du danach in Home Assistant wie jedes andere bearbeitest. Mit der paxx12 Extended Firmware zeigt **paxx12-Einstellungen** deren eigene Einstellungen (RTSP, SpoolLink, …) nur zum Ansehen; geändert wird weiter auf ihrer Seite `/firmware-config/`.
 
 ## Kartenoptionen
 
@@ -62,6 +64,9 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: Schnellwahl für Geschwindigkeit und Flussrate; der aktuelle Wert ist markiert |
 | `mesh_values` | `true` | 2.2: Höhenwerte in den Kacheln der Bettnivellierung (bis 12 × 12 Messpunkte) |
 | `exclude_objects` | `true` | 2.2.1: Objektliste und Umrisse zum Ausschließen in der Schichtansicht; `false` blendet beides aus (Drucke mit sehr vielen Teilen) |
+| `clock` | `false` | 2.4: Uhr (Stunden:Minuten, Zeitformat von HA) rechts in der Kopfzeile; auf schmalen Karten ausgeblendet |
+| `buttons` | – | 2.4: bis zu 4 eigene Knöpfe neben *Licht*: `name`, `icon`, `show` (`idle` = vor, `printing` = während, `finished` = nach dem Druck; Standard alle), `tap_action`, `hold_action` (Aktionen von Home Assistant: navigate, perform-action, more-info, url …) |
+| `light_entities` | – | 2.4: weitere Lampen/Schalter, die mit dem Licht-Knopf mitgehen, z. B. eine WLED-Leiste |
 | `alerts` | mit `stage`/`job` | 2.2, Bereichs-Karte: Meldungen des Druckers oben (`true` immer, `false` nie). Der Bereich `messages` zeigt sie für sich |
 | `toolheads` | – | Kopfnamen, z. B. `- name: Links` (Material und Farbe kommen vom Drucker) |
 | `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |

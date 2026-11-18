@@ -44,6 +44,8 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 
 The attribute `head_states` of `sensor.…_filaments` says per head whether it is `parked` or `active` (on the carriage).
 
+2.4: **`event.…_print_event`** fires for every event the notifications know – `complete`, `cancelled`, `error`, `paused`, `alert`, `first_layer`, `almost_done`, `spool_low`, `spool_runout`, `bed_cool`, `maintenance`, `chamber_ready` – with `name`, `file`, `message`, independent of whether notifications are set up. In an automation: trigger *Entity → Print event*, condition on the event type (or a state trigger with attribute `event_type`).
+
 The event `snapmaker_u1_card_print_finished` fires at every print end with `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost`, for your own automations.
 
 ## Services
