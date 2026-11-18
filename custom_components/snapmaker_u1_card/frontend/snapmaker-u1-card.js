@@ -8462,6 +8462,16 @@
       try {
         const res = await this._hass.callService(DOMAIN, "self_test", { ...this._entryData(), language: LANG }, void 0, false, true);
         this._selftest = res && res.response || { error: tr("Keine Antwort") };
+        const integ = this._st(this._ents.files)?.attributes.version;
+        if (this._selftest.checks && integ) {
+          const same = integ === CARD_VERSION;
+          this._selftest.checks.push({
+            key: "card_version",
+            ok: same ? true : false,
+            detail: same ? tr("Karte im Browser ist aktuell ({v})", { v: CARD_VERSION }) : tr("Browser hat noch Karte {old}, Integration ist {new} – Dashboard neu laden (Strg+F5 bzw. App-Cache leeren)", { old: CARD_VERSION, new: integ })
+          });
+          if (!same) this._selftest.ok = false;
+        }
       } catch (err) {
         this._selftest = { error: err && (err.message || err.error) || String(err) };
       }

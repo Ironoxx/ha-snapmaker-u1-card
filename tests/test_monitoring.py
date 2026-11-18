@@ -571,3 +571,23 @@ async def test_error_log(hass: HomeAssistant, mock_client) -> None:
     for i in range(ERROR_LOG_MAX + 3):
         coord._update_errors([describe_error({"id": 531, "index": i, "code": 1, "level": 1, "message": ""})])
     assert len(coord.error_log) == ERROR_LOG_MAX
+
+
+async def test_self_test_more(hass: HomeAssistant, mock_client) -> None:
+    """2.4: power switch, printer clock, maintenance, blueprint in the self test."""
+    from datetime import timedelta
+
+    from homeassistant.util import dt as dt_util
+
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    late = dt_util.utcnow() - timedelta(minutes=5)
+    coord.data.maintenance = [{"key": "nozzle", "label": "Düse", "due": True}]
+    with patch(f"{API}.server_time", AsyncMock(return_value=late)), \
+         patch(f"{API}.rpc", AsyncMock(return_value={"free_space": 3000, "total_space": 8000})):
+        res = await hass.services.async_call(DOMAIN, "self_test", {}, blocking=True, return_response=True)
+    keys = {c["key"]: c for c in res["checks"]}
+    assert keys["power_switch"]["ok"] is True
+    assert keys["clock"]["ok"] is None and "300" in keys["clock"]["detail"]
+    assert keys["maintenance"]["ok"] is None and "Düse" in keys["maintenance"]["detail"]
+    assert keys["blueprint"]["ok"] is None, "installed, no automation yet"

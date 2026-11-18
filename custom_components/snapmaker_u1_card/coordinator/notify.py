@@ -178,14 +178,25 @@ class NotifyMixin:
                     out.append((service, channel))
         return out
 
+    def add_event_listener(self, listener: Any) -> Any:
+        """2.4: the event entity listens to every print event; returns the remove callback."""
+        listeners = self.__dict__.setdefault("_event_listeners", [])
+        listeners.append(listener)
+        return lambda: listeners.remove(listener) if listener in listeners else None
+
     def _notify(self, event: str, info: dict[str, Any]) -> None:
         """Send a notification for ``event`` to the groups that have it enabled."""
-        targets = self._notify_targets(event)
-        if not targets:
-            return
         de = self.hass.config.language.lower().startswith("de")
         title = f"Snapmaker U1: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
         message = notify_message(info, de, currency_symbol(self.hass.config.currency))
+        # 2.4: event entity for own automations, whether or not notifications are set up
+        attrs = {k: info[k] for k in ("name", "file", "result") if info.get(k) is not None}
+        attrs["message"] = message
+        for listener in list(self.__dict__.get("_event_listeners", [])):
+            listener(event, attrs)
+        targets = self._notify_targets(event)
+        if not targets:
+            return
         data: dict[str, Any] = {"tag": f"{DOMAIN}_{self.config_entry.entry_id}", "group": DOMAIN}
         camera = None if info.get("no_image") else self.camera_entity()
         if info.get("photo"):

@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Evento de impresión",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Impresión terminada",
+              "cancelled": "Impresión cancelada",
+              "error": "Error de impresión",
+              "paused": "Impresión en pausa (p. ej. fin de filamento)",
+              "alert": "Mensaje de la impresora durante la impresión",
+              "first_layer": "Primera capa terminada",
+              "almost_done": "Casi terminada",
+              "spool_low": "Filamento insuficiente (Spoolman)",
+              "spool_runout": "La bobina se va a acabar durante la impresión (Spoolman)",
+              "bed_cool": "Pieza lista para retirar (cama fría)",
+              "maintenance": "Mantenimiento pendiente",
+              "chamber_ready": "La cámara alcanzó su objetivo (top cover o calefactor de cámara)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

@@ -642,3 +642,19 @@ async def test_second_notification_group(hass: HomeAssistant, mock_client, notif
     hass.config_entries.async_update_entry(entry, options={**entry.options, "notify_targets_2": []})
     assert coord._notify_targets("error") == []
     assert coord._notify_targets("complete") == [("mobile_app_handy", None)]
+
+
+async def test_print_event_entity(hass: HomeAssistant, mock_client) -> None:
+    """2.4: every print event lands on the event entity, also without notifications."""
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    ent = next(s for s in hass.states.async_all("event") if s.entity_id.endswith("_print_event"))
+    assert "complete" in ent.attributes["event_types"] and "spool_runout" in ent.attributes["event_types"]
+    coord._notify("complete", {"name": "Teil", "file": "teil.gcode"})
+    await hass.async_block_till_done()
+    ent = hass.states.get(ent.entity_id)
+    assert ent.attributes["event_type"] == "complete"
+    assert ent.attributes["name"] == "Teil" and ent.attributes["file"] == "teil.gcode" and ent.attributes["message"]
+    coord._notify("queue", {"name": "x"})  # not an event type: ignored
+    await hass.async_block_till_done()
+    assert hass.states.get(ent.entity_id).attributes["event_type"] == "complete"

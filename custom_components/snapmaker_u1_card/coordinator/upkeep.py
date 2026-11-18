@@ -25,6 +25,7 @@ from ..const import (
     CONF_MAINTENANCE_MONTHS,
     CONF_NOTIFY,
     CONF_NOTIFY2,
+    CONF_POWER_SENSOR,
     CONF_POWER_SWITCH,
     DEFAULT_BACKUP,
     DOMAIN,
@@ -319,8 +320,97 @@ class UpkeepMixin:
                 add("media", True, t(f"Medienordner beschreibbar: {folder}", f"Media folder writable: {folder}"))
             except OSError as err:
                 add("media", False, f"{folder}: {err}")
+        await self._self_test_more(add, t, paxx)
         ok = all(c["ok"] is not False for c in checks)
         return {"ok": ok, "time": dt_util.now().isoformat(), "checks": checks}
+
+    async def _self_test_more(self, add: Any, t: Any, paxx: bool) -> None:
+        """2.4: power switch and meter, Spoolman per head, paxx12 health, printer clock,
+        maintenance due, status light blueprint."""
+        # power switch and power meter
+        switch = self.options.get(CONF_POWER_SWITCH)
+        if switch:
+            st = self.hass.states.get(switch)
+            usable = st is not None and st.state not in ("unavailable", "unknown")
+            add("power_switch", usable, t(f"Netzschalter {switch}: {st.state if st else 'fehlt'}",
+                                          f"Power switch {switch}: {st.state if st else 'missing'}"))
+        meter = self.options.get(CONF_POWER_SENSOR)
+        if meter:
+            st = self.hass.states.get(meter)
+            try:
+                value = float(st.state) if st else None
+            except ValueError:
+                value = None
+            add("power_meter", True if value is not None else None,
+                t(f"Leistungsmesser {meter}: {st.state} {st.attributes.get('unit_of_measurement', '')}".strip()
+                  if st else f"Leistungsmesser {meter} fehlt",
+                  f"Power meter {meter}: {st.state} {st.attributes.get('unit_of_measurement', '')}".strip()
+                  if st else f"Power meter {meter} missing") if value is not None or st is None
+                else t(f"Leistungsmesser {meter} liefert keinen Wert ({st.state})",
+                       f"Power meter {meter} has no value ({st.state})"))
+        # Spoolman per head: a spool on every loaded head, material matching
+        if self.spools.enabled and self.spools.online and self.data:
+            missing, wrong = [], []
+            for slot in self.data.slots or []:
+                if not slot.get("loaded"):
+                    continue
+                info = self.spools.slot_info(slot["index"])
+                if not info:
+                    missing.append(str(slot["index"] + 1))
+                    continue
+                mat = str(info.get("material") or "").upper()
+                typ = str(slot.get("type") or "").upper()
+                if mat and typ and not (mat.startswith(typ) or typ.startswith(mat)):
+                    wrong.append(f"{slot['index'] + 1} ({typ} ≠ {mat})")
+            if missing or wrong:
+                add("spoolman_heads", None, t(
+                    (f"Ohne Spule: Kopf {', '.join(missing)}. " if missing else "")
+                    + (f"Material passt nicht: Kopf {', '.join(wrong)}" if wrong else ""),
+                    (f"No spool: head {', '.join(missing)}. " if missing else "")
+                    + (f"Material differs: head {', '.join(wrong)}" if wrong else "")).strip())
+            else:
+                add("spoolman_heads", True, t("Jeder geladene Kopf hat eine passende Spule",
+                                              "Every loaded head has a matching spool"))
+        # paxx12: WLAN signal and eMMC wear
+        if paxx and self.data:
+            m = self.data.machine or {}
+            wifi, wear, eol = m.get("wifi_signal"), m.get("emmc_life_used"), m.get("emmc_pre_eol")
+            if wifi is not None or wear is not None:
+                weak = isinstance(wifi, (int, float)) and wifi < -75
+                worn = eol in ("warning", "urgent") or (isinstance(wear, (int, float)) and wear >= 80)
+                parts = []
+                if wifi is not None:
+                    parts.append(t(f"WLAN {wifi} dBm" + (" (schwach)" if weak else ""), f"WLAN {wifi} dBm" + (" (weak)" if weak else "")))
+                if wear is not None:
+                    parts.append(t(f"eMMC {wear} % verbraucht" + (" – Speicher altert" if worn else ""),
+                                   f"eMMC {wear} % used" + (" – storage is wearing out" if worn else "")))
+                add("paxx12_health", False if eol == "urgent" else (None if weak or worn else True), " · ".join(parts))
+        # printer clock against Home Assistant (end times, history)
+        try:
+            when = await self.client.server_time()
+        except MoonrakerError:
+            when = None
+        if when is not None:
+            diff = abs((dt_util.utcnow() - when).total_seconds())
+            add("clock", True if diff < 120 else None,
+                t(f"Uhr des Druckers weicht {round(diff)} s von Home Assistant ab", f"Printer clock differs by {round(diff)} s from Home Assistant")
+                if diff >= 120 else t("Uhr des Druckers stimmt mit Home Assistant überein", "Printer clock matches Home Assistant"))
+        # maintenance due
+        due = [i for i in (self.data.maintenance if self.data else None) or [] if i.get("due")]
+        if due:
+            add("maintenance", None, t(f"Wartung fällig: {', '.join(str(i.get('label') or i.get('key')) for i in due)}",
+                                       f"Maintenance due: {', '.join(str(i.get('label') or i.get('key')) for i in due)}"))
+        # status light blueprint: installed, used?
+        from homeassistant.components.automation import automations_with_blueprint
+
+        path = f"{DOMAIN}/status_light.yaml"
+        installed = await self.hass.async_add_executor_job(
+            Path(self.hass.config.path("blueprints", "automation", path)).exists)
+        used = automations_with_blueprint(self.hass, path) if installed else []
+        add("blueprint", True if used else None,
+            t(f"Status-Licht-Blueprint in {len(used)} Automation(en) genutzt", f"Status light blueprint used in {len(used)} automation(s)")
+            if used else t("Status-Licht-Blueprint installiert, noch keine Automation daraus", "Status light blueprint installed, no automation from it yet")
+            if installed else t("Status-Licht-Blueprint nicht installiert", "Status light blueprint not installed"))
 
     # ── paxx12 Extended Firmware (2.2) ─────────────────────────────────────
     async def _detect_paxx(self) -> None:

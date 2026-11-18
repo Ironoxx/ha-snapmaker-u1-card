@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Printgebeurtenis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Print voltooid",
+              "cancelled": "Print geannuleerd",
+              "error": "Printfout",
+              "paused": "Print gepauzeerd (bijv. filament op)",
+              "alert": "Printerbericht tijdens een print",
+              "first_layer": "Eerste laag klaar",
+              "almost_done": "Bijna klaar",
+              "spool_low": "Te weinig filament (Spoolman)",
+              "spool_runout": "Spoel raakt op tijdens de print (Spoolman)",
+              "bed_cool": "Onderdeel klaar om te verwijderen (bed afgekoeld)",
+              "maintenance": "Onderhoud nodig",
+              "chamber_ready": "Kamer heeft het doel bereikt (top cover of kamerverwarming)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

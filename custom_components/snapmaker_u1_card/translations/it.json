@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Evento di stampa",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Stampa finita",
+              "cancelled": "Stampa annullata",
+              "error": "Errore di stampa",
+              "paused": "Stampa in pausa (es. filamento esaurito)",
+              "alert": "Messaggio della stampante durante la stampa",
+              "first_layer": "Primo strato completato",
+              "almost_done": "Quasi finita",
+              "spool_low": "Filamento insufficiente (Spoolman)",
+              "spool_runout": "Bobina in esaurimento durante la stampa (Spoolman)",
+              "bed_cool": "Pezzo pronto da rimuovere (piano raffreddato)",
+              "maintenance": "Manutenzione da fare",
+              "chamber_ready": "La camera ha raggiunto l’obiettivo (top cover o riscaldatore camera)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

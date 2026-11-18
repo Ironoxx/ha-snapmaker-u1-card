@@ -1,6 +1,6 @@
 /** System tab: diagnostics, self test, maintenance and config backup. */
 
-import { DOMAIN, MAINT_LABELS } from "../const.js";
+import { CARD_VERSION, DOMAIN, MAINT_LABELS } from "../const.js";
 import { esc, fmtDate, fmtInt, fmtMoney, num } from "../format.js";
 import { LANG, tr } from "../i18n.js";
 
@@ -134,6 +134,15 @@ export const SystemMixin = (Base) => class extends Base {
     try {
       const res = await this._hass.callService(DOMAIN, "self_test", { ...this._entryData(), language: LANG }, undefined, false, true);
       this._selftest = (res && res.response) || { error: tr("Keine Antwort") };
+      // 2.4: the card in this browser against the integration's version
+      const integ = this._st(this._ents.files)?.attributes.version;
+      if (this._selftest.checks && integ) {
+        const same = integ === CARD_VERSION;
+        this._selftest.checks.push({ key: "card_version", ok: same ? true : false,
+          detail: same ? tr("Karte im Browser ist aktuell ({v})", { v: CARD_VERSION })
+            : tr("Browser hat noch Karte {old}, Integration ist {new} – Dashboard neu laden (Strg+F5 bzw. App-Cache leeren)", { old: CARD_VERSION, new: integ }) });
+        if (!same) this._selftest.ok = false;
+      }
     } catch (err) {
       this._selftest = { error: (err && (err.message || err.error)) || String(err) };
     }

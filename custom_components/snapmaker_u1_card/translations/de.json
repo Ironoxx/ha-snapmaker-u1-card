@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Druckereignis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Druck fertig",
+              "cancelled": "Druck abgebrochen",
+              "error": "Druckfehler",
+              "paused": "Druck pausiert (z. B. Filament leer)",
+              "alert": "Meldung vom Drucker während des Drucks",
+              "first_layer": "Erste Schicht fertig",
+              "almost_done": "Gleich fertig",
+              "spool_low": "Filament reicht nicht (Spoolman)",
+              "spool_runout": "Spule läuft im Druck gleich leer (Spoolman)",
+              "bed_cool": "Teil entnehmbar (Bett abgekühlt)",
+              "maintenance": "Wartung fällig",
+              "chamber_ready": "Kammer hat Solltemperatur erreicht (Top Cover oder Kammerheizung)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

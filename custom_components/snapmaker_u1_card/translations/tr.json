@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Baskı olayı",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Baskı bitti",
+              "cancelled": "Baskı iptal edildi",
+              "error": "Baskı hatası",
+              "paused": "Baskı duraklatıldı (örn. filament bitti)",
+              "alert": "Baskı sırasında yazıcı mesajı",
+              "first_layer": "İlk katman bitti",
+              "almost_done": "Neredeyse bitti",
+              "spool_low": "Yetersiz filament (Spoolman)",
+              "spool_runout": "Makara baskı sırasında bitmek üzere (Spoolman)",
+              "bed_cool": "Parça alınmaya hazır (tabla soğudu)",
+              "maintenance": "Zamanı gelen bakım",
+              "chamber_ready": "Kabin hedefine ulaştı (üst kapak veya kabin ısıtıcısı)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

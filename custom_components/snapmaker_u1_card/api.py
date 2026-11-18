@@ -94,6 +94,21 @@ class MoonrakerClient:
         objs = result.get("objects") if isinstance(result, dict) else None
         return [str(o) for o in objs] if isinstance(objs, list) else []
 
+    async def server_time(self) -> Any:
+        """2.4: the printer's clock (HTTP Date header of Moonraker), or None."""
+        from email.utils import parsedate_to_datetime
+
+        try:
+            async with self._session.get(f"{self.base_url}/server/info", headers=self._headers,
+                                         timeout=HTTP_TIMEOUT) as resp:
+                date = resp.headers.get("Date")
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise MoonrakerConnectionError(f"{self.host} not reachable: {err}") from err
+        try:
+            return parsedate_to_datetime(date) if date else None
+        except (TypeError, ValueError):
+            return None
+
     async def spoolman_status(self) -> dict[str, Any]:
         """Moonraker's Spoolman state: ``spool_id`` = the spool it books right now (or None)."""
         result = await self._get_json("/server/spoolman/status")

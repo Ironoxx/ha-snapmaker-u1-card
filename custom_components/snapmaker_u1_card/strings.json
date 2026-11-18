@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Print event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Print finished",
+              "cancelled": "Print cancelled",
+              "error": "Print error",
+              "paused": "Print paused (e.g. filament runout)",
+              "alert": "Printer message during a print",
+              "first_layer": "First layer done",
+              "almost_done": "Almost done",
+              "spool_low": "Not enough filament (Spoolman)",
+              "spool_runout": "Spool about to run out during print (Spoolman)",
+              "bed_cool": "Part ready to remove (bed cooled)",
+              "maintenance": "Maintenance due",
+              "chamber_ready": "Chamber reached its target (top cover or chamber heater)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

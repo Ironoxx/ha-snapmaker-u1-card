@@ -593,6 +593,29 @@
       "led": {
         "name": "LED {name}"
       }
+    },
+    "event": {
+      "print_event": {
+        "name": "Événement d'impression",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "complete": "Impression terminée",
+              "cancelled": "Impression annulée",
+              "error": "Erreur d’impression",
+              "paused": "Impression en pause (p. ex. fin de filament)",
+              "alert": "Message de l’imprimante pendant une impression",
+              "first_layer": "Première couche terminée",
+              "almost_done": "Presque terminée",
+              "spool_low": "Filament insuffisant (Spoolman)",
+              "spool_runout": "Bobine bientôt vide pendant l’impression (Spoolman)",
+              "bed_cool": "Pièce prête à retirer (plateau refroidi)",
+              "maintenance": "Entretien à faire",
+              "chamber_ready": "L’enceinte a atteint sa consigne (top cover ou chauffage d’enceinte)"
+            }
+          }
+        }
+      }
     }
   },
   "services": {
