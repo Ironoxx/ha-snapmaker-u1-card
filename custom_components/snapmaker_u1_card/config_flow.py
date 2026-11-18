@@ -379,10 +379,60 @@ class U1ConfigFlow(ConfigFlow, domain=DOMAIN):
             error = await self._probe(user_input)
             if error is None:
                 self._data = user_input
-                return await self.async_step_settings()
+                return await self.async_step_setup()
             errors["base"] = error
         return self.async_show_form(
             step_id="user", data_schema=_schema(user_input or {}), errors=errors
+        )
+
+    async def async_step_setup(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """2.4: guided setup (step by step) or all settings on one page."""
+        return self.async_show_menu(step_id="setup", menu_options=["guided_power", "settings"])
+
+    def _guided_schema(self, sec: str) -> vol.Schema:
+        """The fields of one settings section as a page of their own."""
+        full = _options_schema(_notify_services(self.hass), self.hass.config.currency)
+        for key, value in full.schema.items():
+            if str(key) == sec:
+                return value.schema
+        raise KeyError(sec)
+
+    async def _guided(self, sec: str, step_id: str, next_step: Any, user_input: dict[str, Any] | None) -> ConfigFlowResult:
+        """One page of the guided setup; checks what can be checked so far."""
+        errors: dict[str, str] = {}
+        answers = self.__dict__.setdefault("_answers", {})
+        if user_input is not None:
+            answers[sec] = user_input
+            error = await _validate_options(self.hass, flatten_options(dict(answers)))
+            if error is None:
+                return await next_step()
+            errors["base"] = error
+        schema = self._guided_schema(sec)
+        if user_input is not None:
+            schema = self.add_suggested_values_to_schema(schema, user_input)
+        return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors, last_step=step_id == "guided_spoolman")
+
+    async def async_step_guided_power(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Guided 1/3: power switch, energy, auto on/off."""
+        return await self._guided(SEC_POWER, "guided_power", self.async_step_guided_notify, user_input)
+
+    async def async_step_guided_notify(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Guided 2/3: notifications and camera."""
+        return await self._guided(SEC_NOTIFY, "guided_notify", self.async_step_guided_spoolman, user_input)
+
+    async def async_step_guided_spoolman(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Guided 3/3: Spoolman; then the entry with the defaults for everything else."""
+        return await self._guided(SEC_SPOOLMAN, "guided_spoolman", self._guided_done, user_input)
+
+    async def _guided_done(self) -> ConfigFlowResult:
+        answers = dict(self.__dict__.get("_answers", {}))
+        full = _options_schema(_notify_services(self.hass), self.hass.config.currency)
+        for key, value in full.schema.items():
+            # sections not asked for: their defaults (the same as on the one-page form)
+            answers.setdefault(str(key), value.schema({}))
+        flat = flatten_options(answers)
+        return self.async_create_entry(
+            title=f"Snapmaker U1 ({self._data[CONF_HOST]})", data=self._data, options=flat, description="guided",
         )
 
     async def async_step_settings(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:

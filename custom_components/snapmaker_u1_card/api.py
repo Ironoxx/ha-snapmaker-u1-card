@@ -404,6 +404,20 @@ class MoonrakerClient:
         ver = (info or {}).get("software_version") if isinstance(info, dict) else None
         return ver if isinstance(ver, str) and ver else None
 
+    async def firmware_settings(self) -> tuple[int, Any]:
+        """2.4: paxx12's settings (``/firmware-config/api/settings``), read only: (HTTP status, JSON or None)."""
+        url = f"http://{self.host}/firmware-config/api/settings"
+        try:
+            async with self._session.get(url, headers=self._headers, timeout=HTTP_TIMEOUT) as resp:
+                if resp.status != 200:
+                    return resp.status, None
+                try:
+                    return 200, await resp.json(content_type=None)
+                except (aiohttp.ContentTypeError, ValueError):
+                    return 200, None
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise MoonrakerConnectionError(str(err)) from err
+
     async def firmware_config(self) -> tuple[int, Any]:
         """paxx12 Extended Firmware's status (``/firmware-config/api/status``): (HTTP status, JSON or None).
 

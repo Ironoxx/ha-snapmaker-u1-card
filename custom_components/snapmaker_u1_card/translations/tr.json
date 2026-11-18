@@ -155,6 +155,85 @@
             }
           }
         }
+      },
+      "setup": {
+        "title": "Kur",
+        "description": "Yazıcıyı nasıl kurmak istiyorsun?",
+        "menu_options": {
+          "guided_power": "Adım adım (önerilen)",
+          "settings": "Tüm ayarlar tek sayfada"
+        }
+      },
+      "guided_power": {
+        "title": "Adım 1 / 3: Güç ve enerji",
+        "description": "Her anahtar çalışır: Shelly, KNX, Zigbee priz, …\n\nHer şey daha sonra Yapılandır altında değiştirilebilir. İhtiyacın olmayanı atla.",
+        "data": {
+          "power_switch": "Yazıcı güç anahtarı",
+          "power_sensor": "Güç sensörü (W)",
+          "energy_sensor": "Enerji sayacı (kWh)",
+          "energy_price": "Elektrik fiyatı varlığı",
+          "shutdown_host": "Elektriği kesmeden önce yazıcıyı kapat",
+          "auto_on": "Baskı başlatıldığında otomatik aç",
+          "auto_off": "Baskıdan sonra otomatik kapat",
+          "auto_off_temp": "Otomatik kapanma sıcaklık sınırı",
+          "auto_off_delay": "Baskıdan sonra otomatik kapanma gecikmesi",
+          "idle_off_hours": "Boşta kalınca kapat",
+          "energy_price_fixed": "Sabit elektrik fiyatı"
+        },
+        "data_description": {
+          "power_switch": "Karttaki aç/kapat düğmesi için kullanılır. Yazdırma sırasında kapatma engellenir.",
+          "power_sensor": "Anlık güç tüketimi, genellikle aynı prizden.",
+          "energy_sensor": "Toplam enerji sayacı. Her baskının tüketimi için kullanılır.",
+          "energy_price": "Güncel fiyatı veren sensör veya yardımcı (dinamik tarifeler). Boş = aşağıdaki sabit fiyat veya enerji panosu.",
+          "shutdown_host": "Yazıcıya kapatma komutu gönderir, yazıcı kapanana kadar ve ardından 10 sn bekler, sonra elektriği keser. Yazıcı reddederse, kendi açma/kapama düğmesindeki gibi 10 sn sonra elektriği kesilir.",
+          "auto_on": "Yazıcı kapalıyken karttan baskı başlatmak yazıcıyı açar ve hazır olana kadar bekler (yaklaşık 1–2 dk).",
+          "auto_off": "Biten veya iptal edilen bir baskıdan sonra, tüm ısıtıcılar soğuduğunda.",
+          "auto_off_temp": "Nozullar ve tabla bu sıcaklığın altında olmalıdır.",
+          "auto_off_delay": "Baskının bitişi ile elektriğin kesilmesi arasındaki en kısa süre.",
+          "idle_off_hours": "Baskı ve ısıtma olmadan geçen saat; sonra düzgünce kapatılır ve elektriği kesilir. 0 = kapalı.",
+          "energy_price_fixed": "kWh başına; fiyat varlığı ayarlanmamışsa kullanılır. İkisi de yoksa enerji panosundaki fiyat kullanılır."
+        }
+      },
+      "guided_notify": {
+        "title": "Adım 2 / 3: Bildirimler ve kamera",
+        "description": "Telefon bildirimi: baskı sonu, hatalar, duraklatma, mesajlar, ilk katman, neredeyse bitti, az filament.\n\nHer şey daha sonra Yapılandır altında değiştirilebilir. İhtiyacın olmayanı atla.",
+        "data": {
+          "notify_targets": "Bildirim hizmetleri",
+          "notify_events": "Bildirim gönderilecek olaylar",
+          "camera": "Fotoğraf için kamera",
+          "almost_done_minutes": "“Neredeyse bitti” uyarısı",
+          "bed_cool_temp": "“Parça hazır” sıcaklığı",
+          "camera_wake": "Kamerayı uyanık tut",
+          "live_notify_budget": "İlerleme bildirimi: günlük güncelleme sayısı",
+          "live_notify_image": "İlerleme bildirimi: kamera görüntüsü",
+          "notify_click_url": "Dokununca aç"
+        },
+        "data_description": {
+          "notify_targets": "örn. notify.mobile_app_pixel_8. Birden fazla seçilebilir.",
+          "camera": "Companion uygulaması güncel bir görüntü ekler. Geçmişteki sonuç fotoğrafı için de kullanılır.",
+          "almost_done_minutes": "Tahmini bitişten önceki dakika.",
+          "bed_cool_temp": "Biten bir baskıdan sonra mesajın gönderileceği tabla sıcaklığı.",
+          "camera_wake": "Snapmaker uygulaması gibi her 10 sn'de camera.start_monitor gönderir. Orijinal ürün yazılımında kamera görüntüsü duruyorsa gerekir; değiştirilmiş ürün yazılımında genellikle gerekmez.",
+          "live_notify_budget": "Süren ilerleme bildirimi (Android) için telefon başına günlük üst sınır. Companion uygulaması günde yaklaşık 500 bildirime izin verir; bitiş, hata ve duraklatma mesajları buna dahil değildir.",
+          "live_notify_image": "İlerleme bildirimi genişletildiğinde kamera görüntüsünü gösterir (her ilerleme güncellemesinde yenilenir, ek bildirim yok).",
+          "notify_click_url": "Bir bildirime dokunulduğunda açılan pano yolu veya URL, örn. /dashboard-printer/0 veya /lovelace/printer. Boş = uygulamanın varsayılanı."
+        }
+      },
+      "guided_spoolman": {
+        "title": "Adım 3 / 3: Spoolman",
+        "description": "İsteğe bağlı. Spoolman kullanmıyorsanız URL'yi boş bırakın.\n\nHer şey daha sonra Yapılandır altında değiştirilebilir. İhtiyacın olmayanı atla.",
+        "data": {
+          "spoolman_url": "Spoolman URL'si",
+          "spoolman_deduct": "Her baskıdan sonra kafa başına tüketimi düş",
+          "spoolman_low": "Uyarı sınırı",
+          "spool_restore": "Kafa yeniden yüklendikten sonra son makara"
+        },
+        "data_description": {
+          "spoolman_url": "7912 portlu adres, örn. 192.168.0.10:7912 (Home Assistant eklentisi: homeassistant.local:7912). Boş = kapalı.",
+          "spoolman_deduct": "Baskı kafası başına dilimleyici ağırlığı (iptal edilirse orantılı). Tüketimi zaten başka bir şey kaydediyorsa (örn. Moonraker'ın kendi Spoolman bağlantısı) kapatın, aksi halde iki kez sayılır.",
+          "spoolman_low": "Bir makarada bundan az filament kaldığında kart uyarı gösterir.",
+          "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin."
+        }
       }
     },
     "error": {
@@ -167,6 +246,9 @@
     "abort": {
       "already_configured": "Bu yazıcı zaten kurulu.",
       "reconfigure_successful": "Ayarlar güncellendi."
+    },
+    "create_entry": {
+      "guided": "Yazıcı kuruldu.\n\nSonraki adımlar:\n- **Pano:** *Snapmaker U1* kartını bir panoya ekle ya da tam bir pano oluşturmasını sağla: kart → *Ayarlar* → *Pano şablonu* (Tam, Minimal, Bakım ve tanılama).\n- Kartın Sistem sekmesindeki **kendi kendine test** her şeyi bir kez kontrol eder.\n- **Durum ışığı:** *Snapmaker U1 – status light* blueprint'i Otomasyonlar → Blueprint'ler altında kurulu.\n\nDiğer ayarlar (filament fiyatları, dosyalar, timelapse'ler, bakım, ikinci bildirim grubu) Yapılandır altında."
     }
   },
   "options": {

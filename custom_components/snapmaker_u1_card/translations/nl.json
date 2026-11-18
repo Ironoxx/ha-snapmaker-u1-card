@@ -155,6 +155,85 @@
             }
           }
         }
+      },
+      "setup": {
+        "title": "Instellen",
+        "description": "Hoe wil je de printer instellen?",
+        "menu_options": {
+          "guided_power": "Stap voor stap (aanbevolen)",
+          "settings": "Alle instellingen op één pagina"
+        }
+      },
+      "guided_power": {
+        "title": "Stap 1 van 3: Stroom en energie",
+        "description": "Elke schakelaar werkt: Shelly, KNX, Zigbee-stekker, …\n\nAlles kan later onder Configureren worden gewijzigd. Sla over wat je niet nodig hebt.",
+        "data": {
+          "power_switch": "Stroomschakelaar van de printer",
+          "power_sensor": "Vermogenssensor (W)",
+          "energy_sensor": "Energiemeter (kWh)",
+          "energy_price": "Entiteit voor de stroomprijs",
+          "shutdown_host": "Printer afsluiten voordat de stroom wordt uitgeschakeld",
+          "auto_on": "Automatisch inschakelen bij het starten van een print",
+          "auto_off": "Automatisch uitschakelen na een print",
+          "auto_off_temp": "Automatisch uit onder temperatuur",
+          "auto_off_delay": "Vertraging automatisch uit na de print",
+          "idle_off_hours": "Uitschakelen na inactiviteit",
+          "energy_price_fixed": "Vaste energieprijs"
+        },
+        "data_description": {
+          "power_switch": "Gebruikt voor de aan/uit-knop op de kaart. Uitschakelen is geblokkeerd tijdens het printen.",
+          "power_sensor": "Actueel vermogen, meestal van dezelfde stekker.",
+          "energy_sensor": "Totale energieteller. Gebruikt voor het verbruik per print.",
+          "energy_price": "Sensor of helper met de actuele prijs (dynamische tarieven). Leeg = vaste prijs hieronder of het energiedashboard.",
+          "shutdown_host": "Stuurt een afsluitopdracht naar de printer, wacht tot hij weg is plus 10 s en schakelt dan uit. Weigert de printer, dan wordt na 10 s uitgeschakeld zoals met zijn wipschakelaar.",
+          "auto_on": "Een print vanuit de kaart starten terwijl de printer uit is, schakelt hem in en wacht tot hij gereed is (ca. 1–2 min).",
+          "auto_off": "Na een voltooide of geannuleerde print, zodra alle verwarmingen zijn afgekoeld.",
+          "auto_off_temp": "Nozzles en bed moeten onder deze temperatuur zijn.",
+          "auto_off_delay": "Minimale tijd tussen het einde van de print en het uitschakelen.",
+          "idle_off_hours": "Uren zonder print en zonder verwarming, daarna netjes afsluiten en uitschakelen. 0 = uit.",
+          "energy_price_fixed": "Per kWh, gebruikt als er geen prijsentiteit is. Zonder beide wordt de prijs van het energiedashboard gebruikt."
+        }
+      },
+      "guided_notify": {
+        "title": "Stap 2 van 3: Meldingen en camera",
+        "description": "Push naar de telefoon: einde print, fouten, pauze, berichten, eerste laag, bijna klaar, weinig filament.\n\nAlles kan later onder Configureren worden gewijzigd. Sla over wat je niet nodig hebt.",
+        "data": {
+          "notify_targets": "Meldingsdiensten",
+          "notify_events": "Melden bij",
+          "camera": "Camera voor het beeld",
+          "almost_done_minutes": "Waarschuwing „bijna klaar”",
+          "bed_cool_temp": "„Onderdeel klaar” bij",
+          "camera_wake": "Camera wakker houden",
+          "live_notify_budget": "Voortgangsmelding: updates per dag",
+          "live_notify_image": "Voortgangsmelding: camerabeeld",
+          "notify_click_url": "Openen bij tikken"
+        },
+        "data_description": {
+          "notify_targets": "bijv. notify.mobile_app_pixel_8. Meerdere mogelijk.",
+          "camera": "De Companion-app voegt een actueel beeld toe. Ook gebruikt voor de resultaatfoto in de geschiedenis.",
+          "almost_done_minutes": "Minuten voor het geschatte einde.",
+          "bed_cool_temp": "Bedtemperatuur na een voltooide print waarbij het bericht wordt verstuurd.",
+          "camera_wake": "Stuurt elke 10 s camera.start_monitor zoals de Snapmaker-app. Nodig als het camerabeeld stilvalt met de originele firmware; aangepaste firmware heeft het meestal niet nodig.",
+          "live_notify_budget": "Bovengrens voor de doorlopende voortgangsmelding (Android) per dag en telefoon. De Companion-app staat ongeveer 500 pushes per dag toe; berichten over einde, fout en pauze tellen hier niet mee.",
+          "live_notify_image": "Toont het camerabeeld als de voortgangsmelding is uitgeklapt (bij elke voortgangsupdate vernieuwd, geen extra pushes).",
+          "notify_click_url": "Dashboardpad of URL dat bij tikken op een melding opent, bijv. /dashboard-printer/0 of /lovelace/printer. Leeg = standaard van de app."
+        }
+      },
+      "guided_spoolman": {
+        "title": "Stap 3 van 3: Spoolman",
+        "description": "Optioneel. Laat de URL leeg als je Spoolman niet gebruikt.\n\nAlles kan later onder Configureren worden gewijzigd. Sla over wat je niet nodig hebt.",
+        "data": {
+          "spoolman_url": "Spoolman-URL",
+          "spoolman_deduct": "Verbruik per kop afschrijven na elke print",
+          "spoolman_low": "Waarschuwen onder",
+          "spool_restore": "Laatste spoel na het opnieuw laden van een kop"
+        },
+        "data_description": {
+          "spoolman_url": "Adres met poort 7912, bijv. 192.168.0.10:7912 (Home Assistant-add-on: homeassistant.local:7912). Leeg = uit.",
+          "spoolman_deduct": "Slicergewicht per printkop (naar rato bij annuleren). Uitzetten als iets anders het verbruik al boekt (bijv. de eigen Spoolman-koppeling van Moonraker), anders wordt het dubbel geteld.",
+          "spoolman_low": "De kaart waarschuwt als een spoel minder filament over heeft.",
+          "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen."
+        }
       }
     },
     "error": {
@@ -167,6 +246,9 @@
     "abort": {
       "already_configured": "Deze printer is al ingesteld.",
       "reconfigure_successful": "Instellingen bijgewerkt."
+    },
+    "create_entry": {
+      "guided": "De printer is ingesteld.\n\nVolgende stappen:\n- **Dashboard:** voeg de kaart *Snapmaker U1* toe aan een dashboard, of laat een volledig dashboard maken: kaart → *Instellingen* → *Dashboardsjabloon* (Volledig, Minimaal, Onderhoud en diagnose).\n- De **zelftest** in het tabblad Systeem van de kaart controleert alles eenmalig.\n- **Statuslicht:** de blueprint *Snapmaker U1 – status light* is geïnstalleerd onder Automatiseringen → Blueprints.\n\nMeer instellingen (filamentprijzen, bestanden, timelapses, onderhoud, tweede meldingsgroep) onder Configureren."
     }
   },
   "options": {

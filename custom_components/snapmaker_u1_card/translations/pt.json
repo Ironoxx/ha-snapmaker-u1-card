@@ -155,6 +155,85 @@
             }
           }
         }
+      },
+      "setup": {
+        "title": "Configurar",
+        "description": "Como queres configurar a impressora?",
+        "menu_options": {
+          "guided_power": "Passo a passo (recomendado)",
+          "settings": "Todas as definições numa página"
+        }
+      },
+      "guided_power": {
+        "title": "Passo 1 de 3: Energia e consumo",
+        "description": "Qualquer interruptor serve: Shelly, KNX, tomada Zigbee, …\n\nTudo pode ser alterado depois em Configurar. Salta o que não precisas.",
+        "data": {
+          "power_switch": "Interruptor de energia da impressora",
+          "power_sensor": "Sensor de potência (W)",
+          "energy_sensor": "Contador de energia (kWh)",
+          "energy_price": "Entidade do preço da eletricidade",
+          "shutdown_host": "Encerrar a impressora antes de cortar a energia",
+          "auto_on": "Ligar automaticamente ao iniciar uma impressão",
+          "auto_off": "Desligar automaticamente após uma impressão",
+          "auto_off_temp": "Desligar automático abaixo da temperatura",
+          "auto_off_delay": "Atraso do desligar automático após a impressão",
+          "idle_off_hours": "Desligar após inatividade",
+          "energy_price_fixed": "Preço fixo da energia"
+        },
+        "data_description": {
+          "power_switch": "Usado para o botão ligar/desligar do cartão. Desligar está bloqueado durante a impressão.",
+          "power_sensor": "Consumo atual, normalmente da mesma tomada.",
+          "energy_sensor": "Contador total de energia. Usado para o consumo de cada impressão.",
+          "energy_price": "Sensor ou auxiliar com o preço atual (tarifas dinâmicas). Vazio = preço fixo abaixo ou o painel de energia.",
+          "shutdown_host": "Envia um encerramento à impressora, espera até ela desaparecer mais 10 s e depois corta a energia. Se a impressora recusar, a energia é cortada após 10 s como com o seu interruptor.",
+          "auto_on": "Iniciar uma impressão no cartão com a impressora desligada liga-a e espera que esteja pronta (cerca de 1–2 min).",
+          "auto_off": "Após uma impressão concluída ou cancelada, quando todos os aquecedores arrefeceram.",
+          "auto_off_temp": "Os bicos e a mesa têm de estar abaixo desta temperatura.",
+          "auto_off_delay": "Tempo mínimo entre o fim da impressão e o desligar.",
+          "idle_off_hours": "Horas sem imprimir nem aquecer; depois encerra de forma limpa e corta a energia. 0 = desligado.",
+          "energy_price_fixed": "Por kWh, usado quando não há entidade de preço. Sem ambos, é usado o preço do painel de energia."
+        }
+      },
+      "guided_notify": {
+        "title": "Passo 2 de 3: Notificações e câmara",
+        "description": "Push no telemóvel: fim da impressão, erros, pausa, mensagens, primeira camada, quase concluída, pouco filamento.\n\nTudo pode ser alterado depois em Configurar. Salta o que não precisas.",
+        "data": {
+          "notify_targets": "Serviços de notificação",
+          "notify_events": "Notificar em",
+          "camera": "Câmara para a imagem",
+          "almost_done_minutes": "Aviso «quase concluída»",
+          "bed_cool_temp": "«Peça pronta» a",
+          "camera_wake": "Manter a câmara ativa",
+          "live_notify_budget": "Notificação de progresso: atualizações por dia",
+          "live_notify_image": "Notificação de progresso: imagem da câmara",
+          "notify_click_url": "Abrir ao tocar"
+        },
+        "data_description": {
+          "notify_targets": "p. ex. notify.mobile_app_pixel_8. Podem ser vários.",
+          "camera": "A app Companion anexa uma imagem atual. Também é usada para a foto do resultado no histórico.",
+          "almost_done_minutes": "Minutos antes do fim estimado.",
+          "bed_cool_temp": "Temperatura da mesa após uma impressão concluída à qual a mensagem é enviada.",
+          "camera_wake": "Envia camera.start_monitor a cada 10 s como a app da Snapmaker. Necessário se a imagem parar com o firmware original; o firmware modificado normalmente não precisa.",
+          "live_notify_budget": "Limite máximo para a notificação de progresso contínua (Android) por dia e telemóvel. A app Companion permite cerca de 500 push por dia; as mensagens de fim, erro e pausa não contam aqui.",
+          "live_notify_image": "Mostra a imagem da câmara quando a notificação de progresso é expandida (atualizada a cada progresso, sem push extra).",
+          "notify_click_url": "Caminho do painel ou URL aberto ao tocar numa notificação, p. ex. /dashboard-printer/0 ou /lovelace/printer. Vazio = predefinição da app."
+        }
+      },
+      "guided_spoolman": {
+        "title": "Passo 3 de 3: Spoolman",
+        "description": "Opcional. Deixe o URL vazio se não usa o Spoolman.\n\nTudo pode ser alterado depois em Configurar. Salta o que não precisas.",
+        "data": {
+          "spoolman_url": "URL do Spoolman",
+          "spoolman_deduct": "Descontar o consumo por cabeça após cada impressão",
+          "spoolman_low": "Avisar abaixo de",
+          "spool_restore": "Última bobina após recarregar uma cabeça"
+        },
+        "data_description": {
+          "spoolman_url": "Endereço com a porta 7912, p. ex. 192.168.0.10:7912 (extra do Home Assistant: homeassistant.local:7912). Vazio = desligado.",
+          "spoolman_deduct": "Peso do slicer por cabeça (proporcional se cancelada). Desligue se outra coisa já regista o consumo (p. ex. a ligação Spoolman do próprio Moonraker), senão é contado duas vezes.",
+          "spoolman_low": "O cartão avisa quando uma bobina tem menos filamento.",
+          "spool_restore": "A impressora esquece a bobina quando o filamento é descarregado (sem etiqueta RFID). Perguntar: a cabeça oferece a última bobina, um toque repõe-na. Automático: volta a ser definida sem perguntar (bobina errada se carregar outra). Desligado: escolher de novo."
+        }
       }
     },
     "error": {
@@ -167,6 +246,9 @@
     "abort": {
       "already_configured": "Esta impressora já está configurada.",
       "reconfigure_successful": "Definições atualizadas."
+    },
+    "create_entry": {
+      "guided": "A impressora está configurada.\n\nPróximos passos:\n- **Painel:** adiciona o cartão *Snapmaker U1* a um painel, ou deixa-o criar um painel completo: cartão → *Definições* → *Modelo de painel* (Completo, Mínimo, Manutenção e diagnóstico).\n- O **autoteste** no separador Sistema do cartão verifica tudo uma vez.\n- **Luz de estado:** o blueprint *Snapmaker U1 – status light* está instalado em Automatizações → Blueprints.\n\nMais definições (preços do filamento, ficheiros, timelapses, manutenção, segundo grupo de notificações) em Configurar."
     }
   },
   "options": {

@@ -246,6 +246,31 @@ def parse_paxx_health(status: Any) -> dict[str, Any]:
     return {k: v for k, v in out.items() if v is not None}
 
 
+def parse_paxx_settings(data: Any) -> list[dict[str, Any]]:
+    """2.4: paxx12's settings as groups [{label, items: [{id, label, value, description}]}] (read only).
+
+    /firmware-config/api/settings: {group: {label, items: [{id, label, description,
+    current, hidden, options: {key: {label}}}]}}; the value is the label of the
+    current option, hidden settings are left out.
+    """
+    out: list[dict[str, Any]] = []
+    for group in data.values() if isinstance(data, dict) else []:
+        if not isinstance(group, dict):
+            continue
+        items = []
+        for item in group.get("items") or []:
+            if not isinstance(item, dict) or item.get("hidden"):
+                continue
+            current = str(item.get("current") or "")
+            opt = (item.get("options") or {}).get(current) if isinstance(item.get("options"), dict) else None
+            value = opt.get("label") if isinstance(opt, dict) and opt.get("label") else current
+            items.append({"id": str(item.get("id") or ""), "label": str(item.get("label") or item.get("id") or ""),
+                          "value": value, "description": item.get("description") or ""})
+        if items:
+            out.append({"label": str(group.get("label") or ""), "items": items})
+    return out
+
+
 def parse_firmware_config(status: Any) -> dict[str, Any]:
     """paxx12 Extended Firmware: values of /firmware-config/api/status.
 

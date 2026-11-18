@@ -155,6 +155,85 @@
             }
           }
         }
+      },
+      "setup": {
+        "title": "Set up",
+        "description": "How do you want to set up the printer?",
+        "menu_options": {
+          "guided_power": "Step by step (recommended)",
+          "settings": "All settings on one page"
+        }
+      },
+      "guided_power": {
+        "title": "Step 1 of 3: Power and energy",
+        "description": "Any switch works: Shelly, KNX, Zigbee plug, …\n\nEverything can be changed later under Configure. Skip what you don't need.",
+        "data": {
+          "power_switch": "Printer power switch",
+          "power_sensor": "Power sensor (W)",
+          "energy_sensor": "Energy meter (kWh)",
+          "energy_price": "Electricity price entity",
+          "shutdown_host": "Shut the printer down before cutting power",
+          "auto_on": "Switch on automatically when a print is started",
+          "auto_off": "Switch off automatically after a print",
+          "auto_off_temp": "Auto-off below temperature",
+          "auto_off_delay": "Auto-off delay after the print",
+          "idle_off_hours": "Switch off after idle",
+          "energy_price_fixed": "Fixed energy price"
+        },
+        "data_description": {
+          "power_switch": "Used for the on/off button on the card. Switching off is blocked while printing.",
+          "power_sensor": "Live power draw, usually from the same plug.",
+          "energy_sensor": "Total energy counter. Used for the consumption of each print.",
+          "energy_price": "Sensor or helper with the current price (dynamic tariffs). Empty = fixed price below or the energy dashboard.",
+          "shutdown_host": "Sends a shutdown to the printer, waits until it is gone plus 10 s, then switches off. If the printer refuses, it is switched off after 10 s like with its rocker switch.",
+          "auto_on": "Starting a print from the card while the printer is off switches it on and waits until it is ready (about 1–2 min).",
+          "auto_off": "After a finished or cancelled print, once all heaters have cooled down.",
+          "auto_off_temp": "Nozzles and bed must be below this temperature.",
+          "auto_off_delay": "Minimum time between the end of the print and switching off.",
+          "idle_off_hours": "Hours without a print and without heating, then shut down cleanly and switch off. 0 = off.",
+          "energy_price_fixed": "Per kWh, used when no price entity is set. Without both, the price from the energy dashboard is used."
+        }
+      },
+      "guided_notify": {
+        "title": "Step 2 of 3: Notifications & camera",
+        "description": "Phone push: print end, errors, pause, messages, first layer, almost done, low filament.\n\nEverything can be changed later under Configure. Skip what you don't need.",
+        "data": {
+          "notify_targets": "Notify services",
+          "notify_events": "Notify on",
+          "camera": "Camera for the picture",
+          "almost_done_minutes": "“Almost done” warning",
+          "bed_cool_temp": "“Part ready” at",
+          "camera_wake": "Keep camera awake",
+          "live_notify_budget": "Progress notification: updates per day",
+          "live_notify_image": "Progress notification: camera image",
+          "notify_click_url": "Open when tapped"
+        },
+        "data_description": {
+          "notify_targets": "e.g. notify.mobile_app_pixel_8. Several are possible.",
+          "camera": "The companion app attaches a current image. Also used for the result photo in the history.",
+          "almost_done_minutes": "Minutes before the estimated end.",
+          "bed_cool_temp": "Bed temperature after a finished print at which the message is sent.",
+          "camera_wake": "Sends camera.start_monitor every 10 s like the Snapmaker app. Needed if the camera image stops on stock firmware; modified firmware usually does not need it.",
+          "live_notify_budget": "Upper limit for the ongoing progress notification (Android) per day and phone. The companion app allows about 500 pushes per day; end, error and pause messages do not count here.",
+          "live_notify_image": "Shows the camera image when the progress notification is expanded (updated with every progress update, no extra pushes).",
+          "notify_click_url": "Dashboard path or URL opened when a notification is tapped, e.g. /dashboard-printer/0 or /lovelace/printer. Empty = the app's default."
+        }
+      },
+      "guided_spoolman": {
+        "title": "Step 3 of 3: Spoolman",
+        "description": "Optional. Leave the URL empty if you don't use Spoolman.\n\nEverything can be changed later under Configure. Skip what you don't need.",
+        "data": {
+          "spoolman_url": "Spoolman URL",
+          "spoolman_deduct": "Deduct usage per head after each print",
+          "spoolman_low": "Warn below",
+          "spool_restore": "Last spool after reloading a head"
+        },
+        "data_description": {
+          "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
+          "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
+          "spoolman_low": "Card shows a warning when a spool has less filament left.",
+          "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again."
+        }
       }
     },
     "error": {
@@ -167,6 +246,9 @@
     "abort": {
       "already_configured": "This printer is already set up.",
       "reconfigure_successful": "Settings updated."
+    },
+    "create_entry": {
+      "guided": "The printer is set up.\n\nNext steps:\n- **Dashboard:** add the card *Snapmaker U1* to a dashboard, or let it create a whole dashboard: card → *Settings* → *Dashboard template* (Full, Minimal, Maintenance & diagnostics).\n- **Self test** in the card's system tab checks everything once.\n- **Status light:** the blueprint *Snapmaker U1 – status light* is installed under Automations → Blueprints.\n\nFurther settings (filament prices, files, timelapses, maintenance, a second notification group) under Configure."
     }
   },
   "options": {

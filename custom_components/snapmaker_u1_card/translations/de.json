@@ -155,6 +155,85 @@
             }
           }
         }
+      },
+      "setup": {
+        "title": "Einrichten",
+        "description": "Wie möchtest du den Drucker einrichten?",
+        "menu_options": {
+          "guided_power": "Schritt für Schritt (empfohlen)",
+          "settings": "Alle Einstellungen auf einer Seite"
+        }
+      },
+      "guided_power": {
+        "title": "Schritt 1 von 3: Strom und Verbrauch",
+        "description": "Jeder Schalter geht: Shelly, KNX, Zigbee-Steckdose, …\n\nAlles lässt sich später unter Konfigurieren ändern. Was du nicht brauchst, einfach überspringen.",
+        "data": {
+          "power_switch": "Netzschalter des Druckers",
+          "power_sensor": "Leistungssensor (W)",
+          "energy_sensor": "Energiezähler (kWh)",
+          "energy_price": "Strompreis-Entität",
+          "shutdown_host": "Drucker vor dem Abschalten herunterfahren",
+          "auto_on": "Beim Druckstart automatisch einschalten",
+          "auto_off": "Nach dem Druck automatisch ausschalten",
+          "auto_off_temp": "Auto-Aus unter Temperatur",
+          "auto_off_delay": "Auto-Aus frühestens nach",
+          "idle_off_hours": "Ausschalten nach Leerlauf",
+          "energy_price_fixed": "Fester Strompreis"
+        },
+        "data_description": {
+          "power_switch": "Für den Ein/Aus-Knopf der Karte. Ausschalten ist während eines Drucks gesperrt.",
+          "power_sensor": "Aktuelle Leistung, meist von derselben Steckdose.",
+          "energy_sensor": "Zählerstand. Daraus wird der Verbrauch je Druck berechnet.",
+          "energy_price": "Sensor oder Helfer mit dem aktuellen Preis (dynamische Tarife). Leer = fester Preis darunter oder Energie-Dashboard.",
+          "shutdown_host": "Fährt den Drucker herunter, wartet bis er weg ist plus 10 s und schaltet dann ab. Lehnt der Drucker ab, wird nach 10 s abgeschaltet wie mit dem Kippschalter.",
+          "auto_on": "Druckstart aus der Karte bei ausgeschaltetem Drucker: einschalten und warten, bis er bereit ist (ca. 1–2 min).",
+          "auto_off": "Nach fertigem oder abgebrochenem Druck, sobald alle Heizungen abgekühlt sind.",
+          "auto_off_temp": "Düsen und Bett müssen unter dieser Temperatur liegen.",
+          "auto_off_delay": "Mindestzeit zwischen Druckende und Abschalten.",
+          "idle_off_hours": "Stunden ohne Druck und ohne Heizung, dann sauber herunterfahren und ausschalten. 0 = aus.",
+          "energy_price_fixed": "Je kWh, gilt ohne Preis-Entität. Ist beides leer, wird der Preis aus dem Energie-Dashboard genommen."
+        }
+      },
+      "guided_notify": {
+        "title": "Schritt 2 von 3: Benachrichtigungen & Kamera",
+        "description": "Push aufs Handy: Druckende, Fehler, Pause, Meldungen, erste Schicht, gleich fertig, Filament knapp.\n\nAlles lässt sich später unter Konfigurieren ändern. Was du nicht brauchst, einfach überspringen.",
+        "data": {
+          "notify_targets": "Benachrichtigungsdienste",
+          "notify_events": "Benachrichtigen bei",
+          "camera": "Kamera für das Bild",
+          "almost_done_minutes": "Vorwarnung „Gleich fertig“",
+          "bed_cool_temp": "„Teil entnehmbar“ ab",
+          "camera_wake": "Kamera wach halten",
+          "live_notify_budget": "Fortschritts-Benachrichtigung: Updates pro Tag",
+          "live_notify_image": "Fortschritts-Benachrichtigung: Kamerabild",
+          "notify_click_url": "Beim Antippen öffnen"
+        },
+        "data_description": {
+          "notify_targets": "z. B. notify.mobile_app_pixel_8. Mehrere möglich.",
+          "camera": "Die Companion-App hängt ein aktuelles Bild an. Wird auch für das Ergebnisfoto in der Historie genutzt.",
+          "almost_done_minutes": "Minuten vor dem geschätzten Ende.",
+          "bed_cool_temp": "Betttemperatur nach fertigem Druck, ab der die Meldung kommt.",
+          "camera_wake": "Schickt alle 10 s camera.start_monitor wie die Snapmaker-App. Nötig, wenn das Kamerabild bei Stock-Firmware stehen bleibt; angepasste Firmware braucht das meist nicht.",
+          "live_notify_budget": "Obergrenze für die Dauer-Benachrichtigung (Android) pro Tag und Handy. Die Companion App erlaubt etwa 500 Pushes pro Tag; Fertig-, Fehler- und Pause-Meldungen zählen hier nicht.",
+          "live_notify_image": "Zeigt das Kamerabild, wenn die Fortschritts-Benachrichtigung aufgeklappt wird (aktualisiert mit jedem Fortschritts-Update, keine zusätzlichen Pushes).",
+          "notify_click_url": "Dashboard-Pfad oder URL, die beim Antippen einer Benachrichtigung geöffnet wird, z. B. /dashboard-drucker/0 oder /lovelace/drucker. Leer = Standard der App."
+        }
+      },
+      "guided_spoolman": {
+        "title": "Schritt 3 von 3: Spoolman",
+        "description": "Optional. Adresse leer lassen, wenn du Spoolman nicht nutzt.\n\nAlles lässt sich später unter Konfigurieren ändern. Was du nicht brauchst, einfach überspringen.",
+        "data": {
+          "spoolman_url": "Spoolman-Adresse",
+          "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
+          "spoolman_low": "Warnen unter",
+          "spool_restore": "Letzte Spule nach dem Neu-Einlegen"
+        },
+        "data_description": {
+          "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
+          "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
+          "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist.",
+          "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen."
+        }
       }
     },
     "error": {
@@ -167,6 +246,9 @@
     "abort": {
       "already_configured": "Dieser Drucker ist bereits eingerichtet.",
       "reconfigure_successful": "Einstellungen übernommen."
+    },
+    "create_entry": {
+      "guided": "Der Drucker ist eingerichtet.\n\nNächste Schritte:\n- **Dashboard:** die Karte *Snapmaker U1* zu einem Dashboard hinzufügen – oder ein ganzes Dashboard anlegen lassen: Karte → *Einstellungen* → *Dashboard-Vorlage* (Voll, Minimal, Wartung & Diagnose).\n- Der **Selbsttest** im System-Reiter der Karte prüft alles einmal durch.\n- **Status-Licht:** Der Blueprint *Snapmaker U1 – status light* ist unter Automationen → Blueprints installiert.\n\nWeitere Einstellungen (Filamentpreise, Dateien, Zeitraffer, Wartung, zweite Benachrichtigungsgruppe) unter Konfigurieren."
     }
   },
   "options": {

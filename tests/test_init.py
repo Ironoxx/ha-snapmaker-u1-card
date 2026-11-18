@@ -81,6 +81,7 @@ def mock_client():
          patch(f"{API}.firmware_version", AsyncMock(return_value="1.6.0")), \
          patch(f"{API}.firmware_config", AsyncMock(return_value=(404, None))) as fwc, \
          patch(f"{API}.server_time", AsyncMock(return_value=None)), \
+         patch(f"{API}.firmware_settings", AsyncMock(return_value=(404, None))), \
          patch(f"{API}.spoolman_status", AsyncMock(return_value={"spoolman_connected": True, "spool_id": None})) as sms, \
          patch(f"{API}.history_totals", AsyncMock(return_value={"total_print_time": 36000.0})):
         yield {"query": q, "download": dl, "start_print": sp, "ready": ready, "files": files, "components": comps,
@@ -169,7 +170,9 @@ async def test_config_flow(hass: HomeAssistant, mock_client) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "http://192.0.2.10/", "port": 80, "api_key": ""}
         )
-        # Second step: all settings right away during setup
+        # 2.4: menu – step by step or all on one page
+        assert result["type"] is FlowResultType.MENU and result["menu_options"] == ["guided_power", "settings"]
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "settings"})
         assert result["type"] is FlowResultType.FORM and result["step_id"] == "settings"
         schema = result["data_schema"].schema
         assert {str(k) for k in schema} == {"power", "notify", "notify_2", "filament", "spoolman", "files", "timelapse", "maintenance"}
@@ -190,6 +193,34 @@ async def test_config_flow(hass: HomeAssistant, mock_client) -> None:
     opts = result["options"]
     assert opts["timelapse_archive"] is True and opts["timelapse_keep"] == 3
     assert opts["filament_prices"] == {"PLA": 19.5} and opts["maintenance"]["plate"] == 25
+
+
+async def test_config_flow_guided(hass: HomeAssistant, mock_client) -> None:
+    """2.4: guided setup – power, notifications, Spoolman; everything else with its defaults."""
+    hass.services.async_register("notify", "mobile_app_handy", AsyncMock())
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    with patch("custom_components.snapmaker_u1_card.async_setup_entry", AsyncMock(return_value=True)), \
+         patch("custom_components.snapmaker_u1_card.async_setup", AsyncMock(return_value=True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "192.0.2.12", "port": 80, "api_key": ""})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"next_step_id": "guided_power"})
+        assert result["step_id"] == "guided_power"
+        assert "power_switch" in {str(k) for k in result["data_schema"].schema}
+        # auto-on without a switch: refused right on this page
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {
+            "shutdown_host": True, "auto_on": True, "auto_off": False, "auto_off_temp": 50, "auto_off_delay": 5, "idle_off_hours": 0})
+        assert result["step_id"] == "guided_power" and result["errors"] == {"base": "auto_needs_switch"}
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {
+            "shutdown_host": True, "auto_on": False, "auto_off": False, "auto_off_temp": 50, "auto_off_delay": 5, "idle_off_hours": 0})
+        assert result["step_id"] == "guided_notify"
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {
+            "notify_targets": ["notify.mobile_app_handy"], "notify_events": ["complete", "error"]})
+        assert result["step_id"] == "guided_spoolman" and result["last_step"] is True
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {"spoolman_deduct": True, "spoolman_low": 100})
+    assert result["type"] is FlowResultType.CREATE_ENTRY and result["description"] == "guided"
+    opts = result["options"]
+    assert opts["notify_targets"] == ["notify.mobile_app_handy"] and opts["notify_events"] == ["complete", "error"]
+    assert opts["files_limit"] and "timelapse_archive" in opts, "untouched sections with their defaults"
 
 
 async def test_config_flow_not_u1(hass: HomeAssistant, mock_client) -> None:

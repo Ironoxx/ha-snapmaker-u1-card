@@ -1006,6 +1006,10 @@ export const STYLES = `
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
+  /* ── Settings: templates and paxx12 (2.4) ─────────────────────────────── */
+  .cfg-tpl { width: 100%; justify-content: flex-start; text-align: left; gap: 12px; padding: 10px 12px; height: auto; margin-top: 8px; }
+  .cfg-paxx-group { margin-top: 10px; text-transform: uppercase; letter-spacing: .06em; }
+
   /* ── Clock and own buttons (2.4, #16) ────────────────────────────────── */
   .head-clock { margin-left: auto; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
     font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--u1-on); white-space: nowrap; }

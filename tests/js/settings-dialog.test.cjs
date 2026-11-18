@@ -60,6 +60,8 @@ const hass = () => ({
   callWS: async (m) => {
     ws.push(JSON.parse(JSON.stringify(m)));
     if (m.type.endsWith("/get")) return JSON.parse(JSON.stringify(META));
+    if (m.type === "lovelace/dashboards/list") return [{ url_path: "snapmaker-u1-minimal" }];
+    if (m.type.startsWith("lovelace/")) return {};
     if (setReply instanceof Error) throw setReply;
     return setReply;
   },
@@ -87,7 +89,7 @@ card.addEventListener("hass-notification", (e) => toasts.push(e.detail.message))
   assert.deepStrictEqual(ws[0], { type: "snapmaker_u1_card/settings/get", language: "de", entry_id: "E1" });
   assert.ok(D().hasAttribute("open"));
   const secs = [...D().querySelectorAll("details.cfg-sec")].map((d) => d.dataset.sec);
-  assert.deepStrictEqual(secs, ["power", "filament", "notify", "maintenance"]);
+  assert.deepStrictEqual(secs, ["power", "filament", "notify", "maintenance", "templates"], "2.4: + dashboard templates (paxx12 only when detected)");
   // summaries
   assert.match(D().querySelector('[data-sec="power"] summary').textContent, /Drucker-Steckdose · Auto-Aus/);
   assert.match(D().querySelector('[data-sec="filament"] summary').textContent, /Spoolman: 1 Material · PETG 25,00/);
@@ -139,6 +141,26 @@ card.addEventListener("hass-notification", (e) => toasts.push(e.detail.message))
   D().querySelector("[data-discard]").click();
   assert.strictEqual(D().querySelector('[data-set="power.power_switch"]').value, "switch.drucker");
   assert.ok(D().querySelector("[data-save]").disabled);
+
+  // 2.4: dashboard template – new dashboard (free path) with the sections; paxx12 settings read only
+  META.paxx = { status: "ok", url: "http://u1/firmware-config/", groups: [{ label: "Camera", items: [{ id: "rtsp", label: "RTSP", value: "Enabled", description: "" }] }] };
+  ws.length = 0;
+  R().querySelector("[data-act=settings]").click();
+  await tick(); await tick();
+  assert.ok(D().querySelector('[data-sec="paxx"]'), "paxx12 section");
+  assert.match(D().querySelector('[data-sec="paxx"]').textContent, /RTSP\s*Enabled/);
+  assert.ok(!D().querySelector('[data-sec="paxx"] input'), "read only");
+  D().querySelector('[data-tpl="minimal"]').click();
+  await tick(); await tick(); await tick();
+  const create = ws.find((m) => m.type === "lovelace/dashboards/create");
+  assert.strictEqual(create.url_path, "snapmaker-u1-minimal-2", "free path");
+  const save = ws.find((m) => m.type === "lovelace/config/save");
+  assert.strictEqual(save.url_path, "snapmaker-u1-minimal-2");
+  const cards = save.config.views[0].sections[0].cards.map((c) => c.type);
+  assert.deepStrictEqual(cards, ["custom:snapmaker-u1-mini-card", "custom:snapmaker-u1-section-card"]);
+  assert.strictEqual(save.config.views[0].type, "sections");
+  assert.ok(toasts.some((t) => /angelegt/.test(t)));
+  delete META.paxx;
 
   console.log("SETTINGS DIALOG OK – admin only, fields, context, save changed sections, errors, discard");
   process.exit(0);

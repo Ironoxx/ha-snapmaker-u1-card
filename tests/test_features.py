@@ -335,3 +335,16 @@ def test_error_texts_in_all_languages() -> None:
     assert info["text"]["fr"] == "Pas de filament à l'alimentation (tête 2)"
     assert error_text(info, "es-ES") == "No hay filamento en el alimentador (cabezal 2). Introduce el filamento hasta el tope."
     assert error_text(info, "zh-Hans").startswith("No filament at the feeder"), "others: English"
+
+
+def test_paxx_settings_read_only() -> None:
+    """2.4: paxx12's /firmware-config/api/settings as label: value groups."""
+    from custom_components.snapmaker_u1_card.coordinator.helpers import parse_paxx_settings
+
+    data = {"camera": {"label": "Camera", "items": [
+        {"id": "rtsp", "label": "RTSP stream", "current": "enabled", "options": {"enabled": {"label": "Enabled"}, "disabled": {"label": "Disabled"}}},
+        {"id": "secret", "label": "x", "current": "1", "hidden": True, "options": {}}]},
+        "empty": {"label": "Empty", "items": []}}
+    assert parse_paxx_settings(data) == [{"label": "Camera", "items": [
+        {"id": "rtsp", "label": "RTSP stream", "value": "Enabled", "description": ""}]}]
+    assert parse_paxx_settings(None) == []

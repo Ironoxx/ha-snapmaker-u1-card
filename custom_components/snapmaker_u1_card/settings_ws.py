@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.translation import async_get_translations
 
+from .api import MoonrakerError
 from .config_flow import (
     _notify_services,
     _options_schema,
@@ -25,6 +26,7 @@ from .config_flow import (
     nest_options,
 )
 from .const import DOMAIN
+from .coordinator.helpers import parse_paxx_settings
 from .parsing import material_prices
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,7 +117,18 @@ async def ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection
     sections = _labels(trans, fields)
     coord = entry.runtime_data
     sm = coord.spools.spools if coord.spools.enabled else []
+    # 2.4: paxx12's own settings, read only (changing them stays on its /firmware-config/ page)
+    paxx = None
+    if coord.firmware.get("variant") == "paxx12":
+        try:
+            code, data = await coord.client.firmware_settings()
+        except MoonrakerError:
+            code, data = 0, None
+        paxx = {"status": "ok" if code == 200 else "login" if code in (401, 403) else "off" if code == 502 else "error",
+                "groups": parse_paxx_settings(data) if code == 200 else [],
+                "url": f"http://{coord.client.host}/firmware-config/"}
     connection.send_result(msg["id"], {
+        "paxx": paxx,
         "fields": fields,
         "sections": sections,
         "values": nest_options(entry.options),

@@ -195,7 +195,7 @@ export const SettingsMixin = (Base) => class extends Base {
           <div class="t-label">${esc(s.meta.title || "")}</div></div>
           <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
         </header>
-        <div class="cfg-list">${secs}</div>
+        <div class="cfg-list">${secs}${this._templateSecHtml()}${this._paxxSecHtml()}</div>
         <div class="cfg-foot">
           <div class="dlg-error" hidden></div>
           <div class="dlg-actions">
@@ -240,6 +240,74 @@ export const SettingsMixin = (Base) => class extends Base {
       this._renderSettings();
     });
     dlg.querySelector("[data-save]").addEventListener("click", () => this._saveSettings());
+    dlg.querySelectorAll("[data-tpl]").forEach((b) => b.addEventListener("click", () => this._createDashboard(b.dataset.tpl, b)));
+  }
+
+  // ── 2.4: dashboard templates (a new sections dashboard, editable in HA afterwards) ──
+  _templateSecHtml() {
+    const tpl = (id, icon, name, desc) => `<button type="button" class="outline cfg-tpl" data-tpl="${id}">
+        <ha-icon icon="${icon}"></ha-icon><span class="cfg-sum"><span>${tr(name)}</span><small class="t-label">${tr(desc)}</small></span></button>`;
+    return `<details class="cfg-sec" data-sec="templates">
+        <summary><ha-icon icon="mdi:view-dashboard-variant-outline"></ha-icon>
+          <span class="cfg-sum"><span>${tr("Dashboard-Vorlage")}</span><small class="t-label">${tr("Fertiges Dashboard anlegen")}</small></span>
+          <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+        <div class="cfg-body"><div class="t-label">${tr("Legt ein neues Dashboard aus Bereichs-Karten an. Danach lässt es sich in Home Assistant wie jedes andere bearbeiten.")}</div>
+          ${tpl("full", "mdi:view-dashboard-outline", "Voll", "Kamera, Druckauftrag, Köpfe, Steuerung, Dateien")}
+          ${tpl("minimal", "mdi:card-outline", "Minimal", "Mini-Karte und Kamera")}
+          ${tpl("maintenance", "mdi:wrench-outline", "Wartung & Diagnose", "Meldungen, Wartung, Bettnivellierung, System, Konsole")}
+        </div>
+      </details>`;
+  }
+
+  _dashboardConfig(tpl) {
+    const sec = (show, columns = 12, extra = {}) => ({ type: "custom:snapmaker-u1-section-card", show, grid_options: { columns }, ...extra });
+    const grid = (...cards) => ({ type: "grid", cards });
+    const layouts = {
+      full: [grid(sec(["stage"])), grid(sec(["job"]), sec(["toolheads"])), grid(sec(["climate"]), sec(["motion"])), grid(sec(["files"]))],
+      minimal: [grid({ type: "custom:snapmaker-u1-mini-card", grid_options: { columns: 12 } }, sec(["stage"]))],
+      maintenance: [grid(sec(["messages"]), sec(["maintenance"])), grid(sec(["mesh"])), grid(sec(["system"])), grid(sec(["console"]))],
+    };
+    return { views: [{ title: "Snapmaker U1", path: "u1", icon: "mdi:printer-3d-nozzle", type: "sections", max_columns: 4, sections: layouts[tpl] }] };
+  }
+
+  async _createDashboard(tpl, btn) {
+    const names = { full: tr("Voll"), minimal: tr("Minimal"), maintenance: tr("Wartung & Diagnose") };
+    if (btn) btn.disabled = true;
+    try {
+      const list = await this._hass.callWS({ type: "lovelace/dashboards/list" });
+      const used = new Set((list || []).map((d) => d.url_path));
+      let path = `snapmaker-u1-${tpl}`;
+      for (let n = 2; used.has(path); n++) path = `snapmaker-u1-${tpl}-${n}`;
+      await this._hass.callWS({ type: "lovelace/dashboards/create", url_path: path, mode: "storage",
+        title: `Snapmaker U1 – ${names[tpl]}`, icon: "mdi:printer-3d-nozzle", show_in_sidebar: true, require_admin: false });
+      await this._hass.callWS({ type: "lovelace/config/save", url_path: path, config: this._dashboardConfig(tpl) });
+      this._toast(tr("Dashboard „{name}“ angelegt", { name: `Snapmaker U1 – ${names[tpl]}` }));
+      this._set = null;
+      this._settingsDialog().close();
+      window.history.pushState(null, "", `/${path}/u1`);
+      window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+    } catch (err) {
+      if (btn) btn.disabled = false;
+      this._toast((err && (err.message || err.error)) || String(err));
+    }
+  }
+
+  // ── 2.4: paxx12's own settings, read only ──
+  _paxxSecHtml() {
+    const p = this._set && this._set.meta.paxx;
+    if (!p) return "";
+    const note = p.status === "login" ? tr("Die paxx12-Seite verlangt eine Anmeldung – Werte nicht lesbar.")
+      : p.status === "off" ? tr("Der Konfigurationsdienst von paxx12 ist aus (Advanced Mode).")
+        : p.status !== "ok" ? tr("paxx12-Einstellungen nicht lesbar.") : "";
+    const groups = (p.groups || []).map((g) => `<div class="t-label cfg-paxx-group">${esc(g.label)}</div>${g.items.map((i) =>
+      `<div class="row"${i.description ? ` title="${esc(i.description)}"` : ""}><span class="k">${esc(i.label)}</span><span class="v">${esc(i.value || "—")}</span></div>`).join("")}`).join("");
+    return `<details class="cfg-sec" data-sec="paxx">
+        <summary><ha-icon icon="mdi:chip"></ha-icon>
+          <span class="cfg-sum"><span>${tr("paxx12-Einstellungen")}</span><small class="t-label">${tr("nur ansehen")}</small></span>
+          <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
+        <div class="cfg-body">${note ? `<div class="t-label">${esc(note)}</div>` : ""}${groups}
+          <a class="t-label" href="${esc(p.url)}" target="_blank" rel="noopener">${tr("Ändern auf der paxx12-Seite /firmware-config/")}</a></div>
+      </details>`;
   }
 
   async _saveSettings() {
