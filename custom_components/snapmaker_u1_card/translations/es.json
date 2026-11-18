@@ -1220,5 +1220,11 @@
         "front": "Delante de la placa"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Los nombres de tarjeta coinciden",
+      "description": "Otra tarjeta también se llama `custom:snapmaker-u1-card`: {cards}. La que se carga primero se queda con el nombre, así que el panel puede mostrar la tarjeta equivocada.\n\nUsa `type: {type}` para la tarjeta de esta integración (editor de tarjetas o YAML) o elimina la otra tarjeta."
+    }
   }
 }

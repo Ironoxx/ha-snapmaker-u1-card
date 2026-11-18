@@ -110,3 +110,46 @@ async def async_uninstall(hass: HomeAssistant) -> None:
                 await resources.async_delete_item(item["id"])
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Dashboard resource not removed: %s", err)
+
+
+# 2.4: other cards that register the same element name "snapmaker-u1-card"
+FOREIGN_CARDS = {"sergey08/snapmaker-u1-card": "/hacsfiles/snapmaker-u1-card/"}
+CONFLICT_ISSUE = "card_conflict"
+OWN_CARD_TYPE = "custom:snapmaker-u1-card-ironoxx"
+
+
+async def async_foreign_cards(hass: HomeAssistant) -> list[str]:
+    """Other cards with the same name: from the dashboard resources and the kbaker827 integration."""
+    found: list[str] = []
+    if hass.config_entries.async_entries("snapmaker_u1"):
+        found.append("kbaker827/ha-snapmaker-u1")
+    resources = _resources(hass)
+    if resources is None:
+        return found
+    try:
+        await _loaded(resources)
+        urls = [str(item.get("url", "")) for item in resources.async_items() if not _is_ours(item)]
+    except Exception as err:  # noqa: BLE001 - only a hint
+        _LOGGER.debug("Dashboard resources not readable: %s", err)
+        return found
+    for name, path in FOREIGN_CARDS.items():
+        if any(path in url for url in urls):
+            found.append(name)
+    return found
+
+
+async def async_check_conflict(hass: HomeAssistant) -> list[str]:
+    """Repair notice when another card takes "custom:snapmaker-u1-card"; removed again when it is gone."""
+    from homeassistant.helpers import issue_registry as ir
+
+    found = await async_foreign_cards(hass)
+    if found:
+        ir.async_create_issue(
+            hass, DOMAIN, CONFLICT_ISSUE, is_fixable=False, is_persistent=False,
+            severity=ir.IssueSeverity.WARNING, translation_key=CONFLICT_ISSUE,
+            translation_placeholders={"cards": ", ".join(found), "type": OWN_CARD_TYPE},
+            learn_more_url="https://github.com/Ironoxx/ha-snapmaker-u1-card/blob/main/docs/troubleshooting.md",
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, CONFLICT_ISSUE)
+    return found

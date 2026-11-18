@@ -1220,5 +1220,11 @@
         "front": "Frente da placa"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Nomes de cartão em conflito",
+      "description": "Outro cartão também se chama `custom:snapmaker-u1-card`: {cards}. O que carregar primeiro fica com o nome, por isso o painel pode mostrar o cartão errado.\n\nUse `type: {type}` para o cartão desta integração (editor de cartões ou YAML) ou remova o outro cartão."
+    }
   }
 }

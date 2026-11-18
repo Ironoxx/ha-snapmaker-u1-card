@@ -1006,6 +1006,14 @@ export const STYLES = `
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
+  /* ── Clock and own buttons (2.4, #16) ────────────────────────────────── */
+  .head-clock { margin-left: auto; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
+    font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--u1-on); white-space: nowrap; }
+  .head-clock + .chips { margin-left: 0; }
+  @container u1 (max-width: 520px) { .head-clock { display: none; } .head-clock + .chips { margin-left: auto; } }
+  .ubtn { min-width: 0; }
+  .ubtn .ubtn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* ── Message history (2.3) ───────────────────────────────────────────── */
   .elog { padding: 6px 0; border-bottom: 1px solid var(--u1-outline); }
   .elog > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; min-height: 36px; list-style: none; }

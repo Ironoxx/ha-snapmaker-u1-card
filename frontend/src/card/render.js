@@ -36,6 +36,8 @@ export const RenderMixin = (Base) => class extends Base {
       d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
       d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
       d.errors.map((e) => e.key).join(","),
+      // 2.4: own buttons depend on the print phase
+      (this._cfg.buttons || []).length ? this._phase() : "",
       (d.errorLog || []).map((e) => e.time).join(","),
       // 2.2: machine state and feeders (messages, load/unload buttons)
       (() => { const ms = this._machineState(); return ms ? `ms${ms.main}${ms.needsUser}${ms.main !== "idle" && !d.active ? ms.action : ""}` : "noms"; })(),
@@ -176,6 +178,20 @@ export const RenderMixin = (Base) => class extends Base {
 
   _wire() {
     const r = this.shadowRoot.getElementById("u1card");
+
+    // 2.4 (#16): own buttons – tap, and hold (0.5 s) when a hold action is set
+    r.querySelectorAll("[data-ubtn]").forEach((b) => {
+      const i = Number(b.dataset.ubtn);
+      let timer = null, held = false;
+      b.addEventListener("pointerdown", () => {
+        held = false;
+        timer = setTimeout(() => { held = true; this._userAction(i, "hold"); }, 500);
+      });
+      const stop = () => { if (timer) clearTimeout(timer); timer = null; };
+      b.addEventListener("pointerup", stop);
+      b.addEventListener("pointerleave", stop);
+      b.addEventListener("click", () => { stop(); if (!held) this._userAction(i, "tap"); held = false; });
+    });
 
     // 2.3: moving the head by hand
     r.querySelectorAll("[data-jogstep]").forEach((b) => b.addEventListener("click", () => {

@@ -53,6 +53,10 @@
  *   speed_presets     [85, 100, 115]; flow_presets [95, 100, 105]
  *   mesh_values       heights in the bed mesh cells          (true)
  *   exclude_objects   object list and outlines in the layer view (true)
+ *   clock             2.4: clock in the header, HH:MM          (false)
+ *   buttons           2.4: up to 4 own buttons next to the light: name, icon,
+ *                     show [idle, printing, finished], tap_action, hold_action
+ *   light_entities    2.4: further lights switched with the light button
  *   alerts            section card: printer messages on top  (with job/stage)
  *   files_limit       number of files shown                  (12)
  *   toolheads         per head: name (and material/color as a fallback
@@ -321,6 +325,11 @@ export class SnapmakerU1Card extends U1Base {
       this._lvTick = (this._lvTick || 0) + 1;
       if (this._unlockUntil && Date.now() > this._unlockUntil) { this._unlockUntil = 0; this._applyLock(); }
       this._tickDisplay();
+      if (this._cfg && this._cfg.clock) {
+        const c = this.shadowRoot && this.shadowRoot.querySelector('[data-su1="clock"]');
+        const t = this._clockText();
+        if (c && c.textContent !== t) c.textContent = t;
+      }
       if (this._lvTick % 5 === 0) this._tickLayer();
       if (this._lvTick % 10 === 1) this._tickTemps();
     }, 1000);

@@ -1220,5 +1220,11 @@
         "front": "Vorne über der Platte"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Kartennamen kollidieren",
+      "description": "Eine andere Karte heißt ebenfalls `custom:snapmaker-u1-card`: {cards}. Welche zuerst lädt, bekommt den Namen – das Dashboard zeigt dann womöglich die falsche Karte.\n\nFür die Karte dieser Integration `type: {type}` verwenden (Karten-Editor oder YAML) oder die andere Karte entfernen."
+    }
   }
 }

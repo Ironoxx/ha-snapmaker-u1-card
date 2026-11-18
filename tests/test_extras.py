@@ -201,3 +201,31 @@ def test_backup_prune_only_own_snapshots(tmp_path) -> None:
     (tmp_path / "meine-sicherung").mkdir()
     _write_snapshot(tmp_path, "2026-01-03_000000", {"printer.cfg": b"x"}, keep=2)
     assert sorted(p.name for p in tmp_path.iterdir()) == ["2026-01-02_000000", "2026-01-03_000000", "meine-sicherung"]
+
+
+async def test_card_conflict_repair(hass) -> None:
+    """2.4: another card named custom:snapmaker-u1-card (sergey08) -> repair notice, gone when removed."""
+    from unittest.mock import patch
+
+    from homeassistant.helpers import issue_registry as ir
+
+    from custom_components.snapmaker_u1_card import resource
+
+    class Res:
+        loaded = True
+
+        def __init__(self, urls):
+            self.urls = urls
+
+        def async_items(self):
+            return [{"id": str(i), "url": u} for i, u in enumerate(self.urls)]
+
+    res = Res(["/snapmaker_u1_card/card/snapmaker-u1-card.js?v=1",
+               "/hacsfiles/snapmaker-u1-card/snapmaker-u1-card.js?hacstag=1"])
+    with patch.object(resource, "_resources", lambda hass: res):
+        assert await resource.async_check_conflict(hass) == ["sergey08/snapmaker-u1-card"]
+        issue = ir.async_get(hass).async_get_issue("snapmaker_u1_card", "card_conflict")
+        assert issue and issue.translation_placeholders["type"] == "custom:snapmaker-u1-card-ironoxx"
+        res.urls = res.urls[:1]
+        assert await resource.async_check_conflict(hass) == []
+        assert ir.async_get(hass).async_get_issue("snapmaker_u1_card", "card_conflict") is None

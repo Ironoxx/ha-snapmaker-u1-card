@@ -6221,7 +6221,10 @@
     mesh_values: "Höhenwerte in der Bettnivellierung",
     exclude_objects: "Objekte ausschließen in der Schichtansicht",
     show: "Bereiche",
-    alerts: "Meldungen des Druckers oben anzeigen"
+    alerts: "Meldungen des Druckers oben anzeigen",
+    clock: "Uhr in der Kopfzeile",
+    buttons: "Eigene Knöpfe (bis zu 4)",
+    light_entities: "Weitere Lampen mit dem Licht-Knopf"
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -6250,8 +6253,24 @@
     camera_height: "Leer = automatisch (Seitenverhältnis des Bildes)",
     state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
     accent_color: "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.",
-    navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog"
+    navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog",
+    clock: "Stunden und Minuten im Zeitformat von Home Assistant, rechts in der Kopfzeile. Auf schmalen Karten ausgeblendet.",
+    buttons: "Neben dem Licht-Knopf, mit den Aktionen von Home Assistant (navigieren, Aktion/Skript, Details, URL). Je Knopf wählbar: vor, während oder nach dem Druck.",
+    light_entities: "Leer = nur das Innenlicht. Z. B. eine WLED-Leiste, die mit dem Licht-Knopf an- und ausgeht."
   };
+  function buttonFields(opts) {
+    return {
+      name: { label: tr("Name"), selector: { text: {} } },
+      icon: { label: tr("Symbol"), selector: { icon: {} } },
+      show: { label: tr("Anzeigen"), selector: { select: { multiple: true, mode: "list", options: opts([
+        ["idle", "Vor dem Druck"],
+        ["printing", "Während des Drucks"],
+        ["finished", "Nach dem Druck (fertig)"]
+      ]) } } },
+      tap_action: { label: tr("Aktion beim Antippen"), selector: { ui_action: {} } },
+      hold_action: { label: tr("Aktion beim Halten"), selector: { ui_action: {} } }
+    };
+  }
   function configForm(mini) {
     const section = mini === "section";
     if (section) mini = false;
@@ -6326,6 +6345,9 @@
       } } },
       { name: "state_accent", selector: { boolean: {} } },
       { name: "accent_color", selector: { color_rgb: {} } },
+      { name: "clock", selector: { boolean: {} } },
+      { name: "buttons", selector: { object: { multiple: true, label_field: "name", fields: buttonFields(opts) } } },
+      { name: "light_entities", selector: { entity: { multiple: true, domain: ["light", "switch"] } } },
       { name: "layer_view", selector: { select: { mode: "dropdown", options: opts([["part", "Teil vergrößert"], ["bed", "Ganzes Druckbett"]]) } } },
       { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
         ["show", "Anzeigen, mit Rückfrage"],
@@ -7054,8 +7076,35 @@
       if (d.printing && !cancelling) out.push(busy("pause", "filled", "mdi:pause", tr("Pause"), tr("Pausiere …")));
       if (d.paused && !cancelling) out.push(busy("resume", "filled", "mdi:play", tr("Fortsetzen"), tr("Setze fort …")));
       if (d.active) out.push(busy("cancel", "outline", "mdi:stop", tr("Abbrechen"), tr("Breche ab …")));
+      out.push(...this._userButtons());
       out.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
       return out.join("");
+    }
+    /** 2.4 (#16): when a print is running, done (complete) or neither. */
+    _phase() {
+      const d = this._d;
+      return d.active ? "printing" : d.state === "complete" ? "finished" : "idle";
+    }
+    /** 2.4 (#16): own buttons (up to 4) next to the light, Home Assistant's standard actions. */
+    _userButtons() {
+      const list = Array.isArray(this._cfg.buttons) ? this._cfg.buttons.slice(0, 4) : [];
+      const phase = this._phase();
+      return list.map((b, i) => {
+        if (!b || typeof b !== "object") return "";
+        const show = Array.isArray(b.show) && b.show.length ? b.show : ["idle", "printing", "finished"];
+        if (!show.includes(phase)) return "";
+        const label = b.name || "";
+        return `<button type="button" class="outline grow ubtn" data-ubtn="${i}" title="${esc(label)}"${label ? "" : ` aria-label="${esc(b.icon || "")}"`}>
+          ${b.icon ? `<ha-icon icon="${esc(b.icon)}"></ha-icon>` : ""}${label ? `<span class="ubtn-name">${esc(label)}</span>` : ""}</button>`;
+      }).join("");
+    }
+    /** Hand an own button's action to Home Assistant (navigate, perform-action, more-info, url …). */
+    _userAction(i, action) {
+      const b = (this._cfg.buttons || [])[i];
+      if (!b) return;
+      const config = { ...b, tap_action: b.tap_action || { action: "none" } };
+      if (action === "hold" && !b.hold_action) return;
+      this.dispatchEvent(new CustomEvent("hass-action", { bubbles: true, composed: true, detail: { config, action } }));
     }
     _pausePrint() {
       this._press("pause_print");
@@ -7089,6 +7138,8 @@
       const light = `light.${this._p("led_cavity_led")}`;
       if (this._machineKey(light)) this._machineCommand("switch", "led_cavity_led", want);
       else this._hass.callService("light", "toggle", { entity_id: light });
+      const extra = (Array.isArray(this._cfg.light_entities) ? this._cfg.light_entities : [this._cfg.light_entities]).filter((e) => typeof e === "string" && e.includes("."));
+      if (extra.length) this._hass.callService("homeassistant", want ? "turn_on" : "turn_off", { entity_id: extra });
       if (!this._pending) this._pending = /* @__PURE__ */ new Map();
       this._pending.set("light", { done: (d) => d.lightReal === want, until: Date.now() + 15e3, want });
       this._pendTimer();
@@ -9435,6 +9486,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <div class="head-brand">${esc(this._cfg.printer_brand)}</div>
           <div class="t-title">${esc(this._cfg.printer_name)}</div>
         </div>
+        ${this._cfg.clock ? `<span class="head-clock" data-su1="clock" aria-label="${tr("Uhrzeit")}">${this._clockText()}</span>` : ""}
         <div class="chips">
           ${!d.online && d.power && d.power.available && !d.power.on ? "" : `<span class="chip ${d.printing ? "live" : ""}" data-tone="${chipTone}">
             <span class="dot"></span><span data-su1="status">${this._statusLabel()}</span>
@@ -9446,6 +9498,18 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           </span>` : ""}
         </div>
       </header>`;
+    }
+    /** 2.4 (#16): hours and minutes in Home Assistant's time format. */
+    _clockText() {
+      const fmt = this._hass && this._hass.locale && this._hass.locale.time_format;
+      const opts = { hour: "2-digit", minute: "2-digit" };
+      if (fmt === "12") opts.hour12 = true;
+      else if (fmt === "24") opts.hourCycle = "h23";
+      try {
+        return (/* @__PURE__ */ new Date()).toLocaleTimeString(LOCALE, opts);
+      } catch (e) {
+        return (/* @__PURE__ */ new Date()).toTimeString().slice(0, 5);
+      }
     }
     _powerChip() {
       const p = this._d.power;
@@ -9530,6 +9594,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         hint: e.hint ? e.hint[LANG] ?? e.hint.en ?? "" : "",
         title: `${e.key} · ${e.message || ""}`
       }));
+      if (window.__snapmakerU1CardConflict) {
+        out.push({
+          level: "warn",
+          icon: "mdi:card-multiple-outline",
+          text: tr("Kartennamen kollidieren"),
+          hint: tr("Eine andere Karte heißt auch custom:snapmaker-u1-card. Für diese Karte type: custom:snapmaker-u1-card-ironoxx verwenden."),
+          title: "custom:snapmaker-u1-card"
+        });
+      }
       const ms = this._machineState();
       if (ms && ms.main === "abnormal" && !out.length) {
         out.push({
@@ -10695,6 +10768,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .arch-head { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .arch-head ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
 
+  /* ── Clock and own buttons (2.4, #16) ────────────────────────────────── */
+  .head-clock { margin-left: auto; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
+    font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--u1-on); white-space: nowrap; }
+  .head-clock + .chips { margin-left: 0; }
+  @container u1 (max-width: 520px) { .head-clock { display: none; } .head-clock + .chips { margin-left: auto; } }
+  .ubtn { min-width: 0; }
+  .ubtn .ubtn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* ── Message history (2.3) ───────────────────────────────────────────── */
   .elog { padding: 6px 0; border-bottom: 1px solid var(--u1-outline); }
   .elog > summary { display: flex; align-items: center; gap: 8px; cursor: pointer; min-height: 36px; list-style: none; }
@@ -10939,6 +11020,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
         d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
         d.errors.map((e) => e.key).join(","),
+        // 2.4: own buttons depend on the print phase
+        (this._cfg.buttons || []).length ? this._phase() : "",
         (d.errorLog || []).map((e) => e.time).join(","),
         // 2.2: machine state and feeders (messages, load/unload buttons)
         (() => {
@@ -11104,6 +11187,28 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
     _wire() {
       const r = this.shadowRoot.getElementById("u1card");
+      r.querySelectorAll("[data-ubtn]").forEach((b) => {
+        const i = Number(b.dataset.ubtn);
+        let timer = null, held = false;
+        b.addEventListener("pointerdown", () => {
+          held = false;
+          timer = setTimeout(() => {
+            held = true;
+            this._userAction(i, "hold");
+          }, 500);
+        });
+        const stop = () => {
+          if (timer) clearTimeout(timer);
+          timer = null;
+        };
+        b.addEventListener("pointerup", stop);
+        b.addEventListener("pointerleave", stop);
+        b.addEventListener("click", () => {
+          stop();
+          if (!held) this._userAction(i, "tap");
+          held = false;
+        });
+      });
       r.querySelectorAll("[data-jogstep]").forEach((b) => b.addEventListener("click", () => {
         this._jogStep = Number(b.dataset.jogstep);
         r.querySelectorAll("[data-jogstep]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
@@ -14312,6 +14417,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           this._applyLock();
         }
         this._tickDisplay();
+        if (this._cfg && this._cfg.clock) {
+          const c = this.shadowRoot && this.shadowRoot.querySelector('[data-su1="clock"]');
+          const t = this._clockText();
+          if (c && c.textContent !== t) c.textContent = t;
+        }
         if (this._lvTick % 5 === 0) this._tickLayer();
         if (this._lvTick % 10 === 1) this._tickTemps();
       }, 1e3);
@@ -14499,7 +14609,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       customElements.define("snapmaker-u1-card", SnapmakerU1Card);
     } else {
       conflict = true;
-      console.warn(`snapmaker-u1-card: another card already uses "custom:snapmaker-u1-card" (e.g. the integration kbaker827/ha-snapmaker-u1). Use "type: custom:${OWN_TYPE}" for this card.`);
+      window.__snapmakerU1CardConflict = true;
+      const other = customElements.get("snapmaker-u1-card");
+      const known = (window.customCards || []).find((c) => c.type === "snapmaker-u1-card");
+      console.warn(`snapmaker-u1-card: card names collide – another card already uses "custom:snapmaker-u1-card"${known && known.name ? ` ("${known.name}")` : other && other.name ? ` (${other.name})` : ""} (e.g. sergey08/snapmaker-u1-card or the integration kbaker827/ha-snapmaker-u1). Use "type: custom:${OWN_TYPE}" for this card.`);
     }
     window.__snapmakerU1CardVersion = CARD_VERSION;
   } else if (window.__snapmakerU1CardVersion !== CARD_VERSION) {

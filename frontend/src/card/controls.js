@@ -158,8 +158,38 @@ export const ControlsMixin = (Base) => class extends Base {
     if (d.printing && !cancelling) out.push(busy("pause", "filled", "mdi:pause", tr("Pause"), tr("Pausiere …")));
     if (d.paused && !cancelling) out.push(busy("resume", "filled", "mdi:play", tr("Fortsetzen"), tr("Setze fort …")));
     if (d.active) out.push(busy("cancel", "outline", "mdi:stop", tr("Abbrechen"), tr("Breche ab …")));
+    out.push(...this._userButtons());
     out.push(`<button class="${d.light ? "on" : "outline"} grow" data-act="light" data-su1="light"><ha-icon icon="mdi:lightbulb"></ha-icon>${tr("Licht")}</button>`);
     return out.join("");
+  }
+
+  /** 2.4 (#16): when a print is running, done (complete) or neither. */
+  _phase() {
+    const d = this._d;
+    return d.active ? "printing" : d.state === "complete" ? "finished" : "idle";
+  }
+
+  /** 2.4 (#16): own buttons (up to 4) next to the light, Home Assistant's standard actions. */
+  _userButtons() {
+    const list = Array.isArray(this._cfg.buttons) ? this._cfg.buttons.slice(0, 4) : [];
+    const phase = this._phase();
+    return list.map((b, i) => {
+      if (!b || typeof b !== "object") return "";
+      const show = Array.isArray(b.show) && b.show.length ? b.show : ["idle", "printing", "finished"];
+      if (!show.includes(phase)) return "";
+      const label = b.name || "";
+      return `<button type="button" class="outline grow ubtn" data-ubtn="${i}" title="${esc(label)}"${label ? "" : ` aria-label="${esc(b.icon || "")}"`}>
+          ${b.icon ? `<ha-icon icon="${esc(b.icon)}"></ha-icon>` : ""}${label ? `<span class="ubtn-name">${esc(label)}</span>` : ""}</button>`;
+    }).join("");
+  }
+
+  /** Hand an own button's action to Home Assistant (navigate, perform-action, more-info, url …). */
+  _userAction(i, action) {
+    const b = (this._cfg.buttons || [])[i];
+    if (!b) return;
+    const config = { ...b, tap_action: b.tap_action || { action: "none" } };
+    if (action === "hold" && !b.hold_action) return;
+    this.dispatchEvent(new CustomEvent("hass-action", { bubbles: true, composed: true, detail: { config, action } }));
   }
 
   _pausePrint() {
@@ -185,6 +215,10 @@ export const ControlsMixin = (Base) => class extends Base {
     const light = `light.${this._p("led_cavity_led")}`;
     if (this._machineKey(light)) this._machineCommand("switch", "led_cavity_led", want);
     else this._hass.callService("light", "toggle", { entity_id: light });
+    // 2.4: further lights (e.g. a WLED strip) follow the chamber light
+    const extra = (Array.isArray(this._cfg.light_entities) ? this._cfg.light_entities : [this._cfg.light_entities])
+      .filter((e) => typeof e === "string" && e.includes("."));
+    if (extra.length) this._hass.callService("homeassistant", want ? "turn_on" : "turn_off", { entity_id: extra });
     // Patched in place: a rebuild would reconnect the camera stream
     if (!this._pending) this._pending = new Map();
     this._pending.set("light", { done: (d) => d.lightReal === want, until: Date.now() + 15000, want });

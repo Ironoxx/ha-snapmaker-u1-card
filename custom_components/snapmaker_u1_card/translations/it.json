@@ -1220,5 +1220,11 @@
         "front": "Davanti al piano"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Nomi delle schede in conflitto",
+      "description": "Anche un'altra scheda si chiama `custom:snapmaker-u1-card`: {cards}. Quella caricata per prima prende il nome, quindi la dashboard può mostrare la scheda sbagliata.\n\nUsa `type: {type}` per la scheda di questa integrazione (editor della scheda o YAML) oppure rimuovi l'altra scheda."
+    }
   }
 }

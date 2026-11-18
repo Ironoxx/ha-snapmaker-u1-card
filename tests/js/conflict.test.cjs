@@ -24,4 +24,7 @@ assert.ok(w.customCards.some((c) => c.type === "snapmaker-u1-card-ironoxx"), "Ka
 const card = w.document.createElement("snapmaker-u1-card-ironoxx");
 card.setConfig({ type: "custom:snapmaker-u1-card-ironoxx" });
 assert.strictEqual(typeof card.getCardSize, "function");
+// 2.4: our own cards (mini, section) say so
+assert.strictEqual(w.__snapmakerU1CardConflict, true);
+assert.ok(warnings.some((m) => /collide/.test(m) && /sergey08/.test(m)), "names the known cards");
 console.log("CONFLICT OK – own card name next to kbaker827's card");

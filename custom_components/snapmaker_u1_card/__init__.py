@@ -213,6 +213,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     add_extra_js_url(hass, f"{CARD_URL}/{CARD_FILENAME}?v={VERSION}")
     # Second loading path, independent of when the integration starts (see resource.py).
     await resource.async_install(hass)
+    await resource.async_check_conflict(hass)
     await blueprints.async_install(hass)
     hass.data[DOMAIN] = {"thumb_dir": thumb_dir}
     await async_setup_voice(hass)

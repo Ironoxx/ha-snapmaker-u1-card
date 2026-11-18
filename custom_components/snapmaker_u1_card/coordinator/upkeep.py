@@ -12,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
+from .. import resource
 from ..api import (
     MoonrakerError,
 )
@@ -193,13 +194,15 @@ class UpkeepMixin:
               + (f" ({len(mr)} entities present, fallback only)" if mr else "")) if own
             else t(f"{len(mr)} Entitäten der Moonraker-Integration", f"{len(mr)} Moonraker integration entities") if mr
             else t("Keine Druckerwerte: Drucker nicht erreichbar", "No printer values: printer not reachable"))
-        # Another U1 integration (kbaker827/ha-snapmaker-u1) registers a card with the same name
-        if self.hass.config_entries.async_entries("snapmaker_u1"):
-            add("card_conflict", None, t(
-                "Die Integration „snapmaker_u1“ (kbaker827) ist auch installiert: beide Karten heißen "
-                "custom:snapmaker-u1-card. Für diese Karte type: custom:snapmaker-u1-card-ironoxx verwenden.",
-                "The integration \"snapmaker_u1\" (kbaker827) is installed too: both cards are called "
-                "custom:snapmaker-u1-card. Use type: custom:snapmaker-u1-card-ironoxx for this card."))
+        # 2.4: other cards called "snapmaker-u1-card" (kbaker827's integration, sergey08's card)
+        foreign = await resource.async_check_conflict(self.hass)
+        if foreign:
+            names = ", ".join(foreign)
+            add("card_conflict", False, t(
+                f"Kartennamen kollidieren mit {names}: beide heißen custom:snapmaker-u1-card. "
+                f"Für diese Karte type: {resource.OWN_CARD_TYPE} verwenden.",
+                f"Card names collide with {names}: both are called custom:snapmaker-u1-card. "
+                f"Use type: {resource.OWN_CARD_TYPE} for this card."))
         # camera: detection of the own camera entity, then an image from the camera in use
         mode = self.webcam.mode
         mode_text = {

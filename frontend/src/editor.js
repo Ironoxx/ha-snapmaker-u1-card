@@ -51,6 +51,9 @@ export const FORM_LABELS = {
   exclude_objects: "Objekte ausschließen in der Schichtansicht",
   show: "Bereiche",
   alerts: "Meldungen des Druckers oben anzeigen",
+  clock: "Uhr in der Kopfzeile",
+  buttons: "Eigene Knöpfe (bis zu 4)",
+  light_entities: "Weitere Lampen mit dem Licht-Knopf",
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
@@ -80,7 +83,22 @@ export const FORM_HELPERS = {
   state_accent: "Druckt, pausiert, Fehler, fertig – in den Farben deines Home-Assistant-Designs",
   accent_color: "Leer = Hauptfarbe deines Home-Assistant-Designs. Färbt Knöpfe, Regler und Hervorhebungen der Karte.",
   navigation_path: "z. B. /dashboard-drucker/0 – leer = Statusdialog",
+  clock: "Stunden und Minuten im Zeitformat von Home Assistant, rechts in der Kopfzeile. Auf schmalen Karten ausgeblendet.",
+  buttons: "Neben dem Licht-Knopf, mit den Aktionen von Home Assistant (navigieren, Aktion/Skript, Details, URL). Je Knopf wählbar: vor, während oder nach dem Druck.",
+  light_entities: "Leer = nur das Innenlicht. Z. B. eine WLED-Leiste, die mit dem Licht-Knopf an- und ausgeht.",
 };
+
+/** 2.4 (#16): one own button in the editor (Home Assistant's native object/action selectors). */
+export function buttonFields(opts) {
+  return {
+    name: { label: tr("Name"), selector: { text: {} } },
+    icon: { label: tr("Symbol"), selector: { icon: {} } },
+    show: { label: tr("Anzeigen"), selector: { select: { multiple: true, mode: "list", options: opts([
+      ["idle", "Vor dem Druck"], ["printing", "Während des Drucks"], ["finished", "Nach dem Druck (fertig)"]]) } } },
+    tap_action: { label: tr("Aktion beim Antippen"), selector: { ui_action: {} } },
+    hold_action: { label: tr("Aktion beim Halten"), selector: { ui_action: {} } },
+  };
+}
 
 /** Form of the card editor: mini = true for the mini card, "section" for the building block card. */
 export function configForm(mini) {
@@ -134,6 +152,9 @@ export function configForm(mini) {
       options: SECTIONS.map((sec) => ({ value: sec, label: tr(SECTION_LABELS[sec]) })) } } },
     { name: "state_accent", selector: { boolean: {} } },
     { name: "accent_color", selector: { color_rgb: {} } },
+    { name: "clock", selector: { boolean: {} } },
+    { name: "buttons", selector: { object: { multiple: true, label_field: "name", fields: buttonFields(opts) } } },
+    { name: "light_entities", selector: { entity: { multiple: true, domain: ["light", "switch"] } } },
     { name: "layer_view", selector: { select: { mode: "dropdown", options: opts([["part", "Teil vergrößert"], ["bed", "Ganzes Druckbett"]]) } } },
     { name: "emergency_stop", selector: { select: { mode: "dropdown", options: opts([
       ["show", "Anzeigen, mit Rückfrage"], ["hold", "Gesichert: 1 s gedrückt halten"], ["hide", "Ausblenden"]]) } } },

@@ -1220,5 +1220,11 @@
         "front": "Front of the plate"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Card names collide",
+      "description": "Another card also calls itself `custom:snapmaker-u1-card`: {cards}. Whichever loads first owns that name, so the dashboard may show the wrong card.\n\nUse `type: {type}` for this integration's card (card editor or YAML), or remove the other card."
+    }
   }
 }

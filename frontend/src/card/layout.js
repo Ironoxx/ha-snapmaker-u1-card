@@ -2,7 +2,7 @@
 
 import { CARD_VERSION, OFFLINE_SECTIONS, TABLET_SIDE, TABS, TAB_STORE } from "../const.js";
 import { esc, num } from "../format.js";
-import { LANG, tr } from "../i18n.js";
+import { LANG, LOCALE, tr } from "../i18n.js";
 
 /** Compares "1.2.10" and "1.3.0" numerically; -1, 0 or 1. */
 export function cmpVersion(a, b) {
@@ -29,6 +29,7 @@ export const LayoutMixin = (Base) => class extends Base {
           <div class="head-brand">${esc(this._cfg.printer_brand)}</div>
           <div class="t-title">${esc(this._cfg.printer_name)}</div>
         </div>
+        ${this._cfg.clock ? `<span class="head-clock" data-su1="clock" aria-label="${tr("Uhrzeit")}">${this._clockText()}</span>` : ""}
         <div class="chips">
           ${!d.online && d.power && d.power.available && !d.power.on ? "" : `<span class="chip ${d.printing ? "live" : ""}" data-tone="${chipTone}">
             <span class="dot"></span><span data-su1="status">${this._statusLabel()}</span>
@@ -40,6 +41,15 @@ export const LayoutMixin = (Base) => class extends Base {
           </span>` : ""}
         </div>
       </header>`;
+  }
+
+  /** 2.4 (#16): hours and minutes in Home Assistant's time format. */
+  _clockText() {
+    const fmt = this._hass && this._hass.locale && this._hass.locale.time_format;
+    const opts = { hour: "2-digit", minute: "2-digit" };
+    if (fmt === "12") opts.hour12 = true;
+    else if (fmt === "24") opts.hourCycle = "h23";
+    try { return new Date().toLocaleTimeString(LOCALE, opts); } catch (e) { return new Date().toTimeString().slice(0, 5); }
   }
 
   _powerChip() {
@@ -138,6 +148,12 @@ export const LayoutMixin = (Base) => class extends Base {
       level: e.level >= 3 ? "error" : "warn", icon: e.level >= 3 ? "mdi:alert-octagon" : "mdi:alert",
       text: this._errText(e), hint: e.hint ? (e.hint[LANG] ?? e.hint.en ?? "") : "", title: `${e.key} · ${e.message || ""}`,
     }));
+    // 2.4: another card took "custom:snapmaker-u1-card" (shown in the mini and section cards)
+    if (window.__snapmakerU1CardConflict) {
+      out.push({ level: "warn", icon: "mdi:card-multiple-outline", text: tr("Kartennamen kollidieren"),
+        hint: tr("Eine andere Karte heißt auch custom:snapmaker-u1-card. Für diese Karte type: custom:snapmaker-u1-card-ironoxx verwenden."),
+        title: "custom:snapmaker-u1-card" });
+    }
     const ms = this._machineState();
     if (ms && ms.main === "abnormal" && !out.length) {
       out.push({ level: "error", icon: "mdi:alert-octagon", text: tr("Der Drucker meldet eine Störung."),

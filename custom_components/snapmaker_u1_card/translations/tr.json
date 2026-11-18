@@ -1220,5 +1220,11 @@
         "front": "Tablanın önü"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Kart adları çakışıyor",
+      "description": "Başka bir kart da `custom:snapmaker-u1-card` adını kullanıyor: {cards}. Önce yüklenen kart bu adı alır, bu yüzden pano yanlış kartı gösterebilir.\n\nBu entegrasyonun kartı için `type: {type}` kullanın (kart düzenleyici veya YAML) ya da diğer kartı kaldırın."
+    }
   }
 }

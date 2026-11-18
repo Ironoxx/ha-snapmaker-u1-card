@@ -1220,5 +1220,11 @@
         "front": "Voor op de plaat"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Kaartnamen botsen",
+      "description": "Een andere kaart heet ook `custom:snapmaker-u1-card`: {cards}. De kaart die het eerst laadt krijgt die naam, dus het dashboard kan de verkeerde kaart tonen.\n\nGebruik `type: {type}` voor de kaart van deze integratie (kaarteditor of YAML) of verwijder de andere kaart."
+    }
   }
 }

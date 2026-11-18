@@ -1220,5 +1220,11 @@
         "front": "Avant du plateau"
       }
     }
+  },
+  "issues": {
+    "card_conflict": {
+      "title": "Conflit de noms de carte",
+      "description": "Une autre carte s'appelle aussi `custom:snapmaker-u1-card` : {cards}. Celle qui se charge en premier prend ce nom, le tableau de bord peut donc afficher la mauvaise carte.\n\nUtilisez `type: {type}` pour la carte de cette intégration (éditeur de carte ou YAML) ou supprimez l'autre carte."
+    }
   }
 }

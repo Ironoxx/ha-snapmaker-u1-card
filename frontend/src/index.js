@@ -29,7 +29,13 @@ if (!customElements.get(OWN_TYPE)) {
     customElements.define("snapmaker-u1-card", SnapmakerU1Card);
   } else {
     conflict = true;
-    console.warn(`snapmaker-u1-card: another card already uses "custom:snapmaker-u1-card" (e.g. the integration kbaker827/ha-snapmaker-u1). Use "type: custom:${OWN_TYPE}" for this card.`);
+    window.__snapmakerU1CardConflict = true;
+    // 2.4: name the known other cards (the integration also raises a repair notice)
+    const other = customElements.get("snapmaker-u1-card");
+    const known = (window.customCards || []).find((c) => c.type === "snapmaker-u1-card");
+    console.warn(`snapmaker-u1-card: card names collide – another card already uses "custom:snapmaker-u1-card"`
+      + `${known && known.name ? ` ("${known.name}")` : other && other.name ? ` (${other.name})` : ""}`
+      + ` (e.g. sergey08/snapmaker-u1-card or the integration kbaker827/ha-snapmaker-u1). Use "type: custom:${OWN_TYPE}" for this card.`);
   }
   window.__snapmakerU1CardVersion = CARD_VERSION;
 } else if (window.__snapmakerU1CardVersion !== CARD_VERSION) {
