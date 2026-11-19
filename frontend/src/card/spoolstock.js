@@ -21,8 +21,8 @@
  * restored. The form takes the other Spoolman fields worth keeping
  * (temperatures, density, diameter, article and lot number, comment) in a
  * collapsed "more details" part. Labels: QR code (link to the spool in
- * Spoolman, own encoder in qr.js) with the main data, printed from a separate
- * window, or saved as an HTML file when the browser blocks the window.
+ * Spoolman, own encoder in qr.js) with the main data, previewed in the dialog,
+ * printed from a hidden iframe or saved as an HTML file.
  */
 
 import { DOMAIN } from "../const.js";
@@ -314,8 +314,13 @@ export const SpoolStockMixin = (Base) => class extends Base {
   /**
    * Labels for the given spools: QR code to the spool in Spoolman plus name,
    * vendor, material, colour, temperatures and ID, 62 mm wide (fits label
-   * printers and A4 sheets alike). Printed from a new window; if the browser
-   * blocks it (popup blocker, some app views) the page is saved as a file.
+   * printers and A4 sheets alike).
+   *
+   * 2.4.0b2 fix: shown as a preview in the card's own dialog and printed from a
+   * hidden iframe – no new window. The Home Assistant app hands window.open()
+   * to the phone's browser, which then showed whatever page it had open last
+   * instead of the labels. "Save file" is the way out where printing from the
+   * app is not available (Android WebView ignores print()).
    */
   _printLabels(spools) {
     if (!spools.length) { this._toast(tr("Keine Spule zum Drucken.")); return; }
@@ -341,23 +346,48 @@ export const SpoolStockMixin = (Base) => class extends Base {
       .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .sw { width: 14mm; height: 3mm; border: 0.2mm solid #000; margin-top: 1mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @media print { body { margin: 0; } .lbl { border-color: transparent; } }
-      </style></head><body><div class="sheet">${spools.map(label).join("")}</div>
-      <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 200); });<\/script></body></html>`;
-    let win = null;
-    try { win = window.open("", "_blank"); } catch (e) { win = null; }
-    if (win && win.document) {
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-      return;
-    }
-    // blocked: hand the page over as a file to open and print
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-    a.download = spools.length === 1 ? `spool-${spools[0].id}-label.html` : "spool-labels.html";
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-    this._toast(tr("Fenster blockiert – Etiketten als Datei gespeichert."));
+      </style></head><body><div class="sheet">${spools.map(label).join("")}</div></body></html>`;
+    this._labelDialog(spools, html);
+  }
+
+  /** Label preview in the spool dialog with "Print" (hidden iframe) and "Save file". */
+  _labelDialog(spools, html) {
+    const dlg = this._spoolDialog();
+    const single = spools.length === 1 ? spools[0] : null;
+    dlg.innerHTML = `<div class="dlg">
+        <header class="dlg-head"><ha-icon icon="mdi:qrcode"></ha-icon><div style="min-width:0">
+          <div class="dlg-title">${esc(single ? tr("Etikett") : tr("Spulen-Etiketten"))}</div>
+          <div class="t-label">${esc(single ? `#${single.id} ${single.name}` : tr("{n} Spulen", { n: spools.length }))}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        <iframe class="label-preview" data-labelframe title="${esc(tr("Spulen-Etiketten"))}"></iframe>
+        <div class="t-label">${tr("Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.")}</div>
+        <div class="dlg-actions">
+          ${single ? `<button type="button" class="outline" data-back>${tr("Zurück")}</button>` : ""}
+          <button type="button" class="outline" data-labelsave><ha-icon icon="mdi:download"></ha-icon>${tr("Als Datei speichern")}</button>
+          <button type="button" class="filled" data-labelprint><ha-icon icon="mdi:printer"></ha-icon>${tr("Drucken")}</button>
+        </div>
+      </div>`;
+    const frame = dlg.querySelector("[data-labelframe]");
+    frame.srcdoc = html; // same origin, our own escaped markup – no scripts inside
+    dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+    if (single) dlg.querySelector("[data-back]").addEventListener("click", () => this._spoolDetail(single.id, !!single.archived));
+    dlg.querySelector("[data-labelprint]").addEventListener("click", () => {
+      try {
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      } catch (e) {
+        this._toast(tr("Drucken geht hier nicht – bitte als Datei speichern."));
+      }
+    });
+    dlg.querySelector("[data-labelsave]").addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+      a.download = single ? `spool-${single.id}-label.html` : "spool-labels.html";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    });
+    this._showDialog(dlg);
   }
 
   /** Form: create a spool in Spoolman. idx = head to assign to (prefilled from it), null = from the stock. */

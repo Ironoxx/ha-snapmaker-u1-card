@@ -13,7 +13,7 @@ Beta. Spoolman tab with archive, delete and QR labels, more fields for new spool
 - **Archive** is Spoolman's own "put away": the spool leaves every list, its usage history stays and it can be restored. **Delete** removes it for good (with a second confirmation). Both are refused for a spool that sits in a head – release it there first.
 - **Empty spools** (0 g left, in no head) offer *empty · archive* right in the list.
 - Chip **Archived** shows the archived spools (loaded only when you switch it on) to restore them.
-- **QR labels:** per spool or for all spools on show (*Labels*), 62 × 29 mm with QR code (link to the spool in Spoolman), ID, name, vendor, material, temperatures and colour. Printed from a new window; if the browser blocks it, the page is saved as a file.
+- **QR labels:** per spool or for all spools on show (*Labels*), 62 × 29 mm with QR code (link to the spool in Spoolman), ID, name, vendor, material, temperatures and colour. Shown as a preview in the dialog, then *Print* (browser print dialog) or *Save as file*.
 - New services `spool_archive` (also restores) and `spool_delete` (admins only).
 
 **New spool: more fields**
@@ -52,7 +52,7 @@ Beta. Spoolman-Reiter mit Archivieren, Löschen und QR-Etiketten, mehr Felder f�
 - **Archivieren** ist das „Wegräumen“ von Spoolman: Die Spule verschwindet aus allen Listen, ihr Verbrauch bleibt erhalten, sie lässt sich wiederherstellen. **Löschen** entfernt sie endgültig (mit zweiter Rückfrage). Beides geht nicht für eine Spule, die in einem Kopf steckt – dort erst die Zuordnung lösen.
 - **Leere Spulen** (0 g Rest, in keinem Kopf) bieten *leer · archivieren* direkt in der Liste an.
 - Chip **Archiviert** zeigt die archivierten Spulen (erst beim Einschalten geladen) zum Wiederherstellen.
-- **QR-Etiketten:** je Spule oder für alle angezeigten Spulen (*Etiketten*), 62 × 29 mm mit QR-Code (Link zur Spule in Spoolman), ID, Name, Hersteller, Material, Temperaturen und Farbe. Gedruckt aus einem neuen Fenster; blockiert der Browser es, wird die Seite als Datei gespeichert.
+- **QR-Etiketten:** je Spule oder für alle angezeigten Spulen (*Etiketten*), 62 × 29 mm mit QR-Code (Link zur Spule in Spoolman), ID, Name, Hersteller, Material, Temperaturen und Farbe. Als Vorschau im Dialog, dann *Drucken* (Druckdialog des Browsers) oder *Als Datei speichern*.
 - Neue Dienste `spool_archive` (auch Wiederherstellen) und `spool_delete` (nur Admins).
 
 **Neue Spule: mehr Felder**

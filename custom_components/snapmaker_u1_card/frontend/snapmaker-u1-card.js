@@ -887,7 +887,6 @@
     "Spule #{id} gelöscht": "Bobina #{id} borrada",
     "Keine Spule zum Drucken.": "No hay bobina para imprimir.",
     "Spulen-Etiketten": "Etiquetas de bobinas",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Ventana bloqueada: etiquetas guardadas como archivo.",
     "Weitere Angaben": "Más datos",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturas, densidad, diámetro y número de artículo pertenecen al filamento y solo se aplican si se crea nuevo.",
     "Düsentemperatur (°C)": "Temperatura de boquilla (°C)",
@@ -898,7 +897,11 @@
     "Restgewicht (g)": "Peso restante (g)",
     "voll": "llena",
     "Artikelnummer": "Número de artículo",
-    "Kommentar": "Comentario"
+    "Kommentar": "Comentario",
+    "{n} Spulen": "{n} bobinas",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Imprime las etiquetas con el diálogo de impresión del navegador. En la app de Home Assistant, guárdalas como archivo si hace falta e imprime desde allí.",
+    "Als Datei speichern": "Guardar como archivo",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Aquí no se puede imprimir: guárdalo como archivo."
   };
 
   // frontend/src/i18n/fr.js
@@ -1720,7 +1723,6 @@
     "Spule #{id} gelöscht": "Bobine #{id} supprimée",
     "Keine Spule zum Drucken.": "Aucune bobine à imprimer.",
     "Spulen-Etiketten": "Étiquettes de bobines",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Fenêtre bloquée – étiquettes enregistrées dans un fichier.",
     "Weitere Angaben": "Plus de détails",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Températures, densité, diamètre et référence appartiennent au filament et ne s'appliquent que s'il est créé.",
     "Düsentemperatur (°C)": "Température de buse (°C)",
@@ -1731,7 +1733,11 @@
     "Restgewicht (g)": "Poids restant (g)",
     "voll": "pleine",
     "Artikelnummer": "Référence",
-    "Kommentar": "Commentaire"
+    "Kommentar": "Commentaire",
+    "{n} Spulen": "{n} bobines",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Imprime les étiquettes via la boîte de dialogue d'impression du navigateur. Dans l'app Home Assistant, enregistre-les si besoin dans un fichier et imprime depuis celui-ci.",
+    "Als Datei speichern": "Enregistrer dans un fichier",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Impossible d'imprimer ici – enregistre dans un fichier."
   };
 
   // frontend/src/i18n/it.js
@@ -2553,7 +2559,6 @@
     "Spule #{id} gelöscht": "Bobina #{id} eliminata",
     "Keine Spule zum Drucken.": "Nessuna bobina da stampare.",
     "Spulen-Etiketten": "Etichette bobine",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Finestra bloccata – etichette salvate come file.",
     "Weitere Angaben": "Altri dati",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperature, densità, diametro e codice articolo appartengono al filamento e valgono solo se viene creato nuovo.",
     "Düsentemperatur (°C)": "Temperatura ugello (°C)",
@@ -2564,7 +2569,11 @@
     "Restgewicht (g)": "Peso rimanente (g)",
     "voll": "piena",
     "Artikelnummer": "Codice articolo",
-    "Kommentar": "Commento"
+    "Kommentar": "Commento",
+    "{n} Spulen": "{n} bobine",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Stampa le etichette tramite la finestra di stampa del browser. Nell'app Home Assistant, se serve, salvale come file e stampa da lì.",
+    "Als Datei speichern": "Salva come file",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Qui non si può stampare – salva come file."
   };
 
   // frontend/src/i18n/nl.js
@@ -3386,7 +3395,6 @@
     "Spule #{id} gelöscht": "Spoel #{id} verwijderd",
     "Keine Spule zum Drucken.": "Geen spoel om te printen.",
     "Spulen-Etiketten": "Spoeletiketten",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Venster geblokkeerd – etiketten als bestand opgeslagen.",
     "Weitere Angaben": "Meer gegevens",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturen, dichtheid, diameter en artikelnummer horen bij het filament en gelden alleen als het nieuw wordt aangemaakt.",
     "Düsentemperatur (°C)": "Nozzletemperatuur (°C)",
@@ -3397,7 +3405,11 @@
     "Restgewicht (g)": "Restgewicht (g)",
     "voll": "vol",
     "Artikelnummer": "Artikelnummer",
-    "Kommentar": "Opmerking"
+    "Kommentar": "Opmerking",
+    "{n} Spulen": "{n} spoelen",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Print de etiketten via het printvenster van de browser. In de Home Assistant-app ze zo nodig als bestand opslaan en vandaar printen.",
+    "Als Datei speichern": "Opslaan als bestand",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Printen gaat hier niet – sla het op als bestand."
   };
 
   // frontend/src/i18n/pt.js
@@ -4219,7 +4231,6 @@
     "Spule #{id} gelöscht": "Bobina #{id} apagada",
     "Keine Spule zum Drucken.": "Sem bobina para imprimir.",
     "Spulen-Etiketten": "Etiquetas de bobinas",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Janela bloqueada – etiquetas guardadas como ficheiro.",
     "Weitere Angaben": "Mais dados",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturas, densidade, diâmetro e referência pertencem ao filamento e só se aplicam se for criado de novo.",
     "Düsentemperatur (°C)": "Temperatura do bico (°C)",
@@ -4230,7 +4241,11 @@
     "Restgewicht (g)": "Peso restante (g)",
     "voll": "cheia",
     "Artikelnummer": "Referência",
-    "Kommentar": "Comentário"
+    "Kommentar": "Comentário",
+    "{n} Spulen": "{n} bobinas",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Imprime as etiquetas através da janela de impressão do navegador. Na app Home Assistant, guarda-as como ficheiro se necessário e imprime a partir daí.",
+    "Als Datei speichern": "Guardar como ficheiro",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Aqui não é possível imprimir – guarda como ficheiro."
   };
 
   // frontend/src/i18n/tr.js
@@ -5052,7 +5067,6 @@
     "Spule #{id} gelöscht": "#{id} makarası silindi",
     "Keine Spule zum Drucken.": "Yazdırılacak makara yok.",
     "Spulen-Etiketten": "Makara etiketleri",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Pencere engellendi – etiketler dosya olarak kaydedildi.",
     "Weitere Angaben": "Diğer bilgiler",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Sıcaklıklar, yoğunluk, çap ve ürün numarası filamente aittir ve yalnızca yeni oluşturulduğunda geçerlidir.",
     "Düsentemperatur (°C)": "Nozul sıcaklığı (°C)",
@@ -5063,7 +5077,11 @@
     "Restgewicht (g)": "Kalan ağırlık (g)",
     "voll": "dolu",
     "Artikelnummer": "Ürün numarası",
-    "Kommentar": "Yorum"
+    "Kommentar": "Yorum",
+    "{n} Spulen": "{n} makara",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Etiketleri tarayıcının yazdırma penceresiyle yazdırır. Home Assistant uygulamasında gerekirse dosya olarak kaydedip oradan yazdır.",
+    "Als Datei speichern": "Dosya olarak kaydet",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Burada yazdırılamıyor – lütfen dosya olarak kaydet."
   };
 
   // frontend/src/i18n/zh.js
@@ -5885,7 +5903,6 @@
     "Spule #{id} gelöscht": "料盘 #{id} 已删除",
     "Keine Spule zum Drucken.": "没有可打印的料盘。",
     "Spulen-Etiketten": "料盘标签",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "窗口被拦截 – 标签已保存为文件。",
     "Weitere Angaben": "更多信息",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "温度、密度、直径和货号属于耗材，仅在新建耗材时生效。",
     "Düsentemperatur (°C)": "喷嘴温度 (°C)",
@@ -5896,7 +5913,11 @@
     "Restgewicht (g)": "剩余重量 (g)",
     "voll": "满",
     "Artikelnummer": "货号",
-    "Kommentar": "备注"
+    "Kommentar": "备注",
+    "{n} Spulen": "{n} 个料盘",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "通过浏览器的打印对话框打印标签。在 Home Assistant 应用中，如有需要请保存为文件后再打印。",
+    "Als Datei speichern": "保存为文件",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "此处无法打印 – 请保存为文件。"
   };
 
   // frontend/src/i18n.js
@@ -6744,7 +6765,6 @@
     "Spule #{id} gelöscht": "Spool #{id} deleted",
     "Keine Spule zum Drucken.": "No spool to print.",
     "Spulen-Etiketten": "Spool labels",
-    "Fenster blockiert – Etiketten als Datei gespeichert.": "Window blocked – labels saved as a file.",
     "Weitere Angaben": "More details",
     "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperatures, density, diameter and article number belong to the filament and only apply when it is newly created.",
     "Düsentemperatur (°C)": "Nozzle temperature (°C)",
@@ -6755,7 +6775,11 @@
     "Restgewicht (g)": "Remaining weight (g)",
     "voll": "full",
     "Artikelnummer": "Article number",
-    "Kommentar": "Comment"
+    "Kommentar": "Comment",
+    "{n} Spulen": "{n} spools",
+    "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Prints the labels through the browser's print dialog. In the Home Assistant app, save them as a file if needed and print from there.",
+    "Als Datei speichern": "Save as file",
+    "Drucken geht hier nicht – bitte als Datei speichern.": "Printing is not available here – please save as a file."
   };
 
   // frontend/src/accent.js
@@ -11229,6 +11253,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .head-form .more-fields > .head-form { margin-top: 8px; }
   /* 2.4: spool details – actions wrap on narrow screens */
   dialog.u1spool .dlg-actions { flex-wrap: wrap; }
+  /* 2.4.0b2: label preview (white paper look, scrolls with many labels) */
+  .label-preview { width: 100%; height: min(50vh, 360px); border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); background: #fff; }
   .stock-row { cursor: pointer; }
   .stock-row:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 2px; }
   .stock-row [data-emptyarch] { flex: none; }
@@ -14963,8 +14989,13 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     /**
      * Labels for the given spools: QR code to the spool in Spoolman plus name,
      * vendor, material, colour, temperatures and ID, 62 mm wide (fits label
-     * printers and A4 sheets alike). Printed from a new window; if the browser
-     * blocks it (popup blocker, some app views) the page is saved as a file.
+     * printers and A4 sheets alike).
+     *
+     * 2.4.0b2 fix: shown as a preview in the card's own dialog and printed from a
+     * hidden iframe – no new window. The Home Assistant app hands window.open()
+     * to the phone's browser, which then showed whatever page it had open last
+     * instead of the labels. "Save file" is the way out where printing from the
+     * app is not available (Android WebView ignores print()).
      */
     _printLabels(spools) {
       if (!spools.length) {
@@ -14993,26 +15024,47 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .sw { width: 14mm; height: 3mm; border: 0.2mm solid #000; margin-top: 1mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @media print { body { margin: 0; } .lbl { border-color: transparent; } }
-      </style></head><body><div class="sheet">${spools.map(label).join("")}</div>
-      <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 200); });<\/script></body></html>`;
-      let win = null;
-      try {
-        win = window.open("", "_blank");
-      } catch (e) {
-        win = null;
-      }
-      if (win && win.document) {
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
-        return;
-      }
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-      a.download = spools.length === 1 ? `spool-${spools[0].id}-label.html` : "spool-labels.html";
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1e4);
-      this._toast(tr("Fenster blockiert – Etiketten als Datei gespeichert."));
+      </style></head><body><div class="sheet">${spools.map(label).join("")}</div></body></html>`;
+      this._labelDialog(spools, html);
+    }
+    /** Label preview in the spool dialog with "Print" (hidden iframe) and "Save file". */
+    _labelDialog(spools, html) {
+      const dlg = this._spoolDialog();
+      const single = spools.length === 1 ? spools[0] : null;
+      dlg.innerHTML = `<div class="dlg">
+        <header class="dlg-head"><ha-icon icon="mdi:qrcode"></ha-icon><div style="min-width:0">
+          <div class="dlg-title">${esc(single ? tr("Etikett") : tr("Spulen-Etiketten"))}</div>
+          <div class="t-label">${esc(single ? `#${single.id} ${single.name}` : tr("{n} Spulen", { n: spools.length }))}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        <iframe class="label-preview" data-labelframe title="${esc(tr("Spulen-Etiketten"))}"></iframe>
+        <div class="t-label">${tr("Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.")}</div>
+        <div class="dlg-actions">
+          ${single ? `<button type="button" class="outline" data-back>${tr("Zurück")}</button>` : ""}
+          <button type="button" class="outline" data-labelsave><ha-icon icon="mdi:download"></ha-icon>${tr("Als Datei speichern")}</button>
+          <button type="button" class="filled" data-labelprint><ha-icon icon="mdi:printer"></ha-icon>${tr("Drucken")}</button>
+        </div>
+      </div>`;
+      const frame = dlg.querySelector("[data-labelframe]");
+      frame.srcdoc = html;
+      dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+      if (single) dlg.querySelector("[data-back]").addEventListener("click", () => this._spoolDetail(single.id, !!single.archived));
+      dlg.querySelector("[data-labelprint]").addEventListener("click", () => {
+        try {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        } catch (e) {
+          this._toast(tr("Drucken geht hier nicht – bitte als Datei speichern."));
+        }
+      });
+      dlg.querySelector("[data-labelsave]").addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+        a.download = single ? `spool-${single.id}-label.html` : "spool-labels.html";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1e4);
+      });
+      this._showDialog(dlg);
     }
     /** Form: create a spool in Spoolman. idx = head to assign to (prefilled from it), null = from the stock. */
     _newSpoolForm(dlg, idx) {

@@ -817,7 +817,6 @@ export default {
   "Spule #{id} gelöscht": "Spoel #{id} verwijderd",
   "Keine Spule zum Drucken.": "Geen spoel om te printen.",
   "Spulen-Etiketten": "Spoeletiketten",
-  "Fenster blockiert – Etiketten als Datei gespeichert.": "Venster geblokkeerd – etiketten als bestand opgeslagen.",
   "Weitere Angaben": "Meer gegevens",
   "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturen, dichtheid, diameter en artikelnummer horen bij het filament en gelden alleen als het nieuw wordt aangemaakt.",
   "Düsentemperatur (°C)": "Nozzletemperatuur (°C)",
@@ -828,5 +827,9 @@ export default {
   "Restgewicht (g)": "Restgewicht (g)",
   "voll": "vol",
   "Artikelnummer": "Artikelnummer",
-  "Kommentar": "Opmerking"
+  "Kommentar": "Opmerking",
+  "{n} Spulen": "{n} spoelen",
+  "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Print de etiketten via het printvenster van de browser. In de Home Assistant-app ze zo nodig als bestand opslaan en vandaar printen.",
+  "Als Datei speichern": "Opslaan als bestand",
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Printen gaat hier niet – sla het op als bestand."
 };

@@ -817,7 +817,6 @@ export default {
   "Spule #{id} gelöscht": "Bobina #{id} apagada",
   "Keine Spule zum Drucken.": "Sem bobina para imprimir.",
   "Spulen-Etiketten": "Etiquetas de bobinas",
-  "Fenster blockiert – Etiketten als Datei gespeichert.": "Janela bloqueada – etiquetas guardadas como ficheiro.",
   "Weitere Angaben": "Mais dados",
   "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturas, densidade, diâmetro e referência pertencem ao filamento e só se aplicam se for criado de novo.",
   "Düsentemperatur (°C)": "Temperatura do bico (°C)",
@@ -828,5 +827,9 @@ export default {
   "Restgewicht (g)": "Peso restante (g)",
   "voll": "cheia",
   "Artikelnummer": "Referência",
-  "Kommentar": "Comentário"
+  "Kommentar": "Comentário",
+  "{n} Spulen": "{n} bobinas",
+  "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Imprime as etiquetas através da janela de impressão do navegador. Na app Home Assistant, guarda-as como ficheiro se necessário e imprime a partir daí.",
+  "Als Datei speichern": "Guardar como ficheiro",
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Aqui não é possível imprimir – guarda como ficheiro."
 };

@@ -817,7 +817,6 @@ export default {
   "Spule #{id} gelöscht": "#{id} makarası silindi",
   "Keine Spule zum Drucken.": "Yazdırılacak makara yok.",
   "Spulen-Etiketten": "Makara etiketleri",
-  "Fenster blockiert – Etiketten als Datei gespeichert.": "Pencere engellendi – etiketler dosya olarak kaydedildi.",
   "Weitere Angaben": "Diğer bilgiler",
   "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Sıcaklıklar, yoğunluk, çap ve ürün numarası filamente aittir ve yalnızca yeni oluşturulduğunda geçerlidir.",
   "Düsentemperatur (°C)": "Nozul sıcaklığı (°C)",
@@ -828,5 +827,9 @@ export default {
   "Restgewicht (g)": "Kalan ağırlık (g)",
   "voll": "dolu",
   "Artikelnummer": "Ürün numarası",
-  "Kommentar": "Yorum"
+  "Kommentar": "Yorum",
+  "{n} Spulen": "{n} makara",
+  "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Etiketleri tarayıcının yazdırma penceresiyle yazdırır. Home Assistant uygulamasında gerekirse dosya olarak kaydedip oradan yazdır.",
+  "Als Datei speichern": "Dosya olarak kaydet",
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Burada yazdırılamıyor – lütfen dosya olarak kaydet."
 };

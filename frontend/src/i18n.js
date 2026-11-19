@@ -826,7 +826,6 @@ export const EN = {
   "Spule #{id} gelöscht": "Spool #{id} deleted",
   "Keine Spule zum Drucken.": "No spool to print.",
   "Spulen-Etiketten": "Spool labels",
-  "Fenster blockiert – Etiketten als Datei gespeichert.": "Window blocked – labels saved as a file.",
   "Weitere Angaben": "More details",
   "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperatures, density, diameter and article number belong to the filament and only apply when it is newly created.",
   "Düsentemperatur (°C)": "Nozzle temperature (°C)",
@@ -837,5 +836,9 @@ export const EN = {
   "Restgewicht (g)": "Remaining weight (g)",
   "voll": "full",
   "Artikelnummer": "Article number",
-  "Kommentar": "Comment"
+  "Kommentar": "Comment",
+  "{n} Spulen": "{n} spools",
+  "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Prints the labels through the browser's print dialog. In the Home Assistant app, save them as a file if needed and print from there.",
+  "Als Datei speichern": "Save as file",
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Printing is not available here – please save as a file."
 };

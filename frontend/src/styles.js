@@ -791,6 +791,8 @@ export const STYLES = `
   .head-form .more-fields > .head-form { margin-top: 8px; }
   /* 2.4: spool details – actions wrap on narrow screens */
   dialog.u1spool .dlg-actions { flex-wrap: wrap; }
+  /* 2.4.0b2: label preview (white paper look, scrolls with many labels) */
+  .label-preview { width: 100%; height: min(50vh, 360px); border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); background: #fff; }
   .stock-row { cursor: pointer; }
   .stock-row:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 2px; }
   .stock-row [data-emptyarch] { flex: none; }

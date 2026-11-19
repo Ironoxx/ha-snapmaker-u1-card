@@ -817,7 +817,6 @@ export default {
   "Spule #{id} gelöscht": "料盘 #{id} 已删除",
   "Keine Spule zum Drucken.": "没有可打印的料盘。",
   "Spulen-Etiketten": "料盘标签",
-  "Fenster blockiert – Etiketten als Datei gespeichert.": "窗口被拦截 – 标签已保存为文件。",
   "Weitere Angaben": "更多信息",
   "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "温度、密度、直径和货号属于耗材，仅在新建耗材时生效。",
   "Düsentemperatur (°C)": "喷嘴温度 (°C)",
@@ -828,5 +827,9 @@ export default {
   "Restgewicht (g)": "剩余重量 (g)",
   "voll": "满",
   "Artikelnummer": "货号",
-  "Kommentar": "备注"
+  "Kommentar": "备注",
+  "{n} Spulen": "{n} 个料盘",
+  "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "通过浏览器的打印对话框打印标签。在 Home Assistant 应用中，如有需要请保存为文件后再打印。",
+  "Als Datei speichern": "保存为文件",
+  "Drucken geht hier nicht – bitte als Datei speichern.": "此处无法打印 – 请保存为文件。"
 };

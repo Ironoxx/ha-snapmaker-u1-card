@@ -12,9 +12,9 @@ w.HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open"
 w.HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); this.dispatchEvent(new w.Event("close")); };
 w.HTMLCanvasElement.prototype.getContext = () => null;
 w.setInterval = () => 0;
-// label window: capture what would be printed
-const opened = [];
-w.open = () => { const doc = { html: "", open() {}, write(h) { this.html += h; }, close() {} }; opened.push(doc); return { document: doc }; };
+// 2.4.0b2 fix: labels never open a new window (the HA app hands it to the phone's browser)
+let windowOpened = 0;
+w.open = () => { windowOpened++; return null; };
 w.eval(src);
 
 const P = "u1";
@@ -80,10 +80,15 @@ const last = () => { const c = calls.at(-1); const d = { ...c[2] }; delete d.con
 
   // 3. Label: QR code with the Spoolman link (trailing slash dropped), printed from a new window
   dlg().querySelector("[data-label]").click();
-  const html = opened.at(-1).html;
+  const frame = dlg().querySelector("[data-labelframe]");
+  assert.ok(frame, "Vorschau im Dialog");
+  const html = frame.srcdoc;
   assert.ok(/<svg[^>]+viewBox="0 0 33 33"/.test(html), "27 Byte Link: Version 3 (29 Module) + 2 x 2 Ruhezone");
   assert.match(html, /#1<\/div>/); assert.match(html, /PLA Schwarz/); assert.match(html, /Düse 215 °C · Bett 60 °C/);
-  assert.match(html, /window\.print/);
+  assert.ok(!/<script/.test(html), "kein Skript im Etikett");
+  assert.ok(dlg().querySelector("[data-labelprint]") && dlg().querySelector("[data-labelsave]"));
+  dlg().querySelector("[data-back]").click();
+  assert.ok(dlg().querySelector("[data-label]"), "Zurück zu den Details");
 
   // 4. Free spool: archive from the details; delete only for admins, with a second step
   row(6).click();
@@ -113,10 +118,10 @@ const last = () => { const c = calls.at(-1); const d = { ...c[2] }; delete d.con
   assert.ok(!row(7), "aus der Archivliste entfernt");
   // labels for the list on show (archived list now empty)
   sec().querySelector("[data-stockarch]").click(); await tick();
-  const before = opened.length;
   sec().querySelector("[data-stocklabels]").click();
-  assert.strictEqual(opened.length, before + 1);
-  assert.strictEqual((opened.at(-1).html.match(/class="lbl"/g) || []).length, 3, "alle angezeigten Spulen");
+  assert.strictEqual((dlg().querySelector("[data-labelframe]").srcdoc.match(/class="lbl"/g) || []).length, 3, "alle angezeigten Spulen");
+  assert.strictEqual(windowOpened, 0, "kein neues Fenster");
+  dlg().close();
 
   // 6. New spool for head 1: RFID temperatures prefilled; picked filament fills "more details"; extra fields sent
   sec().querySelector("[data-stocknew]").click(); await tick();
@@ -140,5 +145,5 @@ const last = () => { const c = calls.at(-1); const d = { ...c[2] }; delete d.con
   card._newSpoolForm(card._spoolDialog(), 0);
   const fh = dlg().querySelector("[data-newspoolform]");
   assert.strictEqual(fh.elements.extruder_temp.value, "210"); assert.strictEqual(fh.elements.bed_temp.value, "60");
-  console.log("SPOOLSTOCK OK –", calls.length, "service calls,", opened.length, "label pages");
+  console.log("SPOOLSTOCK OK –", calls.length, "service calls, labels in the dialog");
 })().catch((e) => { console.error(e); process.exit(1); });

@@ -817,7 +817,6 @@ export default {
   "Spule #{id} gelöscht": "Bobina #{id} eliminata",
   "Keine Spule zum Drucken.": "Nessuna bobina da stampare.",
   "Spulen-Etiketten": "Etichette bobine",
-  "Fenster blockiert – Etiketten als Datei gespeichert.": "Finestra bloccata – etichette salvate come file.",
   "Weitere Angaben": "Altri dati",
   "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperature, densità, diametro e codice articolo appartengono al filamento e valgono solo se viene creato nuovo.",
   "Düsentemperatur (°C)": "Temperatura ugello (°C)",
@@ -828,5 +827,9 @@ export default {
   "Restgewicht (g)": "Peso rimanente (g)",
   "voll": "piena",
   "Artikelnummer": "Codice articolo",
-  "Kommentar": "Commento"
+  "Kommentar": "Commento",
+  "{n} Spulen": "{n} bobine",
+  "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Stampa le etichette tramite la finestra di stampa del browser. Nell'app Home Assistant, se serve, salvale come file e stampa da lì.",
+  "Als Datei speichern": "Salva come file",
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Qui non si può stampare – salva come file."
 };
