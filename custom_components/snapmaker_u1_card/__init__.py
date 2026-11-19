@@ -24,7 +24,9 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from . import blueprints, resource, settings_ws, spoolman_ws, whats_new
 from .api import MoonrakerClient
@@ -53,7 +55,6 @@ from .const import (
     SERVICE_SET_SPOOL,
     SERVICE_START_PRINT,
     THUMB_URL,
-    VERSION,
 )
 from .coordinator import U1Coordinator
 from .i18n import tr
@@ -69,7 +70,7 @@ from .webrtc_view import WebrtcView
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CAMERA, Platform.EVENT, Platform.LIGHT, Platform.NUMBER, Platform.SELECT,
-             Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
+             Platform.SENSOR, Platform.SWITCH, Platform.TODO, Platform.UPDATE]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type U1ConfigEntry = ConfigEntry[U1Coordinator]
@@ -91,7 +92,13 @@ PRINT_FIELDS = {
     ),
 }
 START_PRINT_SCHEMA = vol.Schema({**PRINT_FIELDS, vol.Optional(ATTR_ENTRY): cv.string})
-QUEUE_ADD_SCHEMA = START_PRINT_SCHEMA
+QUEUE_ADD_SCHEMA = vol.Schema({
+    **PRINT_FIELDS,
+    # 2.4: start time (local time if no zone is given) and the "bed is clear" question at that time
+    vol.Optional("start_at"): cv.datetime,
+    vol.Optional("confirm_bed", default=True): cv.boolean,
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
 JOB_SCHEMA = vol.Schema({vol.Required("job_id"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
 QUEUE_MOVE_SCHEMA = vol.Schema({
     vol.Required("job_id"): cv.string,
@@ -160,6 +167,26 @@ CREATE_SPOOL_SCHEMA = vol.Schema({
     vol.Optional("spool_weight"): vol.All(vol.Coerce(float), vol.Range(min=0, max=2000)),
     vol.Optional("price"): vol.All(vol.Coerce(float), vol.Range(min=0, max=10000)),
     vol.Optional("remaining"): vol.All(vol.Coerce(float), vol.Range(min=0, max=10000)),
+    # 2.4: the other Spoolman fields worth keeping (filament part only for a new filament)
+    vol.Optional("extruder_temp"): vol.All(vol.Coerce(int), vol.Range(min=150, max=350)),
+    vol.Optional("bed_temp"): vol.All(vol.Coerce(int), vol.Range(min=0, max=150)),
+    vol.Optional("density"): vol.All(vol.Coerce(float), vol.Range(min=0.5, max=3)),
+    vol.Optional("diameter"): vol.All(vol.Coerce(float), vol.Range(min=1, max=3)),
+    vol.Optional("article_number"): vol.All(cv.string, vol.Length(max=64)),
+    vol.Optional("lot_nr"): vol.All(cv.string, vol.Length(max=64)),
+    vol.Optional("comment"): vol.All(cv.string, vol.Length(max=1024)),
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
+# 2.4: optional create_spool fields handed on as they are (see async_create_spool)
+CREATE_SPOOL_EXTRA = ("extruder_temp", "bed_temp", "density", "diameter", "article_number", "lot_nr", "comment")
+# 2.4: archive / restore / delete a spool from the card's Spoolman tab
+SPOOL_ARCHIVE_SCHEMA = vol.Schema({
+    vol.Required("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional("archived", default=True): cv.boolean,
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
+SPOOL_DELETE_SCHEMA = vol.Schema({
+    vol.Required("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(ATTR_ENTRY): cv.string,
 })
 SEND_GCODE_SCHEMA = vol.Schema({vol.Required("script"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
@@ -195,7 +222,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await hass.http.async_register_static_paths(
         [
-            StaticPathConfig(CARD_URL, str(frontend_dir), cache_headers=False),
+            # 2.4: cached (31 days) – the URL changes with every new file, see resource.card_tag
+            StaticPathConfig(CARD_URL, str(frontend_dir), cache_headers=True),
             StaticPathConfig(THUMB_URL, str(thumb_dir), cache_headers=True),
         ]
     )
@@ -209,8 +237,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(WebrtcView())
     hass.http.register_view(ScreenSnapshotView())
     hass.http.register_view(ScreenTouchView())
-    # The version parameter forces browsers to reload the card after an update.
-    add_extra_js_url(hass, f"{CARD_URL}/{CARD_FILENAME}?v={VERSION}")
+    # The version parameter (version + file hash, 2.4) forces browsers to reload the card
+    # after an update; with it the card may be cached for long (cache_headers above).
+    tag = await hass.async_add_executor_job(resource.card_tag, frontend_dir)
+    add_extra_js_url(hass, f"{CARD_URL}/{CARD_FILENAME}?v={tag}")
     # Second loading path, independent of when the integration starts (see resource.py).
     await resource.async_install(hass)
     await resource.async_check_conflict(hass)
@@ -266,9 +296,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return await _coordinator(hass, d.get(ATTR_ENTRY)).async_create_spool(
             slot - 1 if slot else None, d["material"], d.get("vendor", "Generic"), d.get("name"),
             d.get("color"), d["weight"], d.get("spool_weight"), d.get("price"), d.get("remaining"),
-            d.get("filament_id"), d.get("external_id"), d.get("location"))
+            d.get("filament_id"), d.get("external_id"), d.get("location"),
+            extra={k: d[k] for k in CREATE_SPOOL_EXTRA if k in d})
 
     hass.services.async_register(DOMAIN, "create_spool", create_spool, schema=CREATE_SPOOL_SCHEMA,
+                                 supports_response=SupportsResponse.OPTIONAL)
+
+    async def spool_archive(call: ServiceCall) -> ServiceResponse:
+        return await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_archive_spool(
+            call.data["spool_id"], call.data["archived"])
+
+    async def spool_delete(call: ServiceCall) -> ServiceResponse:
+        return await _coordinator(hass, call.data.get(ATTR_ENTRY)).async_delete_spool(call.data["spool_id"])
+
+    hass.services.async_register(DOMAIN, "spool_archive", spool_archive, schema=SPOOL_ARCHIVE_SCHEMA,
+                                 supports_response=SupportsResponse.OPTIONAL)
+    # Deleting cannot be undone (Spoolman drops the usage history too): admins only
+    async_register_admin_service(hass, DOMAIN, "spool_delete", spool_delete, schema=SPOOL_DELETE_SCHEMA,
                                  supports_response=SupportsResponse.OPTIONAL)
 
     async def set_preference(call: ServiceCall) -> None:
@@ -310,6 +354,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         job["file"] = call.data["filename"].lstrip("/")
         if "mapping" in job:
             job["mapping"] = {str(k): v for k, v in job["mapping"].items()}
+        if job.get("start_at") is not None:
+            job["start_at"] = dt_util.as_utc(job["start_at"]).timestamp()
+        else:
+            job.pop("confirm_bed", None)  # only means something with a start time
         return {"job": coordinator.queue_add(job)}
 
     async def queue_remove(call: ServiceCall) -> None:

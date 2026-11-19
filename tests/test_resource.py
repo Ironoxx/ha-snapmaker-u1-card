@@ -39,19 +39,28 @@ def _ours(coll):
 
 async def test_resource_points_to_the_integration(hass: HomeAssistant, mock_client) -> None:
     """hacs/default review: no copy in /config/www, the resource uses the integration's static path."""
+    import hashlib
+
+    from custom_components.snapmaker_u1_card import resource
     from custom_components.snapmaker_u1_card.const import VERSION
 
     await _setup(hass)
     coll = hass.data[LOVELACE_DATA].resources
     assert hass.data[LOVELACE_DATA].resource_mode == "storage"
     items = _ours(coll)
-    assert [(i["url"], i["type"]) for i in items] == [(f"/{DOMAIN}/card/snapmaker-u1-card.js?v={VERSION}", "module")]
+    # 2.4: version plus the file's hash, so the card can be cached for long
+    js = Path(resource.__file__).parent / "frontend" / "snapmaker-u1-card.js"
+    tag = f"{VERSION}-{hashlib.sha256(js.read_bytes()).hexdigest()[:8]}"
+    assert resource.card_tag() == tag
+    assert [(i["url"], i["type"]) for i in items] == [(f"/{DOMAIN}/card/snapmaker-u1-card.js?v={tag}", "module")]
+    # the gzip copy matches the bundle (built together by npm run build)
+    import gzip
+    assert gzip.decompress((js.parent / "snapmaker-u1-card.js.gz").read_bytes()) == js.read_bytes()
     assert not Path(hass.config.path("www", DOMAIN)).exists(), "nothing written to /config/www"
 
 
 async def test_old_resource_and_copy_migrated(hass: HomeAssistant, storage_resources) -> None:
     from custom_components.snapmaker_u1_card import resource
-    from custom_components.snapmaker_u1_card.const import VERSION
 
     www = Path(hass.config.path("www"))
     (www / DOMAIN).mkdir(parents=True)
@@ -64,7 +73,7 @@ async def test_old_resource_and_copy_migrated(hass: HomeAssistant, storage_resou
     await storage_resources.async_create_item({"res_type": "js", "url": f"/local/{DOMAIN}/snapmaker-u1-card.js?v=0.9"})
     await resource.async_install(hass)
     items = _ours(storage_resources)
-    assert [(i["url"], i["type"]) for i in items] == [(f"/{DOMAIN}/card/snapmaker-u1-card.js?v={VERSION}", "module")]
+    assert [(i["url"], i["type"]) for i in items] == [(f"/{DOMAIN}/card/snapmaker-u1-card.js?v={resource.card_tag()}", "module")]
     assert other in storage_resources.async_items(), "fremde Ressourcen bleiben"
     assert not (www / DOMAIN).exists(), "own old copy removed"
     assert (www / "u1_top.png").read_text() == "user file", "nothing else touched"

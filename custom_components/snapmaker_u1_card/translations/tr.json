@@ -119,13 +119,17 @@
               "spoolman_url": "Spoolman URL'si",
               "spoolman_deduct": "Her baskıdan sonra kafa başına tüketimi düş",
               "spoolman_low": "Uyarı sınırı",
-              "spool_restore": "Kafa yeniden yüklendikten sonra son makara"
+              "spool_restore": "Kafa yeniden yüklendikten sonra son makara",
+              "todo_shopping": "Azalan makaralar için alışveriş listesi",
+              "shopping_target": "Bu yapılacaklar listesine ekle"
             },
             "data_description": {
               "spoolman_url": "7912 portlu adres, örn. 192.168.0.10:7912 (Home Assistant eklentisi: homeassistant.local:7912). Boş = kapalı.",
               "spoolman_deduct": "Baskı kafası başına dilimleyici ağırlığı (iptal edilirse orantılı). Tüketimi zaten başka bir şey kaydediyorsa (örn. Moonraker'ın kendi Spoolman bağlantısı) kapatın, aksi halde iki kez sayılır.",
               "spoolman_low": "Bir makarada bundan az filament kaldığında kart uyarı gösterir.",
-              "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin."
+              "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin.",
+              "todo_shopping": "“Şunun altında uyar” değerinin altındaki makaralar bir HA yapılacaklar listesine eklenir. Kapalı = liste yok.",
+              "shopping_target": "İsteğe bağlı, ör. alışveriş listen. Boş = kendi listesi “Filament alışveriş listesi”. Öğeler yalnızca eklenir, asla silinmez."
             }
           },
           "timelapse": {
@@ -151,7 +155,11 @@
               "maint_nozzle": "Nozulları ve sileceği temizle",
               "maint_rails": "Doğrusal rayları yağla",
               "maint_belts": "Kayış gerginliğini kontrol et",
-              "maint_filter": "Hava filtresini değiştir"
+              "maint_filter": "Hava filtresini değiştir",
+              "todo_maintenance": "Bekleyen bakım yapılacaklar listesi olarak"
+            },
+            "data_description": {
+              "todo_maintenance": "Bir öğeyi işaretlemek = bakım yapıldı. Kapalı = liste yok."
             }
           }
         }
@@ -226,13 +234,17 @@
           "spoolman_url": "Spoolman URL'si",
           "spoolman_deduct": "Her baskıdan sonra kafa başına tüketimi düş",
           "spoolman_low": "Uyarı sınırı",
-          "spool_restore": "Kafa yeniden yüklendikten sonra son makara"
+          "spool_restore": "Kafa yeniden yüklendikten sonra son makara",
+          "todo_shopping": "Azalan makaralar için alışveriş listesi",
+          "shopping_target": "Bu yapılacaklar listesine ekle"
         },
         "data_description": {
           "spoolman_url": "7912 portlu adres, örn. 192.168.0.10:7912 (Home Assistant eklentisi: homeassistant.local:7912). Boş = kapalı.",
           "spoolman_deduct": "Baskı kafası başına dilimleyici ağırlığı (iptal edilirse orantılı). Tüketimi zaten başka bir şey kaydediyorsa (örn. Moonraker'ın kendi Spoolman bağlantısı) kapatın, aksi halde iki kez sayılır.",
           "spoolman_low": "Bir makarada bundan az filament kaldığında kart uyarı gösterir.",
-          "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin."
+          "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin.",
+          "todo_shopping": "“Şunun altında uyar” değerinin altındaki makaralar bir HA yapılacaklar listesine eklenir. Kapalı = liste yok.",
+          "shopping_target": "İsteğe bağlı, ör. alışveriş listen. Boş = kendi listesi “Filament alışveriş listesi”. Öğeler yalnızca eklenir, asla silinmez."
         }
       }
     },
@@ -354,13 +366,17 @@
               "spoolman_url": "Spoolman URL'si",
               "spoolman_deduct": "Her baskıdan sonra kafa başına tüketimi düş",
               "spoolman_low": "Uyarı sınırı",
-              "spool_restore": "Kafa yeniden yüklendikten sonra son makara"
+              "spool_restore": "Kafa yeniden yüklendikten sonra son makara",
+              "todo_shopping": "Azalan makaralar için alışveriş listesi",
+              "shopping_target": "Bu yapılacaklar listesine ekle"
             },
             "data_description": {
               "spoolman_url": "7912 portlu adres, örn. 192.168.0.10:7912 (Home Assistant eklentisi: homeassistant.local:7912). Boş = kapalı.",
               "spoolman_deduct": "Baskı kafası başına dilimleyici ağırlığı (iptal edilirse orantılı). Tüketimi zaten başka bir şey kaydediyorsa (örn. Moonraker'ın kendi Spoolman bağlantısı) kapatın, aksi halde iki kez sayılır.",
               "spoolman_low": "Bir makarada bundan az filament kaldığında kart uyarı gösterir.",
-              "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin."
+              "spool_restore": "Filament boşaltıldığında yazıcı makarayı unutur (RFID etiketi yok). Sor: kafa son makarayı önerir, tek dokunuşla geri yüklenir. Otomatik: sormadan yeniden ayarlanır (farklı bir makara takarsanız yanlış makara). Kapalı: yeniden seçin.",
+              "todo_shopping": "“Şunun altında uyar” değerinin altındaki makaralar bir HA yapılacaklar listesine eklenir. Kapalı = liste yok.",
+              "shopping_target": "İsteğe bağlı, ör. alışveriş listen. Boş = kendi listesi “Filament alışveriş listesi”. Öğeler yalnızca eklenir, asla silinmez."
             }
           },
           "timelapse": {
@@ -399,7 +415,11 @@
               "maint_coupling": "Kafa bağlantısının çelik pimleri ve bilyeleri (baskı saati)",
               "maint_m_coupling": "Kafa bağlantısının çelik pimleri ve bilyeleri (ay)",
               "maint_pogo": "Kafaların pogo kontaklarını temizle (baskı saati)",
-              "maint_m_pogo": "Kafaların pogo kontaklarını temizle (ay)"
+              "maint_m_pogo": "Kafaların pogo kontaklarını temizle (ay)",
+              "todo_maintenance": "Bekleyen bakım yapılacaklar listesi olarak"
+            },
+            "data_description": {
+              "todo_maintenance": "Bir öğeyi işaretlemek = bakım yapıldı. Kapalı = liste yok."
             }
           }
         }
@@ -698,6 +718,14 @@
           }
         }
       }
+    },
+    "todo": {
+      "maintenance_todo": {
+        "name": "Bakım"
+      },
+      "shopping_todo": {
+        "name": "Filament alışveriş listesi"
+      }
     }
   },
   "services": {
@@ -830,6 +858,14 @@
         "pause_layers": {
           "name": "Katmandan önce duraklat",
           "description": "Katman listesi (1 = ilk). Yazıcı bu katmanlardan önce duraklar, örn. mıknatıs yerleştirmek için. Bunun için dosyanın PAUSE içeren bir kopyası oluşturulur."
+        },
+        "start_at": {
+          "name": "Başlangıç saati",
+          "description": "İşi bu saatte başlat (Home Assistant saat dilimi). Boş = eskisi gibi elle başlat."
+        },
+        "confirm_bed": {
+          "name": "“Tabla boş mu?” diye sor",
+          "description": "Başlangıç saatinde önce bildirimde ve kartta tablanın boş olup olmadığını sor. Kapalı = yazıcı boşalır boşalmaz kendisi başlar."
         }
       }
     },
@@ -1230,6 +1266,34 @@
         "config_entry_id": {
           "name": "Yazıcı",
           "description": "Yalnızca birden fazla yazıcı varsa gerekir."
+        },
+        "extruder_temp": {
+          "name": "Nozul sıcaklığı",
+          "description": "Önerilen nozul sıcaklığı °C (yalnızca yeni filament)."
+        },
+        "bed_temp": {
+          "name": "Tabla sıcaklığı",
+          "description": "Önerilen tabla sıcaklığı °C (yalnızca yeni filament)."
+        },
+        "density": {
+          "name": "Yoğunluk",
+          "description": "g/cm³; boş = malzemeye göre (yalnızca yeni filament)."
+        },
+        "diameter": {
+          "name": "Çap",
+          "description": "mm; boş = 1,75 (yalnızca yeni filament)."
+        },
+        "article_number": {
+          "name": "Ürün numarası",
+          "description": "Üreticinin ürün numarası veya EAN (yalnızca yeni filament)."
+        },
+        "lot_nr": {
+          "name": "Parti no",
+          "description": "Bu makaranın partisi."
+        },
+        "comment": {
+          "name": "Yorum",
+          "description": "Bu makaraya not."
         }
       }
     },
@@ -1252,6 +1316,38 @@
         "config_entry_id": {
           "name": "Yazıcı",
           "description": "Yalnızca birden fazla yazıcıda gerekli."
+        }
+      }
+    },
+    "spool_archive": {
+      "name": "Makarayı arşivle",
+      "description": "Spoolman'da bir makarayı arşivler (listelerde gizlenir, tüketim kalır) veya geri getirir. Bir kafada takılı makara için değil.",
+      "fields": {
+        "spool_id": {
+          "name": "Makara kimliği",
+          "description": "Spoolman'daki makara kimliği."
+        },
+        "archived": {
+          "name": "Arşivle",
+          "description": "Açık = arşivle, kapalı = geri getir."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden çok yazıcıda gerekir."
+        }
+      }
+    },
+    "spool_delete": {
+      "name": "Makarayı sil",
+      "description": "Spoolman'da bir makarayı tüketimiyle birlikte kalıcı olarak siler. Yalnızca yöneticiler; bir kafada takılı makara için değil.",
+      "fields": {
+        "spool_id": {
+          "name": "Makara kimliği",
+          "description": "Spoolman'daki makara kimliği."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden çok yazıcıda gerekir."
         }
       }
     }

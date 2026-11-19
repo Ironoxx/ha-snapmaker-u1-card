@@ -119,13 +119,17 @@
               "spoolman_url": "Spoolman-Adresse",
               "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
               "spoolman_low": "Warnen unter",
-              "spool_restore": "Letzte Spule nach dem Neu-Einlegen"
+              "spool_restore": "Letzte Spule nach dem Neu-Einlegen",
+              "todo_shopping": "Einkaufsliste für knappe Spulen",
+              "shopping_target": "In diese Aufgabenliste eintragen"
             },
             "data_description": {
               "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
               "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
               "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist.",
-              "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen."
+              "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen.",
+              "todo_shopping": "Spulen unter „Warnen unter“ landen auf einer HA-Aufgabenliste. Aus = keine Liste.",
+              "shopping_target": "Optional, z. B. deine Einkaufsliste. Leer = eigene Liste „Filament-Einkaufsliste“. Einträge werden nur hinzugefügt, nie gelöscht."
             }
           },
           "timelapse": {
@@ -151,7 +155,11 @@
               "maint_nozzle": "Düsen und Abstreifer reinigen",
               "maint_rails": "Linearführungen schmieren",
               "maint_belts": "Riemenspannung prüfen",
-              "maint_filter": "Luftfilter wechseln"
+              "maint_filter": "Luftfilter wechseln",
+              "todo_maintenance": "Fällige Wartung als Aufgabenliste"
+            },
+            "data_description": {
+              "todo_maintenance": "Abhaken = Wartung erledigt. Aus = keine Liste."
             }
           }
         }
@@ -226,13 +234,17 @@
           "spoolman_url": "Spoolman-Adresse",
           "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
           "spoolman_low": "Warnen unter",
-          "spool_restore": "Letzte Spule nach dem Neu-Einlegen"
+          "spool_restore": "Letzte Spule nach dem Neu-Einlegen",
+          "todo_shopping": "Einkaufsliste für knappe Spulen",
+          "shopping_target": "In diese Aufgabenliste eintragen"
         },
         "data_description": {
           "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
           "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
           "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist.",
-          "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen."
+          "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen.",
+          "todo_shopping": "Spulen unter „Warnen unter“ landen auf einer HA-Aufgabenliste. Aus = keine Liste.",
+          "shopping_target": "Optional, z. B. deine Einkaufsliste. Leer = eigene Liste „Filament-Einkaufsliste“. Einträge werden nur hinzugefügt, nie gelöscht."
         }
       }
     },
@@ -354,13 +366,17 @@
               "spoolman_url": "Spoolman-Adresse",
               "spoolman_deduct": "Verbrauch nach jedem Druck je Kopf abbuchen",
               "spoolman_low": "Warnen unter",
-              "spool_restore": "Letzte Spule nach dem Neu-Einlegen"
+              "spool_restore": "Letzte Spule nach dem Neu-Einlegen",
+              "todo_shopping": "Einkaufsliste für knappe Spulen",
+              "shopping_target": "In diese Aufgabenliste eintragen"
             },
             "data_description": {
               "spoolman_url": "Adresse mit Port 7912, z. B. 192.168.0.10:7912 (Home-Assistant-Add-on: homeassistant.local:7912). Leer = aus.",
               "spoolman_deduct": "Gewicht laut Slicer je Kopf (bei Abbruch anteilig). Ausschalten, wenn schon etwas anderes abbucht (z. B. Moonrakers eigene Spoolman-Anbindung), sonst wird doppelt gezählt.",
               "spoolman_low": "Die Karte warnt, wenn auf einer Spule weniger übrig ist.",
-              "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen."
+              "spool_restore": "Beim Entladen vergisst der Drucker die Spule (ohne RFID-Tag). Vorschlagen: Der Kopf bietet die letzte Spule an, ein Tipp übernimmt sie. Automatisch: Sie wird ohne Nachfrage wieder gesetzt (falsche Spule, wenn du eine andere einlegst). Aus: neu wählen.",
+              "todo_shopping": "Spulen unter „Warnen unter“ landen auf einer HA-Aufgabenliste. Aus = keine Liste.",
+              "shopping_target": "Optional, z. B. deine Einkaufsliste. Leer = eigene Liste „Filament-Einkaufsliste“. Einträge werden nur hinzugefügt, nie gelöscht."
             }
           },
           "timelapse": {
@@ -399,7 +415,11 @@
               "maint_coupling": "Stahlstifte und Kugeln der Kopfaufnahme (Druckstunden)",
               "maint_m_coupling": "Stahlstifte und Kugeln der Kopfaufnahme (Monate)",
               "maint_pogo": "Pogo-Kontakte der Köpfe reinigen (Druckstunden)",
-              "maint_m_pogo": "Pogo-Kontakte der Köpfe reinigen (Monate)"
+              "maint_m_pogo": "Pogo-Kontakte der Köpfe reinigen (Monate)",
+              "todo_maintenance": "Fällige Wartung als Aufgabenliste"
+            },
+            "data_description": {
+              "todo_maintenance": "Abhaken = Wartung erledigt. Aus = keine Liste."
             }
           }
         }
@@ -698,6 +718,14 @@
           }
         }
       }
+    },
+    "todo": {
+      "maintenance_todo": {
+        "name": "Wartung"
+      },
+      "shopping_todo": {
+        "name": "Filament-Einkaufsliste"
+      }
     }
   },
   "services": {
@@ -830,6 +858,14 @@
         "pause_layers": {
           "name": "Pause vor Schicht",
           "description": "Liste von Schichten (1 = erste). Der Drucker hält vor diesen Schichten an, z. B. zum Einlegen von Magneten. Dafür wird eine Kopie der Datei mit PAUSE angelegt."
+        },
+        "start_at": {
+          "name": "Startzeit",
+          "description": "Auftrag zu dieser Zeit starten (Zeitzone von Home Assistant). Leer = wie bisher von Hand starten."
+        },
+        "confirm_bed": {
+          "name": "„Druckbett frei?“ fragen",
+          "description": "Zur Startzeit erst per Benachrichtigung und in der Karte fragen, ob das Bett frei ist. Aus = startet selbst, sobald der Drucker frei ist."
         }
       }
     },
@@ -1230,6 +1266,34 @@
         "config_entry_id": {
           "name": "Drucker",
           "description": "Nur bei mehreren Druckern nötig."
+        },
+        "extruder_temp": {
+          "name": "Düsentemperatur",
+          "description": "Empfohlene Düsentemperatur in °C (nur bei neuem Filament)."
+        },
+        "bed_temp": {
+          "name": "Betttemperatur",
+          "description": "Empfohlene Betttemperatur in °C (nur bei neuem Filament)."
+        },
+        "density": {
+          "name": "Dichte",
+          "description": "g/cm³; leer = nach Material (nur bei neuem Filament)."
+        },
+        "diameter": {
+          "name": "Durchmesser",
+          "description": "mm; leer = 1,75 (nur bei neuem Filament)."
+        },
+        "article_number": {
+          "name": "Artikelnummer",
+          "description": "Artikelnummer des Herstellers oder EAN (nur bei neuem Filament)."
+        },
+        "lot_nr": {
+          "name": "Charge",
+          "description": "Charge/Los dieser Spule."
+        },
+        "comment": {
+          "name": "Kommentar",
+          "description": "Notiz zu dieser Spule."
         }
       }
     },
@@ -1248,6 +1312,38 @@
         "position": {
           "name": "Feste Position",
           "description": "center oder front – statt Achse und Strecke."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "spool_archive": {
+      "name": "Spule archivieren",
+      "description": "Archiviert eine Spule in Spoolman (aus den Listen ausgeblendet, Verbrauch bleibt) oder holt sie zurück. Nicht für eine Spule, die in einem Kopf steckt.",
+      "fields": {
+        "spool_id": {
+          "name": "Spulen-ID",
+          "description": "ID der Spule in Spoolman."
+        },
+        "archived": {
+          "name": "Archivieren",
+          "description": "An = archivieren, aus = wiederherstellen."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "spool_delete": {
+      "name": "Spule löschen",
+      "description": "Löscht eine Spule in Spoolman endgültig, samt Verbrauch. Nur für Admins; nicht für eine Spule, die in einem Kopf steckt.",
+      "fields": {
+        "spool_id": {
+          "name": "Spulen-ID",
+          "description": "ID der Spule in Spoolman."
         },
         "config_entry_id": {
           "name": "Drucker",

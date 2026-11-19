@@ -44,6 +44,8 @@ Entity IDs follow the Home Assistant language at setup time; the English names a
 
 The attribute `head_states` of `sensor.…_filaments` says per head whether it is `parked` or `active` (on the carriage).
 
+2.4: **`todo.…_maintenance`** and **`todo.…_filament_shopping_list`** – only when switched on in the options (off by default). Maintenance: due items, ticking one off = `maintenance_done` (the firmware's tool changer counter is reset on the printer). Shopping list: spools below the warning threshold, ticking off/removing is remembered until the spool is no longer low. With *Add to this to-do list* the items go to that list instead and the own list does not exist.
+
 2.4: **`event.…_print_event`** fires for every event the notifications know – `complete`, `cancelled`, `error`, `paused`, `alert`, `first_layer`, `almost_done`, `spool_low`, `spool_runout`, `bed_cool`, `maintenance`, `chamber_ready` – with `name`, `file`, `message`, independent of whether notifications are set up. In an automation: trigger *Entity → Print event*, condition on the event type (or a state trigger with attribute `event_type`).
 
 The event `snapmaker_u1_card_print_finished` fires at every print end with `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost`, for your own automations.
@@ -78,6 +80,18 @@ action: snapmaker_u1_card.queue_clear
 ```
 
 Moonraker's own queue (`[job_queue]`) is not loaded on the U1 and knows nothing about filament mapping, so the integration keeps its own list. It survives restarts. After a print a "Next job waiting" notification is sent (to the configured services).
+
+2.4: **Start time.** `queue_add` with `start_at` (date and time; without a zone in Home Assistant's time zone) plans the job; in the print dialog: *Start time (queue)* → *Schedule*. At that time:
+- `confirm_bed: true` (default): a notification (group 1) asks *Bed clear – start*; the button starts the job, so does *Start* on the job in the card. Without a confirmation the job waits.
+- `confirm_bed: false`: the job starts on its own as soon as the printer is free (switched on first with *auto on*); still printing = it waits for the end.
+- A time that passed while Home Assistant was not running is never made up for: the job is marked *missed* and announced. A refused start is kept on the job (*failed: …*) and announced, not retried.
+
+```yaml
+action: snapmaker_u1_card.queue_add
+data: {filename: Holder.gcode, start_at: "2026-11-20 06:30:00", confirm_bed: true}
+```
+
+The job's attribute `sched` in the queue sensor: empty (waiting for its time), `confirm`, `due`, `starting`, `missed`, `error` (with `sched_error`).
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 

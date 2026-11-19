@@ -119,13 +119,17 @@
               "spoolman_url": "Spoolman-URL",
               "spoolman_deduct": "Verbruik per kop afschrijven na elke print",
               "spoolman_low": "Waarschuwen onder",
-              "spool_restore": "Laatste spoel na het opnieuw laden van een kop"
+              "spool_restore": "Laatste spoel na het opnieuw laden van een kop",
+              "todo_shopping": "Boodschappenlijst voor bijna lege spoelen",
+              "shopping_target": "Aan deze takenlijst toevoegen"
             },
             "data_description": {
               "spoolman_url": "Adres met poort 7912, bijv. 192.168.0.10:7912 (Home Assistant-add-on: homeassistant.local:7912). Leeg = uit.",
               "spoolman_deduct": "Slicergewicht per printkop (naar rato bij annuleren). Uitzetten als iets anders het verbruik al boekt (bijv. de eigen Spoolman-koppeling van Moonraker), anders wordt het dubbel geteld.",
               "spoolman_low": "De kaart waarschuwt als een spoel minder filament over heeft.",
-              "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen."
+              "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen.",
+              "todo_shopping": "Spoelen onder „Waarschuwen onder” komen op een HA-takenlijst. Uit = geen lijst.",
+              "shopping_target": "Optioneel, bijv. je boodschappenlijst. Leeg = eigen lijst „Filament-boodschappenlijst”. Items worden alleen toegevoegd, nooit verwijderd."
             }
           },
           "timelapse": {
@@ -151,7 +155,11 @@
               "maint_nozzle": "Nozzles en wisser reinigen",
               "maint_rails": "Lineaire geleiders smeren",
               "maint_belts": "Riemspanning controleren",
-              "maint_filter": "Luchtfilter vervangen"
+              "maint_filter": "Luchtfilter vervangen",
+              "todo_maintenance": "Openstaand onderhoud als takenlijst"
+            },
+            "data_description": {
+              "todo_maintenance": "Afvinken = onderhoud gedaan. Uit = geen lijst."
             }
           }
         }
@@ -226,13 +234,17 @@
           "spoolman_url": "Spoolman-URL",
           "spoolman_deduct": "Verbruik per kop afschrijven na elke print",
           "spoolman_low": "Waarschuwen onder",
-          "spool_restore": "Laatste spoel na het opnieuw laden van een kop"
+          "spool_restore": "Laatste spoel na het opnieuw laden van een kop",
+          "todo_shopping": "Boodschappenlijst voor bijna lege spoelen",
+          "shopping_target": "Aan deze takenlijst toevoegen"
         },
         "data_description": {
           "spoolman_url": "Adres met poort 7912, bijv. 192.168.0.10:7912 (Home Assistant-add-on: homeassistant.local:7912). Leeg = uit.",
           "spoolman_deduct": "Slicergewicht per printkop (naar rato bij annuleren). Uitzetten als iets anders het verbruik al boekt (bijv. de eigen Spoolman-koppeling van Moonraker), anders wordt het dubbel geteld.",
           "spoolman_low": "De kaart waarschuwt als een spoel minder filament over heeft.",
-          "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen."
+          "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen.",
+          "todo_shopping": "Spoelen onder „Waarschuwen onder” komen op een HA-takenlijst. Uit = geen lijst.",
+          "shopping_target": "Optioneel, bijv. je boodschappenlijst. Leeg = eigen lijst „Filament-boodschappenlijst”. Items worden alleen toegevoegd, nooit verwijderd."
         }
       }
     },
@@ -354,13 +366,17 @@
               "spoolman_url": "Spoolman-URL",
               "spoolman_deduct": "Verbruik per kop afschrijven na elke print",
               "spoolman_low": "Waarschuwen onder",
-              "spool_restore": "Laatste spoel na het opnieuw laden van een kop"
+              "spool_restore": "Laatste spoel na het opnieuw laden van een kop",
+              "todo_shopping": "Boodschappenlijst voor bijna lege spoelen",
+              "shopping_target": "Aan deze takenlijst toevoegen"
             },
             "data_description": {
               "spoolman_url": "Adres met poort 7912, bijv. 192.168.0.10:7912 (Home Assistant-add-on: homeassistant.local:7912). Leeg = uit.",
               "spoolman_deduct": "Slicergewicht per printkop (naar rato bij annuleren). Uitzetten als iets anders het verbruik al boekt (bijv. de eigen Spoolman-koppeling van Moonraker), anders wordt het dubbel geteld.",
               "spoolman_low": "De kaart waarschuwt als een spoel minder filament over heeft.",
-              "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen."
+              "spool_restore": "De printer vergeet de spoel als het filament wordt ontladen (geen RFID-tag). Vragen: de kop biedt de laatste spoel aan, één tik herstelt hem. Automatisch: hij wordt zonder vragen opnieuw ingesteld (verkeerde spoel als je een andere laadt). Uit: opnieuw kiezen.",
+              "todo_shopping": "Spoelen onder „Waarschuwen onder” komen op een HA-takenlijst. Uit = geen lijst.",
+              "shopping_target": "Optioneel, bijv. je boodschappenlijst. Leeg = eigen lijst „Filament-boodschappenlijst”. Items worden alleen toegevoegd, nooit verwijderd."
             }
           },
           "timelapse": {
@@ -399,7 +415,11 @@
               "maint_coupling": "Stalen pennen en kogels van de kopkoppeling (printuren)",
               "maint_m_coupling": "Stalen pennen en kogels van de kopkoppeling (maanden)",
               "maint_pogo": "Pogo-contacten van de koppen reinigen (printuren)",
-              "maint_m_pogo": "Pogo-contacten van de koppen reinigen (maanden)"
+              "maint_m_pogo": "Pogo-contacten van de koppen reinigen (maanden)",
+              "todo_maintenance": "Openstaand onderhoud als takenlijst"
+            },
+            "data_description": {
+              "todo_maintenance": "Afvinken = onderhoud gedaan. Uit = geen lijst."
             }
           }
         }
@@ -698,6 +718,14 @@
           }
         }
       }
+    },
+    "todo": {
+      "maintenance_todo": {
+        "name": "Onderhoud"
+      },
+      "shopping_todo": {
+        "name": "Filament-boodschappenlijst"
+      }
     }
   },
   "services": {
@@ -830,6 +858,14 @@
         "pause_layers": {
           "name": "Pauze vóór laag",
           "description": "Lijst met lagen (1 = eerste). De printer pauzeert vóór deze lagen, bijv. om magneten te plaatsen. Hiervoor wordt een kopie van het bestand met PAUSE gemaakt."
+        },
+        "start_at": {
+          "name": "Starttijd",
+          "description": "Taak op dit tijdstip starten (tijdzone van Home Assistant). Leeg = zoals voorheen met de hand starten."
+        },
+        "confirm_bed": {
+          "name": "Vragen „bed vrij?”",
+          "description": "Op de starttijd eerst via de melding en de kaart vragen of het bed vrij is. Uit = start zelf zodra de printer vrij is."
         }
       }
     },
@@ -1230,6 +1266,34 @@
         "config_entry_id": {
           "name": "Printer",
           "description": "Alleen nodig bij meerdere printers."
+        },
+        "extruder_temp": {
+          "name": "Nozzletemperatuur",
+          "description": "Aanbevolen nozzletemperatuur in °C (alleen nieuw filament)."
+        },
+        "bed_temp": {
+          "name": "Bedtemperatuur",
+          "description": "Aanbevolen bedtemperatuur in °C (alleen nieuw filament)."
+        },
+        "density": {
+          "name": "Dichtheid",
+          "description": "g/cm³; leeg = volgens materiaal (alleen nieuw filament)."
+        },
+        "diameter": {
+          "name": "Diameter",
+          "description": "mm; leeg = 1,75 (alleen nieuw filament)."
+        },
+        "article_number": {
+          "name": "Artikelnummer",
+          "description": "Artikelnummer van de fabrikant of EAN (alleen nieuw filament)."
+        },
+        "lot_nr": {
+          "name": "Batch",
+          "description": "Batch van deze spoel."
+        },
+        "comment": {
+          "name": "Opmerking",
+          "description": "Notitie bij deze spoel."
         }
       }
     },
@@ -1248,6 +1312,38 @@
         "position": {
           "name": "Vaste positie",
           "description": "center of front – in plaats van as en afstand."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "spool_archive": {
+      "name": "Spoel archiveren",
+      "description": "Archiveert een spoel in Spoolman (verborgen in lijsten, verbruik blijft) of zet hem terug. Niet voor een spoel die in een kop zit.",
+      "fields": {
+        "spool_id": {
+          "name": "Spoel-ID",
+          "description": "ID van de spoel in Spoolman."
+        },
+        "archived": {
+          "name": "Archiveren",
+          "description": "Aan = archiveren, uit = terugzetten."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "spool_delete": {
+      "name": "Spoel verwijderen",
+      "description": "Verwijdert een spoel definitief in Spoolman, inclusief verbruik. Alleen beheerders; niet voor een spoel die in een kop zit.",
+      "fields": {
+        "spool_id": {
+          "name": "Spoel-ID",
+          "description": "ID van de spoel in Spoolman."
         },
         "config_entry_id": {
           "name": "Printer",

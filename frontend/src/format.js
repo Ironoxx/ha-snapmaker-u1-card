@@ -125,3 +125,11 @@ export async function copyText(text) {
   ta.remove();
   return ok;
 }
+
+/** 2.4: start time of a scheduled job (epoch seconds), short: time today, else weekday/date and time. */
+export const fmtStart = (ts) => {
+  const d = new Date(ts * 1000);
+  const today = new Date().toDateString() === d.toDateString();
+  return today ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : d.toLocaleString([], { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+};

@@ -15,8 +15,8 @@ Bei der Einrichtung wählst du nach der Adresse (2.4): **Schritt für Schritt** 
 | Benachrichtigungen – Gruppe 2 | 2.3: optionale zweite Gruppe mit eigenen `notify`-Diensten und Anlässen (Standard: Fehler, pausiert, Meldung im Druck, Spule wird leer), z. B. an eine andere Person oder mit anderem Ton. Jeder Dienst bekommt eine Meldung nur einmal. Unter Android nutzt Gruppe 2 den eigenen Benachrichtigungskanal *Snapmaker U1 2*: den Ton dafür in den Benachrichtigungseinstellungen des Handys wählen. Leer = aus |
 | Filamentpreise | € je kg für PLA, PETG, ABS, ASA, TPU, PA und sonstige. `PLA-CF` nutzt den PLA-Preis. Mit Spoolman haben dessen Preise Vorrang: am Druckende der Preis der Spule im jeweiligen Kopf, sonst der Durchschnittspreis je kg deiner Spulen dieses Materials (Spulenpreis, sonst Filamentpreis, je Nettogewicht). Diese Felder gelten nur für Materialien ohne Preis in Spoolman |
 | Zeitraffer sichern | Ein/aus, wie viele neueste auf dem Drucker bleiben (0 = nie löschen), wie viele im Medienordner bleiben (50, 0 = alle), Sicherungen nach x Tagen löschen (0 = nie) |
-| Wartung | Intervall je Punkt in Druckstunden (0 = ausblenden) |
-| Spoolman | Adresse (leer = aus), Verbrauch je Kopf abbuchen (an/aus), Warnschwelle in g. 2.3: Mit dem Spoolman von Moonraker, aber ohne SpoolLink bucht Moonraker nur seine aktive Spule ab; die übrigen Spulen bucht die Integration nach dem Druck |
+| Wartung | Intervall je Punkt in Druckstunden (0 = ausblenden). 2.4: **Fällige Wartung als Aufgabenliste** (aus): jeder fällige Punkt auf einer HA-Aufgabenliste *Wartung*, Abhaken markiert ihn als erledigt |
+| Spoolman | Adresse (leer = aus), Verbrauch je Kopf abbuchen (an/aus), Warnschwelle in g. 2.3: Mit dem Spoolman von Moonraker, aber ohne SpoolLink bucht Moonraker nur seine aktive Spule ab; die übrigen Spulen bucht die Integration nach dem Druck. 2.4: **Einkaufsliste für knappe Spulen** (aus): Spulen unter der Warnschwelle auf einer eigenen Aufgabenliste *Filament-Einkaufsliste* – oder mit **In diese Aufgabenliste eintragen** in eine vorhandene Liste (z. B. `todo.shopping_list`; nur hinzufügen, nie löschen, keine Doppelten) |
 | Dateien | Anzahl neuester Dateien, Drucker-Konfiguration sichern (an) |
 
 ## Einstellungen in der Karte
@@ -122,6 +122,8 @@ Eine Ressource legst du nicht selbst an; die Integration lädt die Karte auf zwe
 
 1. über die Startseite von Home Assistant (`add_extra_js_url`),
 2. als Dashboard-Ressource `/snapmaker_u1_card/card/snapmaker-u1-card.js?v=…`, die die Integration anlegt, aktuell hält und mit der Integration wieder entfernt. Unter *Dashboards → Ressourcen* bitte stehen lassen.
+
+2.4: `v=` ist die Version plus ein kurzer Prüfwert der Datei. Die Karte wird mit langen Cache-Zeiten und – für Browser, die es können – als gzip-Kopie ausgeliefert (etwa 260 KB statt etwa 900 KB), Handy und Tablet laden sie also aus ihrem Cache; eine neue Datei bekommt eine neue Adresse und kommt sofort an.
 
 Beides kommt aus der Integration selbst; nach `/config/www` wird nichts kopiert. Bis 2.1.1 lag eine Kopie der Karte unter `/config/www/snapmaker_u1_card/`; seit 2.1.2 verlegt die Integration ihre Ressource auf den neuen Pfad und löscht nur diese alte Kopie ihrer eigenen Datei.
 

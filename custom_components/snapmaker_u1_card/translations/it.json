@@ -119,13 +119,17 @@
               "spoolman_url": "URL di Spoolman",
               "spoolman_deduct": "Scala il consumo per testina dopo ogni stampa",
               "spoolman_low": "Avvisa sotto",
-              "spool_restore": "Ultima bobina dopo aver ricaricato una testina"
+              "spool_restore": "Ultima bobina dopo aver ricaricato una testina",
+              "todo_shopping": "Lista della spesa per bobine in esaurimento",
+              "shopping_target": "Aggiungi a questa lista di attività"
             },
             "data_description": {
               "spoolman_url": "Indirizzo con porta 7912, es. 192.168.0.10:7912 (componente aggiuntivo di Home Assistant: homeassistant.local:7912). Vuoto = disattivato.",
               "spoolman_deduct": "Peso dello slicer per testina (in proporzione se annullata). Disattiva se qualcos’altro registra già il consumo (es. la connessione Spoolman propria di Moonraker), altrimenti viene contato due volte.",
               "spoolman_low": "La scheda avvisa quando a una bobina resta meno filamento.",
-              "spool_restore": "La stampante dimentica la bobina quando il filamento viene scaricato (senza tag RFID). Chiedi: la testina propone l’ultima bobina, un tocco la ripristina. Automatico: viene reimpostata senza chiedere (bobina sbagliata se ne carichi un’altra). Disattivato: scegli di nuovo."
+              "spool_restore": "La stampante dimentica la bobina quando il filamento viene scaricato (senza tag RFID). Chiedi: la testina propone l’ultima bobina, un tocco la ripristina. Automatico: viene reimpostata senza chiedere (bobina sbagliata se ne carichi un’altra). Disattivato: scegli di nuovo.",
+              "todo_shopping": "Le bobine sotto «Avvisa sotto» finiscono in una lista di attività di HA. Spento = nessuna lista.",
+              "shopping_target": "Facoltativo, ad es. la tua lista della spesa. Vuoto = lista propria «Lista della spesa filamento». Le voci vengono solo aggiunte, mai cancellate."
             }
           },
           "timelapse": {
@@ -151,7 +155,11 @@
               "maint_nozzle": "Pulire ugelli e spazzola",
               "maint_rails": "Lubrificare le guide lineari",
               "maint_belts": "Controllare la tensione delle cinghie",
-              "maint_filter": "Sostituire il filtro dell’aria"
+              "maint_filter": "Sostituire il filtro dell’aria",
+              "todo_maintenance": "Manutenzione dovuta come lista di attività"
+            },
+            "data_description": {
+              "todo_maintenance": "Spuntare una voce = manutenzione fatta. Spento = nessuna lista."
             }
           }
         }
@@ -226,13 +234,17 @@
           "spoolman_url": "URL di Spoolman",
           "spoolman_deduct": "Scala il consumo per testina dopo ogni stampa",
           "spoolman_low": "Avvisa sotto",
-          "spool_restore": "Ultima bobina dopo aver ricaricato una testina"
+          "spool_restore": "Ultima bobina dopo aver ricaricato una testina",
+          "todo_shopping": "Lista della spesa per bobine in esaurimento",
+          "shopping_target": "Aggiungi a questa lista di attività"
         },
         "data_description": {
           "spoolman_url": "Indirizzo con porta 7912, es. 192.168.0.10:7912 (componente aggiuntivo di Home Assistant: homeassistant.local:7912). Vuoto = disattivato.",
           "spoolman_deduct": "Peso dello slicer per testina (in proporzione se annullata). Disattiva se qualcos’altro registra già il consumo (es. la connessione Spoolman propria di Moonraker), altrimenti viene contato due volte.",
           "spoolman_low": "La scheda avvisa quando a una bobina resta meno filamento.",
-          "spool_restore": "La stampante dimentica la bobina quando il filamento viene scaricato (senza tag RFID). Chiedi: la testina propone l’ultima bobina, un tocco la ripristina. Automatico: viene reimpostata senza chiedere (bobina sbagliata se ne carichi un’altra). Disattivato: scegli di nuovo."
+          "spool_restore": "La stampante dimentica la bobina quando il filamento viene scaricato (senza tag RFID). Chiedi: la testina propone l’ultima bobina, un tocco la ripristina. Automatico: viene reimpostata senza chiedere (bobina sbagliata se ne carichi un’altra). Disattivato: scegli di nuovo.",
+          "todo_shopping": "Le bobine sotto «Avvisa sotto» finiscono in una lista di attività di HA. Spento = nessuna lista.",
+          "shopping_target": "Facoltativo, ad es. la tua lista della spesa. Vuoto = lista propria «Lista della spesa filamento». Le voci vengono solo aggiunte, mai cancellate."
         }
       }
     },
@@ -354,13 +366,17 @@
               "spoolman_url": "URL di Spoolman",
               "spoolman_deduct": "Scala il consumo per testina dopo ogni stampa",
               "spoolman_low": "Avvisa sotto",
-              "spool_restore": "Ultima bobina dopo aver ricaricato una testina"
+              "spool_restore": "Ultima bobina dopo aver ricaricato una testina",
+              "todo_shopping": "Lista della spesa per bobine in esaurimento",
+              "shopping_target": "Aggiungi a questa lista di attività"
             },
             "data_description": {
               "spoolman_url": "Indirizzo con porta 7912, es. 192.168.0.10:7912 (componente aggiuntivo di Home Assistant: homeassistant.local:7912). Vuoto = disattivato.",
               "spoolman_deduct": "Peso dello slicer per testina (in proporzione se annullata). Disattiva se qualcos’altro registra già il consumo (es. la connessione Spoolman propria di Moonraker), altrimenti viene contato due volte.",
               "spoolman_low": "La scheda avvisa quando a una bobina resta meno filamento.",
-              "spool_restore": "La stampante dimentica la bobina quando il filamento viene scaricato (senza tag RFID). Chiedi: la testina propone l’ultima bobina, un tocco la ripristina. Automatico: viene reimpostata senza chiedere (bobina sbagliata se ne carichi un’altra). Disattivato: scegli di nuovo."
+              "spool_restore": "La stampante dimentica la bobina quando il filamento viene scaricato (senza tag RFID). Chiedi: la testina propone l’ultima bobina, un tocco la ripristina. Automatico: viene reimpostata senza chiedere (bobina sbagliata se ne carichi un’altra). Disattivato: scegli di nuovo.",
+              "todo_shopping": "Le bobine sotto «Avvisa sotto» finiscono in una lista di attività di HA. Spento = nessuna lista.",
+              "shopping_target": "Facoltativo, ad es. la tua lista della spesa. Vuoto = lista propria «Lista della spesa filamento». Le voci vengono solo aggiunte, mai cancellate."
             }
           },
           "timelapse": {
@@ -399,7 +415,11 @@
               "maint_coupling": "Perni e sfere dell’aggancio testine (ore di stampa)",
               "maint_m_coupling": "Perni e sfere dell’aggancio testine (mesi)",
               "maint_pogo": "Pulire i contatti pogo delle testine (ore di stampa)",
-              "maint_m_pogo": "Pulire i contatti pogo delle testine (mesi)"
+              "maint_m_pogo": "Pulire i contatti pogo delle testine (mesi)",
+              "todo_maintenance": "Manutenzione dovuta come lista di attività"
+            },
+            "data_description": {
+              "todo_maintenance": "Spuntare una voce = manutenzione fatta. Spento = nessuna lista."
             }
           }
         }
@@ -698,6 +718,14 @@
           }
         }
       }
+    },
+    "todo": {
+      "maintenance_todo": {
+        "name": "Manutenzione"
+      },
+      "shopping_todo": {
+        "name": "Lista della spesa filamento"
+      }
     }
   },
   "services": {
@@ -830,6 +858,14 @@
         "pause_layers": {
           "name": "Pausa prima dello strato",
           "description": "Elenco di strati (1 = primo). La stampante si ferma prima di questi strati, es. per inserire magneti. A questo scopo viene creata una copia del file con PAUSE."
+        },
+        "start_at": {
+          "name": "Ora di avvio",
+          "description": "Avvia il lavoro a quest'ora (fuso orario di Home Assistant). Vuoto = avvio manuale come prima."
+        },
+        "confirm_bed": {
+          "name": "Chiedi «piatto libero?»",
+          "description": "All'ora di avvio chiede prima nella notifica e nella scheda se il piatto è libero. Spento = parte da solo appena la stampante è libera."
         }
       }
     },
@@ -1230,6 +1266,34 @@
         "config_entry_id": {
           "name": "Stampante",
           "description": "Serve solo con più stampanti."
+        },
+        "extruder_temp": {
+          "name": "Temperatura ugello",
+          "description": "Temperatura ugello consigliata in °C (solo filamento nuovo)."
+        },
+        "bed_temp": {
+          "name": "Temperatura piatto",
+          "description": "Temperatura piatto consigliata in °C (solo filamento nuovo)."
+        },
+        "density": {
+          "name": "Densità",
+          "description": "g/cm³; vuoto = in base al materiale (solo filamento nuovo)."
+        },
+        "diameter": {
+          "name": "Diametro",
+          "description": "mm; vuoto = 1,75 (solo filamento nuovo)."
+        },
+        "article_number": {
+          "name": "Codice articolo",
+          "description": "Codice articolo del produttore o EAN (solo filamento nuovo)."
+        },
+        "lot_nr": {
+          "name": "Lotto",
+          "description": "Lotto di questa bobina."
+        },
+        "comment": {
+          "name": "Commento",
+          "description": "Nota su questa bobina."
         }
       }
     },
@@ -1248,6 +1312,38 @@
         "position": {
           "name": "Posizione fissa",
           "description": "center o front – invece di asse e distanza."
+        },
+        "config_entry_id": {
+          "name": "Stampante",
+          "description": "Necessario solo con più stampanti."
+        }
+      }
+    },
+    "spool_archive": {
+      "name": "Archivia bobina",
+      "description": "Archivia una bobina in Spoolman (nascosta dalle liste, consumo conservato) o la ripristina. Non per una bobina montata in una testina.",
+      "fields": {
+        "spool_id": {
+          "name": "ID bobina",
+          "description": "ID della bobina in Spoolman."
+        },
+        "archived": {
+          "name": "Archivia",
+          "description": "Acceso = archivia, spento = ripristina."
+        },
+        "config_entry_id": {
+          "name": "Stampante",
+          "description": "Necessario solo con più stampanti."
+        }
+      }
+    },
+    "spool_delete": {
+      "name": "Elimina bobina",
+      "description": "Elimina definitivamente una bobina in Spoolman, insieme al consumo. Solo amministratori; non per una bobina montata in una testina.",
+      "fields": {
+        "spool_id": {
+          "name": "ID bobina",
+          "description": "ID della bobina in Spoolman."
         },
         "config_entry_id": {
           "name": "Stampante",

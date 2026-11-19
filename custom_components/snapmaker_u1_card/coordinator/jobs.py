@@ -1,14 +1,32 @@
-"""Starting prints, "pause at layer" copies and the job queue."""
+"""Starting prints, "pause at layer" copies and the job queue.
+
+2.4: a queued job can carry a start time (``start_at``, epoch seconds). One
+timer per job (``async_track_point_in_utc_time``, no polling) makes it due:
+
+* ``confirm_bed`` (default on): the job waits for "bed is clear" – card button
+  or the action button in the notification – before anything moves.
+* without it the job starts as soon as the printer is free (switched on first
+  with the option auto_on); still printing = it waits for the next update.
+
+Job field ``sched``: None (waiting for its time) | "confirm" | "due" | "starting" | "missed"
+(the time passed while Home Assistant was not running: never started blindly,
+only announced) | "error" (start refused, ``sched_error``).
+"""
 
 from __future__ import annotations
 
 import logging
 import posixpath
 import tempfile
+import time
+from functools import partial
 from pathlib import Path
 from typing import Any
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 from ..api import (
     MoonrakerError,
@@ -28,7 +46,8 @@ from ..parsing import (
 
 _LOGGER = logging.getLogger(__name__)
 
-_LOGGER = logging.getLogger(__name__)
+# A start time up to this long ago (HA restarted just then) still counts as on time.
+SCHEDULE_GRACE_S = 300
 
 
 class PrintJobMixin:
@@ -146,7 +165,10 @@ class PrintJobMixin:
             _LOGGER.debug("Pause copy %s not deleted: %s", path, err)
 
     def queue_add(self, job: dict[str, Any]) -> dict[str, Any]:
-        """Add a job to the queue and return it."""
+        """Add a job to the queue and return it (``start_at``: epoch seconds or None)."""
+        if job.get("start_at") is not None and job["start_at"] < time.time() - 60:
+            raise HomeAssistantError(tr(self.hass, "Die Startzeit liegt in der Vergangenheit.",
+                                        "The start time is in the past."))
         info = next((f for f in self._files if f.get("path") == job["file"]), None)
         entry = self.queue.add({**job, "name": (info or {}).get("name") or posixpath.basename(job["file"]),
                                 "thumb": (info or {}).get("thumb")})
@@ -187,6 +209,103 @@ class PrintJobMixin:
 
     def _queue_changed(self) -> None:
         self._save()
+        self.schedule_jobs()
         if self.data is not None:
             self.data.queue = list(self.queue.jobs)
             self.async_update_listeners()
+
+    # ── 2.4: start times ───────────────────────────────────────────────────
+    def schedule_jobs(self, startup: bool = False) -> None:
+        """Arm a timer for every job with a start time that has none yet; drop stale timers.
+
+        ``startup``: a start time that passed while Home Assistant was off is not
+        made up for – the job is marked "missed" and announced.
+        """
+        timers: dict[str, Any] = self.__dict__.setdefault("_job_timers", {})
+        if startup:
+            # Home Assistant stopped in the middle of a scheduled start: unknown whether
+            # the printer got it, so ask instead of starting a second time
+            for job in self.queue.jobs:
+                if job.get("sched") == "starting":
+                    job["sched"] = "missed"
+                    self._save()
+        waiting = {j["id"]: j for j in self.queue.jobs if j.get("start_at") and not j.get("sched")}
+        for job_id in [k for k in timers if k not in waiting]:
+            timers.pop(job_id)()
+        now = time.time()
+        for job_id, job in waiting.items():
+            if job_id in timers:
+                continue
+            if startup and job["start_at"] < now - SCHEDULE_GRACE_S:
+                job["sched"] = "missed"
+                self._notify("queue", {"name": job.get("name"), "text": self._sched_text("missed", job)})
+                self._save()
+                continue
+            when = dt_util.utc_from_timestamp(max(job["start_at"], now + 1))
+            timers[job_id] = async_track_point_in_utc_time(self.hass, partial(self._job_due, job_id), when)
+
+    def cancel_job_timers(self) -> None:
+        """On unload: no timer may fire into a coordinator that is gone."""
+        for unsub in self.__dict__.pop("_job_timers", {}).values():
+            unsub()
+
+    @callback
+    def _job_due(self, job_id: str, _now: Any = None) -> None:
+        """The start time of a job is reached."""
+        self.__dict__.get("_job_timers", {}).pop(job_id, None)
+        job = self.queue.get(job_id)
+        if job is None:
+            return
+        if job.get("confirm_bed", True):
+            job["sched"] = "confirm"
+            self._notify("queue", {"name": job.get("name"), "text": self._sched_text("confirm", job),
+                                   "job_id": job_id})
+        else:
+            job["sched"] = "due"
+        self._queue_changed()
+        self.try_due_jobs()
+
+    @callback
+    def try_due_jobs(self) -> None:
+        """Start the first due job (no bed question) once the printer is free.
+
+        Coordinator listener: runs after every update with the new data in place
+        (inside the update ``self.data`` would still be the old snapshot).
+        """
+        job = next((j for j in self.queue.jobs if j.get("sched") == "due"), None)
+        if job is None or self._starting or self.shutting_down:
+            return
+        data = self.data
+        if data is not None and data.online and data.print_state in ACTIVE_PRINT_STATES:
+            return  # still printing: wait for the next update
+        if (data is None or not data.online) and not (self.power_is_off() and self.options.get("auto_on")):
+            return  # off without auto-on (or not reachable): wait until it is back
+        job["sched"] = "starting"  # not picked up again by the next listener call
+        self.hass.async_create_task(self._start_due(job["id"]), "snapmaker_u1_card scheduled print")
+
+    async def _start_due(self, job_id: str) -> None:
+        """Start a scheduled job; a refusal is kept on the job and announced, not retried."""
+        job = self.queue.get(job_id)
+        if job is None or job.get("sched") not in ("due", "confirm", "starting"):
+            return
+        try:
+            await self.queue_start(job_id)
+            _LOGGER.info("Scheduled job %s started", job.get("file"))
+        except HomeAssistantError as err:
+            job["sched"], job["sched_error"] = "error", str(err)
+            self._notify("queue", {"name": job.get("name"), "text": self._sched_text("error", job)})
+            self._queue_changed()
+
+    def _sched_text(self, kind: str, job: dict[str, Any]) -> str:
+        """Notification text for a scheduled job."""
+        de = self.hass.config.language.lower().startswith("de")
+        at = dt_util.as_local(dt_util.utc_from_timestamp(job["start_at"])).strftime("%H:%M") if job.get("start_at") else ""
+        texts = {
+            "confirm": ("Geplanter Start {at}: Ist das Druckbett frei? Mit „Starten“ geht es los.",
+                        "Scheduled start {at}: is the bed clear? Tap “Start” to begin."),
+            "missed": ("Geplanter Start {at} verpasst (Home Assistant lief nicht). Bitte in der Karte starten.",
+                       "Scheduled start {at} missed (Home Assistant was not running). Please start it from the card."),
+            "error": ("Geplanter Start {at} nicht möglich: {err}", "Scheduled start {at} failed: {err}"),
+        }
+        de_text, en_text = texts[kind]
+        return (de_text if de else en_text).format(at=at, err=job.get("sched_error") or "")

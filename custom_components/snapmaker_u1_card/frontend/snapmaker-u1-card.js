@@ -2,7 +2,7 @@
 (() => {
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
-  var CARD_VERSION = "2.4.0b1";
+  var CARD_VERSION = "2.4.0b2";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -847,7 +847,58 @@
     "nur ansehen": "solo ver",
     "paxx12-Einstellungen": "Ajustes de paxx12",
     "paxx12-Einstellungen nicht lesbar.": "Ajustes de paxx12 no legibles.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "Cambiar en la página de paxx12 /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "Cambiar en la página de paxx12 /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Mantenimiento pendiente: {items}. Puedes imprimir igualmente.",
+    "Startzeit (Warteschlange)": "Hora de inicio (cola)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "A la hora de inicio, preguntar si la cama está libre",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "A la hora de inicio llega una notificación con «Cama libre – iniciar»; sin confirmación, el trabajo espera.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Se inicia sola a la hora de inicio en cuanto la impresora esté libre. ¡La cama debe estar vacía!",
+    "Planen": "Programar",
+    "Geplant für {at}: {name}": "Programado para {at}: {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}: ¿cama libre? Inícialo",
+    "{at} verpasst": "{at} perdido",
+    "{at} fehlgeschlagen: {err}": "{at} falló: {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}: se inicia en cuanto la impresora esté libre",
+    "Start {at}": "Inicio {at}",
+    "ohne Rückfrage": "sin preguntar",
+    "archiviert": "archivada",
+    "Leere Spule archivieren": "Archivar bobina vacía",
+    "leer · archivieren": "vacía · archivar",
+    "Etiketten für die angezeigten Spulen drucken": "Imprimir etiquetas de las bobinas mostradas",
+    "Etiketten": "Etiquetas",
+    "Archiviert": "Archivadas",
+    "Keine archivierten Spulen.": "No hay bobinas archivadas.",
+    "Lade archivierte Spulen …": "Cargando bobinas archivadas …",
+    "Archivierte Spulen konnten nicht geladen werden.": "No se pudieron cargar las bobinas archivadas.",
+    "Rest": "Restante",
+    "Düse": "Boquilla",
+    "Charge": "Lote",
+    "Zuletzt benutzt": "Último uso",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "Está en {head}: para archivarla o borrarla, primero quítala del cabezal.",
+    "Etikett": "Etiqueta",
+    "Wiederherstellen": "Restaurar",
+    "Archivieren": "Archivar",
+    "Löschen": "Borrar",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "¿Borrar la bobina #{id} definitivamente? Spoolman borra también su consumo. Archivar, en cambio, se puede deshacer.",
+    "Endgültig löschen": "Borrar definitivamente",
+    "Spule #{id} archiviert": "Bobina #{id} archivada",
+    "Spule #{id} wiederhergestellt": "Bobina #{id} restaurada",
+    "Spule #{id} gelöscht": "Bobina #{id} borrada",
+    "Keine Spule zum Drucken.": "No hay bobina para imprimir.",
+    "Spulen-Etiketten": "Etiquetas de bobinas",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Ventana bloqueada: etiquetas guardadas como archivo.",
+    "Weitere Angaben": "Más datos",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturas, densidad, diámetro y número de artículo pertenecen al filamento y solo se aplican si se crea nuevo.",
+    "Düsentemperatur (°C)": "Temperatura de boquilla (°C)",
+    "Betttemperatur (°C)": "Temperatura de cama (°C)",
+    "Dichte (g/cm³)": "Densidad (g/cm³)",
+    "nach Material": "según material",
+    "Durchmesser (mm)": "Diámetro (mm)",
+    "Restgewicht (g)": "Peso restante (g)",
+    "voll": "llena",
+    "Artikelnummer": "Número de artículo",
+    "Kommentar": "Comentario"
   };
 
   // frontend/src/i18n/fr.js
@@ -1629,7 +1680,58 @@
     "nur ansehen": "lecture seule",
     "paxx12-Einstellungen": "Réglages paxx12",
     "paxx12-Einstellungen nicht lesbar.": "Réglages paxx12 illisibles.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "Modifier sur la page paxx12 /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "Modifier sur la page paxx12 /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Maintenance due : {items}. L'impression reste possible.",
+    "Startzeit (Warteschlange)": "Heure de début (file)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "À l'heure prévue, demander si le plateau est libre",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "À l'heure prévue, une notification « Plateau libre – démarrer » arrive ; sans confirmation, la tâche attend.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Démarre seule à l'heure prévue dès que l'imprimante est libre. Le plateau doit alors être vide !",
+    "Planen": "Planifier",
+    "Geplant für {at}: {name}": "Planifié pour {at} : {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at} : plateau libre ? Démarre-le",
+    "{at} verpasst": "{at} manqué",
+    "{at} fehlgeschlagen: {err}": "{at} échoué : {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at} : démarre dès que l'imprimante est libre",
+    "Start {at}": "Début {at}",
+    "ohne Rückfrage": "sans demander",
+    "archiviert": "archivée",
+    "Leere Spule archivieren": "Archiver la bobine vide",
+    "leer · archivieren": "vide · archiver",
+    "Etiketten für die angezeigten Spulen drucken": "Imprimer les étiquettes des bobines affichées",
+    "Etiketten": "Étiquettes",
+    "Archiviert": "Archivées",
+    "Keine archivierten Spulen.": "Aucune bobine archivée.",
+    "Lade archivierte Spulen …": "Chargement des bobines archivées …",
+    "Archivierte Spulen konnten nicht geladen werden.": "Impossible de charger les bobines archivées.",
+    "Rest": "Restant",
+    "Düse": "Buse",
+    "Charge": "Lot",
+    "Zuletzt benutzt": "Dernière utilisation",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "Montée sur {head} – pour l'archiver ou la supprimer, libère-la d'abord dans la tête.",
+    "Etikett": "Étiquette",
+    "Wiederherstellen": "Restaurer",
+    "Archivieren": "Archiver",
+    "Löschen": "Supprimer",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "Supprimer définitivement la bobine #{id} ? Spoolman supprime aussi sa consommation. L'archivage, lui, est réversible.",
+    "Endgültig löschen": "Supprimer définitivement",
+    "Spule #{id} archiviert": "Bobine #{id} archivée",
+    "Spule #{id} wiederhergestellt": "Bobine #{id} restaurée",
+    "Spule #{id} gelöscht": "Bobine #{id} supprimée",
+    "Keine Spule zum Drucken.": "Aucune bobine à imprimer.",
+    "Spulen-Etiketten": "Étiquettes de bobines",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Fenêtre bloquée – étiquettes enregistrées dans un fichier.",
+    "Weitere Angaben": "Plus de détails",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Températures, densité, diamètre et référence appartiennent au filament et ne s'appliquent que s'il est créé.",
+    "Düsentemperatur (°C)": "Température de buse (°C)",
+    "Betttemperatur (°C)": "Température du plateau (°C)",
+    "Dichte (g/cm³)": "Densité (g/cm³)",
+    "nach Material": "selon le matériau",
+    "Durchmesser (mm)": "Diamètre (mm)",
+    "Restgewicht (g)": "Poids restant (g)",
+    "voll": "pleine",
+    "Artikelnummer": "Référence",
+    "Kommentar": "Commentaire"
   };
 
   // frontend/src/i18n/it.js
@@ -2411,7 +2513,58 @@
     "nur ansehen": "solo lettura",
     "paxx12-Einstellungen": "Impostazioni paxx12",
     "paxx12-Einstellungen nicht lesbar.": "Impostazioni paxx12 non leggibili.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "Modifica nella pagina paxx12 /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "Modifica nella pagina paxx12 /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Manutenzione dovuta: {items}. Puoi stampare comunque.",
+    "Startzeit (Warteschlange)": "Ora di avvio (coda)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "All'ora di avvio chiedi se il piatto è libero",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "All'ora di avvio arriva una notifica con «Piatto libero – avvia»; senza conferma il lavoro attende.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Parte da solo all'ora di avvio appena la stampante è libera. Il piatto deve essere vuoto!",
+    "Planen": "Pianifica",
+    "Geplant für {at}: {name}": "Pianificato per {at}: {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}: piatto libero? Avvialo",
+    "{at} verpasst": "{at} mancato",
+    "{at} fehlgeschlagen: {err}": "{at} non riuscito: {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}: parte appena la stampante è libera",
+    "Start {at}": "Avvio {at}",
+    "ohne Rückfrage": "senza chiedere",
+    "archiviert": "archiviata",
+    "Leere Spule archivieren": "Archivia bobina vuota",
+    "leer · archivieren": "vuota · archivia",
+    "Etiketten für die angezeigten Spulen drucken": "Stampa etichette per le bobine mostrate",
+    "Etiketten": "Etichette",
+    "Archiviert": "Archiviate",
+    "Keine archivierten Spulen.": "Nessuna bobina archiviata.",
+    "Lade archivierte Spulen …": "Caricamento bobine archiviate …",
+    "Archivierte Spulen konnten nicht geladen werden.": "Impossibile caricare le bobine archiviate.",
+    "Rest": "Rimanente",
+    "Düse": "Ugello",
+    "Charge": "Lotto",
+    "Zuletzt benutzt": "Ultimo uso",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "Si trova in {head}: per archiviarla o eliminarla, prima rimuovila dalla testina.",
+    "Etikett": "Etichetta",
+    "Wiederherstellen": "Ripristina",
+    "Archivieren": "Archivia",
+    "Löschen": "Elimina",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "Eliminare definitivamente la bobina #{id}? Spoolman elimina anche il suo consumo. L'archiviazione invece si può annullare.",
+    "Endgültig löschen": "Elimina definitivamente",
+    "Spule #{id} archiviert": "Bobina #{id} archiviata",
+    "Spule #{id} wiederhergestellt": "Bobina #{id} ripristinata",
+    "Spule #{id} gelöscht": "Bobina #{id} eliminata",
+    "Keine Spule zum Drucken.": "Nessuna bobina da stampare.",
+    "Spulen-Etiketten": "Etichette bobine",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Finestra bloccata – etichette salvate come file.",
+    "Weitere Angaben": "Altri dati",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperature, densità, diametro e codice articolo appartengono al filamento e valgono solo se viene creato nuovo.",
+    "Düsentemperatur (°C)": "Temperatura ugello (°C)",
+    "Betttemperatur (°C)": "Temperatura piatto (°C)",
+    "Dichte (g/cm³)": "Densità (g/cm³)",
+    "nach Material": "in base al materiale",
+    "Durchmesser (mm)": "Diametro (mm)",
+    "Restgewicht (g)": "Peso rimanente (g)",
+    "voll": "piena",
+    "Artikelnummer": "Codice articolo",
+    "Kommentar": "Commento"
   };
 
   // frontend/src/i18n/nl.js
@@ -3193,7 +3346,58 @@
     "nur ansehen": "alleen bekijken",
     "paxx12-Einstellungen": "paxx12-instellingen",
     "paxx12-Einstellungen nicht lesbar.": "paxx12-instellingen niet leesbaar.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "Wijzigen op de paxx12-pagina /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "Wijzigen op de paxx12-pagina /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Onderhoud nodig: {items}. Printen kan toch.",
+    "Startzeit (Warteschlange)": "Starttijd (wachtrij)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "Op de starttijd vragen of het bed vrij is",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "Op de starttijd komt een melding met „Bed vrij – starten”; zonder bevestiging wacht de taak.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Start vanzelf op de starttijd zodra de printer vrij is. Het bed moet dan leeg zijn!",
+    "Planen": "Plannen",
+    "Geplant für {at}: {name}": "Gepland voor {at}: {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}: bed vrij? Graag starten",
+    "{at} verpasst": "{at} gemist",
+    "{at} fehlgeschlagen: {err}": "{at} mislukt: {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}: start zodra de printer vrij is",
+    "Start {at}": "Start {at}",
+    "ohne Rückfrage": "zonder vragen",
+    "archiviert": "gearchiveerd",
+    "Leere Spule archivieren": "Lege spoel archiveren",
+    "leer · archivieren": "leeg · archiveren",
+    "Etiketten für die angezeigten Spulen drucken": "Etiketten voor de getoonde spoelen printen",
+    "Etiketten": "Etiketten",
+    "Archiviert": "Gearchiveerd",
+    "Keine archivierten Spulen.": "Geen gearchiveerde spoelen.",
+    "Lade archivierte Spulen …": "Gearchiveerde spoelen laden …",
+    "Archivierte Spulen konnten nicht geladen werden.": "Gearchiveerde spoelen konden niet worden geladen.",
+    "Rest": "Rest",
+    "Düse": "Nozzle",
+    "Charge": "Batch",
+    "Zuletzt benutzt": "Laatst gebruikt",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "Zit in {head} – om te archiveren of te verwijderen eerst de koppeling in de printkop opheffen.",
+    "Etikett": "Etiket",
+    "Wiederherstellen": "Terugzetten",
+    "Archivieren": "Archiveren",
+    "Löschen": "Verwijderen",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "Spoel #{id} definitief verwijderen? Spoolman verwijdert ook het verbruik. Archiveren kun je wel ongedaan maken.",
+    "Endgültig löschen": "Definitief verwijderen",
+    "Spule #{id} archiviert": "Spoel #{id} gearchiveerd",
+    "Spule #{id} wiederhergestellt": "Spoel #{id} teruggezet",
+    "Spule #{id} gelöscht": "Spoel #{id} verwijderd",
+    "Keine Spule zum Drucken.": "Geen spoel om te printen.",
+    "Spulen-Etiketten": "Spoeletiketten",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Venster geblokkeerd – etiketten als bestand opgeslagen.",
+    "Weitere Angaben": "Meer gegevens",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturen, dichtheid, diameter en artikelnummer horen bij het filament en gelden alleen als het nieuw wordt aangemaakt.",
+    "Düsentemperatur (°C)": "Nozzletemperatuur (°C)",
+    "Betttemperatur (°C)": "Bedtemperatuur (°C)",
+    "Dichte (g/cm³)": "Dichtheid (g/cm³)",
+    "nach Material": "volgens materiaal",
+    "Durchmesser (mm)": "Diameter (mm)",
+    "Restgewicht (g)": "Restgewicht (g)",
+    "voll": "vol",
+    "Artikelnummer": "Artikelnummer",
+    "Kommentar": "Opmerking"
   };
 
   // frontend/src/i18n/pt.js
@@ -3975,7 +4179,58 @@
     "nur ansehen": "só ver",
     "paxx12-Einstellungen": "Definições do paxx12",
     "paxx12-Einstellungen nicht lesbar.": "Definições do paxx12 não legíveis.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "Alterar na página do paxx12 /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "Alterar na página do paxx12 /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Manutenção pendente: {items}. Podes imprimir na mesma.",
+    "Startzeit (Warteschlange)": "Hora de início (fila)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "À hora de início, perguntar se a mesa está livre",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "À hora de início chega uma notificação com «Mesa livre – iniciar»; sem confirmação, o trabalho espera.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Inicia sozinho à hora de início assim que a impressora estiver livre. A mesa tem de estar vazia!",
+    "Planen": "Agendar",
+    "Geplant für {at}: {name}": "Agendado para {at}: {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}: mesa livre? Inicia",
+    "{at} verpasst": "{at} perdido",
+    "{at} fehlgeschlagen: {err}": "{at} falhou: {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}: inicia assim que a impressora estiver livre",
+    "Start {at}": "Início {at}",
+    "ohne Rückfrage": "sem perguntar",
+    "archiviert": "arquivada",
+    "Leere Spule archivieren": "Arquivar bobina vazia",
+    "leer · archivieren": "vazia · arquivar",
+    "Etiketten für die angezeigten Spulen drucken": "Imprimir etiquetas das bobinas mostradas",
+    "Etiketten": "Etiquetas",
+    "Archiviert": "Arquivadas",
+    "Keine archivierten Spulen.": "Sem bobinas arquivadas.",
+    "Lade archivierte Spulen …": "A carregar bobinas arquivadas …",
+    "Archivierte Spulen konnten nicht geladen werden.": "Não foi possível carregar as bobinas arquivadas.",
+    "Rest": "Restante",
+    "Düse": "Bico",
+    "Charge": "Lote",
+    "Zuletzt benutzt": "Último uso",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "Está em {head}: para arquivar ou apagar, retira-a primeiro da cabeça.",
+    "Etikett": "Etiqueta",
+    "Wiederherstellen": "Restaurar",
+    "Archivieren": "Arquivar",
+    "Löschen": "Apagar",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "Apagar a bobina #{id} definitivamente? O Spoolman apaga também o consumo. Arquivar, pelo contrário, pode ser desfeito.",
+    "Endgültig löschen": "Apagar definitivamente",
+    "Spule #{id} archiviert": "Bobina #{id} arquivada",
+    "Spule #{id} wiederhergestellt": "Bobina #{id} restaurada",
+    "Spule #{id} gelöscht": "Bobina #{id} apagada",
+    "Keine Spule zum Drucken.": "Sem bobina para imprimir.",
+    "Spulen-Etiketten": "Etiquetas de bobinas",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Janela bloqueada – etiquetas guardadas como ficheiro.",
+    "Weitere Angaben": "Mais dados",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperaturas, densidade, diâmetro e referência pertencem ao filamento e só se aplicam se for criado de novo.",
+    "Düsentemperatur (°C)": "Temperatura do bico (°C)",
+    "Betttemperatur (°C)": "Temperatura da mesa (°C)",
+    "Dichte (g/cm³)": "Densidade (g/cm³)",
+    "nach Material": "conforme o material",
+    "Durchmesser (mm)": "Diâmetro (mm)",
+    "Restgewicht (g)": "Peso restante (g)",
+    "voll": "cheia",
+    "Artikelnummer": "Referência",
+    "Kommentar": "Comentário"
   };
 
   // frontend/src/i18n/tr.js
@@ -4757,7 +5012,58 @@
     "nur ansehen": "yalnızca görüntüle",
     "paxx12-Einstellungen": "paxx12 ayarları",
     "paxx12-Einstellungen nicht lesbar.": "paxx12 ayarları okunamıyor.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "paxx12 sayfasında değiştir /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "paxx12 sayfasında değiştir /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Bakım zamanı: {items}. Yine de yazdırabilirsin.",
+    "Startzeit (Warteschlange)": "Başlangıç saati (kuyruk)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "Başlangıç saatinde tablanın boş olup olmadığını sor",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "Başlangıç saatinde “Tabla boş – başlat” bildirimi gelir; onay olmadan iş bekler.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Başlangıç saatinde yazıcı boşalır boşalmaz kendisi başlar. Tabla o zaman boş olmalı!",
+    "Planen": "Planla",
+    "Geplant für {at}: {name}": "{at} için planlandı: {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}: tabla boş mu? Lütfen başlat",
+    "{at} verpasst": "{at} kaçırıldı",
+    "{at} fehlgeschlagen: {err}": "{at} başarısız: {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}: yazıcı boşalınca başlar",
+    "Start {at}": "Başlangıç {at}",
+    "ohne Rückfrage": "sormadan",
+    "archiviert": "arşivlendi",
+    "Leere Spule archivieren": "Boş makarayı arşivle",
+    "leer · archivieren": "boş · arşivle",
+    "Etiketten für die angezeigten Spulen drucken": "Gösterilen makaralar için etiket yazdır",
+    "Etiketten": "Etiketler",
+    "Archiviert": "Arşivlenenler",
+    "Keine archivierten Spulen.": "Arşivlenmiş makara yok.",
+    "Lade archivierte Spulen …": "Arşivlenmiş makaralar yükleniyor …",
+    "Archivierte Spulen konnten nicht geladen werden.": "Arşivlenmiş makaralar yüklenemedi.",
+    "Rest": "Kalan",
+    "Düse": "Nozul",
+    "Charge": "Parti",
+    "Zuletzt benutzt": "Son kullanım",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "{head} içinde – arşivlemek veya silmek için önce kafadaki atamayı kaldır.",
+    "Etikett": "Etiket",
+    "Wiederherstellen": "Geri getir",
+    "Archivieren": "Arşivle",
+    "Löschen": "Sil",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "#{id} makarası kalıcı olarak silinsin mi? Spoolman tüketimini de siler. Arşivleme ise geri alınabilir.",
+    "Endgültig löschen": "Kalıcı olarak sil",
+    "Spule #{id} archiviert": "#{id} makarası arşivlendi",
+    "Spule #{id} wiederhergestellt": "#{id} makarası geri getirildi",
+    "Spule #{id} gelöscht": "#{id} makarası silindi",
+    "Keine Spule zum Drucken.": "Yazdırılacak makara yok.",
+    "Spulen-Etiketten": "Makara etiketleri",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Pencere engellendi – etiketler dosya olarak kaydedildi.",
+    "Weitere Angaben": "Diğer bilgiler",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Sıcaklıklar, yoğunluk, çap ve ürün numarası filamente aittir ve yalnızca yeni oluşturulduğunda geçerlidir.",
+    "Düsentemperatur (°C)": "Nozul sıcaklığı (°C)",
+    "Betttemperatur (°C)": "Tabla sıcaklığı (°C)",
+    "Dichte (g/cm³)": "Yoğunluk (g/cm³)",
+    "nach Material": "malzemeye göre",
+    "Durchmesser (mm)": "Çap (mm)",
+    "Restgewicht (g)": "Kalan ağırlık (g)",
+    "voll": "dolu",
+    "Artikelnummer": "Ürün numarası",
+    "Kommentar": "Yorum"
   };
 
   // frontend/src/i18n/zh.js
@@ -5539,7 +5845,58 @@
     "nur ansehen": "仅查看",
     "paxx12-Einstellungen": "paxx12 设置",
     "paxx12-Einstellungen nicht lesbar.": "无法读取 paxx12 设置。",
-    "Ändern auf der paxx12-Seite /firmware-config/": "在 paxx12 页面 /firmware-config/ 修改"
+    "Ändern auf der paxx12-Seite /firmware-config/": "在 paxx12 页面 /firmware-config/ 修改",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "需要维护：{items}。仍可打印。",
+    "Startzeit (Warteschlange)": "开始时间（队列）",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "到开始时间时询问打印床是否已清空",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "到开始时间会收到“打印床已清空 – 开始”通知；未确认时任务会等待。",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "到开始时间且打印机空闲时自动开始。届时打印床必须已清空！",
+    "Planen": "计划",
+    "Geplant für {at}: {name}": "已计划于 {at}：{name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}：打印床已清空？请开始",
+    "{at} verpasst": "{at} 已错过",
+    "{at} fehlgeschlagen: {err}": "{at} 失败：{err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}：打印机空闲后开始",
+    "Start {at}": "开始 {at}",
+    "ohne Rückfrage": "不询问",
+    "archiviert": "已归档",
+    "Leere Spule archivieren": "归档空料盘",
+    "leer · archivieren": "空 · 归档",
+    "Etiketten für die angezeigten Spulen drucken": "为显示的料盘打印标签",
+    "Etiketten": "标签",
+    "Archiviert": "已归档",
+    "Keine archivierten Spulen.": "没有已归档的料盘。",
+    "Lade archivierte Spulen …": "正在加载已归档料盘 …",
+    "Archivierte Spulen konnten nicht geladen werden.": "无法加载已归档料盘。",
+    "Rest": "剩余",
+    "Düse": "喷嘴",
+    "Charge": "批次",
+    "Zuletzt benutzt": "上次使用",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "在 {head} 中 – 归档或删除前请先在打印头中解除分配。",
+    "Etikett": "标签",
+    "Wiederherstellen": "恢复",
+    "Archivieren": "归档",
+    "Löschen": "删除",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "永久删除料盘 #{id}？Spoolman 也会删除其用量记录。归档则可以撤销。",
+    "Endgültig löschen": "永久删除",
+    "Spule #{id} archiviert": "料盘 #{id} 已归档",
+    "Spule #{id} wiederhergestellt": "料盘 #{id} 已恢复",
+    "Spule #{id} gelöscht": "料盘 #{id} 已删除",
+    "Keine Spule zum Drucken.": "没有可打印的料盘。",
+    "Spulen-Etiketten": "料盘标签",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "窗口被拦截 – 标签已保存为文件。",
+    "Weitere Angaben": "更多信息",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "温度、密度、直径和货号属于耗材，仅在新建耗材时生效。",
+    "Düsentemperatur (°C)": "喷嘴温度 (°C)",
+    "Betttemperatur (°C)": "热床温度 (°C)",
+    "Dichte (g/cm³)": "密度 (g/cm³)",
+    "nach Material": "按材料",
+    "Durchmesser (mm)": "直径 (mm)",
+    "Restgewicht (g)": "剩余重量 (g)",
+    "voll": "满",
+    "Artikelnummer": "货号",
+    "Kommentar": "备注"
   };
 
   // frontend/src/i18n.js
@@ -5550,9 +5907,9 @@
   var LOCALES = { de: "de-DE", es: "es-ES", fr: "fr-FR", it: "it-IT", nl: "nl-NL", pt: "pt-PT", tr: "tr-TR", zh: "zh-Hans" };
   function setLang(hass) {
     const l = String(hass && (hass.locale && hass.locale.language || hass.language) || "de").toLowerCase();
-    const base = l.split("-")[0];
-    const traditionalChinese = base === "zh" && /^zh-(?:hant|tw|hk|mo)(?:-|$)/.test(l);
-    const candidate = traditionalChinese ? "" : base;
+    const base2 = l.split("-")[0];
+    const traditionalChinese = base2 === "zh" && /^zh-(?:hant|tw|hk|mo)(?:-|$)/.test(l);
+    const candidate = traditionalChinese ? "" : base2;
     LANG = candidate === "de" || MORE[candidate] ? candidate : "en";
     LOCALE = l.includes("-") ? l : LOCALES[LANG] || "en-GB";
     const cur = hass && hass.config && hass.config.currency;
@@ -6347,7 +6704,58 @@
     "nur ansehen": "view only",
     "paxx12-Einstellungen": "paxx12 settings",
     "paxx12-Einstellungen nicht lesbar.": "paxx12 settings not readable.",
-    "Ändern auf der paxx12-Seite /firmware-config/": "Change on the paxx12 page /firmware-config/"
+    "Ändern auf der paxx12-Seite /firmware-config/": "Change on the paxx12 page /firmware-config/",
+    // 2.4.0b2: spool archive/delete/labels, more spool fields, start time, maintenance hint
+    "Wartung fällig: {items}. Drucken geht trotzdem.": "Maintenance due: {items}. You can still print.",
+    "Startzeit (Warteschlange)": "Start time (queue)",
+    "Zur Startzeit fragen, ob das Druckbett frei ist": "At the start time ask whether the bed is clear",
+    "Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.": "At the start time a notification with “Bed clear – start” arrives; without confirmation the job waits.",
+    "Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!": "Starts on its own at the start time as soon as the printer is free. The bed must be clear by then!",
+    "Planen": "Schedule",
+    "Geplant für {at}: {name}": "Scheduled for {at}: {name}",
+    "{at}: Druckbett frei? Bitte starten": "{at}: bed clear? Please start",
+    "{at} verpasst": "{at} missed",
+    "{at} fehlgeschlagen: {err}": "{at} failed: {err}",
+    "{at}: startet, sobald der Drucker frei ist": "{at}: starts as soon as the printer is free",
+    "Start {at}": "Start {at}",
+    "ohne Rückfrage": "without asking",
+    "archiviert": "archived",
+    "Leere Spule archivieren": "Archive empty spool",
+    "leer · archivieren": "empty · archive",
+    "Etiketten für die angezeigten Spulen drucken": "Print labels for the spools shown",
+    "Etiketten": "Labels",
+    "Archiviert": "Archived",
+    "Keine archivierten Spulen.": "No archived spools.",
+    "Lade archivierte Spulen …": "Loading archived spools …",
+    "Archivierte Spulen konnten nicht geladen werden.": "Archived spools could not be loaded.",
+    "Rest": "Remaining",
+    "Düse": "Nozzle",
+    "Charge": "Lot",
+    "Zuletzt benutzt": "Last used",
+    "Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.": "In {head} – to archive or delete it, release it in the print head first.",
+    "Etikett": "Label",
+    "Wiederherstellen": "Restore",
+    "Archivieren": "Archive",
+    "Löschen": "Delete",
+    "Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.": "Delete spool #{id} for good? Spoolman deletes its usage too. Archiving, by contrast, can be undone.",
+    "Endgültig löschen": "Delete for good",
+    "Spule #{id} archiviert": "Spool #{id} archived",
+    "Spule #{id} wiederhergestellt": "Spool #{id} restored",
+    "Spule #{id} gelöscht": "Spool #{id} deleted",
+    "Keine Spule zum Drucken.": "No spool to print.",
+    "Spulen-Etiketten": "Spool labels",
+    "Fenster blockiert – Etiketten als Datei gespeichert.": "Window blocked – labels saved as a file.",
+    "Weitere Angaben": "More details",
+    "Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.": "Temperatures, density, diameter and article number belong to the filament and only apply when it is newly created.",
+    "Düsentemperatur (°C)": "Nozzle temperature (°C)",
+    "Betttemperatur (°C)": "Bed temperature (°C)",
+    "Dichte (g/cm³)": "Density (g/cm³)",
+    "nach Material": "by material",
+    "Durchmesser (mm)": "Diameter (mm)",
+    "Restgewicht (g)": "Remaining weight (g)",
+    "voll": "full",
+    "Artikelnummer": "Article number",
+    "Kommentar": "Comment"
   };
 
   // frontend/src/accent.js
@@ -6769,6 +7177,11 @@
     ta.remove();
     return ok;
   }
+  var fmtStart = (ts) => {
+    const d = new Date(ts * 1e3);
+    const today = (/* @__PURE__ */ new Date()).toDateString() === d.toDateString();
+    return today ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : d.toLocaleString([], { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  };
 
   // frontend/src/card/state.js
   var StateMixin = (Base) => class extends Base {
@@ -8206,8 +8619,13 @@
         const opts = [
           j.timelapse ? `<ha-icon icon="mdi:filmstrip" title="${tr("Zeitraffer")}"></ha-icon>` : "",
           j.bed_leveling ? `<ha-icon icon="mdi:grid" title="${tr("Bettnivellierung")}"></ha-icon>` : "",
-          Array.isArray(j.pause_layers) && j.pause_layers.length ? `<span>${tr("Pause vor {l}", { l: j.pause_layers.join(", ") })}</span>` : ""
+          Array.isArray(j.pause_layers) && j.pause_layers.length ? `<span>${tr("Pause vor {l}", { l: j.pause_layers.join(", ") })}</span>` : "",
+          // 2.4: start time and where the scheduled job stands
+          j.start_at ? `<span class="q-sched" data-sched="${esc(j.sched || "wait")}"><ha-icon icon="mdi:calendar-clock"></ha-icon>${esc(
+            j.sched === "confirm" ? tr("{at}: Druckbett frei? Bitte starten", { at: fmtStart(j.start_at) }) : j.sched === "missed" ? tr("{at} verpasst", { at: fmtStart(j.start_at) }) : j.sched === "error" ? tr("{at} fehlgeschlagen: {err}", { at: fmtStart(j.start_at), err: j.sched_error || "" }) : j.sched === "due" || j.sched === "starting" ? tr("{at}: startet, sobald der Drucker frei ist", { at: fmtStart(j.start_at) }) : tr("Start {at}", { at: fmtStart(j.start_at) }) + (j.confirm_bed === false ? ` · ${tr("ohne Rückfrage")}` : "")
+          )}</span>` : ""
         ].join("");
+        const startable = i === 0 || ["confirm", "missed", "error"].includes(j.sched);
         return `
         <div class="q-item" data-first="${i === 0 ? 1 : 0}">
           <span class="q-pos">${i + 1}</span>
@@ -8217,9 +8635,9 @@
             <div class="q-meta">${dots ? `<span class="file-dots">${dots}</span>` : ""}${opts}</div>
           </div>
           <div class="q-btns">
-            ${i === 0 ? `<button class="filled" data-q="start" data-job="${esc(j.id)}" ${canStart ? "" : "disabled"}>
-              <ha-icon icon="mdi:play"></ha-icon>${tr("Starten")}</button>` : `
-              <button class="icon ghost" data-q="move" data-job="${esc(j.id)}" data-pos="${i - 1}" title="${tr("Nach oben")}"><ha-icon icon="mdi:arrow-up"></ha-icon></button>`}
+            ${startable ? `<button class="filled" data-q="start" data-job="${esc(j.id)}" ${canStart ? "" : "disabled"}>
+              <ha-icon icon="mdi:play"></ha-icon>${tr("Starten")}</button>` : ""}
+            ${i > 0 ? `<button class="icon ghost" data-q="move" data-job="${esc(j.id)}" data-pos="${i - 1}" title="${tr("Nach oben")}"><ha-icon icon="mdi:arrow-up"></ha-icon></button>` : ""}
             <button class="icon ghost" data-q="remove" data-job="${esc(j.id)}" title="${tr("Entfernen")}"><ha-icon icon="mdi:close"></ha-icon></button>
           </div>
         </div>`;
@@ -8231,7 +8649,7 @@
           <span class="panel-title">${tr("Warteschlange")}</span>
           <span class="t-label" style="margin-left:auto">${tr("{n} Aufträge", { n: jobs.length })}</span>
         </div>
-        ${d.active ? `<div class="t-label">${tr("Startet nicht von selbst: nach dem Druck das Bett räumen und hier starten.")}</div>` : ""}
+        ${d.active && !jobs.some((j) => j.start_at && j.confirm_bed === false) ? `<div class="t-label">${tr("Startet nicht von selbst: nach dem Druck das Bett räumen und hier starten.")}</div>` : ""}
         <div class="q-list">${items}</div>
       </section>`;
     }
@@ -8689,11 +9107,11 @@
       const paxx = a.variant === "paxx12";
       const name = paxx ? `<span class="fw-variant">paxx12</span> ` : "";
       const short = (v) => esc(String(v || "?").replace(/-[0-9a-f]{6,}$/i, ""));
-      const base = paxx && a.paxx_version && a.base ? ` <span class="t-label">(${tr("Basis")} ${esc(String(a.base).split("_")[0])})</span>` : "";
+      const base2 = paxx && a.paxx_version && a.base ? ` <span class="t-label">(${tr("Basis")} ${esc(String(a.base).split("_")[0])})</span>` : "";
       if (st.state === "on" && a.latest_version) {
-        return `${name}${short(a.installed_version)} <span style="color:var(--u1-warn)">→ ${short(a.latest_version)} ${tr("verfügbar")}</span>${base}`;
+        return `${name}${short(a.installed_version)} <span style="color:var(--u1-warn)">→ ${short(a.latest_version)} ${tr("verfügbar")}</span>${base2}`;
       }
-      return `${name}${short(a.installed_version)} · ${tr("aktuell")}${base}`;
+      return `${name}${short(a.installed_version)} · ${tr("aktuell")}${base2}`;
     }
     _selfTestHtml() {
       const t = this._selftest;
@@ -9398,14 +9816,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const cum = [0];
       for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
       const total = cum[cum.length - 1];
-      const place = (x, y) => {
+      const place2 = (x, y) => {
         noz.setAttribute("transform", `translate(${x.toFixed(2)},${(-y).toFixed(2)})`);
         if (gantry) gantry.setAttribute("transform", `translate(0,${(-y).toFixed(2)})`);
       };
       if (this._nozRaf) cancelAnimationFrame(this._nozRaf);
       const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (!total || reduced || typeof requestAnimationFrame !== "function") {
-        place(end[0], end[1]);
+        place2(end[0], end[1]);
         return;
       }
       const now = Date.now();
@@ -9419,7 +9837,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         while (i < cum.length - 1 && cum[i] < d) i++;
         const seg = cum[i] - cum[i - 1] || 1;
         const f = Math.max(0, Math.min(1, (d - cum[i - 1]) / seg));
-        place(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f);
+        place2(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * f, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * f);
         if (k < 1 && noz.isConnected) this._nozRaf = requestAnimationFrame(step);
       };
       this._nozRaf = requestAnimationFrame(step);
@@ -10673,7 +11091,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .spool-opt-text > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .stock { display: flex; flex-direction: column; gap: 10px; }
   .stock-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
-  .stock-row[hidden] { display: none; }
+  .stock-row[hidden], .stock-list[hidden] { display: none; }
   .stock-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--u1-outline) 50%, transparent); }
   .stock-row .spool-track { margin-top: 4px; }
@@ -10803,6 +11221,17 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; min-height: 38px; box-sizing: border-box; }
   .head-form input[type="color"] { padding: 2px; cursor: pointer; }
   .head-form .dlg-error, .head-form .dlg-actions { grid-column: 1 / -1; }
+  /* 2.4: textarea like the inputs; collapsed "more details" in the new spool form */
+  .head-form textarea { font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high); resize: vertical;
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; box-sizing: border-box; }
+  .head-form .more-fields { display: flex; flex-direction: column; gap: 8px; }
+  .head-form .more-fields > summary { cursor: pointer; font-size: 13px; color: var(--u1-primary); }
+  .head-form .more-fields > .head-form { margin-top: 8px; }
+  /* 2.4: spool details – actions wrap on narrow screens */
+  dialog.u1spool .dlg-actions { flex-wrap: wrap; }
+  .stock-row { cursor: pointer; }
+  .stock-row:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 2px; }
+  .stock-row [data-emptyarch] { flex: none; }
   .chip-row { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   .rows .chip[data-prefset], .rows .chip[data-prefsen] { height: 28px; padding: 0 12px; font-size: 12px; cursor: pointer; box-shadow: none; }
   .rows .chip[aria-pressed="true"], .rows .chip.sel { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
@@ -10871,6 +11300,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     background: var(--u1-primary-container); color: var(--u1-on-primary-container);
   }
   .dlg-note[data-tone="error"] { background: var(--u1-error-container); color: var(--u1-on-error-container); }
+  .dlg-note[data-tone="warn"] { background: color-mix(in srgb, var(--u1-warn) 18%, transparent); color: var(--u1-on); }
+  .dlg-note[data-tone="warn"] ha-icon { color: var(--u1-warn); }
   .dlg-note ha-icon { --mdc-icon-size: 18px; flex-shrink: 0; }
 
   /* ── History ─────────────────────────────────────────────────────────── */
@@ -10983,6 +11414,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .q-meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--u1-on-variant); margin-top: 2px; flex-wrap: wrap; }
   .q-meta ha-icon { --mdc-icon-size: 15px; }
   .q-meta .file-dots { margin: 0; }
+  .q-sched { display: inline-flex; align-items: center; gap: 4px; }
+  .q-sched[data-sched="confirm"], .q-sched[data-sched="missed"] { color: var(--u1-warn); font-weight: 500; }
+  .q-sched[data-sched="error"] { color: var(--u1-error); }
   .q-btns { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
   .q-btns button.filled { height: 36px; padding: 0 14px; }
   .upl { display: flex; align-items: center; gap: 10px; font-size: 13px; }
@@ -11280,7 +11714,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.history ? d.history.map((h) => `${h.ended}${h.total_cost}`).join(",") : "noh",
         d.timelapses ? d.timelapses.videos.map((v) => v.path).join(",") : "not",
         d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
-        d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
+        d.queue ? d.queue.map((j) => `${j.id}:${j.start_at || ""}:${j.sched || ""}`).join(",") : "noq",
         d.errors.map((e) => e.key).join(","),
         // 2.4: own buttons depend on the print phase
         (this._cfg.buttons || []).length ? this._phase() : "",
@@ -11994,6 +12428,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   };
 
   // frontend/src/card/dialog.js
+  var localNow = () => {
+    const d = new Date(Date.now() - (/* @__PURE__ */ new Date()).getTimezoneOffset() * 6e4);
+    return d.toISOString().slice(0, 16);
+  };
   var PrintDialogMixin = (Base) => class extends Base {
     _entryData() {
       const st = this._ents && this._ents.files && this._st(this._ents.files);
@@ -12073,6 +12511,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           timelapse: !!prefs.timelapse
         },
         confirmed: false,
+        // 2.4: optional start time for the queue ("YYYY-MM-DDTHH:MM", browser time) and the bed question then
+        startAt: "",
+        confirmBed: true,
         busy: false,
         error: null,
         slotsKey: JSON.stringify(slots),
@@ -12258,6 +12699,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const fst = this._ents && this._ents.filaments && this._st(this._ents.filaments);
       const stale = !!(fst && fst.attributes && fst.attributes.live === false);
       const f = g.file;
+      const maintDue = (this._d && this._d.maint || []).filter((m) => m.due);
+      const hasQueue = !!(this._ents && this._ents.queue);
+      const planned = hasQueue && !!g.startAt;
       const meta = [];
       if (f.time) meta.push(fmtMin(f.time / 60));
       if (f.weight) meta.push(`${Math.round(f.weight)} g`);
@@ -12316,6 +12760,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
             ${costParts.length ? `<div class="t-label" data-cost>${tr("Geschätzt")}: ${costParts.map(esc).join(" · ")}</div>` : ""}
           </div>
         </header>
+        ${maintDue.length ? `<div class="dlg-note" data-tone="warn" data-maintdue><ha-icon icon="mdi:wrench-clock"></ha-icon>
+          ${tr("Wartung fällig: {items}. Drucken geht trotzdem.", { items: maintDue.map((m) => tr(MAINT_LABELS[m.key] || m.key)).join(", ") })}</div>` : ""}
         ${off ? `<div class="dlg-note" data-tone="${p.autoOn ? "" : "error"}"><ha-icon icon="mdi:power-plug-off"></ha-icon>
           ${p.autoOn ? tr("Der Drucker ist aus. Er wird eingeschaltet und startet den Druck, sobald er bereit ist (ca. 1–2 min).") : tr("Der Drucker ist aus. Bitte erst einschalten.")}</div>` : ""}
         <details class="dlg-settings" data-settings ${g.settingsOpen ? "open" : ""}>
@@ -12345,6 +12791,14 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
             ${g.busy ? "disabled" : ""} />
         </label>
         ${pause.error ? `<div class="map-issue" style="color:var(--u1-error)"><ha-icon icon="mdi:alert-circle"></ha-icon>${esc(pause.error)}</div>` : pause.layers.length ? `<div class="t-label">${tr("Der Drucker hält vor Schicht {l} an (z. B. für Magnete). Fortsetzen am Display oder in der Karte.", { l: pause.layers.join(", ") })}</div>` : ""}
+        ${hasQueue ? `<label class="pause-in">
+          <ha-icon icon="mdi:clock-outline"></ha-icon>
+          <span>${tr("Startzeit (Warteschlange)")}</span>
+          <input type="datetime-local" data-startat value="${esc(g.startAt)}" min="${localNow()}" ${g.busy ? "disabled" : ""} />
+        </label>
+        ${planned ? `<label class="chk"><input type="checkbox" data-confirmbed ${g.confirmBed ? "checked" : ""} ${g.busy ? "disabled" : ""} />
+          <span>${tr("Zur Startzeit fragen, ob das Druckbett frei ist")}</span></label>
+          <div class="t-label">${g.confirmBed ? tr("Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.") : tr("Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!")}</div>` : ""}` : ""}
         ${busyPrinter ? `<div class="dlg-note"><ha-icon icon="mdi:tray-plus"></ha-icon>${tr("Der Drucker druckt gerade. Du kannst den Auftrag in die Warteschlange stellen.")}</div>` : ""}
         <label class="chk confirm">
           <input type="checkbox" data-confirm ${g.confirmed ? "checked" : ""} ${g.busy ? "disabled" : ""} />
@@ -12353,10 +12807,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         ${g.error ? `<div class="dlg-error"><ha-icon icon="mdi:alert-circle"></ha-icon>${esc(g.error)}</div>` : ""}
         <div class="dlg-actions">
           <button type="button" class="outline" data-dlg="cancel" ${g.busy ? "disabled" : ""}>${tr("Abbrechen")}</button>
-          ${this._ents && this._ents.queue ? `<button type="button" class="tonal" data-dlg="queue" ${g.busy || qBlocked ? "disabled" : ""}>
-            <ha-icon icon="mdi:tray-plus"></ha-icon>${tr("Warteschlange")}</button>` : ""}
-          <button type="button" class="filled" data-dlg="print"
-            ${!g.confirmed || g.busy || blocked ? "disabled" : ""}>
+          ${hasQueue ? `<button type="button" class="${planned ? "filled" : "tonal"}" data-dlg="queue" ${g.busy || qBlocked ? "disabled" : ""}>
+            <ha-icon icon="${planned ? "mdi:calendar-clock" : "mdi:tray-plus"}"></ha-icon>${planned ? tr("Planen") : tr("Warteschlange")}</button>` : ""}
+          <button type="button" class="${planned ? "outline" : "filled"}" data-dlg="print"
+            ${!g.confirmed || g.busy || blocked || planned ? "disabled" : ""}>
             <ha-icon icon="${g.busy ? "mdi:loading" : "mdi:printer-3d"}" class="${g.busy ? "spin" : ""}"></ha-icon>
             ${g.busy ? off ? tr("Drucker startet …") : tr("Wird gestartet …") : off ? tr("Einschalten &amp; drucken") : tr("Drucken")}</button>
         </div>
@@ -12400,6 +12854,16 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (det) det.addEventListener("toggle", () => {
         g.settingsOpen = det.open;
       });
+      const sat = el.querySelector("[data-startat]");
+      if (sat) sat.addEventListener("change", () => {
+        g.startAt = sat.value;
+        this._renderDialog();
+      });
+      const cbed = el.querySelector("[data-confirmbed]");
+      if (cbed) cbed.addEventListener("change", () => {
+        g.confirmBed = cbed.checked;
+        this._renderDialog();
+      });
       const pin = el.querySelector("[data-pause]");
       if (pin) pin.addEventListener("change", () => {
         g.pause = pin.value;
@@ -12440,10 +12904,17 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (g.used.length) data.mapping = mapping;
       const pause = this._parsePause(g.pause, g.file.layers).layers;
       if (pause.length) data.pause_layers = pause;
+      if (toQueue && g.startAt) {
+        const at = new Date(g.startAt);
+        if (!Number.isNaN(at.getTime())) {
+          data.start_at = at.toISOString();
+          data.confirm_bed = !!g.confirmBed;
+        }
+      }
       try {
         await this._hass.callService(DOMAIN, toQueue ? "queue_add" : "start_print", data, void 0, false);
         this._closeDialog();
-        this._toast(toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name }) : tr("Druck gestartet: {name}", { name: g.file.name }));
+        this._toast(toQueue && data.start_at ? tr("Geplant für {at}: {name}", { at: fmtStart(Date.parse(data.start_at) / 1e3), name: g.file.name }) : toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name }) : tr("Druck gestartet: {name}", { name: g.file.name }));
       } catch (err) {
         if (this._dlg !== g) return;
         g.busy = false;
@@ -13965,8 +14436,250 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     }
   };
 
+  // frontend/src/qr.js
+  var BLOCKS_M = [
+    null,
+    [10, [1, 16]],
+    [16, [1, 28]],
+    [26, [1, 44]],
+    [18, [2, 32]],
+    [24, [2, 43]],
+    [16, [4, 27]],
+    [18, [4, 31]],
+    [22, [2, 38], [2, 39]],
+    [22, [3, 36], [2, 37]],
+    [26, [4, 43], [1, 44]]
+  ];
+  var ALIGN = [null, [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50]];
+  var MAX_VERSION = 10;
+  var EXP = new Uint8Array(512);
+  var LOG = new Uint8Array(256);
+  (() => {
+    let x = 1;
+    for (let i = 0; i < 255; i++) {
+      EXP[i] = x;
+      LOG[x] = i;
+      x <<= 1;
+      if (x & 256) x ^= 285;
+    }
+    for (let i = 255; i < 512; i++) EXP[i] = EXP[i - 255];
+  })();
+  var mul = (a, b) => a && b ? EXP[LOG[a] + LOG[b]] : 0;
+  function rsEncode(data, ecLen) {
+    let gen = [1];
+    for (let i = 0; i < ecLen; i++) {
+      const next = new Array(gen.length + 1).fill(0);
+      gen.forEach((c, j) => {
+        next[j] ^= c;
+        next[j + 1] ^= mul(c, EXP[i]);
+      });
+      gen = next;
+    }
+    const rem = new Array(ecLen).fill(0);
+    data.forEach((d) => {
+      const factor = d ^ rem.shift();
+      rem.push(0);
+      for (let j = 0; j < ecLen; j++) rem[j] ^= mul(gen[j + 1], factor);
+    });
+    return rem;
+  }
+  function dataCapacity(version) {
+    const [, ...groups] = BLOCKS_M[version];
+    return groups.reduce((n, [b, d]) => n + b * d, 0);
+  }
+  function encodeData(bytes, version) {
+    const bits = [];
+    const put = (value, len) => {
+      for (let i = len - 1; i >= 0; i--) bits.push(value >>> i & 1);
+    };
+    put(4, 4);
+    put(bytes.length, version < 10 ? 8 : 16);
+    bytes.forEach((b) => put(b, 8));
+    const cap = dataCapacity(version) * 8;
+    put(0, Math.min(4, cap - bits.length));
+    while (bits.length % 8) bits.push(0);
+    const out = [];
+    for (let i = 0; i < bits.length; i += 8) out.push(bits.slice(i, i + 8).reduce((a, b) => a << 1 | b, 0));
+    for (let pad = 236; out.length < cap / 8; pad ^= 236 ^ 17) out.push(pad);
+    return out;
+  }
+  function codewords(data, version) {
+    const [ecLen, ...groups] = BLOCKS_M[version];
+    const blocks = [];
+    let pos = 0;
+    groups.forEach(([count, len]) => {
+      for (let i = 0; i < count; i++) {
+        blocks.push(data.slice(pos, pos + len));
+        pos += len;
+      }
+    });
+    const ecs = blocks.map((b) => rsEncode(b, ecLen));
+    const out = [];
+    const maxLen = Math.max(...blocks.map((b) => b.length));
+    for (let i = 0; i < maxLen; i++) blocks.forEach((b) => {
+      if (i < b.length) out.push(b[i]);
+    });
+    for (let i = 0; i < ecLen; i++) ecs.forEach((e) => out.push(e[i]));
+    return out;
+  }
+  function bch(value, poly, polyBits) {
+    let v = value << polyBits - 1;
+    for (let i = 31 - Math.clz32(v); i >= polyBits - 1; i--) if (v >>> i & 1) v ^= poly << i - polyBits + 1;
+    return value << polyBits - 1 | v;
+  }
+  var MASKS = [
+    (r, c) => (r + c) % 2 === 0,
+    (r) => r % 2 === 0,
+    (r, c) => c % 3 === 0,
+    (r, c) => (r + c) % 3 === 0,
+    (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+    (r, c) => r * c % 2 + r * c % 3 === 0,
+    (r, c) => (r * c % 2 + r * c % 3) % 2 === 0,
+    (r, c) => ((r + c) % 2 + r * c % 3) % 2 === 0
+  ];
+  function base(version) {
+    const size = version * 4 + 17;
+    const m = Array.from({ length: size }, () => new Array(size).fill(false));
+    const fn = Array.from({ length: size }, () => new Array(size).fill(false));
+    const set = (r, c, dark) => {
+      m[r][c] = dark;
+      fn[r][c] = true;
+    };
+    [[0, 0], [0, size - 7], [size - 7, 0]].forEach(([r0, c0]) => {
+      for (let r = -1; r <= 7; r++) for (let c = -1; c <= 7; c++) {
+        const rr = r0 + r, cc = c0 + c;
+        if (rr < 0 || cc < 0 || rr >= size || cc >= size) continue;
+        const ring = Math.max(Math.abs(r - 3), Math.abs(c - 3));
+        set(rr, cc, r >= 0 && r <= 6 && c >= 0 && c <= 6 && ring !== 2);
+      }
+    });
+    const al = ALIGN[version];
+    al.forEach((r) => al.forEach((c) => {
+      if (fn[r][c]) return;
+      for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++)
+        set(r + dr, c + dc, Math.max(Math.abs(dr), Math.abs(dc)) !== 1);
+    }));
+    for (let i = 8; i < size - 8; i++) {
+      set(6, i, i % 2 === 0);
+      set(i, 6, i % 2 === 0);
+    }
+    set(size - 8, 8, true);
+    for (let i = 0; i < 9; i++) {
+      if (!fn[8][i]) set(8, i, false);
+      if (!fn[i][8]) set(i, 8, false);
+    }
+    for (let i = 0; i < 8; i++) {
+      set(8, size - 1 - i, false);
+      if (!fn[size - 1 - i][8]) set(size - 1 - i, 8, false);
+    }
+    if (version >= 7) {
+      const v = bch(version, 7973, 13);
+      for (let i = 0; i < 18; i++) {
+        const dark = (v >>> i & 1) === 1;
+        const a = Math.floor(i / 3), b = i % 3 + size - 11;
+        set(a, b, dark);
+        set(b, a, dark);
+      }
+    }
+    return { m, fn, size };
+  }
+  function place(m, fn, size, cw) {
+    let bit = 0;
+    const total = cw.length * 8;
+    for (let right = size - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      for (let v = 0; v < size; v++) {
+        const upward = (right + 1 & 2) === 0;
+        const r = upward ? size - 1 - v : v;
+        for (let j = 0; j < 2; j++) {
+          const c = right - j;
+          if (fn[r][c]) continue;
+          m[r][c] = bit < total ? (cw[bit >>> 3] >>> 7 - (bit & 7) & 1) === 1 : false;
+          bit++;
+        }
+      }
+    }
+  }
+  function drawFormat(m, size, mask) {
+    const data = 0 << 3 | mask;
+    const f = bch(data, 1335, 11) ^ 21522;
+    const bitAt = (i) => (f >>> i & 1) === 1;
+    for (let i = 0; i <= 5; i++) m[i][8] = bitAt(i);
+    m[7][8] = bitAt(6);
+    m[8][8] = bitAt(7);
+    m[8][7] = bitAt(8);
+    for (let i = 9; i < 15; i++) m[8][14 - i] = bitAt(i);
+    for (let i = 0; i < 8; i++) m[8][size - 1 - i] = bitAt(i);
+    for (let i = 8; i < 15; i++) m[size - 15 + i][8] = bitAt(i);
+    m[size - 8][8] = true;
+  }
+  function penalty(m, size) {
+    let score = 0;
+    const lines = (get) => {
+      for (let a = 0; a < size; a++) {
+        let run = 1;
+        for (let b = 1; b <= size; b++) {
+          if (b < size && get(a, b) === get(a, b - 1)) run++;
+          else {
+            if (run >= 5) score += run - 2;
+            run = 1;
+          }
+        }
+        for (let b = 0; b + 10 < size; b++) {
+          const p = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0].every((v, k) => get(a, b + k) === !!v);
+          const q = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1].every((v, k) => get(a, b + k) === !!v);
+          if (p) score += 40;
+          if (q) score += 40;
+        }
+      }
+    };
+    lines((a, b) => m[a][b]);
+    lines((a, b) => m[b][a]);
+    for (let r = 0; r < size - 1; r++) for (let c = 0; c < size - 1; c++) {
+      const v = m[r][c];
+      if (v === m[r][c + 1] && v === m[r + 1][c] && v === m[r + 1][c + 1]) score += 3;
+    }
+    let dark = 0;
+    m.forEach((row) => row.forEach((v) => {
+      if (v) dark++;
+    }));
+    score += Math.floor(Math.abs(dark * 20 - size * size * 10) / (size * size)) * 10;
+    return score;
+  }
+  function qrMatrix(text, mask = null) {
+    const bytes = Array.from(new TextEncoder().encode(String(text)));
+    let version = 1;
+    const fits = (v) => 4 + (v < 10 ? 8 : 16) + bytes.length * 8 <= dataCapacity(v) * 8;
+    while (version <= MAX_VERSION && !fits(version)) version++;
+    if (version > MAX_VERSION) throw new Error("QR: text too long");
+    const cw = codewords(encodeData(bytes, version), version);
+    let best = null;
+    (mask === null ? [0, 1, 2, 3, 4, 5, 6, 7] : [mask]).forEach((k) => {
+      const { m, fn, size } = base(version);
+      place(m, fn, size, cw);
+      for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) if (!fn[r][c] && MASKS[k](r, c)) m[r][c] = !m[r][c];
+      drawFormat(m, size, k);
+      const score = mask === null ? penalty(m, size) : 0;
+      if (!best || score < best.score) best = { m, score };
+    });
+    return best.m;
+  }
+  function qrSvg(text, { size = "100%", quiet = 4 } = {}) {
+    const m = qrMatrix(text);
+    const n = m.length + quiet * 2;
+    let path = "";
+    m.forEach((row, r) => row.forEach((dark, c) => {
+      if (dark) path += `M${c + quiet} ${r + quiet}h1v1h-1z`;
+    }));
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${n} ${n}" width="${size}" height="${size}" shape-rendering="crispEdges"><rect width="${n}" height="${n}" fill="#fff"/><path d="${path}" fill="#000"/></svg>`;
+  }
+
   // frontend/src/card/spoolstock.js
   var SUGGEST_DELAY_MS = 250;
+  var rfidTemp = (v) => {
+    const t = Array.isArray(v) ? v[0] : v;
+    return Number.isFinite(Number(t)) && Number(t) > 0 ? Math.round(Number(t)) : "";
+  };
   var SpoolStockMixin = (Base) => class extends Base {
     /** The dialog element shared by picker, stock and form. */
     _spoolDialog() {
@@ -13996,42 +14709,52 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       });
       return out;
     }
+    /** One spool row of the stock list (active or archived). */
+    _stockRow(s, heads, low, archived = false) {
+      const rest = s.remaining_weight;
+      const pct = rest != null && s.initial_weight ? clamp(rest / s.initial_weight * 100, 0, 100) : null;
+      const head = heads.get(s.id);
+      const colors = s.colors && s.colors.length > 1 ? `linear-gradient(135deg, ${s.colors.map(esc).join(", ")})` : esc(s.color || "var(--u1-outline)");
+      const text = [s.name, s.vendor, s.material, s.location, `#${s.id}`].join(" ").toLowerCase();
+      const empty = !archived && rest != null && rest <= 0 && head == null;
+      return `<div class="stock-row" data-stock="${s.id}" ${archived ? "data-archived" : ""} role="button" tabindex="0"
+        data-low="${rest != null && rest < low ? 1 : 0}"
+        data-mat="${esc((s.material || "").toUpperCase())}" data-text="${esc(text)}"
+        data-rest="${rest || 0}" data-value="${s.price_kg && rest ? (s.price_kg * rest / 1e3).toFixed(2) : 0}">
+        <span class="spool-dot" style="--fil:${colors}"></span>
+        <span class="spool-opt-text"><span>#${s.id} ${esc(s.name)}</span>
+          <span class="t-label">${[
+        s.vendor,
+        s.material,
+        s.location,
+        head != null ? tr("steckt in {head}", { head: (this._d.heads[head] || {}).name || `E${head}` }) : "",
+        archived ? tr("archiviert") : ""
+      ].filter(Boolean).map(esc).join(" · ")}</span>
+          ${pct != null ? `<span class="spool-track"><i style="width:${pct}%"></i></span>` : ""}</span>
+        ${empty ? `<button type="button" class="chip sm" data-emptyarch="${s.id}" title="${tr("Leere Spule archivieren")}">
+          <ha-icon icon="mdi:archive-arrow-down-outline"></ha-icon><span>${tr("leer · archivieren")}</span></button>` : ""}
+        <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
+      </div>`;
+    }
     /** Tab "Spoolman": every active spool; filter and search work in place (no rebuild, focus stays). */
     _sectionSpools() {
       const sm = this._spoolman();
       if (!sm) return "";
-      const all = (sm.spools || []).slice().sort((a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
+      const sorted = (list) => list.slice().sort((a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
+      const all = sorted(sm.spools || []);
       const heads = this._spoolHeads();
       const materials = [...new Set(all.map((s) => (s.material || "").toUpperCase()).filter(Boolean))].sort();
-      const f = this._stockFilter || (this._stockFilter = { material: "", text: "" });
+      const f = this._stockFilter || (this._stockFilter = { material: "", text: "", archived: false });
       const low = sm.low || 0;
-      const row = (s) => {
-        const rest = s.remaining_weight;
-        const pct = rest != null && s.initial_weight ? clamp(rest / s.initial_weight * 100, 0, 100) : null;
-        const head = heads.get(s.id);
-        const colors = s.colors && s.colors.length > 1 ? `linear-gradient(135deg, ${s.colors.map(esc).join(", ")})` : esc(s.color || "var(--u1-outline)");
-        const text = [s.name, s.vendor, s.material, s.location, `#${s.id}`].join(" ").toLowerCase();
-        return `<div class="stock-row" data-stock="${s.id}" data-low="${rest != null && rest < low ? 1 : 0}"
-          data-mat="${esc((s.material || "").toUpperCase())}" data-text="${esc(text)}"
-          data-rest="${rest || 0}" data-value="${s.price_kg && rest ? (s.price_kg * rest / 1e3).toFixed(2) : 0}">
-          <span class="spool-dot" style="--fil:${colors}"></span>
-          <span class="spool-opt-text"><span>#${s.id} ${esc(s.name)}</span>
-            <span class="t-label">${[
-          s.vendor,
-          s.material,
-          s.location,
-          head != null ? tr("steckt in {head}", { head: (this._d.heads[head] || {}).name || `E${head}` }) : ""
-        ].filter(Boolean).map(esc).join(" · ")}</span>
-            ${pct != null ? `<span class="spool-track"><i style="width:${pct}%"></i></span>` : ""}</span>
-          <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
-        </div>`;
-      };
+      const arch = f.archived ? this._archSpools : null;
       return `
       <section class="panel span2 span3 stock" data-spools>
         <div class="panel-head">
           <ha-icon icon="mdi:package-variant-closed"></ha-icon>
           <span class="panel-title">${tr("Spoolman-Bestand")}</span>
-          <button type="button" class="chip sm" data-stocknew style="margin-left:auto" ${sm.online ? "" : "disabled"}>
+          <button type="button" class="chip sm" data-stocklabels style="margin-left:auto" title="${tr("Etiketten für die angezeigten Spulen drucken")}">
+            <ha-icon icon="mdi:qrcode"></ha-icon><span>${tr("Etiketten")}</span></button>
+          <button type="button" class="chip sm" data-stocknew ${sm.online ? "" : "disabled"}>
             <ha-icon icon="mdi:plus"></ha-icon><span>${tr("Neue Spule")}</span></button>
         </div>
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
@@ -14040,9 +14763,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         <div class="chips stock-chips">
           <button type="button" class="chip sm" data-stockmat="" aria-pressed="${!f.material}">${tr("Alle")}</button>
           ${materials.map((m) => `<button type="button" class="chip sm" data-stockmat="${esc(m)}" aria-pressed="${f.material === m}">${esc(m)}</button>`).join("")}
+          <button type="button" class="chip sm" data-stockarch aria-pressed="${!!f.archived}" ${sm.online ? "" : "disabled"}>
+            <ha-icon icon="mdi:archive-outline"></ha-icon><span>${tr("Archiviert")}</span></button>
         </div>
-        <div class="stock-list">${all.map(row).join("")}</div>
-        <div class="t-label" data-stockempty hidden>${all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>
+        <div class="stock-list" data-activelist ${f.archived ? "hidden" : ""}>${all.map((s) => this._stockRow(s, heads, low)).join("")}</div>
+        <div class="stock-list" data-archlist ${f.archived ? "" : "hidden"}>${arch ? sorted(arch).map((s) => this._stockRow(s, heads, low, true)).join("") : ""}</div>
+        <div class="t-label" data-stockempty hidden>${f.archived ? tr("Keine archivierten Spulen.") : all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>
       </section>`;
     }
     _wireSpools(r) {
@@ -14062,13 +14788,62 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         this._newSpoolForm(dlg, null);
         this._showDialog(dlg);
       });
+      sec.querySelector("[data-stockarch]").addEventListener("click", () => this._toggleArchived(sec));
+      sec.querySelector("[data-stocklabels]").addEventListener("click", () => {
+        const list = sec.querySelector(this._stockFilter.archived ? "[data-archlist]" : "[data-activelist]");
+        const ids = [...list.querySelectorAll("[data-stock]")].filter((el) => !el.hidden).map((el) => Number(el.dataset.stock));
+        this._printLabels(ids.map((id) => this._stockSpool(id)).filter(Boolean));
+      });
+      this._wireStockRows(sec);
+      this._filterSpools(sec);
+    }
+    /** Row tap = details; the inline "empty" chip archives straight away. */
+    _wireStockRows(sec) {
+      sec.querySelectorAll("[data-stock]:not([data-wired])").forEach((el) => {
+        el.dataset.wired = "1";
+        const open = () => this._spoolDetail(Number(el.dataset.stock), el.hasAttribute("data-archived"));
+        el.addEventListener("click", (e) => {
+          if (!e.target.closest("[data-emptyarch]")) open();
+        });
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        });
+      });
+      sec.querySelectorAll("[data-emptyarch]:not([data-wired])").forEach((b) => {
+        b.dataset.wired = "1";
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this._spoolArchive(Number(b.dataset.emptyarch), true);
+        });
+      });
+    }
+    /** Chip "Archived": fetch the archived spools once per switch-on (not polled), then filter in place. */
+    async _toggleArchived(sec) {
+      const f = this._stockFilter;
+      f.archived = !f.archived;
+      sec.querySelector("[data-activelist]").hidden = f.archived;
+      const box = sec.querySelector("[data-archlist]");
+      box.hidden = !f.archived;
+      if (f.archived) {
+        box.innerHTML = `<div class="t-label">${tr("Lade archivierte Spulen …")}</div>`;
+        const res = await this._spoolCatalogWS("archived", {});
+        this._archSpools = res && res.spools || [];
+        if (!res) this._toast(tr("Archivierte Spulen konnten nicht geladen werden."));
+        const sm = this._spoolman() || {};
+        box.innerHTML = this._archSpools.map((s) => this._stockRow(s, this._spoolHeads(), sm.low || 0, true)).join("");
+        this._wireStockRows(sec);
+      }
       this._filterSpools(sec);
     }
     _filterSpools(sec) {
       const f = this._stockFilter;
       const words = f.text.toLowerCase().split(/\s+/).filter(Boolean);
       let n = 0, grams = 0, value = 0;
-      sec.querySelectorAll("[data-stock]").forEach((el) => {
+      const list = sec.querySelector(f.archived ? "[data-archlist]" : "[data-activelist]");
+      list.querySelectorAll("[data-stock]").forEach((el) => {
         const show = (!f.material || el.dataset.mat === f.material) && words.every((w) => el.dataset.text.includes(w));
         el.hidden = !show;
         if (show) {
@@ -14078,8 +14853,166 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         }
       });
       sec.querySelectorAll("[data-stockmat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stockmat === f.material)));
+      sec.querySelector("[data-stockarch]").setAttribute("aria-pressed", String(!!f.archived));
       sec.querySelector("[data-stocksum]").textContent = tr("{n} Spulen · {kg} kg", { n, kg: (grams / 1e3).toFixed(1) }) + (value > 0 ? ` · ${fmtMoney(value)}` : "");
-      sec.querySelector("[data-stockempty]").hidden = n > 0;
+      const empty = sec.querySelector("[data-stockempty]");
+      empty.hidden = n > 0;
+      empty.textContent = f.archived ? tr("Keine archivierten Spulen.") : ((this._spoolman() || {}).spools || []).length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.");
+    }
+    /** Spool by ID from the active list or the archived ones loaded last. */
+    _stockSpool(id) {
+      const sm = this._spoolman() || {};
+      return (sm.spools || []).find((s) => s.id === id) || (this._archSpools || []).find((s) => s.id === id) || null;
+    }
+    /** Details of one spool with its actions (label, archive/restore, delete for admins). */
+    _spoolDetail(id, archived) {
+      const s = this._stockSpool(id);
+      if (!s) return;
+      const dlg = this._spoolDialog();
+      const head = this._spoolHeads().get(id);
+      const headName = head != null ? (this._d.heads[head] || {}).name || `E${head}` : null;
+      const admin = !!(this._hass && this._hass.user && this._hass.user.is_admin);
+      const rows = [
+        [tr("Hersteller"), s.vendor],
+        [tr("Material"), s.material],
+        [tr("Rest"), s.remaining_weight != null ? `${Math.round(s.remaining_weight)} g${s.initial_weight ? ` / ${Math.round(s.initial_weight)} g` : ""}` : null],
+        [tr("Leerspule (g)"), s.spool_weight != null ? `${Math.round(s.spool_weight)} g` : null],
+        [tr("Düse"), s.extruder_temp ? `${s.extruder_temp} °C` : null],
+        [tr("Bett"), s.bed_temp ? `${s.bed_temp} °C` : null],
+        [tr("Ort"), s.location],
+        [tr("Charge"), s.lot_nr],
+        [tr("Preis"), s.price_kg ? `${fmtMoney(s.price_kg)}/kg` : null],
+        [tr("Zuletzt benutzt"), s.last_used ? new Date(s.last_used).toLocaleDateString() : null],
+        [tr("Kopf"), headName]
+      ].filter(([, v]) => v != null && v !== "");
+      const colors = s.colors && s.colors.length > 1 ? `linear-gradient(135deg, ${s.colors.map(esc).join(", ")})` : esc(s.color || "var(--u1-outline)");
+      dlg.innerHTML = `<div class="dlg">
+        <header class="dlg-head"><span class="spool-dot" style="--fil:${colors}"></span><div style="min-width:0">
+          <div class="dlg-title">#${s.id} ${esc(s.name)}</div>
+          <div class="t-label">${archived ? tr("archiviert") : tr("in Spoolman")}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        <div class="rows">${rows.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
+        ${headName ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${tr("Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.", { head: headName })}</div>` : ""}
+        <div class="dlg-error" hidden></div>
+        <div class="dlg-actions" data-spoolacts>
+          <button type="button" class="outline" data-label><ha-icon icon="mdi:qrcode"></ha-icon>${tr("Etikett")}</button>
+          ${archived ? `<button type="button" class="outline" data-restore><ha-icon icon="mdi:archive-arrow-up-outline"></ha-icon>${tr("Wiederherstellen")}</button>` : `<button type="button" class="outline" data-archive ${headName ? "disabled" : ""}><ha-icon icon="mdi:archive-arrow-down-outline"></ha-icon>${tr("Archivieren")}</button>`}
+          ${admin ? `<button type="button" class="outline danger" data-delete ${headName ? "disabled" : ""}><ha-icon icon="mdi:delete-outline"></ha-icon>${tr("Löschen")}</button>` : ""}
+        </div>
+      </div>`;
+      const q = (sel) => dlg.querySelector(sel);
+      q("[data-close]").addEventListener("click", () => dlg.close());
+      q("[data-label]").addEventListener("click", () => this._printLabels([s]));
+      if (q("[data-archive]")) q("[data-archive]").addEventListener("click", () => this._spoolArchive(id, true, dlg));
+      if (q("[data-restore]")) q("[data-restore]").addEventListener("click", () => this._spoolArchive(id, false, dlg));
+      if (q("[data-delete]")) q("[data-delete]").addEventListener("click", () => {
+        q("[data-spoolacts]").innerHTML = `<div class="dlg-note" data-tone="error" style="flex-basis:100%"><ha-icon icon="mdi:alert-outline"></ha-icon>
+          ${tr("Spule #{id} endgültig löschen? Spoolman löscht auch ihren Verbrauch. Archivieren lässt sich dagegen rückgängig machen.", { id })}</div>
+        <button type="button" class="outline" data-cancel>${tr("Abbrechen")}</button>
+        <button type="button" class="danger strong" data-confirm><ha-icon icon="mdi:delete-forever-outline"></ha-icon>${tr("Endgültig löschen")}</button>`;
+        q("[data-cancel]").addEventListener("click", () => this._spoolDetail(id, archived));
+        q("[data-confirm]").addEventListener("click", () => this._spoolDelete(id, dlg));
+      });
+      this._showDialog(dlg);
+    }
+    /** Service spool_archive; restoring also drops the spool from the cached archived list. */
+    async _spoolArchive(id, archived, dlg = null) {
+      try {
+        await this._hass.callService(DOMAIN, "spool_archive", { spool_id: id, archived, ...this._entryData() });
+        if (!archived && this._archSpools) this._archSpools = this._archSpools.filter((s) => s.id !== id);
+        if (archived && this._archSpools) this._archSpools = null;
+        this._toast(archived ? tr("Spule #{id} archiviert", { id }) : tr("Spule #{id} wiederhergestellt", { id }));
+        if (dlg) dlg.close();
+        this._refreshArchList();
+      } catch (err) {
+        this._spoolError(dlg, err);
+      }
+    }
+    /** Service spool_delete (admins only, the integration checks again). */
+    async _spoolDelete(id, dlg) {
+      try {
+        await this._hass.callService(DOMAIN, "spool_delete", { spool_id: id, ...this._entryData() });
+        if (this._archSpools) this._archSpools = this._archSpools.filter((s) => s.id !== id);
+        this._toast(tr("Spule #{id} gelöscht", { id }));
+        dlg.close();
+        this._refreshArchList();
+      } catch (err) {
+        this._spoolError(dlg, err);
+      }
+    }
+    /** The archived list is not part of the render signature: redraw it in place after a change. */
+    _refreshArchList() {
+      const sec = this.shadowRoot && this.shadowRoot.querySelector("[data-spools]");
+      if (!sec || !this._stockFilter || !this._stockFilter.archived) return;
+      const box = sec.querySelector("[data-archlist]");
+      box.querySelectorAll("[data-stock]").forEach((el) => {
+        if (!(this._archSpools || []).some((s) => s.id === Number(el.dataset.stock))) el.remove();
+      });
+      if (this._archSpools === null) box.innerHTML = "";
+      this._filterSpools(sec);
+    }
+    _spoolError(dlg, err) {
+      const msg = err && err.message || String(err);
+      const el = dlg && dlg.querySelector(".dlg-error");
+      if (el) {
+        el.hidden = false;
+        el.textContent = msg;
+      } else this._toast(msg);
+    }
+    /**
+     * Labels for the given spools: QR code to the spool in Spoolman plus name,
+     * vendor, material, colour, temperatures and ID, 62 mm wide (fits label
+     * printers and A4 sheets alike). Printed from a new window; if the browser
+     * blocks it (popup blocker, some app views) the page is saved as a file.
+     */
+    _printLabels(spools) {
+      if (!spools.length) {
+        this._toast(tr("Keine Spule zum Drucken."));
+        return;
+      }
+      const sm = this._spoolman() || {};
+      const base2 = String(sm.url || "").replace(/\/+$/, "");
+      const label = (s) => {
+        const link = base2 ? `${base2}/spool/show/${s.id}` : `web+spoolman:s-${s.id}`;
+        const temps = [s.extruder_temp ? `${tr("Düse")} ${s.extruder_temp} °C` : "", s.bed_temp ? `${tr("Bett")} ${s.bed_temp} °C` : ""].filter(Boolean).join(" · ");
+        const colors = s.colors && s.colors.length > 1 ? `linear-gradient(135deg, ${s.colors.map(esc).join(", ")})` : esc(s.color || "#ccc");
+        return `<div class="lbl"><div class="qr">${qrSvg(link, { quiet: 2 })}</div><div class="txt">
+          <div class="id">#${s.id}</div><div class="nm">${esc(s.name)}</div>
+          <div>${[s.vendor, s.material].filter(Boolean).map(esc).join(" · ")}</div>
+          ${temps ? `<div>${esc(temps)}</div>` : ""}
+          <div class="sw" style="background:${colors}"></div></div></div>`;
+      };
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(tr("Spulen-Etiketten"))}</title><style>
+      body { font: 11px/1.25 system-ui, sans-serif; margin: 8mm; color: #000; background: #fff; }
+      .sheet { display: flex; flex-wrap: wrap; gap: 4mm; }
+      .lbl { width: 62mm; height: 29mm; box-sizing: border-box; border: 0.2mm dashed #999; padding: 2mm;
+        display: flex; gap: 2mm; align-items: center; break-inside: avoid; page-break-inside: avoid; }
+      .qr { width: 25mm; height: 25mm; flex: none; } .qr svg { width: 100%; height: 100%; }
+      .txt { min-width: 0; } .id { font-weight: 700; font-size: 13px; }
+      .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .sw { width: 14mm; height: 3mm; border: 0.2mm solid #000; margin-top: 1mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @media print { body { margin: 0; } .lbl { border-color: transparent; } }
+      </style></head><body><div class="sheet">${spools.map(label).join("")}</div>
+      <script>window.addEventListener("load", function () { setTimeout(function () { window.print(); }, 200); });<\/script></body></html>`;
+      let win = null;
+      try {
+        win = window.open("", "_blank");
+      } catch (e) {
+        win = null;
+      }
+      if (win && win.document) {
+        win.document.open();
+        win.document.write(html);
+        win.document.close();
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+      a.download = spools.length === 1 ? `spool-${spools[0].id}-label.html` : "spool-labels.html";
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1e4);
+      this._toast(tr("Fenster blockiert – Etiketten als Datei gespeichert."));
     }
     /** Form: create a spool in Spoolman. idx = head to assign to (prefilled from it), null = from the stock. */
     _newSpoolForm(dlg, idx) {
@@ -14109,6 +15042,20 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <label>${tr("Leerspule (g)")}<input name="spool_weight" type="number" min="0" max="2000" step="1" placeholder="${tr("optional")}" /></label>
           <label>${tr("Preis")}<input name="price" type="number" min="0" max="10000" step="0.01" placeholder="${tr("optional")}" /></label>
           <label>${tr("Ort")}<input name="location" maxlength="64" placeholder="${tr("optional")}" /></label>
+          <details class="wide more-fields">
+            <summary>${tr("Weitere Angaben")}</summary>
+            <div class="t-label">${tr("Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.")}</div>
+            <div class="head-form">
+              <label>${tr("Düsentemperatur (°C)")}<input name="extruder_temp" type="number" min="150" max="350" step="1" value="${rfidTemp(rfid.nozzle_temp)}" placeholder="${tr("optional")}" /></label>
+              <label>${tr("Betttemperatur (°C)")}<input name="bed_temp" type="number" min="0" max="150" step="1" value="${rfidTemp(rfid.bed_temp)}" placeholder="${tr("optional")}" /></label>
+              <label>${tr("Dichte (g/cm³)")}<input name="density" type="number" min="0.5" max="3" step="0.01" placeholder="${tr("nach Material")}" /></label>
+              <label>${tr("Durchmesser (mm)")}<input name="diameter" type="number" min="1" max="3" step="0.01" placeholder="1.75" /></label>
+              <label>${tr("Restgewicht (g)")}<input name="remaining" type="number" min="0" max="10000" step="1" placeholder="${tr("voll")}" /></label>
+              <label>${tr("Artikelnummer")}<input name="article_number" maxlength="64" placeholder="${tr("optional")}" /></label>
+              <label>${tr("Charge")}<input name="lot_nr" maxlength="64" placeholder="${tr("optional")}" /></label>
+              <label class="wide">${tr("Kommentar")}<textarea name="comment" maxlength="1024" rows="2" placeholder="${tr("optional")}"></textarea></label>
+            </div>
+          </details>
           ${head ? "" : `<label>${tr("Zuordnen")}<select name="slot"><option value="">${tr("keinem Kopf")}</option>
             ${heads.map((h) => `<option value="${h.idx + 1}">${esc(h.name)}</option>`).join("")}</select></label>`}
           <datalist id="u1-vendors"></datalist><datalist id="u1-materials"></datalist>
@@ -14155,6 +15102,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         if (it.weight) field("weight").value = Math.round(it.weight);
         field("spool_weight").value = it.spool_weight ? Math.round(it.spool_weight) : "";
         if (it.price) field("price").value = it.price;
+        [
+          ["extruder_temp", it.extruder_temp],
+          ["bed_temp", it.bed_temp],
+          ["density", it.density],
+          ["diameter", it.diameter],
+          ["article_number", it.article_number]
+        ].forEach(([k, v]) => {
+          field(k).value = v != null && v !== "" ? v : "";
+        });
         box.hidden = true;
         showPicked();
       };
@@ -14203,8 +15159,17 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           weight: Number(f.get("weight")),
           ...opt("spool_weight"),
           ...opt("price"),
-          ...this._entryData()
+          ...this._entryData(),
+          ...opt("extruder_temp"),
+          ...opt("bed_temp"),
+          ...opt("density"),
+          ...opt("diameter"),
+          ...opt("remaining")
         };
+        ["article_number", "lot_nr", "comment"].forEach((k) => {
+          const v = String(f.get(k) || "").trim();
+          if (v) data[k] = v;
+        });
         const nm = String(f.get("name") || "").trim();
         if (nm) data.name = nm;
         const loc = String(f.get("location") || "").trim();

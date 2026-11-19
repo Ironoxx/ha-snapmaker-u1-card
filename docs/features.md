@@ -144,13 +144,19 @@ Optional. Without a Spoolman address none of this appears in the card or the int
 
 **Stock.** The tab *Spoolman* (only with Spoolman set up) lists every active spool: colour, vendor, material, location, which head it is in and the remaining weight as a bar (below the warning threshold in orange). On top the number of spools, the filament left in kg and its value (from the spool prices). Filter by material, search by name, vendor, location or `#ID`.
 
+2.4: **Tap a spool** for its details (vendor, material, remaining, empty spool, temperatures, location, lot, price, last used, head) with *Label*, *Archive* and – admins only – *Delete* (second confirmation; Spoolman deletes the usage too). **Archive** hides the spool from every list but keeps its history; the chip *Archived* loads the archived spools (only then, not with every refresh) to restore them. A spool that sits in a head can be neither archived nor deleted – release it in the head first. Empty spools (0 g, in no head) offer *empty · archive* right in the list. Services: `spool_archive` (`spool_id`, `archived`: true/false), `spool_delete` (`spool_id`, admins).
+
+**Labels.** *Label* (one spool) or *Labels* (all spools on show) opens a printable page: 62 × 29 mm per spool with a QR code (link to the spool in Spoolman, `…/spool/show/<id>`), ID, name, vendor, material, temperatures and a colour bar – fits label printers and A4 sheets. The QR code is made in the card itself (no external service). If the browser blocks the new window, the page is saved as an HTML file to open and print.
+
 **New spool.** From the *Spoolman* tab (*New spool*) or the spool picker of a head (*Create new spool*, prefilled with the head's material, vendor and colour, from the RFID tag if there is one). Typing in *Search filament* shows matches from your own Spoolman filaments and from Spoolman's catalogue [SpoolmanDB](https://github.com/Donkie/SpoolmanDB) (several thousand filaments of known vendors, 1.75 mm only); vendor and material fields suggest the known names. A pick fills vendor, material, name, colour, net weight and empty spool weight:
 - an own filament is used as it is,
 - a catalogue entry is imported into Spoolman once (vendor created if needed, with its colour, density and temperatures) and reused for the next spool.
 
 Without a pick, vendor and filament are reused if they exist (same name, material and colour), otherwise created (density by material, 1.75 mm). Location and price are optional; from the *Spoolman* tab you choose the head in the form or none. Picking a spool for a head stays under the print heads. With SpoolLink the head is set via `SET_SPOOL_ID`. The catalogue needs Spoolman 0.18 or newer with internet access; without it only your own filaments are suggested.
 
-Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`, `location`, `filament_id` or `external_id`), returns `spool_id`.
+2.4: *More details* (collapsed) adds nozzle and bed temperature, density, diameter, remaining weight, article number, lot number and comment. Temperatures, density, diameter and article number belong to the filament and are only used when it is created new (an existing filament is never changed); a picked filament fills them in, a new spool for a head takes the temperatures from its RFID tag. Lot number and comment belong to the spool. Spoolman keeps one nozzle and one bed temperature (no range).
+
+Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`, `color`, `weight`, `spool_weight`, `price`, `remaining`, `location`, `filament_id` or `external_id`; 2.4: `extruder_temp`, `bed_temp`, `density`, `diameter`, `article_number`, `lot_nr`, `comment`), returns `spool_id`.
 
 **Assigning spools to heads.** Moonraker only knows *one* active spool for Spoolman; with four heads the integration handles this itself. For each loaded head an active (not archived) spool is chosen by:
 

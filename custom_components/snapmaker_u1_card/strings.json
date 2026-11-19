@@ -119,13 +119,17 @@
               "spoolman_url": "Spoolman URL",
               "spoolman_deduct": "Deduct usage per head after each print",
               "spoolman_low": "Warn below",
-              "spool_restore": "Last spool after reloading a head"
+              "spool_restore": "Last spool after reloading a head",
+              "todo_shopping": "Shopping list for low spools",
+              "shopping_target": "Add to this to-do list"
             },
             "data_description": {
               "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
               "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
               "spoolman_low": "Card shows a warning when a spool has less filament left.",
-              "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again."
+              "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again.",
+              "todo_shopping": "Spools below “Warn below” land on an HA to-do list. Off = no list.",
+              "shopping_target": "Optional, e.g. your shopping list. Empty = own list “Filament shopping list”. Items are only added, never removed."
             }
           },
           "timelapse": {
@@ -151,7 +155,11 @@
               "maint_nozzle": "Clean nozzles and wiper",
               "maint_rails": "Lubricate linear rails",
               "maint_belts": "Check belt tension",
-              "maint_filter": "Replace air filter"
+              "maint_filter": "Replace air filter",
+              "todo_maintenance": "Due maintenance as a to-do list"
+            },
+            "data_description": {
+              "todo_maintenance": "Ticking off an item marks it done. Off = no list."
             }
           }
         }
@@ -226,13 +234,17 @@
           "spoolman_url": "Spoolman URL",
           "spoolman_deduct": "Deduct usage per head after each print",
           "spoolman_low": "Warn below",
-          "spool_restore": "Last spool after reloading a head"
+          "spool_restore": "Last spool after reloading a head",
+          "todo_shopping": "Shopping list for low spools",
+          "shopping_target": "Add to this to-do list"
         },
         "data_description": {
           "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
           "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
           "spoolman_low": "Card shows a warning when a spool has less filament left.",
-          "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again."
+          "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again.",
+          "todo_shopping": "Spools below “Warn below” land on an HA to-do list. Off = no list.",
+          "shopping_target": "Optional, e.g. your shopping list. Empty = own list “Filament shopping list”. Items are only added, never removed."
         }
       }
     },
@@ -354,13 +366,17 @@
               "spoolman_url": "Spoolman URL",
               "spoolman_deduct": "Deduct usage per head after each print",
               "spoolman_low": "Warn below",
-              "spool_restore": "Last spool after reloading a head"
+              "spool_restore": "Last spool after reloading a head",
+              "todo_shopping": "Shopping list for low spools",
+              "shopping_target": "Add to this to-do list"
             },
             "data_description": {
               "spoolman_url": "Address with port 7912, e.g. 192.168.0.10:7912 (Home Assistant add-on: homeassistant.local:7912). Empty = off.",
               "spoolman_deduct": "Slicer weight per toolhead (pro rata when cancelled). Turn off if something else already books usage (e.g. Moonraker's own Spoolman connection), otherwise it is counted twice.",
               "spoolman_low": "Card shows a warning when a spool has less filament left.",
-              "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again."
+              "spool_restore": "The printer forgets the spool when filament is unloaded (no RFID tag). Ask: the head offers the last spool, one tap restores it. Automatic: it is set again without asking (wrong spool if you load a different one). Off: choose again.",
+              "todo_shopping": "Spools below “Warn below” land on an HA to-do list. Off = no list.",
+              "shopping_target": "Optional, e.g. your shopping list. Empty = own list “Filament shopping list”. Items are only added, never removed."
             }
           },
           "timelapse": {
@@ -399,7 +415,11 @@
               "maint_coupling": "Steel pins and balls of the head coupling (print hours)",
               "maint_m_coupling": "Steel pins and balls of the head coupling (months)",
               "maint_pogo": "Clean pogo contacts of the heads (print hours)",
-              "maint_m_pogo": "Clean pogo contacts of the heads (months)"
+              "maint_m_pogo": "Clean pogo contacts of the heads (months)",
+              "todo_maintenance": "Due maintenance as a to-do list"
+            },
+            "data_description": {
+              "todo_maintenance": "Ticking off an item marks it done. Off = no list."
             }
           }
         }
@@ -698,6 +718,14 @@
           }
         }
       }
+    },
+    "todo": {
+      "maintenance_todo": {
+        "name": "Maintenance"
+      },
+      "shopping_todo": {
+        "name": "Filament shopping list"
+      }
     }
   },
   "services": {
@@ -830,6 +858,14 @@
         "pause_layers": {
           "name": "Pause before layer",
           "description": "List of layers (1 = first). The printer pauses before these layers, e.g. to insert magnets. A copy of the file with PAUSE is created for this."
+        },
+        "start_at": {
+          "name": "Start time",
+          "description": "Start the job at this time (Home Assistant's time zone). Empty = start by hand as before."
+        },
+        "confirm_bed": {
+          "name": "Ask “bed is clear?”",
+          "description": "At the start time first ask in the notification and the card whether the bed is clear. Off = start on its own as soon as the printer is free."
         }
       }
     },
@@ -1230,6 +1266,34 @@
         "config_entry_id": {
           "name": "Printer",
           "description": "Only needed with several printers."
+        },
+        "extruder_temp": {
+          "name": "Nozzle temperature",
+          "description": "Recommended nozzle temperature in °C (new filament only)."
+        },
+        "bed_temp": {
+          "name": "Bed temperature",
+          "description": "Recommended bed temperature in °C (new filament only)."
+        },
+        "density": {
+          "name": "Density",
+          "description": "g/cm³; empty = by material (new filament only)."
+        },
+        "diameter": {
+          "name": "Diameter",
+          "description": "mm; empty = 1.75 (new filament only)."
+        },
+        "article_number": {
+          "name": "Article number",
+          "description": "Vendor's article number or EAN (new filament only)."
+        },
+        "lot_nr": {
+          "name": "Lot number",
+          "description": "Batch of this spool."
+        },
+        "comment": {
+          "name": "Comment",
+          "description": "Note on this spool."
         }
       }
     },
@@ -1248,6 +1312,38 @@
         "position": {
           "name": "Fixed position",
           "description": "center or front – instead of axis and distance."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "spool_archive": {
+      "name": "Archive spool",
+      "description": "Archives a spool in Spoolman (hidden from lists, usage history kept) or restores it. Not for a spool that is in a head.",
+      "fields": {
+        "spool_id": {
+          "name": "Spool ID",
+          "description": "ID of the spool in Spoolman."
+        },
+        "archived": {
+          "name": "Archive",
+          "description": "On = archive, off = restore."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "spool_delete": {
+      "name": "Delete spool",
+      "description": "Deletes a spool in Spoolman for good, including its usage. Admins only; not for a spool that is in a head.",
+      "fields": {
+        "spool_id": {
+          "name": "Spool ID",
+          "description": "ID of the spool in Spoolman."
         },
         "config_entry_id": {
           "name": "Printer",

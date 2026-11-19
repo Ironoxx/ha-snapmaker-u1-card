@@ -119,13 +119,17 @@
               "spoolman_url": "URL de Spoolman",
               "spoolman_deduct": "Descontar el consumo por cabezal tras cada impresión",
               "spoolman_low": "Avisar por debajo de",
-              "spool_restore": "Última bobina tras recargar un cabezal"
+              "spool_restore": "Última bobina tras recargar un cabezal",
+              "todo_shopping": "Lista de compra para bobinas escasas",
+              "shopping_target": "Añadir a esta lista de tareas"
             },
             "data_description": {
               "spoolman_url": "Dirección con puerto 7912, p. ej. 192.168.0.10:7912 (complemento de Home Assistant: homeassistant.local:7912). Vacío = desactivado.",
               "spoolman_deduct": "Peso del slicer por cabezal (proporcional si se cancela). Desactívalo si otra cosa ya registra el consumo (p. ej. la conexión de Spoolman propia de Moonraker); si no, se cuenta dos veces.",
               "spoolman_low": "La tarjeta avisa cuando a una bobina le queda menos filamento.",
-              "spool_restore": "La impresora olvida la bobina al descargar el filamento (sin etiqueta RFID). Preguntar: el cabezal ofrece la última bobina, un toque la restaura. Automático: se vuelve a asignar sin preguntar (bobina equivocada si cargas otra). Desactivado: elegir de nuevo."
+              "spool_restore": "La impresora olvida la bobina al descargar el filamento (sin etiqueta RFID). Preguntar: el cabezal ofrece la última bobina, un toque la restaura. Automático: se vuelve a asignar sin preguntar (bobina equivocada si cargas otra). Desactivado: elegir de nuevo.",
+              "todo_shopping": "Las bobinas por debajo de «Avisar por debajo de» van a una lista de tareas de HA. Apagado = sin lista.",
+              "shopping_target": "Opcional, p. ej. tu lista de la compra. Vacío = lista propia «Lista de compra de filamento». Solo se añaden elementos, nunca se borran."
             }
           },
           "timelapse": {
@@ -151,7 +155,11 @@
               "maint_nozzle": "Limpiar boquillas y limpiador",
               "maint_rails": "Lubricar las guías lineales",
               "maint_belts": "Revisar la tensión de las correas",
-              "maint_filter": "Cambiar el filtro de aire"
+              "maint_filter": "Cambiar el filtro de aire",
+              "todo_maintenance": "Mantenimiento pendiente como lista de tareas"
+            },
+            "data_description": {
+              "todo_maintenance": "Marcar un elemento = mantenimiento hecho. Apagado = sin lista."
             }
           }
         }
@@ -226,13 +234,17 @@
           "spoolman_url": "URL de Spoolman",
           "spoolman_deduct": "Descontar el consumo por cabezal tras cada impresión",
           "spoolman_low": "Avisar por debajo de",
-          "spool_restore": "Última bobina tras recargar un cabezal"
+          "spool_restore": "Última bobina tras recargar un cabezal",
+          "todo_shopping": "Lista de compra para bobinas escasas",
+          "shopping_target": "Añadir a esta lista de tareas"
         },
         "data_description": {
           "spoolman_url": "Dirección con puerto 7912, p. ej. 192.168.0.10:7912 (complemento de Home Assistant: homeassistant.local:7912). Vacío = desactivado.",
           "spoolman_deduct": "Peso del slicer por cabezal (proporcional si se cancela). Desactívalo si otra cosa ya registra el consumo (p. ej. la conexión de Spoolman propia de Moonraker); si no, se cuenta dos veces.",
           "spoolman_low": "La tarjeta avisa cuando a una bobina le queda menos filamento.",
-          "spool_restore": "La impresora olvida la bobina al descargar el filamento (sin etiqueta RFID). Preguntar: el cabezal ofrece la última bobina, un toque la restaura. Automático: se vuelve a asignar sin preguntar (bobina equivocada si cargas otra). Desactivado: elegir de nuevo."
+          "spool_restore": "La impresora olvida la bobina al descargar el filamento (sin etiqueta RFID). Preguntar: el cabezal ofrece la última bobina, un toque la restaura. Automático: se vuelve a asignar sin preguntar (bobina equivocada si cargas otra). Desactivado: elegir de nuevo.",
+          "todo_shopping": "Las bobinas por debajo de «Avisar por debajo de» van a una lista de tareas de HA. Apagado = sin lista.",
+          "shopping_target": "Opcional, p. ej. tu lista de la compra. Vacío = lista propia «Lista de compra de filamento». Solo se añaden elementos, nunca se borran."
         }
       }
     },
@@ -354,13 +366,17 @@
               "spoolman_url": "URL de Spoolman",
               "spoolman_deduct": "Descontar el consumo por cabezal tras cada impresión",
               "spoolman_low": "Avisar por debajo de",
-              "spool_restore": "Última bobina tras recargar un cabezal"
+              "spool_restore": "Última bobina tras recargar un cabezal",
+              "todo_shopping": "Lista de compra para bobinas escasas",
+              "shopping_target": "Añadir a esta lista de tareas"
             },
             "data_description": {
               "spoolman_url": "Dirección con puerto 7912, p. ej. 192.168.0.10:7912 (complemento de Home Assistant: homeassistant.local:7912). Vacío = desactivado.",
               "spoolman_deduct": "Peso del slicer por cabezal (proporcional si se cancela). Desactívalo si otra cosa ya registra el consumo (p. ej. la conexión de Spoolman propia de Moonraker); si no, se cuenta dos veces.",
               "spoolman_low": "La tarjeta avisa cuando a una bobina le queda menos filamento.",
-              "spool_restore": "La impresora olvida la bobina al descargar el filamento (sin etiqueta RFID). Preguntar: el cabezal ofrece la última bobina, un toque la restaura. Automático: se vuelve a asignar sin preguntar (bobina equivocada si cargas otra). Desactivado: elegir de nuevo."
+              "spool_restore": "La impresora olvida la bobina al descargar el filamento (sin etiqueta RFID). Preguntar: el cabezal ofrece la última bobina, un toque la restaura. Automático: se vuelve a asignar sin preguntar (bobina equivocada si cargas otra). Desactivado: elegir de nuevo.",
+              "todo_shopping": "Las bobinas por debajo de «Avisar por debajo de» van a una lista de tareas de HA. Apagado = sin lista.",
+              "shopping_target": "Opcional, p. ej. tu lista de la compra. Vacío = lista propia «Lista de compra de filamento». Solo se añaden elementos, nunca se borran."
             }
           },
           "timelapse": {
@@ -399,7 +415,11 @@
               "maint_coupling": "Pasadores y bolas del acoplamiento de cabezales (horas de impresión)",
               "maint_m_coupling": "Pasadores y bolas del acoplamiento de cabezales (meses)",
               "maint_pogo": "Limpiar los contactos pogo de los cabezales (horas de impresión)",
-              "maint_m_pogo": "Limpiar los contactos pogo de los cabezales (meses)"
+              "maint_m_pogo": "Limpiar los contactos pogo de los cabezales (meses)",
+              "todo_maintenance": "Mantenimiento pendiente como lista de tareas"
+            },
+            "data_description": {
+              "todo_maintenance": "Marcar un elemento = mantenimiento hecho. Apagado = sin lista."
             }
           }
         }
@@ -698,6 +718,14 @@
           }
         }
       }
+    },
+    "todo": {
+      "maintenance_todo": {
+        "name": "Mantenimiento"
+      },
+      "shopping_todo": {
+        "name": "Lista de compra de filamento"
+      }
     }
   },
   "services": {
@@ -830,6 +858,14 @@
         "pause_layers": {
           "name": "Pausa antes de la capa",
           "description": "Lista de capas (1 = primera). La impresora se detiene antes de estas capas, p. ej. para insertar imanes. Para ello se crea una copia del archivo con PAUSE."
+        },
+        "start_at": {
+          "name": "Hora de inicio",
+          "description": "Iniciar el trabajo a esta hora (zona horaria de Home Assistant). Vacío = iniciar a mano como antes."
+        },
+        "confirm_bed": {
+          "name": "Preguntar «¿cama libre?»",
+          "description": "A la hora de inicio, preguntar primero en la notificación y en la tarjeta si la cama está libre. Apagado = inicia solo en cuanto la impresora esté libre."
         }
       }
     },
@@ -1230,6 +1266,34 @@
         "config_entry_id": {
           "name": "Impresora",
           "description": "Solo necesario con varias impresoras."
+        },
+        "extruder_temp": {
+          "name": "Temperatura de boquilla",
+          "description": "Temperatura de boquilla recomendada en °C (solo filamento nuevo)."
+        },
+        "bed_temp": {
+          "name": "Temperatura de cama",
+          "description": "Temperatura de cama recomendada en °C (solo filamento nuevo)."
+        },
+        "density": {
+          "name": "Densidad",
+          "description": "g/cm³; vacío = según material (solo filamento nuevo)."
+        },
+        "diameter": {
+          "name": "Diámetro",
+          "description": "mm; vacío = 1,75 (solo filamento nuevo)."
+        },
+        "article_number": {
+          "name": "Número de artículo",
+          "description": "Número de artículo del fabricante o EAN (solo filamento nuevo)."
+        },
+        "lot_nr": {
+          "name": "Lote",
+          "description": "Lote de esta bobina."
+        },
+        "comment": {
+          "name": "Comentario",
+          "description": "Nota sobre esta bobina."
         }
       }
     },
@@ -1248,6 +1312,38 @@
         "position": {
           "name": "Posición fija",
           "description": "center o front – en lugar de eje y distancia."
+        },
+        "config_entry_id": {
+          "name": "Impresora",
+          "description": "Solo necesario con varias impresoras."
+        }
+      }
+    },
+    "spool_archive": {
+      "name": "Archivar bobina",
+      "description": "Archiva una bobina en Spoolman (oculta en las listas, se conserva el consumo) o la restaura. No para una bobina que está en un cabezal.",
+      "fields": {
+        "spool_id": {
+          "name": "ID de bobina",
+          "description": "ID de la bobina en Spoolman."
+        },
+        "archived": {
+          "name": "Archivar",
+          "description": "Encendido = archivar, apagado = restaurar."
+        },
+        "config_entry_id": {
+          "name": "Impresora",
+          "description": "Solo necesario con varias impresoras."
+        }
+      }
+    },
+    "spool_delete": {
+      "name": "Borrar bobina",
+      "description": "Borra una bobina en Spoolman definitivamente, junto con su consumo. Solo administradores; no para una bobina que está en un cabezal.",
+      "fields": {
+        "spool_id": {
+          "name": "ID de bobina",
+          "description": "ID de la bobina en Spoolman."
         },
         "config_entry_id": {
           "name": "Impresora",

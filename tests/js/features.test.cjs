@@ -161,6 +161,8 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   D().querySelector("[data-pause]").value = "20 5,20"; D().querySelector("[data-pause]").dispatchEvent(new w.Event("change"));
   dl = D();
   assert.match(text(dl), /vor Schicht 5, 20 an/);
+  // 2.4: due maintenance is shown as a hint, printing stays possible
+  assert.match(text(dl.querySelector("[data-maintdue]")), /Wartung fällig: Druckplatte reinigen/);
   // Print: confirmation required; queue: not
   assert.ok(dl.querySelector('[data-dlg="print"]').disabled);
   dl.querySelector('[data-dlg="queue"]').click();
@@ -171,6 +173,24 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.deepEqual(q[2].mapping, { 0: 2, 1: 0 });
   assert.strictEqual(q[2].timelapse, true);
   assert.ok(!D() || !D().hasAttribute("open"), "Dialog zu");
+
+  // 5b. 2.4: start time -> "Schedule" sends start_at (UTC) and the bed question; "Print" is off then
+  tab("files");
+  R().querySelector('[data-print="box.gcode"]').click();
+  const sat = D().querySelector("[data-startat]");
+  assert.ok(sat && sat.min, "Startzeit-Feld mit Minimum");
+  sat.value = "2099-01-02T22:30"; sat.dispatchEvent(new w.Event("change"));
+  assert.match(text(D()), /Bett frei – starten/);
+  assert.ok(D().querySelector('[data-dlg="print"]').disabled, "mit Startzeit nur planen");
+  assert.match(text(D().querySelector('[data-dlg="queue"]')), /Planen/);
+  D().querySelector("[data-confirmbed]").click();
+  assert.match(text(D()), /Das Druckbett muss dann leer sein/);
+  D().querySelector('[data-dlg="queue"]').click();
+  await tick(); await tick();
+  const qs = calls.pop();
+  assert.strictEqual(qs[1], "queue_add");
+  assert.strictEqual(qs[2].start_at, new Date("2099-01-02T22:30").toISOString());
+  assert.strictEqual(qs[2].confirm_bed, false);
 
   // 6. Start a print with pauses
   tab("files");
@@ -183,6 +203,15 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const sp = calls.pop();
   assert.strictEqual(sp[1], "start_print");
   assert.deepEqual(sp[2].pause_layers, [7]);
+
+  // 7a. 2.4: a scheduled job waiting for "bed is clear" can be started even if it is not first
+  const jobs0 = states["sensor.snapmaker_u1_card_warteschlange"].attributes.jobs;
+  jobs0[1] = { ...jobs0[1], start_at: 4070908800, sched: "confirm" };
+  card.hass = hass();
+  assert.match(text(R().querySelector(".q-list")), /Druckbett frei\? Bitte starten/);
+  assert.deepEqual([...R().querySelectorAll('[data-q="start"]')].map((b) => b.dataset.job), ["j1", "j2"]);
+  jobs0[1] = { id: "j2", file: "teil.gcode", name: "Teil" };
+  card.hass = hass();
 
   // 7. Queue in the files tab
   const qtext = text(R().querySelector(".q-list"));

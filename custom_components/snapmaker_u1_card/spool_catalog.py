@@ -39,6 +39,9 @@ def compact_own(f: dict[str, Any]) -> dict[str, Any]:
         "weight": _num(f.get("weight")), "spool_weight": _num(f.get("spool_weight")),
         "price": _num(f.get("price")),
         "extruder_temp": f.get("settings_extruder_temp"), "bed_temp": f.get("settings_bed_temp"),
+        # 2.4: shown in the "more details" part of the form when this filament is picked
+        "density": _num(f.get("density")), "diameter": _num(f.get("diameter")),
+        "article_number": f.get("article_number") or None,
         "external_id": f.get("external_id"),
     }
 

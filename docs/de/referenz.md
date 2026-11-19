@@ -41,6 +41,8 @@ Das Attribut `head_states` von `sensor.…_filamente` sagt pro Kopf, ob er `park
 
 Die Slot-Sensoren tragen zusätzlich das Attribut `rfid` mit den Daten des Spulen-Chips.
 
+2.4: **`todo.…_wartung`** und **`todo.…_filament_einkaufsliste`** – nur wenn in den Optionen eingeschaltet (standardmäßig aus). Wartung: fällige Punkte, Abhaken = `maintenance_done` (der Werkzeugwechsel-Zähler der Firmware wird am Drucker zurückgesetzt). Einkaufsliste: Spulen unter der Warnschwelle, Abhaken/Entfernen bleibt gemerkt, bis die Spule nicht mehr knapp ist. Mit *In diese Aufgabenliste eintragen* landen die Einträge stattdessen dort und die eigene Liste gibt es nicht.
+
 2.4: **`event.…_druckereignis`** feuert bei jedem Anlass, den die Benachrichtigungen kennen – `complete`, `cancelled`, `error`, `paused`, `alert`, `first_layer`, `almost_done`, `spool_low`, `spool_runout`, `bed_cool`, `maintenance`, `chamber_ready` – mit `name`, `file`, `message`, unabhängig davon, ob Benachrichtigungen eingerichtet sind. In einer Automation: Auslöser *Entität → Druckereignis*, Bedingung auf den Ereignistyp (oder Zustands-Auslöser mit Attribut `event_type`).
 
 Ereignis `snapmaker_u1_card_print_finished` bei jedem Druckende, mit `file`, `name`, `result`, `duration_s`, `tool_changes`, `energy_kwh`, `energy_cost`, `filament_g`, `filament_cost`, `total_cost` – für eigene Automationen.
@@ -75,6 +77,18 @@ action: snapmaker_u1_card.queue_clear
 ```
 
 Moonrakers eigene Warteschlange (`[job_queue]`) ist auf dem U1 nicht geladen und kennt keine Filamentzuordnung, deshalb führt die Integration die Liste selbst. Sie übersteht Neustarts. Nach einem Druck kommt eine Benachrichtigung „Nächster Auftrag wartet“ (an die eingetragenen Dienste).
+
+2.4: **Startzeit.** `queue_add` mit `start_at` (Datum und Uhrzeit; ohne Zone in der Zeitzone von Home Assistant) plant den Auftrag; im Druckdialog: *Startzeit (Warteschlange)* → *Planen*. Zu dieser Zeit:
+- `confirm_bed: true` (Standard): Eine Benachrichtigung (Gruppe 1) fragt *Bett frei – starten*; der Knopf startet den Auftrag, ebenso *Starten* am Auftrag in der Karte. Ohne Bestätigung wartet der Auftrag.
+- `confirm_bed: false`: Der Auftrag startet selbst, sobald der Drucker frei ist (mit *automatisch einschalten* vorher eingeschaltet); druckt er noch, wartet der Auftrag bis zum Ende.
+- Eine Zeit, die verstrichen ist, während Home Assistant nicht lief, wird nie nachgeholt: Der Auftrag wird als *verpasst* markiert und gemeldet. Ein abgelehnter Start bleibt am Auftrag stehen (*fehlgeschlagen: …*) und wird gemeldet, nicht wiederholt.
+
+```yaml
+action: snapmaker_u1_card.queue_add
+data: {filename: Halter.gcode, start_at: "2026-11-20 06:30:00", confirm_bed: true}
+```
+
+Attribut `sched` des Auftrags im Warteschlangen-Sensor: leer (wartet auf seine Zeit), `confirm`, `due`, `starting`, `missed`, `error` (mit `sched_error`).
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 

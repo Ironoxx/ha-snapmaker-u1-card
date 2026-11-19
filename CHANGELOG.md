@@ -4,6 +4,84 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.4.0b2
+
+Beta. Spoolman tab with archive, delete and QR labels, more fields for new spools, start times for queued jobs, to-do lists for maintenance and shopping, and a card that loads faster on phones. Includes everything from 2.4.0b1 (guided setup, dashboard templates, clock and own buttons, print event entity, mini card, broader self test, card name conflict).
+
+**Spoolman tab**
+- **Tap a spool** for its details (vendor, material, remaining, empty spool, temperatures, location, lot, price, last used, head) and the actions *Label*, *Archive* and – for admins – *Delete*.
+- **Archive** is Spoolman's own "put away": the spool leaves every list, its usage history stays and it can be restored. **Delete** removes it for good (with a second confirmation). Both are refused for a spool that sits in a head – release it there first.
+- **Empty spools** (0 g left, in no head) offer *empty · archive* right in the list.
+- Chip **Archived** shows the archived spools (loaded only when you switch it on) to restore them.
+- **QR labels:** per spool or for all spools on show (*Labels*), 62 × 29 mm with QR code (link to the spool in Spoolman), ID, name, vendor, material, temperatures and colour. Printed from a new window; if the browser blocks it, the page is saved as a file.
+- New services `spool_archive` (also restores) and `spool_delete` (admins only).
+
+**New spool: more fields**
+- Collapsed *More details* in the form: nozzle and bed temperature, density, diameter, remaining weight, article number, lot number and comment. Temperatures, density, diameter and article number belong to the filament and are only used when it is created new; a picked filament fills them in, a spool created for a head takes the temperatures from its RFID tag.
+- Service `create_spool`: new fields `extruder_temp`, `bed_temp`, `density`, `diameter`, `article_number`, `lot_nr`, `comment`.
+
+**Start time for queued jobs**
+- In the print dialog, *Start time (queue)* plans a job instead of printing now (button *Schedule*).
+- At the start time, by default a notification asks *Bed clear – start* (also on the job in the card); without a confirmation the job waits. Switched off, the job starts on its own as soon as the printer is free (switched on first with *auto on*).
+- A start time that passed while Home Assistant was not running is never made up for blindly: the job is marked *missed* and announced. One timer per job, no polling.
+- Service `queue_add`: new fields `start_at` and `confirm_bed`.
+
+**To-do lists (options, both off by default)**
+- **Maintenance** (section *Maintenance*): every due item; ticking it off marks it done.
+- **Shopping list** (section *Spoolman*): spools below *Warn below*. Own list *Filament shopping list*, or – with *Add to this to-do list* – items go to an existing list such as your shopping list (only added, never removed, no duplicates).
+- Both are built from data the integration already has, no extra requests.
+
+**Print dialog**
+- **Due maintenance** shows up as a hint; printing stays possible.
+
+**Faster loading**
+- The card file is now served with long cache headers and a gzip copy: phones and tablets download about 260 KB instead of about 900 KB, and afterwards load it from their cache. The address changes with every new file, so an update still arrives right away.
+
+**Fixed (already on beta since b1)**
+- Spoolman tab missing after a Home Assistant restart while the printer was off (#17, thanks donjo3): last known heads are kept, Spoolman is refreshed while the printer is off.
+- Clock on the far right of the header, the state chips to its left.
+
+Please check: archive/restore/delete a test spool, a label (print preview is enough), a new spool with temperatures, a queued job with a start time a few minutes ahead (with and without the bed question), the two to-do lists, the print dialog with due maintenance.
+
+### Deutsch
+
+Beta. Spoolman-Reiter mit Archivieren, Löschen und QR-Etiketten, mehr Felder für neue Spulen, Startzeiten für Aufträge in der Warteschlange, Aufgabenlisten für Wartung und Einkauf und eine Karte, die auf dem Handy schneller lädt. Enthält alles aus 2.4.0b1 (geführte Einrichtung, Dashboard-Vorlagen, Uhr und eigene Knöpfe, Druckereignis-Entität, Mini-Karte, breiterer Selbsttest, Kartennamen-Konflikt).
+
+**Spoolman-Reiter**
+- **Tipp auf eine Spule** zeigt die Details (Hersteller, Material, Rest, Leerspule, Temperaturen, Ort, Charge, Preis, zuletzt benutzt, Kopf) und die Aktionen *Etikett*, *Archivieren* und – für Admins – *Löschen*.
+- **Archivieren** ist das „Wegräumen“ von Spoolman: Die Spule verschwindet aus allen Listen, ihr Verbrauch bleibt erhalten, sie lässt sich wiederherstellen. **Löschen** entfernt sie endgültig (mit zweiter Rückfrage). Beides geht nicht für eine Spule, die in einem Kopf steckt – dort erst die Zuordnung lösen.
+- **Leere Spulen** (0 g Rest, in keinem Kopf) bieten *leer · archivieren* direkt in der Liste an.
+- Chip **Archiviert** zeigt die archivierten Spulen (erst beim Einschalten geladen) zum Wiederherstellen.
+- **QR-Etiketten:** je Spule oder für alle angezeigten Spulen (*Etiketten*), 62 × 29 mm mit QR-Code (Link zur Spule in Spoolman), ID, Name, Hersteller, Material, Temperaturen und Farbe. Gedruckt aus einem neuen Fenster; blockiert der Browser es, wird die Seite als Datei gespeichert.
+- Neue Dienste `spool_archive` (auch Wiederherstellen) und `spool_delete` (nur Admins).
+
+**Neue Spule: mehr Felder**
+- Eingeklappt *Weitere Angaben* im Formular: Düsen- und Betttemperatur, Dichte, Durchmesser, Restgewicht, Artikelnummer, Charge und Kommentar. Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und zählen nur, wenn es neu angelegt wird; ein gewähltes Filament füllt sie aus, eine Spule für einen Kopf übernimmt die Temperaturen von dessen RFID-Tag.
+- Dienst `create_spool`: neue Felder `extruder_temp`, `bed_temp`, `density`, `diameter`, `article_number`, `lot_nr`, `comment`.
+
+**Startzeit für Aufträge in der Warteschlange**
+- Im Druckdialog plant *Startzeit (Warteschlange)* einen Auftrag, statt sofort zu drucken (Knopf *Planen*).
+- Zur Startzeit fragt standardmäßig eine Benachrichtigung *Bett frei – starten* (auch am Auftrag in der Karte); ohne Bestätigung wartet der Auftrag. Ausgeschaltet startet er selbst, sobald der Drucker frei ist (mit *automatisch einschalten* vorher eingeschaltet).
+- Eine Startzeit, die verstrichen ist, während Home Assistant nicht lief, wird nie blind nachgeholt: Der Auftrag wird als *verpasst* markiert und gemeldet. Ein Zeitgeber je Auftrag, keine Abfragen.
+- Dienst `queue_add`: neue Felder `start_at` und `confirm_bed`.
+
+**Aufgabenlisten (Optionen, beide standardmäßig aus)**
+- **Wartung** (Abschnitt *Wartung*): jeder fällige Punkt; Abhaken markiert ihn als erledigt.
+- **Einkaufsliste** (Abschnitt *Spoolman*): Spulen unter *Warnen unter*. Eigene Liste *Filament-Einkaufsliste* oder – mit *In diese Aufgabenliste eintragen* – Einträge in eine vorhandene Liste wie deine Einkaufsliste (nur hinzufügen, nie löschen, keine Doppelten).
+- Beide entstehen aus Daten, die die Integration ohnehin hat, ohne zusätzliche Abfragen.
+
+**Druckdialog**
+- **Fällige Wartung** erscheint als Hinweis; Drucken bleibt möglich.
+
+**Schneller laden**
+- Die Kartendatei kommt jetzt mit langen Cache-Zeiten und als gzip-Kopie: Handy und Tablet laden etwa 260 KB statt etwa 900 KB und danach aus ihrem Cache. Die Adresse ändert sich mit jeder neuen Datei, ein Update kommt also trotzdem sofort an.
+
+**Behoben (seit b1 schon auf beta)**
+- Spoolman-Reiter fehlte nach einem Neustart von Home Assistant bei ausgeschaltetem Drucker (#17, danke donjo3): Die letzten Köpfe bleiben erhalten, Spoolman wird auch bei ausgeschaltetem Drucker abgefragt.
+- Uhr ganz rechts in der Kopfzeile, die Status-Chips links daneben.
+
+Bitte prüfen: eine Test-Spule archivieren/wiederherstellen/löschen, ein Etikett (Druckvorschau reicht), eine neue Spule mit Temperaturen, ein Auftrag mit Startzeit ein paar Minuten voraus (mit und ohne Bett-Rückfrage), die beiden Aufgabenlisten, den Druckdialog mit fälliger Wartung.
+
 ## 2.4.0b1
 
 Beta. Guided setup, dashboard templates, clock and own buttons, a print event entity, the compact mini card and a broader self test.

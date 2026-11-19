@@ -1,7 +1,7 @@
 /** Files tab: file grid, search/folders, queue and upload. */
 
 import { DOMAIN } from "../const.js";
-import { esc, fmtMin } from "../format.js";
+import { esc, fmtMin, fmtStart } from "../format.js";
 import { tr } from "../i18n.js";
 
 export const FilesMixin = (Base) => class extends Base {
@@ -139,7 +139,16 @@ export const FilesMixin = (Base) => class extends Base {
         j.timelapse ? `<ha-icon icon="mdi:filmstrip" title="${tr("Zeitraffer")}"></ha-icon>` : "",
         j.bed_leveling ? `<ha-icon icon="mdi:grid" title="${tr("Bettnivellierung")}"></ha-icon>` : "",
         Array.isArray(j.pause_layers) && j.pause_layers.length ? `<span>${tr("Pause vor {l}", { l: j.pause_layers.join(", ") })}</span>` : "",
+        // 2.4: start time and where the scheduled job stands
+        j.start_at ? `<span class="q-sched" data-sched="${esc(j.sched || "wait")}"><ha-icon icon="mdi:calendar-clock"></ha-icon>${esc(
+          j.sched === "confirm" ? tr("{at}: Druckbett frei? Bitte starten", { at: fmtStart(j.start_at) })
+            : j.sched === "missed" ? tr("{at} verpasst", { at: fmtStart(j.start_at) })
+              : j.sched === "error" ? tr("{at} fehlgeschlagen: {err}", { at: fmtStart(j.start_at), err: j.sched_error || "" })
+                : j.sched === "due" || j.sched === "starting" ? tr("{at}: startet, sobald der Drucker frei ist", { at: fmtStart(j.start_at) })
+                  : tr("Start {at}", { at: fmtStart(j.start_at) }) + (j.confirm_bed === false ? ` · ${tr("ohne Rückfrage")}` : ""))}</span>` : "",
       ].join("");
+      // the first job, and a scheduled one that waits for the user, can be started here
+      const startable = i === 0 || ["confirm", "missed", "error"].includes(j.sched);
       return `
         <div class="q-item" data-first="${i === 0 ? 1 : 0}">
           <span class="q-pos">${i + 1}</span>
@@ -149,9 +158,9 @@ export const FilesMixin = (Base) => class extends Base {
             <div class="q-meta">${dots ? `<span class="file-dots">${dots}</span>` : ""}${opts}</div>
           </div>
           <div class="q-btns">
-            ${i === 0 ? `<button class="filled" data-q="start" data-job="${esc(j.id)}" ${canStart ? "" : "disabled"}>
-              <ha-icon icon="mdi:play"></ha-icon>${tr("Starten")}</button>` : `
-              <button class="icon ghost" data-q="move" data-job="${esc(j.id)}" data-pos="${i - 1}" title="${tr("Nach oben")}"><ha-icon icon="mdi:arrow-up"></ha-icon></button>`}
+            ${startable ? `<button class="filled" data-q="start" data-job="${esc(j.id)}" ${canStart ? "" : "disabled"}>
+              <ha-icon icon="mdi:play"></ha-icon>${tr("Starten")}</button>` : ""}
+            ${i > 0 ? `<button class="icon ghost" data-q="move" data-job="${esc(j.id)}" data-pos="${i - 1}" title="${tr("Nach oben")}"><ha-icon icon="mdi:arrow-up"></ha-icon></button>` : ""}
             <button class="icon ghost" data-q="remove" data-job="${esc(j.id)}" title="${tr("Entfernen")}"><ha-icon icon="mdi:close"></ha-icon></button>
           </div>
         </div>`;
@@ -163,7 +172,7 @@ export const FilesMixin = (Base) => class extends Base {
           <span class="panel-title">${tr("Warteschlange")}</span>
           <span class="t-label" style="margin-left:auto">${tr("{n} Aufträge", { n: jobs.length })}</span>
         </div>
-        ${d.active ? `<div class="t-label">${tr("Startet nicht von selbst: nach dem Druck das Bett räumen und hier starten.")}</div>` : ""}
+        ${d.active && !jobs.some((j) => j.start_at && j.confirm_bed === false) ? `<div class="t-label">${tr("Startet nicht von selbst: nach dem Druck das Bett räumen und hier starten.")}</div>` : ""}
         <div class="q-list">${items}</div>
       </section>`;
   }

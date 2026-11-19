@@ -3,6 +3,8 @@
 ``snapmaker_u1_card/spoolman/catalog`` – vendor and material names (own ones first)
 ``snapmaker_u1_card/spoolman/suggest`` – filaments matching vendor, material and text,
 own Spoolman filaments first, then SpoolmanDB
+``snapmaker_u1_card/spoolman/archived`` – 2.4: the archived spools, only when the card
+shows them (filter "archived"), so the regular poll stays as small as before
 
 Read-only; creating the spool goes through the ``create_spool`` service.
 """
@@ -17,6 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .api import MoonrakerError
 from .const import DOMAIN
+from .parsing import compact_spool
 from .settings_ws import _entry
 
 
@@ -63,7 +66,25 @@ async def ws_suggest(hass: HomeAssistant, connection: websocket_api.ActiveConnec
         connection.send_error(msg["id"], "spoolman", str(err))
 
 
+@websocket_api.websocket_command({
+    vol.Required("type"): f"{DOMAIN}/spoolman/archived",
+    vol.Optional("entry_id"): str,
+})
+@websocket_api.async_response
+async def ws_archived(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """Archived spools in the card's compact form, newest ID first."""
+    mgr = _manager(hass, connection, msg)
+    if mgr is None:
+        return
+    try:
+        spools = [compact_spool(s) for s in await mgr.client.archived_spools()]
+        connection.send_result(msg["id"], {"spools": sorted(spools, key=lambda s: -(s.get("id") or 0))})
+    except MoonrakerError as err:
+        connection.send_error(msg["id"], "spoolman", str(err))
+
+
 @callback
 def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_catalog)
     websocket_api.async_register_command(hass, ws_suggest)
+    websocket_api.async_register_command(hass, ws_archived)

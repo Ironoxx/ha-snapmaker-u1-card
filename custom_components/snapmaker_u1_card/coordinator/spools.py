@@ -11,8 +11,10 @@ from ..api import (
     MoonrakerError,
 )
 from ..const import (
+    CONF_SHOPPING_TARGET,
     CONF_SPOOL_RESTORE,
     CONF_SPOOLMAN_LOW,
+    CONF_TODO_SHOPPING,
     DEFAULT_SPOOL_RESTORE,
     DEFAULT_SPOOLMAN_LOW,
     SPOOLMAN_INTERVAL_S,
@@ -146,11 +148,87 @@ class SpoolMixin:
         self._set_history([{**rec, "spools": filled, "spools_final": True}, *history[1:]])
         return True
 
+    # ── 2.4: shopping list ─────────────────────────────────────────────────
+    def shopping_spools(self) -> list[dict[str, Any]]:
+        """Active spools below the low-stock threshold (option spoolman_low, 0 = off), by ID."""
+        mgr = self.spools
+        low = float(self.options.get(CONF_SPOOLMAN_LOW, DEFAULT_SPOOLMAN_LOW))
+        if not mgr.enabled or not mgr.online or low <= 0:
+            return []
+        return sorted((s for s in mgr.spools if not s.get("archived")
+                       and isinstance(s.get("remaining_weight"), (int, float)) and s["remaining_weight"] < low),
+                      key=lambda s: s["id"])
+
+    def shopping_text(self, spool: dict[str, Any]) -> str:
+        """Item text: what to buy (vendor, material, name), no IDs."""
+        name = spool.get("name") or ""
+        parts = [spool.get("vendor"), spool.get("material") if spool.get("material") not in name else None, name]
+        return " ".join(str(p) for p in parts if p) or f"Spool {spool.get('id')}"
+
+    def _shopping_check(self) -> None:
+        """Keep the shopping memory in step with the spools; feed an external list.
+
+        Runs with every Spoolman refresh, costs nothing with the option off. A spool
+        that is no longer low (refilled, archived, deleted) is forgotten, so it can
+        come back later. With ``shopping_target`` each newly low spool is added
+        once to that list (todo.add_item); the integration never removes anything
+        there.
+        """
+        if not self.options.get(CONF_TODO_SHOPPING):
+            return
+        low_ids = {s["id"] for s in self.shopping_spools()}
+        if not self.spools.online:
+            return  # do not forget anything while Spoolman is away
+        state = {k: v for k, v in self.shopping["state"].items() if int(k) in low_ids}
+        sent = [i for i in self.shopping["sent"] if i in low_ids]
+        changed = state != self.shopping["state"] or sent != self.shopping["sent"]
+        target = self.options.get(CONF_SHOPPING_TARGET)
+        new = [s for s in self.shopping_spools() if s["id"] not in sent] if target else []
+        if new:
+            sent.extend(s["id"] for s in new)
+            changed = True
+            self.hass.async_create_task(self._shopping_add(target, new), "snapmaker_u1_card shopping list")
+        if changed:
+            self.shopping = {"state": state, "sent": sent}
+            self._save(10)
+
+    async def _shopping_add(self, target: str, spools: list[dict[str, Any]]) -> None:
+        """Add items to an existing to-do list; skips texts that are already on it (not done)."""
+        try:
+            res = await self.hass.services.async_call("todo", "get_items", {"status": ["needs_action"]},
+                                                      target={"entity_id": target}, blocking=True,
+                                                      return_response=True)
+            existing = {str(i.get("summary") or "").casefold()
+                        for i in ((res or {}).get(target) or {}).get("items") or []}
+        except Exception as err:  # noqa: BLE001 - list gone or no get_items: still try to add
+            _LOGGER.debug("Shopping list %s not readable: %s", target, err)
+            existing = set()
+        for spool in spools:
+            text = self.shopping_text(spool)
+            if text.casefold() in existing:
+                continue
+            try:
+                await self.hass.services.async_call("todo", "add_item", {"item": text},
+                                                    target={"entity_id": target}, blocking=True)
+                existing.add(text.casefold())
+            except Exception as err:  # noqa: BLE001 - a broken target must not break the update
+                _LOGGER.warning("Shopping list %s: could not add %s: %s", target, text, err)
+
+    def set_shopping_state(self, spool_id: int, state: str | None) -> None:
+        """Own shopping list: remember ticked off ("done") or removed ("hidden") items."""
+        if state is None:
+            self.shopping["state"].pop(str(spool_id), None)
+        else:
+            self.shopping["state"][str(spool_id)] = state
+        self._save(5)
+        self.async_update_listeners()
+
     def _spoolman_data(self, slots: list[dict[str, Any]]) -> dict[str, Any] | None:
         """Spoolman status for the card (None if not configured)."""
         mgr = self.spools
         if not mgr.enabled or mgr.client is None:
             return None
+        self._shopping_check()
         return {
             "online": mgr.online,
             "error": mgr.error,
@@ -278,17 +356,91 @@ class SpoolMixin:
         _LOGGER.info("Spool %s weighed: %s g left (was %s g)", spool_id, rest, before)
         return {"spool_id": spool_id, "remaining_weight": rest, "before": before}
 
+    def _spool_head(self, spool_id: int) -> int | None:
+        """2.4: head (0-3) that holds this spool right now, by our assignment or SpoolLink; None = free."""
+        mgr = self.spools
+        for idx, sid in mgr.assigned().items():
+            if sid == spool_id:
+                return idx
+        for idx, sid in enumerate(mgr.printer_ids or []):
+            if sid == spool_id:
+                return idx
+        return None
+
+    async def async_archive_spool(self, spool_id: int, archived: bool = True) -> dict[str, Any]:
+        """2.4 service: archive a spool in Spoolman (or restore it with ``archived=False``).
+
+        Archiving is Spoolman's own "put away": the spool leaves every list but keeps
+        its usage history and can be brought back. A spool that sits in a head is
+        refused, otherwise its usage would have nowhere to go.
+        """
+        mgr = self.spools
+        if not mgr.enabled or mgr.client is None:
+            raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
+        if archived and (head := self._spool_head(spool_id)) is not None:
+            raise HomeAssistantError(tr(
+                self.hass, f"Spule {spool_id} steckt in Kopf {head + 1} – erst die Zuordnung lösen.",
+                f"Spool {spool_id} is in head {head + 1} – release it there first."))
+        try:
+            await mgr.client.set_archived(spool_id, archived)
+        except MoonrakerError as err:
+            raise HomeAssistantError(tr(self.hass, f"Spoolman lehnt ab: {err}", f"Spoolman refused: {err}")) from err
+        _LOGGER.info("Spoolman: spool %s %s", spool_id, "archived" if archived else "restored")
+        await self._spools_changed()
+        return {"spool_id": spool_id, "archived": archived}
+
+    async def async_delete_spool(self, spool_id: int) -> dict[str, Any]:
+        """2.4 service: delete a spool in Spoolman for good (admin only, see __init__).
+
+        Same head check as archiving. Bookings still queued for the spool are
+        dropped: Spoolman would answer 404 for them anyway.
+        """
+        mgr = self.spools
+        if not mgr.enabled or mgr.client is None:
+            raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
+        if (head := self._spool_head(spool_id)) is not None:
+            raise HomeAssistantError(tr(
+                self.hass, f"Spule {spool_id} steckt in Kopf {head + 1} – erst die Zuordnung lösen.",
+                f"Spool {spool_id} is in head {head + 1} – release it there first."))
+        try:
+            await mgr.client.delete_spool(spool_id)
+        except MoonrakerError as err:
+            raise HomeAssistantError(tr(self.hass, f"Spoolman lehnt ab: {err}", f"Spoolman refused: {err}")) from err
+        dropped = [q for q in mgr.queue if q.get("spool_id") == spool_id]
+        for item in dropped:
+            mgr.queue.remove(item)
+        _LOGGER.info("Spoolman: spool %s deleted%s", spool_id,
+                     f", {len(dropped)} pending booking(s) dropped" if dropped else "")
+        self._save()
+        await self._spools_changed()
+        return {"spool_id": spool_id, "deleted": True}
+
+    async def _spools_changed(self) -> None:
+        """Reload the spool list right away and push it to the card."""
+        self.spools.force()
+        await self.spools.async_refresh()
+        if self.data is not None:
+            self.data.spoolman = self._spoolman_data(self.data.slots)
+            self.async_update_listeners()
+
     async def async_create_spool(self, slot_index: int | None, material: str, vendor: str, name: str | None,
                                  color: str | None, weight: float, spool_weight: float | None = None,
                                  price: float | None = None, remaining: float | None = None,
                                  filament_id: int | None = None, external_id: str | None = None,
-                                 location: str | None = None) -> dict[str, Any]:
+                                 location: str | None = None,
+                                 extra: dict[str, Any] | None = None) -> dict[str, Any]:
         """Create a spool in Spoolman (vendor and filament reused or created) and assign it to a head.
 
         ``filament_id`` takes an existing Spoolman filament as it is; ``external_id``
         imports a SpoolmanDB filament (vendor created if needed, reused if already
         imported). Otherwise vendor and filament are found or built from the fields.
+
+        ``extra`` (2.4): extruder_temp, bed_temp, density, diameter, article_number
+        go into a *new* filament (an existing one is never changed behind the user's
+        back; entered temperatures win over the RFID tag); lot_nr and comment
+        belong to the spool and always apply.
         """
+        extra = extra or {}
         mgr = self.spools
         if not mgr.enabled or mgr.client is None:
             raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
@@ -301,8 +453,10 @@ class SpoolMixin:
         if slot_index is not None:
             slot = next((s for s in (self.data or self._prev).slots if s["index"] == slot_index), None)
         rfid = (slot or {}).get("rfid") or {}
-        temps = ((rfid.get("nozzle_temp") or [None])[0] if isinstance(rfid.get("nozzle_temp"), list) else None,
-                 rfid.get("bed_temp"))
+        temps = (extra.get("extruder_temp")
+                 or ((rfid.get("nozzle_temp") or [None])[0] if isinstance(rfid.get("nozzle_temp"), list) else None),
+                 extra.get("bed_temp") or rfid.get("bed_temp"))
+        fil_extra = {k: extra[k] for k in ("density", "diameter", "article_number") if extra.get(k)}
         client = mgr.client
         try:
             vendor_id: int | None = None
@@ -329,9 +483,15 @@ class SpoolMixin:
                 vendor_id = v["id"] if v else (await client.create("vendor", {"name": vendor}))["id"]
                 if ext is not None:
                     body = external_body(ext, vendor_id)
+                    # catalogue values stay, only what the catalogue lacks is filled in
+                    for key, value in (("settings_extruder_temp", extra.get("extruder_temp")),
+                                       ("settings_bed_temp", extra.get("bed_temp")),
+                                       ("article_number", extra.get("article_number"))):
+                        if value and not body.get(key):
+                            body[key] = value
                 else:
                     fil_id, body = find_or_build_filament(filaments, vendor_id, material, name,
-                                                          color, weight, spool_weight, temps)
+                                                          color, weight, spool_weight, temps, fil_extra)
             new_filament = fil_id is None
             if new_filament:
                 try:
@@ -351,6 +511,9 @@ class SpoolMixin:
                 spool_body["price"] = round(float(price), 2)
             if remaining is not None:
                 spool_body["remaining_weight"] = round(min(float(remaining), float(weight)), 1)
+            for key in ("lot_nr", "comment"):
+                if str(extra.get(key) or "").strip():
+                    spool_body[key] = str(extra[key]).strip()
             spool = await client.create("spool", spool_body)
         except MoonrakerError as err:
             raise HomeAssistantError(tr(self.hass, f"Spoolman lehnt ab: {err}", f"Spoolman refused: {err}")) from err

@@ -1,9 +1,15 @@
 /** Print dialog: filament mapping like Snapmaker Orca, options, queue and photo viewer. */
 
 import { onColor, suggestMapping } from "../color.js";
-import { DOMAIN } from "../const.js";
-import { esc, fixed, fmtMin, fmtMoney } from "../format.js";
+import { DOMAIN, MAINT_LABELS } from "../const.js";
+import { esc, fixed, fmtMin, fmtMoney, fmtStart } from "../format.js";
 import { tr } from "../i18n.js";
+
+/** Now as "YYYY-MM-DDTHH:MM" in browser time, the format of <input type="datetime-local">. */
+const localNow = () => {
+  const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+  return d.toISOString().slice(0, 16);
+};
 
 export const PrintDialogMixin = (Base) => class extends Base {
   _entryData() {
@@ -91,6 +97,9 @@ export const PrintDialogMixin = (Base) => class extends Base {
         timelapse: !!prefs.timelapse,
       },
       confirmed: false,
+      // 2.4: optional start time for the queue ("YYYY-MM-DDTHH:MM", browser time) and the bed question then
+      startAt: "",
+      confirmBed: true,
       busy: false,
       error: null,
       slotsKey: JSON.stringify(slots),
@@ -244,6 +253,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
     const fst = this._ents && this._ents.filaments && this._st(this._ents.filaments);
     const stale = !!(fst && fst.attributes && fst.attributes.live === false);
     const f = g.file;
+    // 2.4: due maintenance is a hint, not a blocker (data the card has anyway)
+    const maintDue = ((this._d && this._d.maint) || []).filter((m) => m.due);
+    const hasQueue = !!(this._ents && this._ents.queue);
+    const planned = hasQueue && !!g.startAt;
 
     const meta = [];
     if (f.time) meta.push(fmtMin(f.time / 60));
@@ -304,6 +317,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
             ${costParts.length ? `<div class="t-label" data-cost>${tr("Geschätzt")}: ${costParts.map(esc).join(" · ")}</div>` : ""}
           </div>
         </header>
+        ${maintDue.length ? `<div class="dlg-note" data-tone="warn" data-maintdue><ha-icon icon="mdi:wrench-clock"></ha-icon>
+          ${tr("Wartung fällig: {items}. Drucken geht trotzdem.", { items: maintDue.map((m) => tr(MAINT_LABELS[m.key] || m.key)).join(", ") })}</div>` : ""}
         ${off ? `<div class="dlg-note" data-tone="${p.autoOn ? "" : "error"}"><ha-icon icon="mdi:power-plug-off"></ha-icon>
           ${p.autoOn ? tr("Der Drucker ist aus. Er wird eingeschaltet und startet den Druck, sobald er bereit ist (ca. 1–2 min).")
             : tr("Der Drucker ist aus. Bitte erst einschalten.")}</div>` : ""}
@@ -333,6 +348,15 @@ export const PrintDialogMixin = (Base) => class extends Base {
         </label>
         ${pause.error ? `<div class="map-issue" style="color:var(--u1-error)"><ha-icon icon="mdi:alert-circle"></ha-icon>${esc(pause.error)}</div>`
           : pause.layers.length ? `<div class="t-label">${tr("Der Drucker hält vor Schicht {l} an (z. B. für Magnete). Fortsetzen am Display oder in der Karte.", { l: pause.layers.join(", ") })}</div>` : ""}
+        ${hasQueue ? `<label class="pause-in">
+          <ha-icon icon="mdi:clock-outline"></ha-icon>
+          <span>${tr("Startzeit (Warteschlange)")}</span>
+          <input type="datetime-local" data-startat value="${esc(g.startAt)}" min="${localNow()}" ${g.busy ? "disabled" : ""} />
+        </label>
+        ${planned ? `<label class="chk"><input type="checkbox" data-confirmbed ${g.confirmBed ? "checked" : ""} ${g.busy ? "disabled" : ""} />
+          <span>${tr("Zur Startzeit fragen, ob das Druckbett frei ist")}</span></label>
+          <div class="t-label">${g.confirmBed ? tr("Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.")
+            : tr("Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!")}</div>` : ""}` : ""}
         ${busyPrinter ? `<div class="dlg-note"><ha-icon icon="mdi:tray-plus"></ha-icon>${tr("Der Drucker druckt gerade. Du kannst den Auftrag in die Warteschlange stellen.")}</div>` : ""}
         <label class="chk confirm">
           <input type="checkbox" data-confirm ${g.confirmed ? "checked" : ""} ${g.busy ? "disabled" : ""} />
@@ -341,10 +365,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
         ${g.error ? `<div class="dlg-error"><ha-icon icon="mdi:alert-circle"></ha-icon>${esc(g.error)}</div>` : ""}
         <div class="dlg-actions">
           <button type="button" class="outline" data-dlg="cancel" ${g.busy ? "disabled" : ""}>${tr("Abbrechen")}</button>
-          ${this._ents && this._ents.queue ? `<button type="button" class="tonal" data-dlg="queue" ${g.busy || qBlocked ? "disabled" : ""}>
-            <ha-icon icon="mdi:tray-plus"></ha-icon>${tr("Warteschlange")}</button>` : ""}
-          <button type="button" class="filled" data-dlg="print"
-            ${!g.confirmed || g.busy || blocked ? "disabled" : ""}>
+          ${hasQueue ? `<button type="button" class="${planned ? "filled" : "tonal"}" data-dlg="queue" ${g.busy || qBlocked ? "disabled" : ""}>
+            <ha-icon icon="${planned ? "mdi:calendar-clock" : "mdi:tray-plus"}"></ha-icon>${planned ? tr("Planen") : tr("Warteschlange")}</button>` : ""}
+          <button type="button" class="${planned ? "outline" : "filled"}" data-dlg="print"
+            ${!g.confirmed || g.busy || blocked || planned ? "disabled" : ""}>
             <ha-icon icon="${g.busy ? "mdi:loading" : "mdi:printer-3d"}" class="${g.busy ? "spin" : ""}"></ha-icon>
             ${g.busy ? (off ? tr("Drucker startet …") : tr("Wird gestartet …")) : (off ? tr("Einschalten &amp; drucken") : tr("Drucken"))}</button>
         </div>
@@ -381,6 +405,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (g.previewOpen) this._pvWire(g);
     const det = el.querySelector("[data-settings]");
     if (det) det.addEventListener("toggle", () => { g.settingsOpen = det.open; });
+    const sat = el.querySelector("[data-startat]");
+    if (sat) sat.addEventListener("change", () => { g.startAt = sat.value; this._renderDialog(); });
+    const cbed = el.querySelector("[data-confirmbed]");
+    if (cbed) cbed.addEventListener("change", () => { g.confirmBed = cbed.checked; this._renderDialog(); });
     const pin = el.querySelector("[data-pause]");
     if (pin) pin.addEventListener("change", () => { g.pause = pin.value; this._renderDialog(); });
 
@@ -419,11 +447,17 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (g.used.length) data.mapping = mapping;
     const pause = this._parsePause(g.pause, g.file.layers).layers;
     if (pause.length) data.pause_layers = pause;
+    if (toQueue && g.startAt) {
+      // browser local time -> absolute UTC time; the integration shows it in HA's time zone
+      const at = new Date(g.startAt);
+      if (!Number.isNaN(at.getTime())) { data.start_at = at.toISOString(); data.confirm_bed = !!g.confirmBed; }
+    }
     try {
       // notifyOnError=false: the error is shown in the dialog, no second toast.
       await this._hass.callService(DOMAIN, toQueue ? "queue_add" : "start_print", data, undefined, false);
       this._closeDialog();
-      this._toast(toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name })
+      this._toast(toQueue && data.start_at ? tr("Geplant für {at}: {name}", { at: fmtStart(Date.parse(data.start_at) / 1000), name: g.file.name })
+        : toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name })
         : tr("Druck gestartet: {name}", { name: g.file.name }));
     } catch (err) {
       if (this._dlg !== g) return;

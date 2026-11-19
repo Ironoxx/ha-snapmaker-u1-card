@@ -213,6 +213,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         self._energy_manager: Any = None  # energy dashboard prefs (price fallback)
         self._maint_notified: list[str] = []  # maintenance items already announced as due
         self.error_log: list[dict[str, Any]] = []  # 2.3: the last firmware messages, newest first
+        # 2.4 shopping list: {"state": {spool_id: "done"|"hidden"}, "sent": [spool_id]} (todo.py)
+        self.shopping: dict[str, Any] = {"state": {}, "sent": []}
         self.chamber_heater: dict[str, Any] | None = None  # Panda Breath / DragonBreath (machine.py)
 
     # ── Options ─────────────────────────────────────────────────────────────
@@ -286,11 +288,19 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         extra = stored if isinstance(stored, dict) else {}
         self._live_init(extra)
         self.queue = JobQueue(extra.get("queue"))
+        self.schedule_jobs(startup=True)  # 2.4: timers for jobs with a start time
+        # 2.4: after every update (new data in place) a due job may start; listener, not inside the update
+        self._jobs_unsub = self.async_add_listener(self.try_due_jobs)
         self.maintenance = Maintenance(extra.get("maintenance"))
         self._print_hours = extra.get("print_hours")
         self._backup = dict(extra.get("backup") or {})
         self._maint_notified = [k for k in extra.get("maint_notified") or [] if isinstance(k, str)]
         self.error_log = [e for e in extra.get("error_log") or [] if isinstance(e, dict)][:ERROR_LOG_MAX]
+        shop = extra.get("shopping") if isinstance(extra.get("shopping"), dict) else {}
+        self.shopping = {
+            "state": {str(k): v for k, v in (shop.get("state") or {}).items() if v in ("done", "hidden")},
+            "sent": [int(i) for i in shop.get("sent") or [] if isinstance(i, int)],
+        }
         self.firmware["latest"] = extra.get("firmware_latest")
         if self.options.get(CONF_ARCHIVE, DEFAULT_ARCHIVE):
             folder = media_root(dict(self.hass.config.media_dirs), self.hass.config.config_dir) / ARCHIVE_DIR
@@ -420,6 +430,10 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         # Flush the delayed save now; otherwise reloading the integration
         # in the middle of a print would lose the baseline.
         await super().async_shutdown()
+        self.cancel_job_timers()
+        if getattr(self, "_jobs_unsub", None):
+            self._jobs_unsub()
+            self._jobs_unsub = None
         if self._machine_timer is not None:
             self._machine_timer.cancel()
             self._machine_timer = None
@@ -490,6 +504,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             "backup": self._backup,
             "maint_notified": self._maint_notified,
             "error_log": self.error_log,
+            "shopping": self.shopping,
             "last_slots": {"slots": self._prev.slots, "preferences": self._prev.preferences,
                            "map_table": self._prev.map_table} if self._prev.slots else None,
             "firmware_latest": self.firmware.get("latest"),

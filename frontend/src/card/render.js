@@ -34,7 +34,7 @@ export const RenderMixin = (Base) => class extends Base {
       d.history ? d.history.map((h) => `${h.ended}${h.total_cost}`).join(",") : "noh",
       d.timelapses ? d.timelapses.videos.map((v) => v.path).join(",") : "not",
       d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
-      d.queue ? d.queue.map((j) => j.id).join(",") : "noq",
+      d.queue ? d.queue.map((j) => `${j.id}:${j.start_at || ""}:${j.sched || ""}`).join(",") : "noq",
       d.errors.map((e) => e.key).join(","),
       // 2.4: own buttons depend on the print phase
       (this._cfg.buttons || []).length ? this._phase() : "",

@@ -6,6 +6,13 @@ the card as a regular dashboard resource. Both point to the integration's own
 static path (``/snapmaker_u1_card/card/…``) with the same version parameter,
 so the browser loads the module once and fetches it again after an update.
 
+2.4: the parameter is the version plus a short hash of the file
+(``card_tag``). That lets the static path send long cache headers – phones
+and tablets load the card from their cache instead of asking every time – and
+a changed file (also a beta pushed without a new version) still gets a new
+URL. Next to the bundle lies a gzip copy (``npm run build``) that aiohttp
+hands to browsers accepting gzip: ~250 KB instead of ~870 KB over the network.
+
 Up to 2.1.1 the card was copied to ``/config/www`` and registered under
 ``/local``. On setup the old resource is moved to the static path and the
 copy that the integration itself put there is removed (only that file, the
@@ -14,6 +21,7 @@ folder only if it is empty then); nothing else in ``/config/www`` is touched.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from pathlib import Path
 from typing import Any
@@ -28,6 +36,23 @@ CARD_RESOURCE = f"{CARD_URL}/{CARD_FILENAME}"
 # Before 2.1.2: copy under /config/www/snapmaker_u1_card/, resource /local/…
 LEGACY_URL = f"/local/{DOMAIN}/{CARD_FILENAME}"
 OURS = (CARD_RESOURCE, LEGACY_URL)
+_TAG: dict[str, str] = {}
+
+
+def card_tag(frontend_dir: Path | None = None) -> str:
+    """Cache-busting parameter: version and the first 8 hex digits of the bundle's SHA-256.
+
+    Read once per Home Assistant start (call it from the executor the first time);
+    falls back to the bare version if the file cannot be read.
+    """
+    if "tag" not in _TAG:
+        path = (frontend_dir or Path(__file__).parent / "frontend") / CARD_FILENAME
+        try:
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()[:8]
+            _TAG["tag"] = f"{VERSION}-{digest}"
+        except OSError:
+            _TAG["tag"] = VERSION
+    return _TAG["tag"]
 
 
 def _remove_legacy_copy(hass: HomeAssistant) -> bool:
@@ -83,7 +108,7 @@ async def async_install(hass: HomeAssistant) -> None:
         return
     try:
         await _loaded(resources)
-        wanted = f"{CARD_RESOURCE}?v={VERSION}"
+        wanted = f"{CARD_RESOURCE}?v={await hass.async_add_executor_job(card_tag)}"
         mine = [item for item in resources.async_items() if _is_ours(item)]
         if not mine:
             await resources.async_create_item({"res_type": "module", "url": wanted})

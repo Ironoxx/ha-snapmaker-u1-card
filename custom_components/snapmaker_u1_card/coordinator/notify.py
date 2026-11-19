@@ -206,7 +206,7 @@ class NotifyMixin:
             # The companion app loads the image with its own authentication.
             data["image"] = f"/api/camera_proxy/{camera}"
         data.update(self._click_data())
-        actions = self._actions(event, de)
+        actions = self._actions(event, de, info)
         if actions:
             data["actions"] = actions
         if event in ("error", "paused") and self._errors:
@@ -234,9 +234,12 @@ class NotifyMixin:
     def _action_id(self, name: str) -> str:
         return f"SU1_{name}_{self.config_entry.entry_id}"
 
-    def _actions(self, event: str, de: bool) -> list[dict[str, str]]:
+    def _actions(self, event: str, de: bool, info: dict[str, Any] | None = None) -> list[dict[str, str]]:
         """Companion app action buttons for an event."""
         t = (lambda a, b: a) if de else (lambda a, b: b)
+        if event == "queue" and (info or {}).get("job_id"):
+            # 2.4: scheduled job waiting for "bed is clear"
+            return [{"action": self._action_id(f"QSTART:{info['job_id']}"), "title": t("Bett frei – starten", "Bed clear – start")}]
         if event in ("first_layer", "almost_done", "alert", "spool_low", "spool_runout"):
             return [{"action": self._action_id("PAUSE"), "title": t("Pausieren", "Pause")},
                     {"action": self._action_id("LIGHT"), "title": t("Licht", "Light")}]
@@ -268,6 +271,13 @@ class NotifyMixin:
                 return
             elif name == "CANCEL_CONFIRM" and state in ACTIVE_PRINT_STATES:
                 await self.client.print_action("cancel")
+            elif name.startswith("QSTART:"):
+                # 2.4: confirmation of a scheduled job from the notification
+                job = self.queue.get(name.split(":", 1)[1])
+                if job is None or job.get("sched") != "confirm":
+                    return
+                await self._start_due(job["id"])
+                return
             elif name == "LIGHT":
                 light = self._light_entity()
                 if light:

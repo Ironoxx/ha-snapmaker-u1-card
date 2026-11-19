@@ -959,6 +959,10 @@ def compact_spool(spool: dict[str, Any]) -> dict[str, Any]:
         "used_weight": _round(spool.get("used_weight")),
         "archived": bool(spool.get("archived")),
         "price_kg": _price_kg(spool),
+        # 2.4: spool details and labels in the card
+        "extruder_temp": fil.get("settings_extruder_temp"),
+        "bed_temp": fil.get("settings_bed_temp"),
+        "lot_nr": spool.get("lot_nr") or None,
     }
 
 
@@ -991,10 +995,13 @@ DENSITY = {"PLA": 1.24, "PLA-CF": 1.29, "PETG": 1.27, "PETG-CF": 1.30, "ABS": 1.
 
 def find_or_build_filament(filaments: list[dict[str, Any]], vendor_id: int, material: str, name: str,
                            color: str | None, weight: float, spool_weight: float | None,
-                           temps: tuple[int | None, int | None] = (None, None)) -> tuple[int | None, dict[str, Any]]:
+                           temps: tuple[int | None, int | None] = (None, None),
+                           extra: dict[str, Any] | None = None) -> tuple[int | None, dict[str, Any]]:
     """Existing Spoolman filament (same vendor, material, name and colour) or the body for a new one.
 
-    Returns ``(id, {})`` for a match, ``(None, body)`` otherwise.
+    Returns ``(id, {})`` for a match, ``(None, body)`` otherwise. ``extra`` (2.4):
+    density, diameter and article_number entered in the card replace the defaults
+    of a new filament (density by material table, 1.75 mm).
     """
     hexcol = (normalize_color(color) or "").lstrip("#").lower() or None
     mat = material.strip().upper()
@@ -1017,6 +1024,11 @@ def find_or_build_filament(filaments: list[dict[str, Any]], vendor_id: int, mate
         body["settings_extruder_temp"] = int(temps[0])
     if temps[1]:
         body["settings_bed_temp"] = int(temps[1])
+    for key in ("density", "diameter"):
+        if (extra or {}).get(key):
+            body[key] = round(float(extra[key]), 3)
+    if str((extra or {}).get("article_number") or "").strip():
+        body["article_number"] = str(extra["article_number"]).strip()
     return None, body
 
 

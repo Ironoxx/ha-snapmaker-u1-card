@@ -601,6 +601,19 @@ class SpoolmanClient:
         result = await self._request("GET", "/spool", params={"allow_archived": "false"})
         return result if isinstance(result, list) else []
 
+    async def archived_spools(self) -> list[dict[str, Any]]:
+        """2.4: only the archived spools (asked for by the card on demand, not polled)."""
+        result = await self._request("GET", "/spool", params={"allow_archived": "true"})
+        return [s for s in result if isinstance(s, dict) and s.get("archived")] if isinstance(result, list) else []
+
+    async def set_archived(self, spool_id: int, archived: bool) -> dict[str, Any]:
+        """2.4: archive a spool (hidden from lists, history kept) or bring it back."""
+        return await self._request("PATCH", f"/spool/{int(spool_id)}", json={"archived": bool(archived)})
+
+    async def delete_spool(self, spool_id: int) -> None:
+        """2.4: delete a spool for good (Spoolman also drops its usage history)."""
+        await self._request("DELETE", f"/spool/{int(spool_id)}")
+
     async def use_weight(self, spool_id: int, grams: float) -> dict[str, Any]:
         return await self._request("PUT", f"/spool/{int(spool_id)}/use", json={"use_weight": round(grams, 2)})
 

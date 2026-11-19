@@ -15,8 +15,8 @@ During setup you choose after the address (2.4): **step by step** (power → not
 | Notifications – group 2 | 2.3: optional second group with its own `notify` services and events (default: error, paused, message during print, spool runs out), e.g. to another person or with another sound. Each service gets a message once. On Android, group 2 uses its own notification channel *Snapmaker U1 2*: set its sound in the phone's notification settings. Empty = off |
 | Filament prices | price per kg for PLA, PETG, ABS, ASA, TPU, PA and others. `PLA-CF` uses the PLA price. With Spoolman its prices come first: at the end of a print the price of the spool in each head, otherwise the average price per kg of your spools of that material (spool price, else filament price, per net weight). These fields only apply to materials without a price in Spoolman |
 | Timelapse backup | on/off, how many of the newest stay on the printer (0 = never delete), how many stay in the media folder (50, 0 = all), delete backups older than x days (0 = never) |
-| Maintenance | interval per item in print hours (0 = hide) |
-| Spoolman | address (empty = off), book usage per head (on/off), warning threshold in g. 2.3: with Moonraker's own Spoolman but without SpoolLink, Moonraker books only its active spool; the integration books the other spools after the print |
+| Maintenance | interval per item in print hours (0 = hide). 2.4: **due maintenance as a to-do list** (off): every due item on an HA to-do list *Maintenance*, ticking it off marks it done |
+| Spoolman | address (empty = off), book usage per head (on/off), warning threshold in g. 2.3: with Moonraker's own Spoolman but without SpoolLink, Moonraker books only its active spool; the integration books the other spools after the print. 2.4: **shopping list for low spools** (off): spools below the warning threshold on an own to-do list *Filament shopping list* – or, with **Add to this to-do list**, added to an existing list (e.g. `todo.shopping_list`; only added, never removed, no duplicates) |
 | Files | number of newest files, back up printer configuration (on) |
 
 ## Settings in the card
@@ -141,6 +141,8 @@ You do not add a resource yourself; the integration loads the card on two paths:
 
 1. through the Home Assistant start page (`add_extra_js_url`),
 2. as the dashboard resource `/snapmaker_u1_card/card/snapmaker-u1-card.js?v=…`, which the integration creates, keeps current and removes again with the integration. Leave it under *Dashboards → Resources*.
+
+2.4: `v=` is the version plus a short hash of the file. The card is sent with long cache headers and, to browsers that accept it, as a gzip copy (about 260 KB instead of about 900 KB), so phones and tablets load it from their cache; a new file gets a new address and arrives right away.
 
 Both come from the integration itself; nothing is copied into `/config/www`. Up to 2.1.1 the card was copied to `/config/www/snapmaker_u1_card/`; since 2.1.2 the integration moves its resource to the new path and deletes only that old copy of its own file.
 

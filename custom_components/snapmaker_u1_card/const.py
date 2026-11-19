@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "2.4.0b1"
+VERSION = "2.4.0b2"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -37,6 +37,10 @@ CONF_ARCHIVE_KEEP = "timelapse_keep"    # keep this many newest on the printer (
 CONF_ARCHIVE_MAX = "timelapse_archive_max"    # newest videos kept
 CONF_ARCHIVE_DAYS = "timelapse_archive_days"  # delete backups older than this
 CONF_MAINTENANCE = "maintenance"        # {"plate": 30, ...} intervals in print hours
+# 2.4: HA to-do lists, both off by default (no entity, no work while off)
+CONF_TODO_MAINT = "todo_maintenance"      # due maintenance items, ticking one off = done
+CONF_TODO_SHOPPING = "todo_shopping"      # spools below the low-stock threshold
+CONF_SHOPPING_TARGET = "shopping_target"  # existing to-do list to add to; empty = own list
 CONF_MAINTENANCE_MONTHS = "maintenance_months"  # {"rails": 1, ...} intervals in calendar months
 
 DEFAULT_PORT = 80
