@@ -1011,10 +1011,10 @@ export const STYLES = `
   .cfg-paxx-group { margin-top: 10px; text-transform: uppercase; letter-spacing: .06em; }
 
   /* ── Clock and own buttons (2.4, #16) ────────────────────────────────── */
-  .head-clock { margin-left: auto; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
+  /* clock always on the far right, the state chips to its left */
+  .head-clock { order: 10; margin-left: 4px; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
     font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--u1-on); white-space: nowrap; }
-  .head-clock + .chips { margin-left: 0; }
-  @container u1 (max-width: 520px) { .head-clock { display: none; } .head-clock + .chips { margin-left: auto; } }
+  @container u1 (max-width: 520px) { .head-clock { display: none; } }
   .ubtn { min-width: 0; }
   .ubtn .ubtn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

@@ -64,7 +64,7 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: Schnellwahl für Geschwindigkeit und Flussrate; der aktuelle Wert ist markiert |
 | `mesh_values` | `true` | 2.2: Höhenwerte in den Kacheln der Bettnivellierung (bis 12 × 12 Messpunkte) |
 | `exclude_objects` | `true` | 2.2.1: Objektliste und Umrisse zum Ausschließen in der Schichtansicht; `false` blendet beides aus (Drucke mit sehr vielen Teilen) |
-| `clock` | `false` | 2.4: Uhr (Stunden:Minuten, Zeitformat von HA) rechts in der Kopfzeile; auf schmalen Karten ausgeblendet |
+| `clock` | `false` | 2.4: Uhr (Stunden:Minuten, Zeitformat von HA) ganz rechts in der Kopfzeile, die Status-Chips links daneben; auf schmalen Karten ausgeblendet |
 | `buttons` | – | 2.4: bis zu 4 eigene Knöpfe neben *Licht*: `name`, `icon`, `show` (`idle` = vor, `printing` = während, `finished` = nach dem Druck; Standard alle), `tap_action`, `hold_action` (Aktionen von Home Assistant: navigate, perform-action, more-info, url …) |
 | `light_entities` | – | 2.4: weitere Lampen/Schalter, die mit dem Licht-Knopf mitgehen, z. B. eine WLED-Leiste |
 | `alerts` | mit `stage`/`job` | 2.2, Bereichs-Karte: Meldungen des Druckers oben (`true` immer, `false` nie). Der Bereich `messages` zeigt sie für sich |

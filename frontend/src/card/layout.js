@@ -29,7 +29,6 @@ export const LayoutMixin = (Base) => class extends Base {
           <div class="head-brand">${esc(this._cfg.printer_brand)}</div>
           <div class="t-title">${esc(this._cfg.printer_name)}</div>
         </div>
-        ${this._cfg.clock ? `<span class="head-clock" data-su1="clock" aria-label="${tr("Uhrzeit")}">${this._clockText()}</span>` : ""}
         <div class="chips">
           ${!d.online && d.power && d.power.available && !d.power.on ? "" : `<span class="chip ${d.printing ? "live" : ""}" data-tone="${chipTone}">
             <span class="dot"></span><span data-su1="status">${this._statusLabel()}</span>
@@ -40,6 +39,7 @@ export const LayoutMixin = (Base) => class extends Base {
             ${d.network === "home" ? tr("Verbunden") : tr("Getrennt")}
           </span>` : ""}
         </div>
+        ${this._cfg.clock ? `<span class="head-clock" data-su1="clock" aria-label="${tr("Uhrzeit")}">${this._clockText()}</span>` : ""}
       </header>`;
   }
 

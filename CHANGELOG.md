@@ -14,7 +14,7 @@ Beta. Guided setup, dashboard templates, clock and own buttons, a print event en
 - **paxx12 settings** (RTSP, SpoolLink, …) to view in the card's settings; changing them stays on paxx12's `/firmware-config/`.
 
 **Card**
-- **Clock** on the right of the header (#16, thanks donjo3): hours and minutes in your HA time format, hidden on narrow cards. Option `clock`, off by default.
+- **Clock** on the far right of the header, the state chips to its left (#16, thanks donjo3): hours and minutes in your HA time format, hidden on narrow cards. Option `clock`, off by default.
 - **Own buttons** (#16): up to 4 next to *Light*, with Home Assistant's actions (`tap_action`/`hold_action`: navigate, perform action/script, more-info, URL), each shown before, during and/or after the print. Option `buttons`, none by default; set up in the card editor.
 - **Light button** switches further lights along (option `light_entities`, e.g. a WLED strip).
 - **Mini card** compact like Home Assistant's tile card: tap the icon to switch the printer on/off, one line cycling through the infos every 5 s, progress ring.
@@ -41,7 +41,7 @@ Beta. Geführte Einrichtung, Dashboard-Vorlagen, Uhr und eigene Knöpfe, eine Dr
 - **paxx12-Einstellungen** (RTSP, SpoolLink, …) zum Ansehen in den Einstellungen der Karte; geändert wird weiter auf `/firmware-config/` von paxx12.
 
 **Karte**
-- **Uhr** rechts in der Kopfzeile (#16, danke donjo3): Stunden und Minuten im Zeitformat deines HA, auf schmalen Karten ausgeblendet. Option `clock`, standardmäßig aus.
+- **Uhr** ganz rechts in der Kopfzeile, die Status-Chips links daneben (#16, danke donjo3): Stunden und Minuten im Zeitformat deines HA, auf schmalen Karten ausgeblendet. Option `clock`, standardmäßig aus.
 - **Eigene Knöpfe** (#16): bis zu 4 neben *Licht*, mit den Aktionen von Home Assistant (`tap_action`/`hold_action`: navigieren, Aktion/Skript, Details, URL), jeweils vor, während und/oder nach dem Druck sichtbar. Option `buttons`, standardmäßig keine; im Karten-Editor einstellbar.
 - **Licht-Knopf** schaltet weitere Lampen mit (Option `light_entities`, z. B. eine WLED-Leiste).
 - **Mini-Karte** kompakt wie die Kachel-Karte von Home Assistant: Tipp aufs Symbol schaltet den Drucker ein/aus, eine Zeile wechselt alle 5 s durch die Infos, Fortschrittsring.

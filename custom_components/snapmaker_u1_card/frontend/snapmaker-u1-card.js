@@ -9744,7 +9744,6 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <div class="head-brand">${esc(this._cfg.printer_brand)}</div>
           <div class="t-title">${esc(this._cfg.printer_name)}</div>
         </div>
-        ${this._cfg.clock ? `<span class="head-clock" data-su1="clock" aria-label="${tr("Uhrzeit")}">${this._clockText()}</span>` : ""}
         <div class="chips">
           ${!d.online && d.power && d.power.available && !d.power.on ? "" : `<span class="chip ${d.printing ? "live" : ""}" data-tone="${chipTone}">
             <span class="dot"></span><span data-su1="status">${this._statusLabel()}</span>
@@ -9755,6 +9754,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
             ${d.network === "home" ? tr("Verbunden") : tr("Getrennt")}
           </span>` : ""}
         </div>
+        ${this._cfg.clock ? `<span class="head-clock" data-su1="clock" aria-label="${tr("Uhrzeit")}">${this._clockText()}</span>` : ""}
       </header>`;
     }
     /** 2.4 (#16): hours and minutes in Home Assistant's time format. */
@@ -11031,10 +11031,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .cfg-paxx-group { margin-top: 10px; text-transform: uppercase; letter-spacing: .06em; }
 
   /* ── Clock and own buttons (2.4, #16) ────────────────────────────────── */
-  .head-clock { margin-left: auto; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
+  /* clock always on the far right, the state chips to its left */
+  .head-clock { order: 10; margin-left: 4px; font-size: clamp(22px, 3.2cqw, 40px); font-weight: 400; line-height: 1;
     font-variant-numeric: tabular-nums; letter-spacing: .02em; color: var(--u1-on); white-space: nowrap; }
-  .head-clock + .chips { margin-left: 0; }
-  @container u1 (max-width: 520px) { .head-clock { display: none; } .head-clock + .chips { margin-left: auto; } }
+  @container u1 (max-width: 520px) { .head-clock { display: none; } }
   .ubtn { min-width: 0; }
   .ubtn .ubtn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

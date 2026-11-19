@@ -64,7 +64,7 @@ All options are optional; except head names and presets they can also be set in 
 | `speed_presets` / `flow_presets` | `[85,100,115]` / `[95,100,105]` | 2.2: quick buttons for speed and flow; the current value is marked |
 | `mesh_values` | `true` | 2.2: heights in the bed mesh cells (up to 12 × 12 points) |
 | `exclude_objects` | `true` | 2.2.1: object list and outlines for excluding objects in the layer view; `false` hides both (prints with very many parts) |
-| `clock` | `false` | 2.4: clock (hours:minutes, HA time format) on the right of the header; hidden on narrow cards |
+| `clock` | `false` | 2.4: clock (hours:minutes, HA time format) on the far right of the header, the state chips to its left; hidden on narrow cards |
 | `buttons` | – | 2.4: up to 4 own buttons next to *Light*: `name`, `icon`, `show` (`idle` = before, `printing` = during, `finished` = after the print; default all), `tap_action`, `hold_action` (Home Assistant's actions: navigate, perform-action, more-info, url …) |
 | `light_entities` | – | 2.4: further lights/switches that follow the light button, e.g. a WLED strip |
 
