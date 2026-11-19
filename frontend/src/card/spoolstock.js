@@ -14,7 +14,8 @@
  * with the filament ID or the catalogue entry, so Spoolman gets the same
  * filament it would create itself.
  *
- * 2.4: tapping a spool opens its details with "label", "archive" and (admins)
+ * 2.4: tapping a spool opens its details with "edit" (2.4.0b3, spool and
+ * filament, incl. the user's own Spoolman fields), "label", "archive" and (admins)
  * "delete"; empty spools offer archiving right in the list; the chip
  * "Archived" loads the archived spools on demand (websocket
  * spoolman/archived, nothing extra in the regular poll) so they can be
@@ -36,6 +37,58 @@ const SUGGEST_DELAY_MS = 250;
 const rfidTemp = (v) => {
   const t = Array.isArray(v) ? v[0] : v;
   return Number.isFinite(Number(t)) && Number(t) > 0 ? Math.round(Number(t)) : "";
+};
+
+/**
+ * 2.4.0b3: the user's own Spoolman fields (Settings → Extra fields in Spoolman) as form
+ * inputs. ``f`` = {key, name, type, unit, default, choices, multi} from the integration
+ * (spoolman/fields); ``prefix`` keeps spool and filament fields apart in one form.
+ */
+const extraName = (prefix, f, part = "") => `${prefix}x_${f.key}${part}`;
+export const extraInput = (f, value, prefix) => {
+  const v = value === undefined ? f.default : value;
+  const label = `${esc(f.name)}${f.unit ? ` (${esc(f.unit)})` : ""}`;
+  const num = (name, val, step) => `<input name="${name}" type="number" step="${step}" value="${val === null || val === undefined ? "" : esc(val)}" />`;
+  switch (f.type) {
+    case "boolean":
+      return `<label class="check"><input type="checkbox" name="${extraName(prefix, f)}" ${v === true ? "checked" : ""} />${label}</label>`;
+    case "integer": case "float":
+      return `<label>${label}${num(extraName(prefix, f), v, f.type === "integer" ? "1" : "any")}</label>`;
+    case "integer_range": case "float_range": {
+      const [a, b] = Array.isArray(v) ? v : [null, null];
+      const step = f.type === "integer_range" ? "1" : "any";
+      return `<label>${label}<span class="range-in">${num(extraName(prefix, f, "__0"), a, step)}–${num(extraName(prefix, f, "__1"), b, step)}</span></label>`;
+    }
+    case "datetime":
+      return `<label>${label}<input name="${extraName(prefix, f)}" type="datetime-local" value="${v ? esc(String(v).slice(0, 16)) : ""}" /></label>`;
+    case "choice": {
+      const sel = new Set(Array.isArray(v) ? v : v ? [v] : []);
+      return `<label>${label}<select name="${extraName(prefix, f)}" ${f.multi ? "multiple" : ""}>
+          ${f.multi ? "" : `<option value=""></option>`}
+          ${(f.choices || []).map((c) => `<option value="${esc(c)}" ${sel.has(c) ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>`;
+    }
+    default:
+      return `<label>${label}<input name="${extraName(prefix, f)}" value="${v === null || v === undefined ? "" : esc(v)}" /></label>`;
+  }
+};
+
+/** Value of one own field from the form; null = empty (the integration then drops it). */
+export const extraValue = (form, f, prefix) => {
+  const el = (part = "") => form.querySelector(`[name="${extraName(prefix, f, part)}"]`);
+  const n = (x) => (x && String(x.value).trim() !== "" ? Number(x.value) : null);
+  switch (f.type) {
+    case "boolean": return el().checked;
+    case "integer": case "float": return n(el());
+    case "integer_range": case "float_range": {
+      const a = n(el("__0")), b = n(el("__1"));
+      return a === null && b === null ? null : [a, b];
+    }
+    case "datetime": return el().value ? new Date(el().value).toISOString() : null;
+    case "choice":
+      if (f.multi) { const vals = [...el().selectedOptions].map((o) => o.value); return vals.length ? vals : null; }
+      return el().value || null;
+    default: return String(el().value || "").trim() || null;
+  }
 };
 
 export const SpoolStockMixin = (Base) => class extends Base {
@@ -242,6 +295,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
         ${headName ? `<div class="dlg-note"><ha-icon icon="mdi:information-outline"></ha-icon>${tr("Steckt in {head} – zum Archivieren oder Löschen erst die Zuordnung im Druckkopf lösen.", { head: headName })}</div>` : ""}
         <div class="dlg-error" hidden></div>
         <div class="dlg-actions" data-spoolacts>
+          <button type="button" class="outline" data-edit><ha-icon icon="mdi:pencil-outline"></ha-icon>${tr("Bearbeiten")}</button>
           <button type="button" class="outline" data-label><ha-icon icon="mdi:qrcode"></ha-icon>${tr("Etikett")}</button>
           ${archived
             ? `<button type="button" class="outline" data-restore><ha-icon icon="mdi:archive-arrow-up-outline"></ha-icon>${tr("Wiederherstellen")}</button>`
@@ -252,6 +306,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
     const q = (sel) => dlg.querySelector(sel);
     q("[data-close]").addEventListener("click", () => dlg.close());
     q("[data-label]").addEventListener("click", () => this._printLabels([s]));
+    q("[data-edit]").addEventListener("click", () => this._editSpoolForm(id, archived));
     if (q("[data-archive]")) q("[data-archive]").addEventListener("click", () => this._spoolArchive(id, true, dlg));
     if (q("[data-restore]")) q("[data-restore]").addEventListener("click", () => this._spoolArchive(id, false, dlg));
     if (q("[data-delete]")) q("[data-delete]").addEventListener("click", () => {
@@ -264,6 +319,129 @@ export const SpoolStockMixin = (Base) => class extends Base {
       q("[data-confirm]").addEventListener("click", () => this._spoolDelete(id, dlg));
     });
     this._showDialog(dlg);
+  }
+
+  /** Own Spoolman fields {spool, filament}; asked once per page, empty lists if Spoolman has none. */
+  async _smFieldsLoad() {
+    if (!this._smFields) this._smFields = this._spoolCatalogWS("fields", {}).then((r) => r || { spool: [], filament: [] });
+    const r = await this._smFields;
+    return { spool: r.spool || [], filament: r.filament || [] };
+  }
+
+  /**
+   * 2.4.0b3: edit a spool (and its filament). Loads the spool once when it opens
+   * (websocket spoolman/spool); saving sends only what changed to update_spool.
+   * Filament values change every spool of that filament – the form says how many.
+   */
+  async _editSpoolForm(id, archived = false) {
+    const dlg = this._spoolDialog();
+    dlg.innerHTML = `<div class="dlg"><div class="t-label">${tr("Lade Spule …")}</div></div>`;
+    this._showDialog(dlg);
+    const res = await this._spoolCatalogWS("spool", { spool_id: id });
+    if (!res || !res.spool) {
+      dlg.innerHTML = `<div class="dlg"><div class="dlg-error">${tr("Spule konnte nicht geladen werden.")}</div>
+        <div class="dlg-actions"><button type="button" class="outline" data-close>${tr("Schließen")}</button></div></div>`;
+      dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+      return;
+    }
+    const sp = res.spool, fil = sp.filament || {};
+    const fl = { spool: (res.fields && res.fields.spool) || [], filament: (res.fields && res.fields.filament) || [] };
+    const val = (v) => (v === null || v === undefined ? "" : esc(v));
+    const numIn = (name, v, min, max, step) => `<input name="${name}" type="number" min="${min}" max="${max}" step="${step}" value="${val(v)}" />`;
+    dlg.innerHTML = `<div class="dlg">
+        <header class="dlg-head"><div style="min-width:0">
+          <div class="dlg-title">${tr("Spule #{id} bearbeiten", { id })}</div>
+          <div class="t-label">${esc([fil.vendor, fil.name].filter(Boolean).join(" · "))}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        <form class="head-form" data-editform autocomplete="off">
+          <div class="wide dlg-sec">${tr("Spule")}</div>
+          <label>${tr("Restgewicht (g)")}${numIn("remaining", sp.remaining_weight, 0, 10000, "any")}</label>
+          <label>${tr("Nettogewicht (g)")}${numIn("initial_weight", sp.initial_weight, 0, 10000, "1")}</label>
+          <label>${tr("Leerspule (g)")}${numIn("spool_weight", sp.spool_weight, 0, 2000, "1")}</label>
+          <label>${tr("Preis")}${numIn("price", sp.price, 0, 10000, "0.01")}</label>
+          <label>${tr("Ort")}<input name="location" maxlength="64" value="${val(sp.location)}" /></label>
+          <label>${tr("Charge")}<input name="lot_nr" maxlength="64" value="${val(sp.lot_nr)}" /></label>
+          <label class="wide">${tr("Kommentar")}<textarea name="comment" maxlength="1024" rows="2">${val(sp.comment)}</textarea></label>
+          ${fl.spool.map((x) => extraInput(x, sp.extra[x.key] ?? null, "s")).join("")}
+          <details class="wide more-fields" data-filpart>
+            <summary>${tr("Filament")}</summary>
+            <div class="t-label">${res.filament_spools > 1 ? tr("Gilt für alle {n} Spulen dieses Filaments.", { n: res.filament_spools }) : tr("Gilt für das Filament dieser Spule.")}</div>
+            <div class="head-form">
+              <label>${tr("Name")}<input name="f_name" maxlength="64" value="${val(fil.name)}" /></label>
+              <label>${tr("Hersteller")}<input name="f_vendor" maxlength="64" value="${val(fil.vendor)}" /></label>
+              <label>${tr("Material")}<input name="f_material" maxlength="32" value="${val(fil.material)}" /></label>
+              ${fil.multi ? "" : `<label>${tr("Farbe")}<input name="f_color" type="color" value="${val(fil.color || "#ffffff")}" /></label>`}
+              <label>${tr("Dichte (g/cm³)")}${numIn("f_density", fil.density, 0.5, 3, "0.01")}</label>
+              <label>${tr("Durchmesser (mm)")}${numIn("f_diameter", fil.diameter, 1, 3, "0.01")}</label>
+              <label>${tr("Düsentemperatur (°C)")}${numIn("f_extruder_temp", fil.extruder_temp, 150, 350, "1")}</label>
+              <label>${tr("Betttemperatur (°C)")}${numIn("f_bed_temp", fil.bed_temp, 0, 150, "1")}</label>
+              <label>${tr("Artikelnummer")}<input name="f_article_number" maxlength="64" value="${val(fil.article_number)}" /></label>
+              ${fl.filament.map((x) => extraInput(x, fil.extra[x.key] ?? null, "f")).join("")}
+            </div>
+          </details>
+          <div class="dlg-error" hidden></div>
+          <div class="dlg-actions">
+            <button type="button" class="outline" data-back>${tr("Zurück")}</button>
+            <button type="submit" class="filled"><ha-icon icon="mdi:content-save-outline"></ha-icon>${tr("Speichern")}</button>
+          </div>
+        </form>
+      </div>`;
+    const form = dlg.querySelector("[data-editform]");
+    dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
+    dlg.querySelector("[data-back]").addEventListener("click", () => this._spoolDetail(id, archived));
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const g = (n) => form.querySelector(`[name="${n}"]`);
+      const txt = (n) => String(g(n) ? g(n).value : "").trim();
+      const num = (n) => (txt(n) === "" ? null : Number(txt(n)));
+      const same = (a, b) => (a === null || a === undefined || a === "" ? null : a) === (b === null || b === undefined || b === "" ? null : b);
+      const data = { spool_id: id, ...this._entryData() };
+      // spool: only what changed (empty clears)
+      [["remaining", sp.remaining_weight], ["initial_weight", sp.initial_weight], ["spool_weight", sp.spool_weight], ["price", sp.price]]
+        .forEach(([k, old]) => { if (!same(num(k), old === null || old === undefined ? null : Number(old))) data[k] = num(k); });
+      [["location", sp.location], ["lot_nr", sp.lot_nr], ["comment", sp.comment]]
+        .forEach(([k, old]) => { if (!same(txt(k), old)) data[k] = txt(k) || null; });
+      const changedExtra = (list, prefix, current) => {
+        const out = {};
+        list.forEach((x) => {
+          const v = extraValue(form, x, prefix);
+          // an unset yes/no field reads as "no" in the form: not a change
+          const cur = current[x.key] ?? (x.type === "boolean" ? false : null);
+          if (JSON.stringify(v) !== JSON.stringify(cur)) out[x.key] = v;
+        });
+        return out;
+      };
+      const sx = changedExtra(fl.spool, "s", sp.extra);
+      if (Object.keys(sx).length) data.extra = sx;
+      // filament
+      [["name", fil.name], ["vendor", fil.vendor], ["material", fil.material]]
+        .forEach(([k, old]) => { if (txt(`f_${k}`) && !same(txt(`f_${k}`), old)) data[`filament_${k}`] = txt(`f_${k}`); });
+      if (!same(txt("f_article_number"), fil.article_number)) data.filament_article_number = txt("f_article_number") || null;
+      if (g("f_color") && !same(g("f_color").value.toLowerCase(), (fil.color || "").toLowerCase())) data.filament_color = g("f_color").value;
+      [["density", fil.density], ["diameter", fil.diameter]]
+        .forEach(([k, old]) => { const v = num(`f_${k}`); if (v !== null && !same(v, old)) data[`filament_${k}`] = v; });
+      [["extruder_temp", fil.extruder_temp], ["bed_temp", fil.bed_temp]]
+        .forEach(([k, old]) => { const v = num(`f_${k}`); if (!same(v, old)) data[`filament_${k}`] = v; });
+      const fx = changedExtra(fl.filament, "f", fil.extra);
+      if (Object.keys(fx).length) data.filament_extra = fx;
+      if (Object.keys(data).filter((k) => k !== "spool_id" && k !== "config_entry_id").length === 0) {
+        this._spoolDetail(id, archived);
+        return;
+      }
+      const btn = form.querySelector("button[type=submit]");
+      btn.disabled = true;
+      try {
+        await this._hass.callService(DOMAIN, "update_spool", data, undefined, false, true);
+        this._toast(tr("Spule #{id} gespeichert", { id }));
+        dlg.close();
+      } catch (err) {
+        btn.disabled = false;
+        const el = form.querySelector(".dlg-error");
+        el.hidden = false;
+        el.textContent = (err && err.message) || String(err);
+      }
+    });
   }
 
   /** Service spool_archive; restoring also drops the spool from the cached archived list. */
@@ -430,6 +608,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
               <label>${tr("Artikelnummer")}<input name="article_number" maxlength="64" placeholder="${tr("optional")}" /></label>
               <label>${tr("Charge")}<input name="lot_nr" maxlength="64" placeholder="${tr("optional")}" /></label>
               <label class="wide">${tr("Kommentar")}<textarea name="comment" maxlength="1024" rows="2" placeholder="${tr("optional")}"></textarea></label>
+              <div class="wide head-form" data-extrabox></div>
             </div>
           </details>
           ${head ? "" : `<label>${tr("Zuordnen")}<select name="slot"><option value="">${tr("keinem Kopf")}</option>
@@ -448,6 +627,18 @@ export const SpoolStockMixin = (Base) => class extends Base {
     dlg.querySelector("[data-close]").addEventListener("click", () => dlg.close());
     dlg.querySelector("[data-back]").addEventListener("click", () =>
       (idx !== null ? this._openSpoolPicker(idx) : dlg.close()));
+
+    // 2.4.0b3: own Spoolman fields, fetched once per page when a form opens
+    let fields = { spool: [], filament: [] };
+    this._smFieldsLoad().then((fl) => {
+      fields = fl;
+      const box = form.querySelector("[data-extrabox]");
+      if (!box) return;
+      box.innerHTML = [
+        fl.spool.length ? `<div class="wide t-label">${tr("Eigene Felder der Spule")}</div>${fl.spool.map((x) => extraInput(x, undefined, "s")).join("")}` : "",
+        fl.filament.length ? `<div class="wide t-label">${tr("Eigene Felder des Filaments (nur bei neuem Filament)")}</div>${fl.filament.map((x) => extraInput(x, undefined, "f")).join("")}` : "",
+      ].join("");
+    });
 
     // vendor and material names for the browser's suggestion lists
     this._spoolCatalogWS("catalog", {}).then((cat) => {
@@ -530,6 +721,11 @@ export const SpoolStockMixin = (Base) => class extends Base {
       if (target) data.slot = target;
       if (picked && picked.source === "own") data.filament_id = picked.filament_id;
       else if (picked) data.external_id = picked.external_id;
+      const ex = (list, prefix) => Object.fromEntries(list.map((x) => [x.key, extraValue(form, x, prefix)])
+        .filter(([, v]) => v !== null && v !== false));
+      const sx = ex(fields.spool, "s"), fx = ex(fields.filament, "f");
+      if (Object.keys(sx).length) data.extra = sx;
+      if (Object.keys(fx).length) data.filament_extra = fx;
       const btn = form.querySelector("button[type=submit]");
       btn.disabled = true;
       try {

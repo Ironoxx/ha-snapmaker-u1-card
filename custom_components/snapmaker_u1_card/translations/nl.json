@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Opmerking",
           "description": "Notitie bij deze spoel."
+        },
+        "extra": {
+          "name": "Eigen velden (spoel)",
+          "description": "Waarden van je eigen Spoolman-velden van de spoel, per sleutel."
+        },
+        "filament_extra": {
+          "name": "Eigen velden (filament)",
+          "description": "Waarden van je eigen Spoolman-velden van het filament (alleen nieuw filament)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "Spoel-ID",
           "description": "ID van de spoel in Spoolman."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Alleen nodig bij meerdere printers."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Spoel bewerken",
+      "description": "Wijzigt een spoel in Spoolman en desgewenst het filament (filamentwaarden gelden voor alle spoelen van dat filament). Alleen opgegeven velden veranderen; leeg wist.",
+      "fields": {
+        "spool_id": {
+          "name": "Spoel-ID",
+          "description": "Spoel-ID"
+        },
+        "remaining": {
+          "name": "Rest",
+          "description": "Rest"
+        },
+        "initial_weight": {
+          "name": "Nettogewicht",
+          "description": "Nettogewicht"
+        },
+        "spool_weight": {
+          "name": "Lege spoel",
+          "description": "Lege spoel"
+        },
+        "price": {
+          "name": "Prijs",
+          "description": "Prijs"
+        },
+        "location": {
+          "name": "Locatie",
+          "description": "Locatie"
+        },
+        "lot_nr": {
+          "name": "Batch",
+          "description": "Batch"
+        },
+        "comment": {
+          "name": "Opmerking",
+          "description": "Opmerking"
+        },
+        "extra": {
+          "name": "Eigen velden (spoel)",
+          "description": "Eigen velden (spoel)"
+        },
+        "filament_name": {
+          "name": "Filamentnaam",
+          "description": "Filamentnaam"
+        },
+        "filament_vendor": {
+          "name": "Fabrikant",
+          "description": "Fabrikant"
+        },
+        "filament_material": {
+          "name": "Materiaal",
+          "description": "Materiaal"
+        },
+        "filament_color": {
+          "name": "Kleur",
+          "description": "Kleur"
+        },
+        "filament_density": {
+          "name": "Dichtheid",
+          "description": "Dichtheid"
+        },
+        "filament_diameter": {
+          "name": "Diameter",
+          "description": "Diameter"
+        },
+        "filament_extruder_temp": {
+          "name": "Nozzletemperatuur",
+          "description": "Nozzletemperatuur"
+        },
+        "filament_bed_temp": {
+          "name": "Bedtemperatuur",
+          "description": "Bedtemperatuur"
+        },
+        "filament_article_number": {
+          "name": "Artikelnummer",
+          "description": "Artikelnummer"
+        },
+        "filament_extra": {
+          "name": "Eigen velden (filament)",
+          "description": "Eigen velden (filament)"
         },
         "config_entry_id": {
           "name": "Printer",

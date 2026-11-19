@@ -831,5 +831,15 @@ export default {
   "{n} Spulen": "{n} makara",
   "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Etiketleri tarayıcının yazdırma penceresiyle yazdırır. Home Assistant uygulamasında gerekirse dosya olarak kaydedip oradan yazdır.",
   "Als Datei speichern": "Dosya olarak kaydet",
-  "Drucken geht hier nicht – bitte als Datei speichern.": "Burada yazdırılamıyor – lütfen dosya olarak kaydet."
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Burada yazdırılamıyor – lütfen dosya olarak kaydet.",
+  // 2.4.0b3: edit spool, own Spoolman fields
+  "Bearbeiten": "Düzenle",
+  "Lade Spule …": "Makara yükleniyor …",
+  "Spule konnte nicht geladen werden.": "Makara yüklenemedi.",
+  "Spule #{id} bearbeiten": "#{id} makarasını düzenle",
+  "Gilt für alle {n} Spulen dieses Filaments.": "Bu filamentin {n} makarasının tümü için geçerli.",
+  "Gilt für das Filament dieser Spule.": "Bu makaranın filamenti için geçerli.",
+  "Spule #{id} gespeichert": "#{id} makarası kaydedildi",
+  "Eigene Felder der Spule": "Makaranın özel alanları",
+  "Eigene Felder des Filaments (nur bei neuem Filament)": "Filamentin özel alanları (yalnızca yeni filament)"
 };

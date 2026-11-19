@@ -831,5 +831,15 @@ export default {
   "{n} Spulen": "{n} bobine",
   "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Stampa le etichette tramite la finestra di stampa del browser. Nell'app Home Assistant, se serve, salvale come file e stampa da lì.",
   "Als Datei speichern": "Salva come file",
-  "Drucken geht hier nicht – bitte als Datei speichern.": "Qui non si può stampare – salva come file."
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Qui non si può stampare – salva come file.",
+  // 2.4.0b3: edit spool, own Spoolman fields
+  "Bearbeiten": "Modifica",
+  "Lade Spule …": "Caricamento bobina …",
+  "Spule konnte nicht geladen werden.": "Impossibile caricare la bobina.",
+  "Spule #{id} bearbeiten": "Modifica bobina #{id}",
+  "Gilt für alle {n} Spulen dieses Filaments.": "Vale per tutte le {n} bobine di questo filamento.",
+  "Gilt für das Filament dieser Spule.": "Vale per il filamento di questa bobina.",
+  "Spule #{id} gespeichert": "Bobina #{id} salvata",
+  "Eigene Felder der Spule": "Campi personalizzati della bobina",
+  "Eigene Felder des Filaments (nur bei neuem Filament)": "Campi personalizzati del filamento (solo filamento nuovo)"
 };

@@ -1,3 +1,6 @@
 # Generated from frontend/src by `npm run build`: collapse in diffs
 custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js linguist-generated=true
 custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js.gz binary linguist-generated=true
+custom_components/snapmaker_u1_card/frontend/i18n/*.gz binary linguist-generated=true
+custom_components/snapmaker_u1_card/frontend/i18n/*.json linguist-generated=true
+frontend/src/i18n-files.gen.js linguist-generated=true

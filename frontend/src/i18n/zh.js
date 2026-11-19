@@ -831,5 +831,15 @@ export default {
   "{n} Spulen": "{n} 个料盘",
   "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "通过浏览器的打印对话框打印标签。在 Home Assistant 应用中，如有需要请保存为文件后再打印。",
   "Als Datei speichern": "保存为文件",
-  "Drucken geht hier nicht – bitte als Datei speichern.": "此处无法打印 – 请保存为文件。"
+  "Drucken geht hier nicht – bitte als Datei speichern.": "此处无法打印 – 请保存为文件。",
+  // 2.4.0b3: edit spool, own Spoolman fields
+  "Bearbeiten": "编辑",
+  "Lade Spule …": "正在加载料盘 …",
+  "Spule konnte nicht geladen werden.": "无法加载料盘。",
+  "Spule #{id} bearbeiten": "编辑料盘 #{id}",
+  "Gilt für alle {n} Spulen dieses Filaments.": "适用于该耗材的全部 {n} 个料盘。",
+  "Gilt für das Filament dieser Spule.": "适用于此料盘的耗材。",
+  "Spule #{id} gespeichert": "料盘 #{id} 已保存",
+  "Eigene Felder der Spule": "料盘自定义字段",
+  "Eigene Felder des Filaments (nur bei neuem Filament)": "耗材自定义字段（仅新耗材）"
 };

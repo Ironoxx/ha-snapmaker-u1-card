@@ -251,3 +251,81 @@ async def test_scheduled_job_missed_while_ha_was_off(hass: HomeAssistant, mock_c
     assert job["sched"] == "missed"
     mock_client["start_print"].assert_not_called()
     assert any("verpasst" in c.data["message"] or "missed" in c.data["message"] for c in notifications)
+
+
+# ── 2.4.0b3: edit spools, own Spoolman fields ───────────────────────────────
+def test_extra_encoding():
+    from custom_components.snapmaker_u1_card import parsing as p
+    current = {"card_uids": '["04AB"]', "dryer": '"Box 1"'}
+    out = p.encode_extra({"dryer": "Box 2", "dried": True, "temp": [40, 55], "old": None}, current)
+    assert out == {"card_uids": '["04AB"]', "dryer": '"Box 2"', "dried": "true", "temp": "[40, 55]"}, "other fields kept"
+    assert p.encode_extra({"dryer": ""}, current) == {"card_uids": '["04AB"]'}, "empty removes"
+    assert p.decode_extra({"a": '"x"', "b": "5", "c": "plain"}) == {"a": "x", "b": 5, "c": "plain"}
+    fields = p.compact_fields([
+        {"key": "z", "name": "Z", "field_type": "text", "order": 2},
+        {"key": "dryer", "name": "Trockner", "field_type": "choice", "choices": ["A", "B"], "multi_choice": False,
+         "default_value": '"A"', "order": 1},
+        {"key": "x", "field_type": "unknown"}])
+    assert [f["key"] for f in fields] == ["dryer", "z"] and fields[0]["default"] == "A" and fields[0]["type"] == "choice"
+
+
+async def test_update_spool_and_edit_view(hass: HomeAssistant, mock_client, spoolman, hass_ws_client) -> None:
+    raw = {"id": 4, "remaining_weight": 400, "initial_weight": 1000, "spool_weight": 200, "price": 20, "location": "Regal",
+           "lot_nr": "", "comment": "", "archived": False, "extra": {"card_uids": '["04AB"]'},
+           "filament": {"id": 9, "name": "PLA Silk Bronze", "material": "PLA", "color_hex": "6f4c2f",
+                        "vendor": {"id": 1, "name": "Generic"}, "density": 1.24, "diameter": 1.75,
+                        "settings_extruder_temp": 210, "extra": {}}}
+    patches = []
+
+    async def update(self, kind, obj_id, data):
+        patches.append((kind, obj_id, data))
+        return {}
+
+    fields = {"spool": [{"key": "dryer", "name": "Trockner", "field_type": "text"}], "filament": []}
+    with patch(f"{SM}.spool", AsyncMock(return_value=raw)), patch(f"{SM}.update", update), \
+         patch(f"{SM}.count_spools", AsyncMock(return_value=3)), \
+         patch(f"{SM}.fields", AsyncMock(side_effect=lambda e: fields[e])), \
+         patch(f"{SM}.vendors", AsyncMock(return_value=[{"id": 1, "name": "Generic"}])), \
+         patch(f"{SM}.create", AsyncMock(return_value={"id": 5})) as create:
+        entry = await _setup(hass, spoolman_url=URL)
+        await _refresh(hass, entry)
+        ws = await hass_ws_client(hass)
+        await ws.send_json({"id": 1, "type": f"{DOMAIN}/spoolman/spool", "spool_id": 4})
+        msg = await ws.receive_json()
+        res = msg["result"]
+        assert res["filament_spools"] == 3 and res["fields"]["spool"][0]["key"] == "dryer"
+        assert res["spool"]["filament"]["extruder_temp"] == 210 and res["spool"]["extra"] == {"card_uids": ["04AB"]}
+        await ws.send_json({"id": 2, "type": f"{DOMAIN}/spoolman/fields"})
+        assert (await ws.receive_json())["result"]["spool"][0]["name"] == "Trockner"
+
+        out = await hass.services.async_call(DOMAIN, "update_spool", {
+            "spool_id": 4, "remaining": 350, "location": None, "extra": {"dryer": "Box 2"},
+            "filament_extruder_temp": 215, "filament_bed_temp": None, "filament_vendor": "Sunlu"},
+            blocking=True, return_response=True)
+    assert out["filament_id"] == 9
+    fil = next(d for k, _, d in patches if k == "filament")
+    sp = next(d for k, _, d in patches if k == "spool")
+    assert fil == {"settings_extruder_temp": 215, "settings_bed_temp": None, "vendor_id": 5}
+    create.assert_awaited_once()  # vendor Sunlu created
+    assert sp == {"remaining_weight": 350.0, "location": None,
+                  "extra": {"card_uids": '["04AB"]', "dryer": '"Box 2"'}}, "SpoolLink's field kept"
+
+
+async def test_create_spool_with_own_fields(hass: HomeAssistant, mock_client, spoolman) -> None:
+    created = []
+
+    async def create(self, kind, data):
+        created.append((kind, data))
+        return {"id": 300 + len(created)}
+
+    with patch(f"{SM}.vendors", AsyncMock(return_value=[{"id": 1, "name": "Generic"}])), \
+         patch(f"{SM}.filaments", AsyncMock(return_value=[])), patch(f"{SM}.create", create):
+        entry = await _setup(hass, spoolman_url=URL)
+        await _refresh(hass, entry)
+        await hass.services.async_call(DOMAIN, "create_spool", {
+            "material": "PLA", "weight": 1000, "extra": {"dryer": "Box 1", "dried": True},
+            "filament_extra": {"shop": "x"}}, blocking=True)
+    fil = next(d for k, d in created if k == "filament")
+    spool = next(d for k, d in created if k == "spool")
+    assert fil["extra"] == {"shop": '"x"'}
+    assert spool["extra"] == {"dryer": '"Box 1"', "dried": "true"}

@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Yorum",
           "description": "Bu makaraya not."
+        },
+        "extra": {
+          "name": "Özel alanlar (makara)",
+          "description": "Makaranın Spoolman özel alanlarının değerleri, anahtara göre."
+        },
+        "filament_extra": {
+          "name": "Özel alanlar (filament)",
+          "description": "Filamentin Spoolman özel alanlarının değerleri (yalnızca yeni filament)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "Makara kimliği",
           "description": "Spoolman'daki makara kimliği."
+        },
+        "config_entry_id": {
+          "name": "Yazıcı",
+          "description": "Yalnızca birden çok yazıcıda gerekir."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Makarayı düzenle",
+      "description": "Spoolman'da bir makarayı ve istenirse filamentini değiştirir (filament değerleri o filamentin tüm makaralarına uygulanır). Yalnızca verilen alanlar değişir; boş siler.",
+      "fields": {
+        "spool_id": {
+          "name": "Makara kimliği",
+          "description": "Makara kimliği"
+        },
+        "remaining": {
+          "name": "Kalan",
+          "description": "Kalan"
+        },
+        "initial_weight": {
+          "name": "Net ağırlık",
+          "description": "Net ağırlık"
+        },
+        "spool_weight": {
+          "name": "Boş makara",
+          "description": "Boş makara"
+        },
+        "price": {
+          "name": "Fiyat",
+          "description": "Fiyat"
+        },
+        "location": {
+          "name": "Konum",
+          "description": "Konum"
+        },
+        "lot_nr": {
+          "name": "Parti no",
+          "description": "Parti no"
+        },
+        "comment": {
+          "name": "Yorum",
+          "description": "Yorum"
+        },
+        "extra": {
+          "name": "Özel alanlar (makara)",
+          "description": "Özel alanlar (makara)"
+        },
+        "filament_name": {
+          "name": "Filament adı",
+          "description": "Filament adı"
+        },
+        "filament_vendor": {
+          "name": "Üretici",
+          "description": "Üretici"
+        },
+        "filament_material": {
+          "name": "Malzeme",
+          "description": "Malzeme"
+        },
+        "filament_color": {
+          "name": "Renk",
+          "description": "Renk"
+        },
+        "filament_density": {
+          "name": "Yoğunluk",
+          "description": "Yoğunluk"
+        },
+        "filament_diameter": {
+          "name": "Çap",
+          "description": "Çap"
+        },
+        "filament_extruder_temp": {
+          "name": "Nozul sıcaklığı",
+          "description": "Nozul sıcaklığı"
+        },
+        "filament_bed_temp": {
+          "name": "Tabla sıcaklığı",
+          "description": "Tabla sıcaklığı"
+        },
+        "filament_article_number": {
+          "name": "Ürün numarası",
+          "description": "Ürün numarası"
+        },
+        "filament_extra": {
+          "name": "Özel alanlar (filament)",
+          "description": "Özel alanlar (filament)"
         },
         "config_entry_id": {
           "name": "Yazıcı",

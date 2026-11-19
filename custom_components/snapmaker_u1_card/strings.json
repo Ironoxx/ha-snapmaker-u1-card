@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Comment",
           "description": "Note on this spool."
+        },
+        "extra": {
+          "name": "Own fields (spool)",
+          "description": "Values of your own Spoolman fields of the spool, by key."
+        },
+        "filament_extra": {
+          "name": "Own fields (filament)",
+          "description": "Values of your own Spoolman fields of the filament (new filament only)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "Spool ID",
           "description": "ID of the spool in Spoolman."
+        },
+        "config_entry_id": {
+          "name": "Printer",
+          "description": "Only needed with several printers."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Edit spool",
+      "description": "Changes a spool in Spoolman and optionally its filament (filament values apply to every spool of that filament). Only the given fields change; empty clears.",
+      "fields": {
+        "spool_id": {
+          "name": "Spool ID",
+          "description": "Spool ID"
+        },
+        "remaining": {
+          "name": "Remaining",
+          "description": "Remaining"
+        },
+        "initial_weight": {
+          "name": "Net weight",
+          "description": "Net weight"
+        },
+        "spool_weight": {
+          "name": "Empty spool",
+          "description": "Empty spool"
+        },
+        "price": {
+          "name": "Price",
+          "description": "Price"
+        },
+        "location": {
+          "name": "Location",
+          "description": "Location"
+        },
+        "lot_nr": {
+          "name": "Lot number",
+          "description": "Lot number"
+        },
+        "comment": {
+          "name": "Comment",
+          "description": "Comment"
+        },
+        "extra": {
+          "name": "Own fields (spool)",
+          "description": "Own fields (spool)"
+        },
+        "filament_name": {
+          "name": "Filament name",
+          "description": "Filament name"
+        },
+        "filament_vendor": {
+          "name": "Vendor",
+          "description": "Vendor"
+        },
+        "filament_material": {
+          "name": "Material",
+          "description": "Material"
+        },
+        "filament_color": {
+          "name": "Colour",
+          "description": "Colour"
+        },
+        "filament_density": {
+          "name": "Density",
+          "description": "Density"
+        },
+        "filament_diameter": {
+          "name": "Diameter",
+          "description": "Diameter"
+        },
+        "filament_extruder_temp": {
+          "name": "Nozzle temperature",
+          "description": "Nozzle temperature"
+        },
+        "filament_bed_temp": {
+          "name": "Bed temperature",
+          "description": "Bed temperature"
+        },
+        "filament_article_number": {
+          "name": "Article number",
+          "description": "Article number"
+        },
+        "filament_extra": {
+          "name": "Own fields (filament)",
+          "description": "Own fields (filament)"
         },
         "config_entry_id": {
           "name": "Printer",

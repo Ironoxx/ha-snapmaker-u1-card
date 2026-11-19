@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Comentario",
           "description": "Nota sobre esta bobina."
+        },
+        "extra": {
+          "name": "Campos propios (bobina)",
+          "description": "Valores de tus campos propios de Spoolman de la bobina, por clave."
+        },
+        "filament_extra": {
+          "name": "Campos propios (filamento)",
+          "description": "Valores de tus campos propios de Spoolman del filamento (solo filamento nuevo)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "ID de bobina",
           "description": "ID de la bobina en Spoolman."
+        },
+        "config_entry_id": {
+          "name": "Impresora",
+          "description": "Solo necesario con varias impresoras."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Editar bobina",
+      "description": "Cambia una bobina en Spoolman y, si se desea, su filamento (los valores del filamento valen para todas sus bobinas). Solo cambian los campos indicados; vacío borra.",
+      "fields": {
+        "spool_id": {
+          "name": "ID de bobina",
+          "description": "ID de bobina"
+        },
+        "remaining": {
+          "name": "Restante",
+          "description": "Restante"
+        },
+        "initial_weight": {
+          "name": "Peso neto",
+          "description": "Peso neto"
+        },
+        "spool_weight": {
+          "name": "Bobina vacía",
+          "description": "Bobina vacía"
+        },
+        "price": {
+          "name": "Precio",
+          "description": "Precio"
+        },
+        "location": {
+          "name": "Ubicación",
+          "description": "Ubicación"
+        },
+        "lot_nr": {
+          "name": "Lote",
+          "description": "Lote"
+        },
+        "comment": {
+          "name": "Comentario",
+          "description": "Comentario"
+        },
+        "extra": {
+          "name": "Campos propios (bobina)",
+          "description": "Campos propios (bobina)"
+        },
+        "filament_name": {
+          "name": "Nombre del filamento",
+          "description": "Nombre del filamento"
+        },
+        "filament_vendor": {
+          "name": "Fabricante",
+          "description": "Fabricante"
+        },
+        "filament_material": {
+          "name": "Material",
+          "description": "Material"
+        },
+        "filament_color": {
+          "name": "Color",
+          "description": "Color"
+        },
+        "filament_density": {
+          "name": "Densidad",
+          "description": "Densidad"
+        },
+        "filament_diameter": {
+          "name": "Diámetro",
+          "description": "Diámetro"
+        },
+        "filament_extruder_temp": {
+          "name": "Temperatura de boquilla",
+          "description": "Temperatura de boquilla"
+        },
+        "filament_bed_temp": {
+          "name": "Temperatura de cama",
+          "description": "Temperatura de cama"
+        },
+        "filament_article_number": {
+          "name": "Número de artículo",
+          "description": "Número de artículo"
+        },
+        "filament_extra": {
+          "name": "Campos propios (filamento)",
+          "description": "Campos propios (filamento)"
         },
         "config_entry_id": {
           "name": "Impresora",

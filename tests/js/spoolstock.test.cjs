@@ -41,11 +41,24 @@ add("sensor.u1c_filamente", "1", { slots, preferences: {}, entry_id: "E1",
   spoolman: { online: true, error: null, url: "http://sm:7912/", low: 100, deduct: true, pending: [],
     slots: { 0: { ...spools[0], manual: true }, 1: null, 2: null, 3: null }, spools } }, "snapmaker_u1_card", "filaments");
 
+// 2.4.0b3: own Spoolman fields and a spool for the edit form
+const FIELDS = { spool: [
+  { key: "dryer", name: "Trockner", type: "choice", choices: ["Box 1", "Box 2"], multi: false, default: "Box 1" },
+  { key: "dried", name: "Getrocknet", type: "boolean", default: false },
+  { key: "hum", name: "Feuchte", type: "float_range", unit: "%", default: null },
+], filament: [{ key: "shop", name: "Shop", type: "text", default: null }] };
+const EDIT = { id: 1, remaining_weight: 650, initial_weight: 1000, spool_weight: 200, price: 20, location: "Regal", lot_nr: "L7",
+  comment: "", extra: { dryer: "Box 1", card_uids: ["04AB"] },
+  filament: { id: 9, name: "PLA Schwarz", vendor: "Generic", material: "PLA", color: "#000000", multi: false, density: 1.24,
+    diameter: 1.75, extruder_temp: 215, bed_temp: 60, article_number: "", extra: {} } };
 const calls = [], ws = [];
 let admin = true;
 const hass = () => ({ states: JSON.parse(JSON.stringify(states)), entities: reg, user: { is_admin: admin },
   callService: async (...a) => { calls.push(JSON.parse(JSON.stringify(a))); return { response: { spool_id: 99 } }; },
-  callWS: async (m) => { ws.push(m); if (m.type.endsWith("/archived")) return { spools: [
+  callWS: async (m) => { ws.push(m);
+    if (m.type.endsWith("/fields")) return FIELDS;
+    if (m.type.endsWith("/spool")) return { spool: EDIT, filament_spools: 3, fields: FIELDS };
+    if (m.type.endsWith("/archived")) return { spools: [
     { id: 7, name: "PLA alt", vendor: "Generic", material: "PLA", color: "#111111", remaining_weight: 10, initial_weight: 1000, archived: true }] };
     return m.type.endsWith("/catalog") ? { vendors: [], materials: [] } : { items: [
       { key: "f:9", source: "own", filament_id: 9, vendor: "Generic", name: "PLA Silk", material: "PLA", extruder_temp: 220, bed_temp: 55, density: 1.24 }] }; } });
@@ -145,5 +158,38 @@ const last = () => { const c = calls.at(-1); const d = { ...c[2] }; delete d.con
   card._newSpoolForm(card._spoolDialog(), 0);
   const fh = dlg().querySelector("[data-newspoolform]");
   assert.strictEqual(fh.elements.extruder_temp.value, "210"); assert.strictEqual(fh.elements.bed_temp.value, "60");
+  // 7. 2.4.0b3: own fields in the new-spool form, sent as extra / filament_extra
+  dlg().close();
+  sec().querySelector("[data-stocknew]").click(); await tick(); await tick();
+  const fx = dlg().querySelector("[data-newspoolform]");
+  assert.ok(fx.querySelector('[name="sx_dryer"]') && fx.querySelector('[name="fx_shop"]'), "eigene Felder im Formular");
+  assert.strictEqual(fx.elements.sx_dryer.value, "Box 1", "Vorgabewert");
+  fx.elements.vendor.value = "Generic"; fx.elements.material.value = "PLA";
+  fx.elements.sx_dried.checked = true; fx.elements.sx_hum__0.value = "10"; fx.elements.sx_hum__1.value = "40";
+  fx.elements.fx_shop.value = "Amazon";
+  fx.dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
+  assert.deepStrictEqual(last()[1].extra, { dryer: "Box 1", dried: true, hum: [10, 40] });
+  assert.deepStrictEqual(last()[1].filament_extra, { shop: "Amazon" });
+  dlg().close();
+
+  // 8. Edit: spool and filament, only changed fields; filament part says how many spools share it
+  row(1).click();
+  dlg().querySelector("[data-edit]").click(); await tick(); await tick();
+  const ef = dlg().querySelector("[data-editform]");
+  assert.ok(ef, "Bearbeiten-Formular");
+  assert.match(text(dlg()), /Gilt für alle 3 Spulen dieses Filaments/);
+  assert.strictEqual(ef.elements.remaining.value, "650"); assert.strictEqual(ef.elements.f_extruder_temp.value, "215");
+  assert.strictEqual(ef.elements.sx_dryer.value, "Box 1", "gespeicherter Wert statt Vorgabe");
+  ef.elements.remaining.value = "500"; ef.elements.location.value = "";
+  ef.elements.sx_dryer.value = "Box 2"; ef.elements.f_bed_temp.value = "";
+  ef.dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
+  assert.deepStrictEqual(last(), ["update_spool", { spool_id: 1, remaining: 500, location: null,
+    extra: { dryer: "Box 2" }, filament_bed_temp: null }]);
+  // nothing changed: back to the details without a call
+  const n = calls.length;
+  row(1).click(); dlg().querySelector("[data-edit]").click(); await tick(); await tick();
+  dlg().querySelector("[data-editform]").dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
+  assert.strictEqual(calls.length, n, "ohne Änderung kein Aufruf");
+  assert.ok(dlg().querySelector("[data-edit]"), "zurück zu den Details");
   console.log("SPOOLSTOCK OK –", calls.length, "service calls, labels in the dialog");
 })().catch((e) => { console.error(e); process.exit(1); });

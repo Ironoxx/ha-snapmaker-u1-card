@@ -831,5 +831,15 @@ export default {
   "{n} Spulen": "{n} bobinas",
   "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Imprime as etiquetas através da janela de impressão do navegador. Na app Home Assistant, guarda-as como ficheiro se necessário e imprime a partir daí.",
   "Als Datei speichern": "Guardar como ficheiro",
-  "Drucken geht hier nicht – bitte als Datei speichern.": "Aqui não é possível imprimir – guarda como ficheiro."
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Aqui não é possível imprimir – guarda como ficheiro.",
+  // 2.4.0b3: edit spool, own Spoolman fields
+  "Bearbeiten": "Editar",
+  "Lade Spule …": "A carregar bobina …",
+  "Spule konnte nicht geladen werden.": "Não foi possível carregar a bobina.",
+  "Spule #{id} bearbeiten": "Editar bobina #{id}",
+  "Gilt für alle {n} Spulen dieses Filaments.": "Aplica-se às {n} bobinas deste filamento.",
+  "Gilt für das Filament dieser Spule.": "Aplica-se ao filamento desta bobina.",
+  "Spule #{id} gespeichert": "Bobina #{id} guardada",
+  "Eigene Felder der Spule": "Campos próprios da bobina",
+  "Eigene Felder des Filaments (nur bei neuem Filament)": "Campos próprios do filamento (só filamento novo)"
 };

@@ -26,7 +26,9 @@ from ..jobs import (
 from ..parsing import (
     ACTIVE_PRINT_STATES,
     describe_file,
+    encode_extra,
     find_or_build_filament,
+    normalize_color,
     parse_file_filaments,
     spool_filament,
 )
@@ -415,6 +417,61 @@ class SpoolMixin:
         await self._spools_changed()
         return {"spool_id": spool_id, "deleted": True}
 
+    async def async_update_spool(self, spool_id: int, spool: dict[str, Any], filament: dict[str, Any]) -> dict[str, Any]:
+        """2.4.0b3 service update_spool: change a spool and (optionally) its filament in Spoolman.
+
+        Only the given fields are sent. ``extra``/``filament.extra`` are merged into
+        the current extra fields (Spoolman replaces the whole dict). Filament values
+        apply to every spool of that filament – the card says so before saving.
+        """
+        mgr = self.spools
+        if not mgr.enabled or mgr.client is None:
+            raise HomeAssistantError(tr(self.hass, "Spoolman ist nicht eingerichtet.", "Spoolman is not set up."))
+        client = mgr.client
+        try:
+            current = await client.spool(spool_id)
+            body: dict[str, Any] = {}
+            for key, target in (("remaining", "remaining_weight"), ("initial_weight", "initial_weight"),
+                                ("spool_weight", "spool_weight"), ("price", "price")):
+                if key in spool:
+                    body[target] = None if spool[key] is None else round(float(spool[key]), 2)
+            for key in ("location", "lot_nr", "comment"):
+                if key in spool:
+                    body[key] = str(spool[key] or "").strip() or None
+            if "extra" in spool:
+                body["extra"] = encode_extra(spool["extra"], current.get("extra"))
+            fil_body: dict[str, Any] = {}
+            fil = current.get("filament") or {}
+            for key, target in (("name", "name"), ("material", "material"), ("article_number", "article_number")):
+                if key in filament:
+                    fil_body[target] = str(filament[key] or "").strip() or None
+            for key, target in (("density", "density"), ("diameter", "diameter")):
+                if filament.get(key):
+                    fil_body[target] = round(float(filament[key]), 3)
+            for key, target in (("extruder_temp", "settings_extruder_temp"), ("bed_temp", "settings_bed_temp")):
+                if key in filament:
+                    fil_body[target] = int(filament[key]) if filament[key] else None
+            if filament.get("color"):
+                fil_body["color_hex"] = (normalize_color(filament["color"]) or "").lstrip("#").lower() or None
+            if str(filament.get("vendor") or "").strip():
+                name = str(filament["vendor"]).strip()
+                v = next((x for x in await client.vendors()
+                          if str(x.get("name") or "").strip().casefold() == name.casefold()), None)
+                fil_body["vendor_id"] = v["id"] if v else (await client.create("vendor", {"name": name}))["id"]
+            if "extra" in filament:
+                fil_body["extra"] = encode_extra(filament["extra"], fil.get("extra"))
+            if fil_body and fil.get("id"):
+                await client.update("filament", fil["id"], fil_body)
+            if body:
+                await client.update("spool", spool_id, body)
+        except MoonrakerError as err:
+            raise HomeAssistantError(tr(self.hass, f"Spoolman lehnt ab: {err}", f"Spoolman refused: {err}")) from err
+        _LOGGER.info("Spoolman: spool %s updated (%s), filament %s (%s)", spool_id, sorted(body), fil.get("id"),
+                     sorted(fil_body))
+        await self._spools_changed()
+        return {"spool_id": spool_id, "filament_id": fil.get("id"), "spool_fields": sorted(body),
+                "filament_fields": sorted(fil_body)}
+
     async def _spools_changed(self) -> None:
         """Reload the spool list right away and push it to the card."""
         self.spools.force()
@@ -493,6 +550,8 @@ class SpoolMixin:
                     fil_id, body = find_or_build_filament(filaments, vendor_id, material, name,
                                                           color, weight, spool_weight, temps, fil_extra)
             new_filament = fil_id is None
+            if new_filament and extra.get("filament_extra"):
+                body["extra"] = encode_extra(extra["filament_extra"])  # 2.4.0b3: own Spoolman fields
             if new_filament:
                 try:
                     fil_id = (await client.create("filament", body))["id"]
@@ -514,6 +573,8 @@ class SpoolMixin:
             for key in ("lot_nr", "comment"):
                 if str(extra.get(key) or "").strip():
                     spool_body[key] = str(extra[key]).strip()
+            if extra.get("extra"):
+                spool_body["extra"] = encode_extra(extra["extra"])
             spool = await client.create("spool", spool_body)
         except MoonrakerError as err:
             raise HomeAssistantError(tr(self.hass, f"Spoolman lehnt ab: {err}", f"Spoolman refused: {err}")) from err

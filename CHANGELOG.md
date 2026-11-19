@@ -4,6 +4,40 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.4.0b3
+
+Beta. Edit spools, your own Spoolman fields in the card, labels as a pop-up, and the card loads only its own language. Includes everything from 2.4.0b2 and 2.4.0b1.
+
+**Spoolman tab**
+- **Edit** in a spool's details: remaining, net weight, empty spool, price, location, lot number, comment – and, folded below, the filament (name, vendor, material, colour, density, diameter, nozzle and bed temperature, article number). The form says how many spools share the filament, because its values apply to all of them. Only what you changed is saved; an emptied field is cleared in Spoolman.
+- **Your own Spoolman fields** (Spoolman → Settings → Extra fields) appear in *New spool* (under *More details*) and in *Edit*: text, number, range, yes/no, choice (also multiple) and date. Fields the card does not touch, e.g. SpoolLink's `card_uids`, are kept.
+- New service `update_spool`; `create_spool` takes `extra` and `filament_extra`.
+
+**Fixed**
+- **Labels** open as a pop-up in the card (preview, *Print*, *Save as file*, close with ✕ or *Back*) instead of a new window. The Home Assistant app passed that window to the phone's browser: the labels appeared full screen without a way back, or the browser showed the page it had open last.
+
+**Faster loading**
+- The card carries only German and English; Spanish, French, Italian, Dutch, Portuguese, Turkish and Chinese come as separate files, loaded once when Home Assistant uses that language (cached like the card). The card is now about 140 KB compressed instead of about 265 KB.
+
+Please check: edit a spool (spool values and one filament value), an own Spoolman field in *New spool* and *Edit*, a label in the app (pop-up, ✕), the card in another language (e.g. English → Spanish in your profile).
+
+### Deutsch
+
+Beta. Spulen bearbeiten, deine eigenen Spoolman-Felder in der Karte, Etiketten als Pop-up, und die Karte lädt nur noch ihre eigene Sprache. Enthält alles aus 2.4.0b2 und 2.4.0b1.
+
+**Spoolman-Reiter**
+- **Bearbeiten** in den Details einer Spule: Rest, Nettogewicht, Leerspule, Preis, Ort, Charge, Kommentar – und eingeklappt darunter das Filament (Name, Hersteller, Material, Farbe, Dichte, Durchmesser, Düsen- und Betttemperatur, Artikelnummer). Das Formular sagt, wie viele Spulen sich das Filament teilen, denn dessen Werte gelten für alle. Gespeichert wird nur, was du geändert hast; ein geleertes Feld wird in Spoolman gelöscht.
+- **Deine eigenen Spoolman-Felder** (Spoolman → Einstellungen → Zusatzfelder) erscheinen in *Neue Spule* (unter *Weitere Angaben*) und in *Bearbeiten*: Text, Zahl, Bereich, Ja/Nein, Auswahl (auch mehrfach) und Datum. Felder, die die Karte nicht anfasst, etwa `card_uids` von SpoolLink, bleiben erhalten.
+- Neuer Dienst `update_spool`; `create_spool` nimmt `extra` und `filament_extra`.
+
+**Behoben**
+- **Etiketten** öffnen als Pop-up in der Karte (Vorschau, *Drucken*, *Als Datei speichern*, schließen mit ✕ oder *Zurück*) statt in einem neuen Fenster. Die Home-Assistant-App hat dieses Fenster an den Browser des Handys gegeben: Die Etiketten erschienen bildschirmfüllend ohne Weg zurück, oder der Browser zeigte die zuletzt offene Seite.
+
+**Schneller laden**
+- Die Karte enthält nur noch Deutsch und Englisch; Spanisch, Französisch, Italienisch, Niederländisch, Portugiesisch, Türkisch und Chinesisch kommen als eigene Dateien, einmal geladen, wenn Home Assistant diese Sprache nutzt (zwischengespeichert wie die Karte). Die Karte ist jetzt komprimiert etwa 140 KB statt etwa 265 KB groß.
+
+Bitte prüfen: eine Spule bearbeiten (Spulenwerte und ein Filamentwert), ein eigenes Spoolman-Feld in *Neue Spule* und *Bearbeiten*, ein Etikett in der App (Pop-up, ✕), die Karte in einer anderen Sprache (z. B. im Profil Englisch → Spanisch).
+
 ## 2.4.0b2
 
 Beta. Spoolman tab with archive, delete and QR labels, more fields for new spools, start times for queued jobs, to-do lists for maintenance and shopping, and a card that loads faster on phones. Includes everything from 2.4.0b1 (guided setup, dashboard templates, clock and own buttons, print event entity, mini card, broader self test, card name conflict).

@@ -67,7 +67,7 @@ import { applyAccent } from "../accent.js";
 import { DOMAIN, SECTIONS, TAB_STORE } from "../const.js";
 import { configForm } from "../editor.js";
 import { toneThumb } from "../format.js";
-import { setLang } from "../i18n.js";
+import { onLangLoaded, setLang } from "../i18n.js";
 
 import { StateMixin } from "./state.js";
 import { ControlsMixin } from "./controls.js";
@@ -305,6 +305,8 @@ export class SnapmakerU1Card extends U1Base {
 
   connectedCallback() {
     document.addEventListener("visibilitychange", this._onVis);
+    // 2.4.0b3: redraw once the language table (loaded on demand) has arrived
+    if (!this._langOff) this._langOff = onLangLoaded(() => { this._renderKey = null; if (this._hass) this.hass = this._hass; });
     // Stream only while the card is visible (other view, scrolled away,
     // collapsed section => connection released).
     if (!this._io && "IntersectionObserver" in window) {
@@ -338,6 +340,7 @@ export class SnapmakerU1Card extends U1Base {
 
   disconnectedCallback() {
     document.removeEventListener("visibilitychange", this._onVis);
+    if (this._langOff) { this._langOff(); this._langOff = null; }
     this._resetZoom();
     if (this._io) this._io.disconnect();
     if (this._camTimer) clearInterval(this._camTimer);

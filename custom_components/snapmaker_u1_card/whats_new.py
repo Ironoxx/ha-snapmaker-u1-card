@@ -171,10 +171,10 @@ Please reload the dashboard once. All details: [release notes]({GITHUB}/releases
 - **Selbsttest** prüft mehr: Netzschalter, Spule je Kopf, Uhrzeit des Druckers, Wartung, paxx12, Blueprint
 - **paxx12-Einstellungen** zum Ansehen in den Karten-Einstellungen
 - **Kollidierende Kartennamen** (andere Karte „snapmaker-u1-card“) erscheinen unter Reparaturen
-- **Spoolman-Reiter:** Spulen archivieren, wiederherstellen und löschen, QR-Etiketten drucken, beim Anlegen auch Temperaturen, Charge und Kommentar
+- **Spoolman-Reiter:** Spulen bearbeiten, archivieren, wiederherstellen und löschen, QR-Etiketten drucken, beim Anlegen auch Temperaturen, Charge, Kommentar und deine eigenen Spoolman-Felder
 - **Startzeit für Aufträge** in der Warteschlange, auf Wunsch mit Rückfrage „Druckbett frei?“ per Benachrichtigung
 - **Aufgabenlisten** (Optionen, Standard aus): fällige Wartung und Einkaufsliste für knappe Spulen
-- Startdialog zeigt **fällige Wartung**; die Karte lädt auf Handy und Tablet schneller (komprimiert, aus dem Cache)
+- Startdialog zeigt **fällige Wartung**; die Karte lädt auf Handy und Tablet schneller (kleiner, komprimiert, aus dem Cache, nur die eigene Sprache)
 
 Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/releases/tag/v2.4.0)
 
@@ -188,10 +188,10 @@ Bitte das Dashboard einmal neu laden. Alle Details: [Versionshinweise]({GITHUB}/
 - **Self test** checks more: power switch, spool per head, printer clock, maintenance, paxx12, blueprint
 - **paxx12 settings** to view in the card's settings
 - **Colliding card names** (another "snapmaker-u1-card") show up under Repairs
-- **Spoolman tab:** archive, restore and delete spools, print QR labels, temperatures, lot and comment when creating one
+- **Spoolman tab:** edit, archive, restore and delete spools, print QR labels, temperatures, lot, comment and your own Spoolman fields when creating one
 - **Start time for queued jobs**, optionally with a "bed clear?" question in the notification
 - **To-do lists** (options, off by default): due maintenance and a shopping list for low spools
-- Print dialog shows **due maintenance**; the card loads faster on phones and tablets (compressed, from the cache)
+- Print dialog shows **due maintenance**; the card loads faster on phones and tablets (smaller, compressed, from the cache, only its own language)
 
 Please reload the dashboard once. All details: [release notes]({GITHUB}/releases/tag/v2.4.0)
 

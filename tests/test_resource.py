@@ -56,6 +56,18 @@ async def test_resource_points_to_the_integration(hass: HomeAssistant, mock_clie
     # the gzip copy matches the bundle (built together by npm run build)
     import gzip
     assert gzip.decompress((js.parent / "snapmaker-u1-card.js.gz").read_bytes()) == js.read_bytes()
+    # 2.4.0b3: language tables beside it, the names the bundle knows, each with its gzip copy
+    import json
+    import re
+    gen = (Path(resource.__file__).parents[2] / "frontend" / "src" / "i18n-files.gen.js").read_text()
+    files = json.loads(re.search(r"LANG_FILES = (\{.*?\});", gen, re.S).group(1))
+    assert sorted(files) == ["es", "fr", "it", "nl", "pt", "tr", "zh"]
+    for name in files.values():
+        f = js.parent / "i18n" / name
+        assert f.exists() and name in js.read_text(), name
+        assert gzip.decompress((js.parent / "i18n" / f"{name}.gz").read_bytes()) == f.read_bytes()
+    assert sorted(p.name for p in (js.parent / "i18n").iterdir()) == sorted(
+        n for name in files.values() for n in (name, f"{name}.gz")), "no stale tables"
     assert not Path(hass.config.path("www", DOMAIN)).exists(), "nothing written to /config/www"
 
 

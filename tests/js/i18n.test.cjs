@@ -9,34 +9,54 @@ const dom = new JSDOM(`<!doctype html><body></body>`, { runScripts: "outside-onl
 const w = dom.window;
 w.HTMLCanvasElement.prototype.getContext = () => null;
 w.setInterval = () => 0;
+// 2.4.0b3: other languages come as files from the integration's static path – served from disk here
+const fetched = [];
+const FRONT = path.join(__dirname, "../../custom_components/snapmaker_u1_card/frontend");
+w.fetch = async (url) => {
+  fetched.push(url);
+  const m = String(url).match(/^\/snapmaker_u1_card\/card\/(i18n\/[\w.]+\.json)$/);
+  if (!m || !fs.existsSync(path.join(FRONT, m[1]))) return { ok: false, status: 404 };
+  const body = fs.readFileSync(path.join(FRONT, m[1]), "utf8");
+  return { ok: true, status: 200, json: async () => JSON.parse(body) };
+};
 w.eval(src);
+const tick = () => new Promise((r) => setTimeout(r, 0));
 
 const states = { "sensor.u1_printer_state": { entity_id: "sensor.u1_printer_state", state: "ready", attributes: {} } };
 const entities = { "sensor.u1_printer_state": { entity_id: "sensor.u1_printer_state", platform: "moonraker" } };
-const tabs = (lang) => {
+// the card redraws by itself once the table has arrived
+const tabs = async (lang) => {
   const c = w.document.createElement("snapmaker-u1-card");
   c.setConfig({ type: "custom:snapmaker-u1-card" });
   w.document.body.appendChild(c);
   c.hass = { states, entities, locale: { language: lang }, callService: async () => {} };
+  for (let i = 0; i < 5; i++) await tick();
   const out = [...c.shadowRoot.querySelectorAll("[data-tab]")].map((b) => b.textContent.trim());
   c.remove();
   return out;
 };
-assert.strictEqual(tabs("de")[0], "Übersicht");
-assert.strictEqual(tabs("en")[0], "Overview");
-assert.strictEqual(tabs("es")[0], "Resumen");
-assert.strictEqual(tabs("fr")[0], "Aperçu");
-assert.strictEqual(tabs("it")[0], "Panoramica");
-assert.strictEqual(tabs("nl")[0], "Overzicht");
-assert.strictEqual(tabs("pt")[0], "Visão geral");
-assert.strictEqual(tabs("pt-BR")[0], "Visão geral", "Region -> Grundsprache");
-assert.strictEqual(tabs("tr")[0], "Genel Bakış");
-assert.strictEqual(tabs("zh-Hans")[0], "概览");
-assert.strictEqual(tabs("zh-CN")[0], "概览");
-assert.strictEqual(tabs("zh")[0], "概览");
-assert.strictEqual(tabs("zh-Hant")[0], "Overview", "Traditional Chinese -> English");
-assert.strictEqual(tabs("zh-TW")[0], "Overview", "Traditional region -> English");
-assert.strictEqual(tabs("sv")[0], "Overview", "unknown -> English");
+(async () => {
+// German and English are in the bundle: no download
+assert.strictEqual((await tabs("de"))[0], "Übersicht");
+assert.strictEqual((await tabs("en"))[0], "Overview");
+assert.deepStrictEqual(fetched, [], "de/en ohne Nachladen");
+assert.strictEqual((await tabs("es"))[0], "Resumen");
+assert.strictEqual((await tabs("fr"))[0], "Aperçu");
+assert.strictEqual((await tabs("it"))[0], "Panoramica");
+assert.strictEqual((await tabs("nl"))[0], "Overzicht");
+assert.strictEqual((await tabs("pt"))[0], "Visão geral");
+assert.strictEqual((await tabs("pt-BR"))[0], "Visão geral", "Region -> Grundsprache");
+assert.strictEqual((await tabs("tr"))[0], "Genel Bakış");
+assert.strictEqual((await tabs("zh-Hans"))[0], "概览");
+assert.strictEqual((await tabs("zh-CN"))[0], "概览");
+assert.strictEqual((await tabs("zh"))[0], "概览");
+assert.strictEqual((await tabs("zh-Hant"))[0], "Overview", "Traditional Chinese -> English");
+assert.strictEqual((await tabs("zh-TW"))[0], "Overview", "Traditional region -> English");
+assert.strictEqual((await tabs("sv"))[0], "Overview", "unknown -> English");
+// one download per language, hashed file names, nothing for unknown/Traditional
+assert.ok(fetched.every((u) => /^\/snapmaker_u1_card\/card\/i18n\/(es|fr|it|nl|pt|tr|zh)\.[0-9a-f]{8}\.json$/.test(u)), fetched.join());
+assert.strictEqual(fetched.length, 7, fetched.join());
+
 
 // every language table has exactly the keys of the English one, with the same placeholders
 const i18n = fs.readFileSync(path.join(__dirname, "../../frontend/src/i18n.js"), "utf8");
@@ -90,4 +110,5 @@ const cost = (lang, currency) => {
 };
 assert.match(cost("tr", "TRY"), /₺700,00/, "TRY in Turkish");
 assert.match(cost("de", "EUR"), /700,00\s€/, "EUR in German");
-console.log("I18N OK – de en es fr it nl pt tr zh-Hans, regional/Traditional fallback, complete tables, placeholders, currency");
+console.log("I18N OK – de en es fr it nl pt tr zh-Hans, loaded on demand, regional/Traditional fallback, complete tables, placeholders, currency");
+})().catch((e) => { console.error(e); process.exit(1); });

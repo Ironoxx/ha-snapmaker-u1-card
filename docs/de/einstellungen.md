@@ -123,7 +123,7 @@ Eine Ressource legst du nicht selbst an; die Integration lädt die Karte auf zwe
 1. über die Startseite von Home Assistant (`add_extra_js_url`),
 2. als Dashboard-Ressource `/snapmaker_u1_card/card/snapmaker-u1-card.js?v=…`, die die Integration anlegt, aktuell hält und mit der Integration wieder entfernt. Unter *Dashboards → Ressourcen* bitte stehen lassen.
 
-2.4: `v=` ist die Version plus ein kurzer Prüfwert der Datei. Die Karte wird mit langen Cache-Zeiten und – für Browser, die es können – als gzip-Kopie ausgeliefert (etwa 260 KB statt etwa 900 KB), Handy und Tablet laden sie also aus ihrem Cache; eine neue Datei bekommt eine neue Adresse und kommt sofort an.
+2.4: `v=` ist die Version plus ein kurzer Prüfwert der Datei. Die Karte wird mit langen Cache-Zeiten und – für Browser, die es können – als gzip-Kopie ausgeliefert (etwa 260 KB statt etwa 900 KB), Handy und Tablet laden sie also aus ihrem Cache; eine neue Datei bekommt eine neue Adresse und kommt sofort an. 2.4.0b3: In der Karte stecken nur Deutsch und Englisch; die anderen Sprachen sind Dateien unter `/snapmaker_u1_card/card/i18n/`, einmal geladen, wenn Home Assistant diese Sprache nutzt.
 
 Beides kommt aus der Integration selbst; nach `/config/www` wird nichts kopiert. Bis 2.1.1 lag eine Kopie der Karte unter `/config/www/snapmaker_u1_card/`; seit 2.1.2 verlegt die Integration ihre Ressource auf den neuen Pfad und löscht nur diese alte Kopie ihrer eigenen Datei.
 

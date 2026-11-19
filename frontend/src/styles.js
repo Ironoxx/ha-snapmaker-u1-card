@@ -789,6 +789,10 @@ export const STYLES = `
   .head-form .more-fields { display: flex; flex-direction: column; gap: 8px; }
   .head-form .more-fields > summary { cursor: pointer; font-size: 13px; color: var(--u1-primary); }
   .head-form .more-fields > .head-form { margin-top: 8px; }
+  /* 2.4.0b3: own Spoolman fields – ranges as two boxes, multi-choice lists not too tall */
+  .head-form .range-in { display: flex; align-items: center; gap: 6px; }
+  .head-form .range-in input { flex: 1; min-width: 0; }
+  .head-form select[multiple] { min-height: 76px; }
   /* 2.4: spool details – actions wrap on narrow screens */
   dialog.u1spool .dlg-actions { flex-wrap: wrap; }
   /* 2.4.0b2: label preview (white paper look, scrolls with many labels) */

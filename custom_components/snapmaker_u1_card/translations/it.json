@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Commento",
           "description": "Nota su questa bobina."
+        },
+        "extra": {
+          "name": "Campi personalizzati (bobina)",
+          "description": "Valori dei tuoi campi Spoolman personalizzati della bobina, per chiave."
+        },
+        "filament_extra": {
+          "name": "Campi personalizzati (filamento)",
+          "description": "Valori dei tuoi campi Spoolman personalizzati del filamento (solo filamento nuovo)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "ID bobina",
           "description": "ID della bobina in Spoolman."
+        },
+        "config_entry_id": {
+          "name": "Stampante",
+          "description": "Necessario solo con più stampanti."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Modifica bobina",
+      "description": "Modifica una bobina in Spoolman e, se vuoi, il suo filamento (i valori del filamento valgono per tutte le sue bobine). Cambiano solo i campi indicati; vuoto cancella.",
+      "fields": {
+        "spool_id": {
+          "name": "ID bobina",
+          "description": "ID bobina"
+        },
+        "remaining": {
+          "name": "Rimanente",
+          "description": "Rimanente"
+        },
+        "initial_weight": {
+          "name": "Peso netto",
+          "description": "Peso netto"
+        },
+        "spool_weight": {
+          "name": "Bobina vuota",
+          "description": "Bobina vuota"
+        },
+        "price": {
+          "name": "Prezzo",
+          "description": "Prezzo"
+        },
+        "location": {
+          "name": "Posizione",
+          "description": "Posizione"
+        },
+        "lot_nr": {
+          "name": "Lotto",
+          "description": "Lotto"
+        },
+        "comment": {
+          "name": "Commento",
+          "description": "Commento"
+        },
+        "extra": {
+          "name": "Campi personalizzati (bobina)",
+          "description": "Campi personalizzati (bobina)"
+        },
+        "filament_name": {
+          "name": "Nome filamento",
+          "description": "Nome filamento"
+        },
+        "filament_vendor": {
+          "name": "Produttore",
+          "description": "Produttore"
+        },
+        "filament_material": {
+          "name": "Materiale",
+          "description": "Materiale"
+        },
+        "filament_color": {
+          "name": "Colore",
+          "description": "Colore"
+        },
+        "filament_density": {
+          "name": "Densità",
+          "description": "Densità"
+        },
+        "filament_diameter": {
+          "name": "Diametro",
+          "description": "Diametro"
+        },
+        "filament_extruder_temp": {
+          "name": "Temperatura ugello",
+          "description": "Temperatura ugello"
+        },
+        "filament_bed_temp": {
+          "name": "Temperatura piatto",
+          "description": "Temperatura piatto"
+        },
+        "filament_article_number": {
+          "name": "Codice articolo",
+          "description": "Codice articolo"
+        },
+        "filament_extra": {
+          "name": "Campi personalizzati (filamento)",
+          "description": "Campi personalizzati (filamento)"
         },
         "config_entry_id": {
           "name": "Stampante",

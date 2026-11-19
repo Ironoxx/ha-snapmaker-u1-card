@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Commentaire",
           "description": "Note sur cette bobine."
+        },
+        "extra": {
+          "name": "Champs personnalisés (bobine)",
+          "description": "Valeurs de tes champs Spoolman personnalisés de la bobine, par clé."
+        },
+        "filament_extra": {
+          "name": "Champs personnalisés (filament)",
+          "description": "Valeurs de tes champs Spoolman personnalisés du filament (nouveau filament uniquement)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "ID de bobine",
           "description": "ID de la bobine dans Spoolman."
+        },
+        "config_entry_id": {
+          "name": "Imprimante",
+          "description": "Nécessaire seulement avec plusieurs imprimantes."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Modifier la bobine",
+      "description": "Modifie une bobine dans Spoolman et, si souhaité, son filament (les valeurs du filament s'appliquent à toutes ses bobines). Seuls les champs indiqués changent ; vide efface.",
+      "fields": {
+        "spool_id": {
+          "name": "ID de bobine",
+          "description": "ID de bobine"
+        },
+        "remaining": {
+          "name": "Restant",
+          "description": "Restant"
+        },
+        "initial_weight": {
+          "name": "Poids net",
+          "description": "Poids net"
+        },
+        "spool_weight": {
+          "name": "Bobine vide",
+          "description": "Bobine vide"
+        },
+        "price": {
+          "name": "Prix",
+          "description": "Prix"
+        },
+        "location": {
+          "name": "Emplacement",
+          "description": "Emplacement"
+        },
+        "lot_nr": {
+          "name": "Lot",
+          "description": "Lot"
+        },
+        "comment": {
+          "name": "Commentaire",
+          "description": "Commentaire"
+        },
+        "extra": {
+          "name": "Champs personnalisés (bobine)",
+          "description": "Champs personnalisés (bobine)"
+        },
+        "filament_name": {
+          "name": "Nom du filament",
+          "description": "Nom du filament"
+        },
+        "filament_vendor": {
+          "name": "Fabricant",
+          "description": "Fabricant"
+        },
+        "filament_material": {
+          "name": "Matériau",
+          "description": "Matériau"
+        },
+        "filament_color": {
+          "name": "Couleur",
+          "description": "Couleur"
+        },
+        "filament_density": {
+          "name": "Densité",
+          "description": "Densité"
+        },
+        "filament_diameter": {
+          "name": "Diamètre",
+          "description": "Diamètre"
+        },
+        "filament_extruder_temp": {
+          "name": "Température de buse",
+          "description": "Température de buse"
+        },
+        "filament_bed_temp": {
+          "name": "Température du plateau",
+          "description": "Température du plateau"
+        },
+        "filament_article_number": {
+          "name": "Référence",
+          "description": "Référence"
+        },
+        "filament_extra": {
+          "name": "Champs personnalisés (filament)",
+          "description": "Champs personnalisés (filament)"
         },
         "config_entry_id": {
           "name": "Imprimante",

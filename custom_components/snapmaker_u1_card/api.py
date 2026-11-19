@@ -614,6 +614,32 @@ class SpoolmanClient:
         """2.4: delete a spool for good (Spoolman also drops its usage history)."""
         await self._request("DELETE", f"/spool/{int(spool_id)}")
 
+    async def spool(self, spool_id: int) -> dict[str, Any]:
+        """2.4.0b3: one spool with filament and vendor (edit form, on demand)."""
+        result = await self._request("GET", f"/spool/{int(spool_id)}")
+        if not isinstance(result, dict):
+            raise MoonrakerError(f"Spoolman did not return spool {spool_id}")
+        return result
+
+    async def fields(self, entity: str) -> list[dict[str, Any]]:
+        """2.4.0b3: the user's own extra fields of ``spool``, ``filament`` or ``vendor``."""
+        if entity not in ("spool", "filament", "vendor"):
+            raise ValueError(entity)
+        result = await self._request("GET", f"/field/{entity}")
+        return result if isinstance(result, list) else []
+
+    async def count_spools(self, filament_id: int) -> int:
+        """2.4.0b3: how many spools (archived too) use this filament – shown before editing it."""
+        result = await self._request("GET", "/spool", params={"filament.id": int(filament_id), "allow_archived": "true"})
+        return len(result) if isinstance(result, list) else 0
+
+    async def update(self, kind: str, obj_id: int, data: dict[str, Any]) -> dict[str, Any]:
+        """2.4.0b3: PATCH a spool or filament with the given fields only."""
+        if kind not in ("spool", "filament"):
+            raise ValueError(kind)
+        result = await self._request("PATCH", f"/{kind}/{int(obj_id)}", json=data)
+        return result if isinstance(result, dict) else {}
+
     async def use_weight(self, spool_id: int, grams: float) -> dict[str, Any]:
         return await self._request("PUT", f"/spool/{int(spool_id)}/use", json={"use_weight": round(grams, 2)})
 

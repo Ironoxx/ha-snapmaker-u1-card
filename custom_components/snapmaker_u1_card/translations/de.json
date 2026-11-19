@@ -1294,6 +1294,14 @@
         "comment": {
           "name": "Kommentar",
           "description": "Notiz zu dieser Spule."
+        },
+        "extra": {
+          "name": "Eigene Felder (Spule)",
+          "description": "Werte deiner eigenen Spoolman-Felder der Spule, nach Schlüssel."
+        },
+        "filament_extra": {
+          "name": "Eigene Felder (Filament)",
+          "description": "Werte deiner eigenen Spoolman-Felder des Filaments (nur bei neuem Filament)."
         }
       }
     },
@@ -1344,6 +1352,92 @@
         "spool_id": {
           "name": "Spulen-ID",
           "description": "ID der Spule in Spoolman."
+        },
+        "config_entry_id": {
+          "name": "Drucker",
+          "description": "Nur bei mehreren Druckern nötig."
+        }
+      }
+    },
+    "update_spool": {
+      "name": "Spule bearbeiten",
+      "description": "Ändert eine Spule in Spoolman und auf Wunsch ihr Filament (Filament-Werte gelten für alle Spulen dieses Filaments). Nur angegebene Felder ändern sich; leer löscht.",
+      "fields": {
+        "spool_id": {
+          "name": "Spulen-ID",
+          "description": "Spulen-ID"
+        },
+        "remaining": {
+          "name": "Rest",
+          "description": "Rest"
+        },
+        "initial_weight": {
+          "name": "Nettogewicht",
+          "description": "Nettogewicht"
+        },
+        "spool_weight": {
+          "name": "Leerspule",
+          "description": "Leerspule"
+        },
+        "price": {
+          "name": "Preis",
+          "description": "Preis"
+        },
+        "location": {
+          "name": "Ort",
+          "description": "Ort"
+        },
+        "lot_nr": {
+          "name": "Charge",
+          "description": "Charge"
+        },
+        "comment": {
+          "name": "Kommentar",
+          "description": "Kommentar"
+        },
+        "extra": {
+          "name": "Eigene Felder (Spule)",
+          "description": "Eigene Felder (Spule)"
+        },
+        "filament_name": {
+          "name": "Filamentname",
+          "description": "Filamentname"
+        },
+        "filament_vendor": {
+          "name": "Hersteller",
+          "description": "Hersteller"
+        },
+        "filament_material": {
+          "name": "Material",
+          "description": "Material"
+        },
+        "filament_color": {
+          "name": "Farbe",
+          "description": "Farbe"
+        },
+        "filament_density": {
+          "name": "Dichte",
+          "description": "Dichte"
+        },
+        "filament_diameter": {
+          "name": "Durchmesser",
+          "description": "Durchmesser"
+        },
+        "filament_extruder_temp": {
+          "name": "Düsentemperatur",
+          "description": "Düsentemperatur"
+        },
+        "filament_bed_temp": {
+          "name": "Betttemperatur",
+          "description": "Betttemperatur"
+        },
+        "filament_article_number": {
+          "name": "Artikelnummer",
+          "description": "Artikelnummer"
+        },
+        "filament_extra": {
+          "name": "Eigene Felder (Filament)",
+          "description": "Eigene Felder (Filament)"
         },
         "config_entry_id": {
           "name": "Drucker",

@@ -175,10 +175,38 @@ CREATE_SPOOL_SCHEMA = vol.Schema({
     vol.Optional("article_number"): vol.All(cv.string, vol.Length(max=64)),
     vol.Optional("lot_nr"): vol.All(cv.string, vol.Length(max=64)),
     vol.Optional("comment"): vol.All(cv.string, vol.Length(max=1024)),
+    # 2.4.0b3: the user's own Spoolman fields {key: value}
+    vol.Optional("extra"): vol.Schema({cv.string: vol.Any(str, int, float, bool, list, None)}),
+    vol.Optional("filament_extra"): vol.Schema({cv.string: vol.Any(str, int, float, bool, list, None)}),
     vol.Optional(ATTR_ENTRY): cv.string,
 })
 # 2.4: optional create_spool fields handed on as they are (see async_create_spool)
-CREATE_SPOOL_EXTRA = ("extruder_temp", "bed_temp", "density", "diameter", "article_number", "lot_nr", "comment")
+CREATE_SPOOL_EXTRA = ("extruder_temp", "bed_temp", "density", "diameter", "article_number", "lot_nr", "comment",
+                      "extra", "filament_extra")
+# 2.4.0b3: update_spool – spool fields and filament fields (filament_*), only what is given is changed
+EXTRA_VALUES = vol.Schema({cv.string: vol.Any(str, int, float, bool, list, None)})
+UPDATE_SPOOL_SCHEMA = vol.Schema({
+    vol.Required("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional("remaining"): vol.Any(None, vol.All(vol.Coerce(float), vol.Range(min=0, max=10000))),
+    vol.Optional("initial_weight"): vol.Any(None, vol.All(vol.Coerce(float), vol.Range(min=0, max=10000))),
+    vol.Optional("spool_weight"): vol.Any(None, vol.All(vol.Coerce(float), vol.Range(min=0, max=2000))),
+    vol.Optional("price"): vol.Any(None, vol.All(vol.Coerce(float), vol.Range(min=0, max=10000))),
+    vol.Optional("location"): vol.Any(None, vol.All(cv.string, vol.Length(max=64))),
+    vol.Optional("lot_nr"): vol.Any(None, vol.All(cv.string, vol.Length(max=64))),
+    vol.Optional("comment"): vol.Any(None, vol.All(cv.string, vol.Length(max=1024))),
+    vol.Optional("extra"): EXTRA_VALUES,
+    vol.Optional("filament_name"): vol.All(cv.string, vol.Length(max=64)),
+    vol.Optional("filament_vendor"): vol.All(cv.string, vol.Length(max=64)),
+    vol.Optional("filament_material"): vol.All(cv.string, vol.Length(max=32)),
+    vol.Optional("filament_color"): vol.Match(r"^#?[0-9a-fA-F]{6}$"),
+    vol.Optional("filament_density"): vol.All(vol.Coerce(float), vol.Range(min=0.5, max=3)),
+    vol.Optional("filament_diameter"): vol.All(vol.Coerce(float), vol.Range(min=1, max=3)),
+    vol.Optional("filament_extruder_temp"): vol.Any(None, vol.All(vol.Coerce(int), vol.Range(min=150, max=350))),
+    vol.Optional("filament_bed_temp"): vol.Any(None, vol.All(vol.Coerce(int), vol.Range(min=0, max=150))),
+    vol.Optional("filament_article_number"): vol.Any(None, vol.All(cv.string, vol.Length(max=64))),
+    vol.Optional("filament_extra"): EXTRA_VALUES,
+    vol.Optional(ATTR_ENTRY): cv.string,
+})
 # 2.4: archive / restore / delete a spool from the card's Spoolman tab
 SPOOL_ARCHIVE_SCHEMA = vol.Schema({
     vol.Required("spool_id"): vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -300,6 +328,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             extra={k: d[k] for k in CREATE_SPOOL_EXTRA if k in d})
 
     hass.services.async_register(DOMAIN, "create_spool", create_spool, schema=CREATE_SPOOL_SCHEMA,
+                                 supports_response=SupportsResponse.OPTIONAL)
+
+    async def update_spool(call: ServiceCall) -> ServiceResponse:
+        d = call.data
+        spool = {k: d[k] for k in ("remaining", "initial_weight", "spool_weight", "price", "location", "lot_nr",
+                                   "comment", "extra") if k in d}
+        filament = {k.removeprefix("filament_"): v for k, v in d.items() if k.startswith("filament_")}
+        return await _coordinator(hass, d.get(ATTR_ENTRY)).async_update_spool(d["spool_id"], spool, filament)
+
+    hass.services.async_register(DOMAIN, "update_spool", update_spool, schema=UPDATE_SPOOL_SCHEMA,
                                  supports_response=SupportsResponse.OPTIONAL)
 
     async def spool_archive(call: ServiceCall) -> ServiceResponse:

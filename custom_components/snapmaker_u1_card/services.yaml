@@ -563,6 +563,118 @@ create_spool:
       selector:
         text:
           multiline: true
+    extra:
+      example: '{"dryer": "Box 2"}'
+      selector:
+        object:
+    filament_extra:
+      selector:
+        object:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: snapmaker_u1_card
+update_spool:
+  fields:
+    spool_id:
+      required: true
+      example: 12
+      selector:
+        number:
+          min: 1
+          max: 1000000
+          mode: box
+    remaining:
+      selector:
+        number:
+          min: 0
+          max: 10000
+          unit_of_measurement: g
+          mode: box
+    initial_weight:
+      selector:
+        number:
+          min: 0
+          max: 10000
+          unit_of_measurement: g
+          mode: box
+    spool_weight:
+      selector:
+        number:
+          min: 0
+          max: 2000
+          unit_of_measurement: g
+          mode: box
+    price:
+      selector:
+        number:
+          min: 0
+          max: 10000
+          step: 0.01
+          mode: box
+    location:
+      selector:
+        text:
+    lot_nr:
+      selector:
+        text:
+    comment:
+      selector:
+        text:
+          multiline: true
+    extra:
+      example: '{"dryer": "Box 2"}'
+      selector:
+        object:
+    filament_name:
+      selector:
+        text:
+    filament_vendor:
+      selector:
+        text:
+    filament_material:
+      selector:
+        text:
+    filament_color:
+      example: "#1a1a1a"
+      selector:
+        text:
+    filament_density:
+      selector:
+        number:
+          min: 0.5
+          max: 3
+          step: 0.01
+          unit_of_measurement: g/cm³
+          mode: box
+    filament_diameter:
+      selector:
+        number:
+          min: 1
+          max: 3
+          step: 0.01
+          unit_of_measurement: mm
+          mode: box
+    filament_extruder_temp:
+      selector:
+        number:
+          min: 150
+          max: 350
+          unit_of_measurement: °C
+          mode: box
+    filament_bed_temp:
+      selector:
+        number:
+          min: 0
+          max: 150
+          unit_of_measurement: °C
+          mode: box
+    filament_article_number:
+      selector:
+        text:
+    filament_extra:
+      selector:
+        object:
     config_entry_id:
       selector:
         config_entry:

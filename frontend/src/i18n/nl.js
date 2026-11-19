@@ -831,5 +831,15 @@ export default {
   "{n} Spulen": "{n} spoelen",
   "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Print de etiketten via het printvenster van de browser. In de Home Assistant-app ze zo nodig als bestand opslaan en vandaar printen.",
   "Als Datei speichern": "Opslaan als bestand",
-  "Drucken geht hier nicht – bitte als Datei speichern.": "Printen gaat hier niet – sla het op als bestand."
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Printen gaat hier niet – sla het op als bestand.",
+  // 2.4.0b3: edit spool, own Spoolman fields
+  "Bearbeiten": "Bewerken",
+  "Lade Spule …": "Spoel laden …",
+  "Spule konnte nicht geladen werden.": "De spoel kon niet worden geladen.",
+  "Spule #{id} bearbeiten": "Spoel #{id} bewerken",
+  "Gilt für alle {n} Spulen dieses Filaments.": "Geldt voor alle {n} spoelen van dit filament.",
+  "Gilt für das Filament dieser Spule.": "Geldt voor het filament van deze spoel.",
+  "Spule #{id} gespeichert": "Spoel #{id} opgeslagen",
+  "Eigene Felder der Spule": "Eigen velden van de spoel",
+  "Eigene Felder des Filaments (nur bei neuem Filament)": "Eigen velden van het filament (alleen nieuw filament)"
 };

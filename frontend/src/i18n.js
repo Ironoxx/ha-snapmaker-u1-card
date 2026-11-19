@@ -5,30 +5,62 @@
  * otherwise the translation (English in EN, es/fr/it/nl/pt/tr/zh in ./i18n/), falling
  * back to English and then German.
  * Placeholders: tr("Spule #{id}", { id: 3 }). The language follows Home Assistant.
+ *
+ * 2.4.0b3: only German and English are in the bundle. The other tables are
+ * separate files (built by scripts/build-i18n.cjs, names in i18n-files.gen.js)
+ * that the card loads once when Home Assistant uses that language – every
+ * device downloads only its own language. Until the table is there the card
+ * shows English; then every card redraws (onLangLoaded).
  */
 
-import es from "./i18n/es.js";
-import fr from "./i18n/fr.js";
-import it from "./i18n/it.js";
-import nl from "./i18n/nl.js";
-import pt from "./i18n/pt.js";
-import trTR from "./i18n/tr.js";
-import zh from "./i18n/zh.js";
+import { CARD_URL_BASE } from "./const.js";
+import { LANG_FILES } from "./i18n-files.gen.js";
 
 export let LANG = "de";
 export let LOCALE = "de-DE";
 // From hass.config.currency; EUR until the card gets hass (and for older HA without it)
 export let CURRENCY = "EUR";
-// Localized UI dictionaries; missing entries fall back to English, then the German source text.
-const MORE = { es, fr, it, nl, pt, tr: trTR, zh };
+// Localized UI dictionaries as they arrive; missing entries fall back to English, then German.
+const MORE = {};
 const LOCALES = { de: "de-DE", es: "es-ES", fr: "fr-FR", it: "it-IT", nl: "nl-NL", pt: "pt-PT", tr: "tr-TR", zh: "zh-Hans" };
+const loading = {};
+const listeners = new Set();
+
+/** Callback when a language table has arrived (cards redraw); returns the remove function. */
+export function onLangLoaded(cb) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+
+/** A table given directly (tests, or a page that has it already); no download then. */
+export function registerLang(code, table) {
+  MORE[code] = table;
+  listeners.forEach((cb) => { try { cb(code); } catch (e) { /* a card's redraw must not stop the others */ } });
+}
+
+/** Fetch the table of ``code`` once; the static path is public and cached (hashed file name). */
+function loadLang(code) {
+  if (MORE[code] || loading[code] || !LANG_FILES[code] || typeof fetch !== "function") return;
+  loading[code] = fetch(`${CARD_URL_BASE}/i18n/${LANG_FILES[code]}`)
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+    .then((table) => registerLang(code, table))
+    .catch((e) => {
+      console.warn(`snapmaker-u1-card: language ${code} not loaded, using English`, e);
+      setTimeout(() => { delete loading[code]; }, 60000); // try again a minute later
+    });
+}
+
+/** "es:1" once the table is there – part of the render keys, so cards redraw with it. */
+export function langKey() { return `${LANG}:${LANG === "de" || LANG === "en" || MORE[LANG] ? 1 : 0}`; }
+
 export function setLang(hass) {
   const l = String((hass && ((hass.locale && hass.locale.language) || hass.language)) || "de").toLowerCase();
   const base = l.split("-")[0];
   // zh-Hans / zh-CN / bare zh use Simplified Chinese; Traditional variants fall back to English.
   const traditionalChinese = base === "zh" && /^zh-(?:hant|tw|hk|mo)(?:-|$)/.test(l);
   const candidate = traditionalChinese ? "" : base;
-  LANG = candidate === "de" || MORE[candidate] ? candidate : "en";
+  LANG = candidate === "de" || LANG_FILES[candidate] || MORE[candidate] ? candidate : "en";
+  if (LANG !== "de" && LANG !== "en") loadLang(LANG);
   // the region of the HA language when there is one (pt-BR, es-419, nl-BE …), else the default
   LOCALE = l.includes("-") ? l : (LOCALES[LANG] || "en-GB");
   const cur = hass && hass.config && hass.config.currency;
@@ -840,5 +872,15 @@ export const EN = {
   "{n} Spulen": "{n} spools",
   "Druckt die Etiketten über den Druckdialog des Browsers. In der Home-Assistant-App ggf. als Datei speichern und von dort drucken.": "Prints the labels through the browser's print dialog. In the Home Assistant app, save them as a file if needed and print from there.",
   "Als Datei speichern": "Save as file",
-  "Drucken geht hier nicht – bitte als Datei speichern.": "Printing is not available here – please save as a file."
+  "Drucken geht hier nicht – bitte als Datei speichern.": "Printing is not available here – please save as a file.",
+  // 2.4.0b3: edit spool, own Spoolman fields
+  "Bearbeiten": "Edit",
+  "Lade Spule …": "Loading spool …",
+  "Spule konnte nicht geladen werden.": "The spool could not be loaded.",
+  "Spule #{id} bearbeiten": "Edit spool #{id}",
+  "Gilt für alle {n} Spulen dieses Filaments.": "Applies to all {n} spools of this filament.",
+  "Gilt für das Filament dieser Spule.": "Applies to the filament of this spool.",
+  "Spule #{id} gespeichert": "Spool #{id} saved",
+  "Eigene Felder der Spule": "Own fields of the spool",
+  "Eigene Felder des Filaments (nur bei neuem Filament)": "Own fields of the filament (new filament only)"
 };

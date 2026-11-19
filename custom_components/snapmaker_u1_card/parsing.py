@@ -11,6 +11,7 @@ isolation. The field names come from Snapmaker's published source code:
 
 from __future__ import annotations
 
+import json
 import posixpath
 import re
 from typing import Any
@@ -1194,4 +1195,74 @@ def exclude_state(eo: dict[str, Any] | None) -> dict[str, Any]:
         ],
         "excluded": [str(n) for n in eo.get("excluded_objects") or []],
         "current": eo.get("current_object"),
+    }
+
+
+# ── 2.4.0b3: Spoolman extra fields and the edit form ──────────────────────
+EXTRA_TYPES = ("text", "integer", "integer_range", "float", "float_range", "datetime", "boolean", "choice")
+
+
+def decode_extra(extra: Any) -> dict[str, Any]:
+    """Spoolman keeps every extra value JSON-encoded as a string; give the values back."""
+    out: dict[str, Any] = {}
+    for key, raw in (extra or {}).items() if isinstance(extra, dict) else []:
+        try:
+            out[str(key)] = json.loads(raw) if isinstance(raw, str) else raw
+        except ValueError:
+            out[str(key)] = raw  # written by hand as plain text
+    return out
+
+
+def encode_extra(values: dict[str, Any] | None, current: dict[str, Any] | None = None) -> dict[str, str]:
+    """Card values -> Spoolman's ``extra`` (JSON strings), merged into the current ones.
+
+    Spoolman replaces the whole ``extra`` on a PATCH, so fields the form did not
+    send (other tools' fields such as SpoolLink's ``card_uids``) are kept from
+    ``current``. None, "" or [] removes a field.
+    """
+    out = {str(k): v if isinstance(v, str) else json.dumps(v) for k, v in (current or {}).items()}
+    for key, value in (values or {}).items():
+        if value is None or value == "" or value == []:
+            out.pop(str(key), None)
+        else:
+            out[str(key)] = json.dumps(value, ensure_ascii=False)
+    return out
+
+
+def compact_fields(fields: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Spoolman field definitions for the card form, in Spoolman's order; unknown types left out."""
+    out = []
+    for f in sorted((x for x in fields if isinstance(x, dict) and x.get("key")), key=lambda x: (x.get("order") or 0)):
+        if f.get("field_type") not in EXTRA_TYPES:
+            continue
+        default = f.get("default_value")
+        try:
+            default = json.loads(default) if isinstance(default, str) else default
+        except ValueError:
+            pass
+        out.append({"key": f["key"], "name": f.get("name") or f["key"], "type": f["field_type"],
+                    "unit": f.get("unit") or None, "default": default,
+                    "choices": list(f.get("choices") or []), "multi": bool(f.get("multi_choice"))})
+    return out
+
+
+def edit_spool_view(spool: dict[str, Any]) -> dict[str, Any]:
+    """A Spoolman spool shaped for the card's edit form (spool part and filament part)."""
+    fil = spool.get("filament") or {}
+    multi = [c for c in (normalize_color(x) for x in str(fil.get("multi_color_hexes") or "").split(",")) if c]
+    return {
+        "id": spool.get("id"), "archived": bool(spool.get("archived")),
+        "remaining_weight": _round(spool.get("remaining_weight")), "initial_weight": _round(spool.get("initial_weight")),
+        "spool_weight": _round(spool.get("spool_weight")), "price": spool.get("price"),
+        "location": spool.get("location") or "", "lot_nr": spool.get("lot_nr") or "", "comment": spool.get("comment") or "",
+        "extra": decode_extra(spool.get("extra")),
+        "filament": {
+            "id": fil.get("id"), "name": fil.get("name") or "", "material": fil.get("material") or "",
+            "vendor": (fil.get("vendor") or {}).get("name") or "",
+            "color": normalize_color(fil.get("color_hex")) or (multi[0] if multi else None), "multi": len(multi) > 1,
+            "density": fil.get("density"), "diameter": fil.get("diameter"),
+            "extruder_temp": fil.get("settings_extruder_temp"), "bed_temp": fil.get("settings_bed_temp"),
+            "article_number": fil.get("article_number") or "", "price": fil.get("price"), "weight": fil.get("weight"),
+            "extra": decode_extra(fil.get("extra")),
+        },
     }

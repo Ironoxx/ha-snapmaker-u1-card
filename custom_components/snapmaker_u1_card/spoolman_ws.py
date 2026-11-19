@@ -5,8 +5,12 @@
 own Spoolman filaments first, then SpoolmanDB
 ``snapmaker_u1_card/spoolman/archived`` – 2.4: the archived spools, only when the card
 shows them (filter "archived"), so the regular poll stays as small as before
+``snapmaker_u1_card/spoolman/fields`` – 2.4.0b3: the user's own Spoolman fields (spool and
+filament) for the new-spool and edit forms
+``snapmaker_u1_card/spoolman/spool`` – 2.4.0b3: one spool for the edit form, with its fields
+and how many spools share the filament
 
-Read-only; creating the spool goes through the ``create_spool`` service.
+Changes go through the services ``create_spool`` and ``update_spool``.
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .api import MoonrakerError
 from .const import DOMAIN
-from .parsing import compact_spool
+from .parsing import compact_fields, compact_spool, edit_spool_view
 from .settings_ws import _entry
 
 
@@ -83,8 +87,54 @@ async def ws_archived(hass: HomeAssistant, connection: websocket_api.ActiveConne
         connection.send_error(msg["id"], "spoolman", str(err))
 
 
+async def _fields(mgr: Any) -> dict[str, list[dict[str, Any]]]:
+    """Own fields of spools and filaments; an older Spoolman without /field gives none."""
+    out = {}
+    for entity in ("spool", "filament"):
+        try:
+            out[entity] = compact_fields(await mgr.client.fields(entity))
+        except MoonrakerError:
+            out[entity] = []
+    return out
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): f"{DOMAIN}/spoolman/fields",
+    vol.Optional("entry_id"): str,
+})
+@websocket_api.async_response
+async def ws_fields(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    mgr = _manager(hass, connection, msg)
+    if mgr is None:
+        return
+    connection.send_result(msg["id"], await _fields(mgr))
+
+
+@websocket_api.websocket_command({
+    vol.Required("type"): f"{DOMAIN}/spoolman/spool",
+    vol.Required("spool_id"): vol.All(int, vol.Range(min=1)),
+    vol.Optional("entry_id"): str,
+})
+@websocket_api.async_response
+async def ws_spool(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """Everything the edit form needs, in one call when it opens."""
+    mgr = _manager(hass, connection, msg)
+    if mgr is None:
+        return
+    try:
+        view = edit_spool_view(await mgr.client.spool(msg["spool_id"]))
+        fid = view["filament"]["id"]
+        shared = await mgr.client.count_spools(fid) if fid else 0
+    except MoonrakerError as err:
+        connection.send_error(msg["id"], "spoolman", str(err))
+        return
+    connection.send_result(msg["id"], {"spool": view, "filament_spools": shared, "fields": await _fields(mgr)})
+
+
 @callback
 def async_register(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_catalog)
     websocket_api.async_register_command(hass, ws_suggest)
     websocket_api.async_register_command(hass, ws_archived)
+    websocket_api.async_register_command(hass, ws_fields)
+    websocket_api.async_register_command(hass, ws_spool)
