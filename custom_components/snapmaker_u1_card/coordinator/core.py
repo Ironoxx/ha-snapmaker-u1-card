@@ -37,6 +37,7 @@ from ..const import (
     ERROR_LOG_MAX,
     EVENT_NOTIFY_ACTION,
     FILES_INTERVAL,
+    SPOOLMAN_INTERVAL_S,
     STATS_INTERVAL_S,
     TIMELAPSE_INTERVAL_S,
     UPDATE_INTERVAL,
@@ -298,6 +299,12 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         # Last file list: show something even with the printer switched off.
         self._files = list(self._print_state.get("files") or [])
         self._timelapses = list(self._print_state.get("timelapses") or [])
+        # 2.4 (#17): last known heads, so the card (and its Spoolman tab) is complete
+        # after a restart with the printer switched off
+        last = extra.get("last_slots") if isinstance(extra.get("last_slots"), dict) else {}
+        if isinstance(last.get("slots"), list):
+            self._prev = U1Data(slots=last["slots"], preferences=last.get("preferences") or {},
+                                map_table=last.get("map_table") or [])
         self._prev = self._offline()
         self._unsub_action = self.hass.bus.async_listen(EVENT_NOTIFY_ACTION, self._on_notify_action)
         self._start_camera_wake()
@@ -483,6 +490,8 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             "backup": self._backup,
             "maint_notified": self._maint_notified,
             "error_log": self.error_log,
+            "last_slots": {"slots": self._prev.slots, "preferences": self._prev.preferences,
+                           "map_table": self._prev.map_table} if self._prev.slots else None,
             "firmware_latest": self.firmware.get("latest"),
             "live_notify": self._live_stored(),
             **({"archive": self.archive.as_stored()} if self.archive else {}),
@@ -530,6 +539,11 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
         )
         return counters
 
+    async def _refresh_spools_offline(self) -> None:
+        """2.4 (#17): Spoolman does not depend on the printer – keep it current while it is off."""
+        if self.spools.enabled and self.spools.due(SPOOLMAN_INTERVAL_S):
+            await self.spools.async_refresh()
+
     def _offline(self) -> U1Data:
         """Data snapshot while the printer is off: keep the last known values."""
         # Re-read firmware/cores after switching on (update on the printer)
@@ -572,6 +586,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             self.webcam.reset()
             self.webcam2.reset()
             self.screen.reset()
+            await self._refresh_spools_offline()
             self._prev = self._offline()
             return self._prev
         try:
@@ -600,6 +615,7 @@ class U1Coordinator(MachineMixin, ProgressNotifyMixin, SpoolMixin, PrintMonitorM
             self.webcam.reset()
             self.webcam2.reset()
             self.screen.reset()
+            await self._refresh_spools_offline()
             self._prev = self._offline()
             return self._prev
 

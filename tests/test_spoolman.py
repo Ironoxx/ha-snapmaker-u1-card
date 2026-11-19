@@ -794,3 +794,35 @@ def test_due_right_after_boot() -> None:
         assert mgr.due(300)
         mgr.force()
         assert mgr.due(300)
+
+
+async def test_spoolman_tab_with_printer_off_after_restart(hass: HomeAssistant, mock_client, spoolman) -> None:
+    """2.4 (#17): HA restart with the printer off – the filaments sensor (and so the card's
+    Spoolman tab) is there, with the last known heads; Spoolman keeps being refreshed."""
+    from custom_components.snapmaker_u1_card.api import MoonrakerConnectionError
+
+    _real_slots(mock_client)
+    entry = await _setup(hass, spoolman_url="http://spoolman.local:7912")
+    coord = entry.runtime_data
+    await _refresh(hass, entry)
+    stored = coord._stored()
+    assert stored["last_slots"]["slots"] and len(stored["last_slots"]["slots"]) == 4
+    # restart: printer off, only the store is left
+    mock_client["query"].side_effect = MoonrakerConnectionError("aus")
+    with patch("homeassistant.helpers.storage.Store.async_load", AsyncMock(return_value=stored)):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+    coord = entry.runtime_data
+    assert coord.data.online is False and len(coord.data.slots) == 4, "last known heads"
+    st = hass.states.get("sensor.snapmaker_u1_card_filaments")
+    assert st.state != "unavailable" and st.attributes["spoolman"]["online"] is True
+    # Spoolman refreshed while the printer stays off
+    coord.spools.force()
+    with patch.object(type(coord.spools), "async_refresh", AsyncMock(return_value=False)) as refresh:
+        await _refresh(hass, entry)
+    refresh.assert_awaited()
+    # first start ever (nothing stored): available anyway because Spoolman is set up
+    coord._prev = type(coord._prev)()
+    coord.async_set_updated_data(coord._offline())
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.snapmaker_u1_card_filaments").state != "unavailable"

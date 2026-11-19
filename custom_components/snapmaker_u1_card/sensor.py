@@ -224,9 +224,11 @@ class FilamentsSensor(U1Entity, SensorEntity):
 
     @property
     def available(self) -> bool:
-        # The last known state stays visible for the print dialog (auto-on).
+        # The last known state stays visible for the print dialog (auto-on);
+        # 2.4 (#17): with Spoolman also without any known heads (Spoolman tab)
         data = self.coordinator.data
-        return super(U1Entity, self).available and data is not None and bool(data.slots)
+        return super(U1Entity, self).available and data is not None and (
+            bool(data.slots) or data.spoolman is not None)
 
     @property
     def native_value(self) -> int:
