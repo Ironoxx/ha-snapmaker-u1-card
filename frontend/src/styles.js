@@ -115,6 +115,10 @@ export const STYLES = `
     white-space: nowrap;
     transition: background var(--u1-motion), color var(--u1-motion), border-color var(--u1-motion);
   }
+  /* 2.4.0b4: one look for every chosen option chip (filters, folders, metrics, notification events) */
+  button.chip[aria-pressed="true"], .chip.sel {
+    background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
+  button.chip { cursor: pointer; }
   .chip[data-tone="active"]   { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
   .chip[data-tone="warn"]     { background: color-mix(in srgb, var(--u1-warn) 22%, transparent); color: var(--u1-warn); border-color: transparent; }
   .chip[data-tone="error"]    { background: var(--u1-error-container); color: var(--u1-on-error-container); border-color: transparent; }
@@ -504,6 +508,18 @@ export const STYLES = `
   details > summary::-webkit-details-marker { display: none; }
   details > summary ha-icon { --mdc-icon-size: 18px; transition: transform var(--u1-motion); }
   details[open] > summary ha-icon.caret { transform: rotate(180deg); }
+  /* 2.4.0b4: the caret always sits at the right end, so every fold reads as "tap to open" */
+  details > summary ha-icon.caret { margin-left: auto; color: var(--u1-on-variant); flex-shrink: 0; }
+  /* 2.4.0b4: rows that open something get a chevron that is visible on touch, not only on hover */
+  ha-icon.row-go { --mdc-icon-size: 18px; color: var(--u1-on-variant); flex-shrink: 0; margin-left: auto; }
+  .head-card-top ha-icon.row-go { align-self: center; }
+  .spool-top ha-icon.row-go { margin-left: 2px; --mdc-icon-size: 16px; }
+  /* 2.4.0b4: panel heads with buttons wrap instead of running out of the card */
+  .panel-head { flex-wrap: wrap; row-gap: 6px; }
+  .panel-head .panel-acts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  @container u1 (max-width: 520px) {
+    .panel-head .panel-acts { margin-left: 0; width: 100%; justify-content: flex-start; }
+  }
   details > .body { padding-top: 10px; }
 
   .switches { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -583,14 +599,22 @@ export const STYLES = `
   }
   .ftools select { flex: 0 0 auto; }
   .fchips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .fchips button[aria-pressed="true"] { background: var(--u1-primary); color: var(--u1-on-primary, #fff); }
   .files-more { display: flex; flex-direction: column; gap: 4px; }
   .files-more button { justify-content: flex-start; text-align: left; }
   dialog.u1photo { padding: 0; border: 0; background: transparent; max-width: 96vw; max-height: 92vh; overflow: visible; }
   dialog.u1photo::backdrop { background: rgba(0,0,0,.8); }
   dialog.u1photo img { display: block; max-width: 96vw; max-height: 92vh; border-radius: var(--u1-r-m); object-fit: contain; cursor: zoom-out; }
   dialog.u1photo .photo-close { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.55); color: #fff; }
-  .hist-photo { width: 44px; height: 44px; border-radius: var(--u1-r-s); object-fit: cover; cursor: zoom-in; flex-shrink: 0; }
+  .hist-photo { width: 44px; height: 44px; border-radius: var(--u1-r-s); object-fit: cover; flex-shrink: 0; display: block; }
+  /* 2.4.0b4: history rows open the print details – chevron and a small magnifier on the photo */
+  .hist[data-hist] { cursor: pointer; }
+  .hist[data-hist]:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 2px; border-radius: var(--u1-r-s); }
+  .hist-photo-wrap { position: relative; flex-shrink: 0; }
+  .hist-zoom { position: absolute; right: -4px; bottom: -4px; --mdc-icon-size: 16px; padding: 2px; border-radius: 50%;
+    background: var(--u1-panel-highest); color: var(--u1-on-variant); }
+  .hist-big { border-radius: var(--u1-r-m); overflow: hidden; background: #000; display: flex; justify-content: center; }
+  .hist-big img { max-width: 100%; max-height: 50vh; object-fit: contain; display: block; }
+  dialog.u1hist .dlg-actions { flex-wrap: wrap; }
   .runout { font-size: 11px; color: var(--u1-warn); }
   .selftest-wrap { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; align-items: flex-start; }
   .selftest { display: flex; flex-direction: column; gap: 4px; }
@@ -654,6 +678,21 @@ export const STYLES = `
   .stock { display: flex; flex-direction: column; gap: 10px; }
   .stock-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
   .stock-row[hidden], .stock-list[hidden] { display: none; }
+  /* 2.4.0b4: sort and group by location; a group spans the whole grid and repeats it inside */
+  .map-alt { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+  .map-alt ha-icon { --mdc-icon-size: 16px; }
+  .stock-view { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .stock-sort { display: inline-flex; align-items: center; gap: 6px; }
+  .stock-sort ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
+  .stock-sort select { font: inherit; min-height: 32px; padding: 4px 8px; border-radius: 8px; color: var(--u1-on);
+    background: transparent; border: 1px solid var(--u1-outline); }
+  .stock-grp { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+  .stock-grp[hidden] { display: none; }
+  .stock-grp-h { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-weight: 500; margin-top: 4px;
+    color: var(--u1-on-variant); }
+  .stock-grp-h ha-icon { --mdc-icon-size: 16px; }
+  [data-headpick] { height: auto; min-height: 36px; gap: 6px; }
+  [data-headpick] .t-label { font-size: 11px; }
   .stock-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--u1-outline) 50%, transparent); }
   .stock-row .spool-track { margin-top: 4px; }
@@ -786,8 +825,12 @@ export const STYLES = `
   /* 2.4: textarea like the inputs; collapsed "more details" in the new spool form */
   .head-form textarea { font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high); resize: vertical;
     border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; box-sizing: border-box; }
-  .head-form .more-fields { display: flex; flex-direction: column; gap: 8px; }
-  .head-form .more-fields > summary { cursor: pointer; font-size: 13px; color: var(--u1-primary); }
+  .head-form .more-fields { display: flex; flex-direction: column; gap: 8px;
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-m); padding: 0 12px; }
+  .head-form .more-fields[open] { padding-bottom: 12px; }
+  .head-form .more-fields > summary { min-height: 44px; font-size: 14px; font-weight: 500; color: var(--u1-on); gap: 8px; }
+  .head-form .more-fields > summary ha-icon:first-child { color: var(--u1-primary); }
+  .head-form .more-fields[open] > summary .t-label { display: none; }
   .head-form .more-fields > .head-form { margin-top: 8px; }
   /* 2.4.0b3: own Spoolman fields – ranges as two boxes, multi-choice lists not too tall */
   .head-form .range-in { display: flex; align-items: center; gap: 6px; }
@@ -834,7 +877,8 @@ export const STYLES = `
   .cfg-multi { display: flex; flex-direction: column; gap: 6px; }
   .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; min-width: 0; }
   .cfg-chk span { min-width: 0; overflow-wrap: anywhere; }
-  .cfg-more > summary { cursor: pointer; color: var(--u1-primary); font-size: 13px; padding: 4px 0; }
+  .cfg-more > summary { cursor: pointer; color: var(--u1-primary); font-size: 13px; padding: 6px 0; gap: 6px; }
+  .cfg-more > summary ha-icon { --mdc-icon-size: 18px; }
   .cfg-more[open] { display: flex; flex-direction: column; gap: 6px; }
   .cfg-chk input { accent-color: var(--u1-primary); width: 18px; height: 18px; }
   .cfg-maint { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
@@ -895,6 +939,12 @@ export const STYLES = `
 
   /* ── Timelapses ──────────────────────────────────────────────────────── */
   .tl-thumb { position: relative; aspect-ratio: 16 / 9; height: auto; }
+  /* 2.4.0b4: merged timelapse list – videos only on the printer are marked, greyed while it is off */
+  button.file.tl { justify-content: flex-start; }
+  .file.tl .tl-where { align-self: center; height: auto; min-height: 22px; max-width: 100%; gap: 4px; font-size: 11px;
+    white-space: normal; line-height: 1.25; padding: 2px 8px; text-align: center; }
+  .file.tl .tl-where ha-icon { --mdc-icon-size: 14px; }
+  .file.tl[data-off] { opacity: .55; }
   .tl-thumb img { object-fit: cover; }
   .tl-play {
     position: absolute; inset: 0; margin: auto; --mdc-icon-size: 36px !important;

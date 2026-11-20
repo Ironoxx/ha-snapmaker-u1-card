@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -16,9 +17,11 @@ from .. import resource
 from ..api import (
     MoonrakerError,
 )
+from ..archive import ARCHIVE_DIR, media_root
 from ..backup import backup_config, list_snapshots
 from ..const import (
     BACKUP_DIR,
+    CONF_ARCHIVE,
     CONF_BACKUP,
     CONF_ENERGY_SENSOR,
     CONF_MAINTENANCE,
@@ -27,6 +30,7 @@ from ..const import (
     CONF_NOTIFY2,
     CONF_POWER_SENSOR,
     CONF_POWER_SWITCH,
+    DEFAULT_ARCHIVE,
     DEFAULT_BACKUP,
     DOMAIN,
     FIRMWARE_CHECK_S,
@@ -37,6 +41,10 @@ from ..i18n import tr
 from ..stats import MAINTENANCE_ITEMS, build_stats, maintenance_label
 
 _LOGGER = logging.getLogger(__name__)
+
+# 2.4.0b4 self test: free space counts as low below 2 GB or below 10 %
+DISK_LOW_BYTES = 2e9
+DISK_LOW_SHARE = 0.10
 from .helpers import (
     latest_release,
     parse_firmware_config,
@@ -411,6 +419,49 @@ class UpkeepMixin:
             t(f"Status-Licht-Blueprint in {len(used)} Automation(en) genutzt", f"Status light blueprint used in {len(used)} automation(s)")
             if used else t("Status-Licht-Blueprint installiert, noch keine Automation daraus", "Status light blueprint installed, no automation from it yet")
             if installed else t("Status-Licht-Blueprint nicht installiert", "Status light blueprint not installed"))
+        await self._self_test_disk(add, t)
+
+    async def _self_test_disk(self, add: Any, t: Any) -> None:
+        """2.4.0b4: free space – Home Assistant's media folder (timelapse backup) and the printer.
+
+        Asked only here (self test), not on every update. Low = less than 2 GB or
+        less than 10 % free; the backup and new prints then fail sooner or later.
+        """
+        def low(free: float, total: float) -> bool:
+            return free < DISK_LOW_BYTES or (total > 0 and free / total < DISK_LOW_SHARE)
+
+        def gb(value: float) -> str:
+            return f"{value / 1e9:.1f} GB"
+
+        if self.options.get(CONF_ARCHIVE, DEFAULT_ARCHIVE):
+            folder = media_root(dict(self.hass.config.media_dirs), self.hass.config.config_dir) / ARCHIVE_DIR
+
+            def usage() -> Any:
+                path = folder
+                while not path.exists() and path != path.parent:
+                    path = path.parent  # the backup folder may not exist yet
+                return shutil.disk_usage(path)
+
+            try:
+                du = await self.hass.async_add_executor_job(usage)
+                bad = low(du.free, du.total)
+                add("disk_media", not bad,
+                    t(f"Medienordner: {gb(du.free)} frei von {gb(du.total)}" + (" – knapp für Zeitraffer-Sicherungen" if bad else ""),
+                      f"Media folder: {gb(du.free)} free of {gb(du.total)}" + (" – low for timelapse backups" if bad else "")))
+            except OSError as err:
+                add("disk_media", None, t(f"Medienordner nicht prüfbar: {err}", f"Media folder not checkable: {err}"))
+        if self.data is not None and self.data.online:
+            try:
+                du = await self.client.disk_usage("gcodes")
+            except MoonrakerError:
+                du = {}
+            free, total = du.get("free"), du.get("total")
+            if isinstance(free, (int, float)) and isinstance(total, (int, float)):
+                bad = low(free, total)
+                add("disk_printer", not bad,
+                    t(f"Speicher im Drucker: {gb(free)} frei von {gb(total)}" + (" – bitte alte Dateien/Zeitraffer löschen" if bad else ""),
+                      f"Printer storage: {gb(free)} free of {gb(total)}" + (" – please delete old files/timelapses" if bad else "")))
+
 
     # ── paxx12 Extended Firmware (2.2) ─────────────────────────────────────
     async def _detect_paxx(self) -> None:

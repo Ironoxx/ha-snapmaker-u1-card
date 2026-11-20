@@ -4,6 +4,78 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.4.0b4
+
+Beta. Safer planned jobs, "right after", print details in the history, one timelapse list, and more help with spools. Includes everything from 2.4.0b3, 2.4.0b2 and 2.4.0b1.
+
+**Important fix: planned jobs (from 2.4.0b2)**
+- Two planned jobs whose times overlap no longer collide: a job that becomes due while another print runs now **waits for its end** instead of failing, and jobs run one after the other.
+- A job planned *without* the bed question no longer starts onto a part left on the bed: if a print ended after the job was planned, it **always asks** first. Only a job whose printer stayed untouched starts on its own.
+- The bed question comes with a fresh **camera image** (camera woken once, when set up).
+
+**Planning**
+- **Print right after** in the print dialog (also `queue_add` with `after_prev: true`): no clock time, the job waits for the running print or the job before it, then asks about the bed.
+- The dialog **warns when a start time overlaps** the running print or another planned job (start + file time).
+- The queue shows the new states: *waits until the printer is free*, *bed used – clear it, then start*.
+
+**History**
+- **Tap a print** for its details: result photo or file preview, result and message, end, duration, filament with spools and grams, energy, cost, tool changes, options – with *Print again*, *Timelapse* (if one matches) and *Photo* (download).
+
+**Timelapses**
+- With backup on: **one list** of backed-up videos and those only on the printer, newest first, no more duplicates. Videos not yet backed up are marked *only on the printer* and only play while it is on.
+
+**Spoolman**
+- **Sort** the stock by material, remaining, last used or ID, and **group by location** (remembered in this browser).
+- **Put in head** in a spool's details (head printing right now is locked).
+- **Spare spool** in the print dialog when a spool is too short: same material, close colour, enough left – in another head = one tap to remap, otherwise a hint which spool to load.
+- **Spool changed during a print** (e.g. runout refill with another spool): the usage is split between the old and the new spool by progress.
+- A spool loaded at the printer (material, colour, vendor reported) that does not match the remembered one is **no longer offered as "previous spool"**.
+
+**Clearer controls**
+- Pressed chips (filters, *Archived*) are clearly highlighted everywhere; folding sections (*Filament*, *More details*, slicer settings, G-code preview, settings) show an arrow; rows that open details show a chevron. On phones the Spoolman header buttons wrap below the title instead of over it.
+
+**Self test**
+- **Free space** in Home Assistant's media folder (timelapse backup) and the printer's G-code storage: warning below 2 GB or 10 %.
+
+Please check: two planned jobs with overlapping times; a planned job without the bed question after another print; *Print right after*; a history entry's details; the timelapse list with the printer on and off; sorting/grouping; *Put in head*; a print where a spool is too short.
+
+### Deutsch
+
+Beta. Sicherere geplante Aufträge, „direkt danach“, Druckdetails in der Historie, eine Zeitraffer-Liste und mehr Hilfe bei Spulen. Enthält alles aus 2.4.0b3, 2.4.0b2 und 2.4.0b1.
+
+**Wichtige Korrektur: geplante Aufträge (seit 2.4.0b2)**
+- Zwei geplante Aufträge mit überlappenden Zeiten kommen sich nicht mehr in die Quere: Ein Auftrag, der fällig wird, während ein anderer Druck läuft, **wartet jetzt auf dessen Ende** statt zu scheitern, und die Aufträge laufen nacheinander.
+- Ein Auftrag *ohne* Rückfrage startet nicht mehr auf ein liegengebliebenes Teil: Ist nach dem Planen ein Druck zu Ende gegangen, **fragt er immer** zuerst. Nur ein Auftrag, dessen Drucker unberührt blieb, startet selbst.
+- Die Rückfrage kommt mit frischem **Kamerabild** (Kamera einmal geweckt, wenn eingerichtet).
+
+**Planen**
+- **Direkt danach drucken** im Druckdialog (auch `queue_add` mit `after_prev: true`): ohne Uhrzeit, der Auftrag wartet auf den laufenden Druck bzw. den Auftrag davor und fragt dann nach dem Druckbett.
+- Der Dialog **warnt, wenn sich eine Startzeit überschneidet** – mit dem laufenden Druck oder einem anderen geplanten Auftrag (Start + Dateizeit).
+- Die Warteschlange zeigt die neuen Zustände: *wartet, bis der Drucker frei ist*, *Druckbett benutzt – räumen, dann starten*.
+
+**Historie**
+- **Druck antippen** für seine Details: Ergebnisfoto oder Vorschaubild, Ergebnis und Meldung, Ende, Dauer, Filament mit Spulen und Gramm, Strom, Kosten, Werkzeugwechsel, Optionen – mit *Nochmal drucken*, *Zeitraffer* (falls einer passt) und *Foto* (herunterladen).
+
+**Zeitraffer**
+- Mit Sicherung: **eine Liste** aus gesicherten Videos und denen nur auf dem Drucker, neueste zuerst, keine Doppelten mehr. Noch nicht gesicherte Videos sind mit *nur auf dem Drucker* markiert und spielen nur bei eingeschaltetem Drucker.
+
+**Spoolman**
+- Bestand **sortieren** nach Material, Rest, zuletzt benutzt oder ID, und **nach Lagerort gruppieren** (im Browser gemerkt).
+- **In Kopf legen** in den Details einer Spule (der gerade druckende Kopf ist gesperrt).
+- **Ersatzspule** im Druckdialog, wenn eine Spule nicht reicht: gleiches Material, ähnliche Farbe, genug Rest – in einem anderen Kopf = ein Tipp zum Umlegen, sonst ein Hinweis, welche Spule einzulegen ist.
+- **Spule im Druck gewechselt** (z. B. Nachladen nach Filamentende mit einer anderen Spule): Der Verbrauch wird nach Fortschritt auf alte und neue Spule aufgeteilt.
+- Eine am Drucker eingelegte Spule (Material, Farbe, Hersteller gemeldet), die nicht zur gemerkten passt, wird **nicht mehr als „vorherige Spule“ angeboten**.
+
+**Klarere Bedienung**
+- Gedrückte Chips (Filter, *Archiviert*) sind überall deutlich hinterlegt; aufklappbare Bereiche (*Filament*, *Weitere Angaben*, Slicer-Einstellungen, G-Code-Vorschau, Einstellungen) zeigen einen Pfeil; Zeilen, die Details öffnen, einen Winkel. Am Handy rutschen die Knöpfe im Spoolman-Kopf unter den Titel statt darüber.
+
+**Selbsttest**
+- **Freier Speicher** im Medienordner von Home Assistant (Zeitraffer-Sicherung) und im G-Code-Speicher des Druckers: Warnung unter 2 GB oder 10 %.
+
+Bitte prüfen: zwei geplante Aufträge mit überlappenden Zeiten; ein geplanter Auftrag ohne Rückfrage nach einem anderen Druck; *Direkt danach drucken*; die Details eines Historieneintrags; die Zeitraffer-Liste mit Drucker an und aus; Sortieren/Gruppieren; *In Kopf legen*; ein Druck, bei dem eine Spule nicht reicht.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.4.0b3
 
 Beta. Edit spools, your own Spoolman fields in the card, labels as a pop-up, and the card loads only its own language. Includes everything from 2.4.0b2 and 2.4.0b1.

@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "Preguntar «¿cama libre?»",
           "description": "A la hora de inicio, preguntar primero en la notificación y en la tarjeta si la cama está libre. Apagado = inicia solo en cuanto la impresora esté libre."
+        },
+        "after_prev": {
+          "name": "Justo después del trabajo anterior",
+          "description": "Se inicia cuando termina el trabajo en curso o anterior, siempre con la pregunta «¿cama libre?». Sustituye la hora de inicio."
         }
       }
     },

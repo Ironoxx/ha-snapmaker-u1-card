@@ -56,7 +56,9 @@ The integration subscribes to `print_stats`, `toolhead`, `virtual_sdcard` and `e
 
 **Tap and image.** Option *Open when tapped* (`notify_click_url`): tapping any notification of the integration opens this path or URL (e.g. `/dashboard-printer/0`). The "print finished" notification shows the result photo; the progress notification shows the camera image when expanded (option, on by default).
 
-**Result photo.** With a camera configured, the integration takes the image at the end of the print once the head has left the part: after the last extrusion it reads the head position (`motion_report`) for up to 15 s and shoots as soon as the head is 25 mm outside the parts' outline (`EXCLUDE_OBJECT_DEFINE`) or the bed has already dropped by 15 mm. The chamber light is switched on for the photo and back off afterwards if it was off. Without position or outline: 2 s after the last extrusion; without a time profile: in the last layer from 99.5 %. On cancel or error the image is taken at that moment. It is stored under `.storage/snapmaker_u1_card/thumbs/<entry>/results/` and appears in the history next to the thumbnail; tapping enlarges it in the card (tap or Esc closes). Photos are kept for the prints in the history.
+**Result photo.** With a camera configured, the integration takes the image at the end of the print once the head has left the part: after the last extrusion it reads the head position (`motion_report`) for up to 15 s and shoots as soon as the head is 25 mm outside the parts' outline (`EXCLUDE_OBJECT_DEFINE`) or the bed has already dropped by 15 mm. The chamber light is switched on for the photo and back off afterwards if it was off. Without position or outline: 2 s after the last extrusion; without a time profile: in the last layer from 99.5 %. On cancel or error the image is taken at that moment. It is stored under `.storage/snapmaker_u1_card/thumbs/<entry>/results/` and appears in the history next to the thumbnail. Photos are kept for the prints in the history.
+
+**Print details** (2.4.0b4). Tapping a history entry opens its details: result photo (or the file's preview, switchable), result and message, end, duration, filament with the spools and their grams, energy, cost, tool changes, options – with *Print again*, *Timelapse* (the video with the same name recorded around the end, backup first) and *Photo* (download). Tapping the picture enlarges it.
 
 ## Bed mesh, flow, top cover and chamber heater
 
@@ -118,7 +120,7 @@ Option *Switch off after idle* (hours, 0 = off): when no print is running, no he
 ## Firmware and self test
 
 - **Update entity "Firmware"**: installed version from the printer (`/machine/system_info`), latest from Snapmaker's release commits of the firmware sources on GitHub (`Snapmaker/u1-moonraker`, `Snapmaker/u1-klipper`), once a day. Updating still happens on the printer (display or Snapmaker app); the entity only reports. Note: Snapmaker may change how it publishes on GitHub; "latest" then stays at the last known version.
-- **Self test** (*System* tab or service `self_test`): printer and Klipper, live connection, firmware, free space on the printer (warning below 500 MiB), Moonraker integration, camera (fetches an image), power switch/energy/price entities, notification services, Spoolman, Assist sentences, media folder. ✓ fine, ! note, ✗ error.
+- **Self test** (*System* tab or service `self_test`): printer and Klipper, live connection, firmware, free space on the printer (warning below 500 MiB; 2.4.0b4: also the G-code storage and Home Assistant's media folder with the timelapse backup – warning below 2 GB or 10 %), Moonraker integration, camera (fetches an image), power switch/energy/price entities, notification services, Spoolman, Assist sentences, media folder. ✓ fine, ! note, ✗ error.
 
 ## Statistics per material
 
@@ -142,9 +144,11 @@ Once a day, never during a print, the integration fetches all files from Moonrak
 
 Optional. Without a Spoolman address none of this appears in the card or the integration.
 
-**Stock.** The tab *Spoolman* (only with Spoolman set up) lists every active spool: colour, vendor, material, location, which head it is in and the remaining weight as a bar (below the warning threshold in orange). On top the number of spools, the filament left in kg and its value (from the spool prices). Filter by material, search by name, vendor, location or `#ID`.
+**Stock.** The tab *Spoolman* (only with Spoolman set up) lists every active spool: colour, vendor, material, location, which head it is in and the remaining weight as a bar (below the warning threshold in orange). On top the number of spools, the filament left in kg and its value (from the spool prices). Filter by material, search by name, vendor, location or `#ID`. 2.4.0b4: sort by material, remaining, last used or ID, and group by location (remembered per browser).
 
 2.4: **Tap a spool** for its details (vendor, material, remaining, empty spool, temperatures, location, lot, price, last used, head) with *Edit*, *Label*, *Archive* and – admins only – *Delete* (second confirmation; Spoolman deletes the usage too). **Archive** hides the spool from every list but keeps its history; the chip *Archived* loads the archived spools (only then, not with every refresh) to restore them. A spool that sits in a head can be neither archived nor deleted – release it in the head first. Empty spools (0 g, in no head) offer *empty · archive* right in the list. Services: `spool_archive` (`spool_id`, `archived`: true/false), `spool_delete` (`spool_id`, admins).
+
+**Put in head** (2.4.0b4): in a spool's details, pick a head – the same as choosing the spool in the head's picker (`set_spool`). The head shows what the printer reports there; the head printing right now is locked during a print.
 
 **Edit** (2.4.0b3): the spool's remaining, net weight, empty spool, price, location, lot number and comment, and folded below its filament (name, vendor, material, colour, density, diameter, temperatures, article number). Filament values apply to every spool of that filament – the form says how many. Only changed fields are saved; an emptied field is cleared. Service `update_spool` (`spool_id`, spool fields, `filament_…` fields, `extra`, `filament_extra`).
 
@@ -172,6 +176,10 @@ Service: `snapmaker_u1_card.create_spool` (`slot`, `material`, `vendor`, `name`,
 Each spool is assigned to at most one head. In the card, tap the spool row of a head and choose "Automatic", "No spool" or a specific spool. Choosing a specific spool also loads its filament into the printer: material (sub type such as Matte or Silk from the material or the spool name), vendor and colour are written to the head's slot (`SET_PRINT_FILAMENT_CONFIG`), so the display, the card and the filament mapping show the right filament. Not for official spools with RFID tag (the tag wins) and not during a print. A manual choice stays until a different filament is detected in that head (material, colour or vendor change) or the spool is archived in Spoolman.
 
 **Booking usage.** After every print the integration books usage per head: weight per filament from the slicer, distributed to the heads via the print's map table (`print_task_config.extruder_map_table`); for cancelled prints pro rata by the actually extruded length. If Spoolman is unreachable, the booking is stored and retried later, even across Home Assistant restarts. The history shows the remaining weight per spool before and after the print (`#5 550 g → 460 g`; ⏳ = not booked yet).
+
+**Spool changed during a print** (2.4.0b4): if a head's spool changes while printing (e.g. a runout refill with a different spool), the usage is split by file progress – the old spool gets what was printed up to the change, the new one the rest. A spool the printer reports for a head (material, colour, vendor) must fit the remembered one; a different spool loaded at the printer is not offered as "previous spool". The Snapmaker U1 itself only documents the runout refill of the same head; a free swap during a print is not offered by the card.
+
+**Spare spool** (2.4.0b4): if a head's spool is too short for the file, the print dialog suggests a spool of the same material and a close colour with enough left: sitting in another head → one tap moves the filament there; otherwise a hint which spool to load (with location).
 
 **paxx12 Extended Firmware with Spoolman (SpoolLink).** If Spoolman is enabled in `/firmware-config/`, Moonraker books the usage itself while printing and the printer keeps the spool per head (`print_task_config.filament_spool_id`). The integration detects both automatically:
 
@@ -203,6 +211,8 @@ The spool per head is also available on `sensor.…_slot_1` … `_slot_4` (attri
 The stock firmware stores timelapses in the Moonraker folder `camera` (`Name_YYYYMMDDhhmmss.mp4` with `_cover.jpg`). The integration searches all folders except config and logs, so Fluidd timelapses (`timelapse`) are found too. Playback goes through an authenticated proxy of the integration with short-lived signed links. It only serves files from the list, never arbitrary paths from the printer.
 
 **Backup.** With *Timelapse backup* the integration copies every new video including its preview to `<media>/snapmaker_u1/` ("Local media" in the media browser, "Saved in media" in the card, playable even with the printer off). Nothing is copied during a print. So the folder does not fill up, only the newest 50 videos are kept by default (option *Keep in media folder*); optionally also an age limit in days. Removed backups are not downloaded again.
+
+**One list** (2.4.0b4): with backup on, the tab shows the backed-up videos and those only on the printer as one list, newest first; a video in both places shows once. Videos not yet backed up are marked *only on the printer* and only play while the printer is on (greyed out otherwise).
 
 **Cleaning up on the printer.** Moonraker exposes the `camera` folder read-only; only Snapmaker's internal camera service (`camera.delete_timelapse_instance`) can delete, and its parameters are undocumented. The integration therefore only deletes videos that are fully backed up, always backs up everything first, probes the parameter form once and remembers it. If the service refuses all forms, everything stays and the card shows that deleting on the printer is not supported by the firmware.
 

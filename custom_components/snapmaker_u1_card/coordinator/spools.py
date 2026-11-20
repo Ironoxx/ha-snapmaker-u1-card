@@ -71,7 +71,8 @@ class SpoolMixin:
         if active and not active.get("pending") and data.print_state in ACTIVE_PRINT_STATES:
             active["map_table"] = list(ptc.get("extruder_map_table") or [])
             if mgr.enabled:
-                active["spool_ids"] = {str(k): v for k, v in mgr.assigned().items()}
+                active["spool_ids"] = self._track_spool_changes(active, {str(k): v for k, v in mgr.assigned().items()},
+                                                                data.progress)
                 # Remaining weight per head at the start, for "550 g -> 460 g" in the history
                 start = active.setdefault("spool_start", {})
                 for key, sid in active["spool_ids"].items():
@@ -81,6 +82,35 @@ class SpoolMixin:
                 if mgr.external_booking and not mgr.spoollink:
                     await self._note_moonraker_spool(active)
         data.spoolman = self._spoolman_data(data.slots)
+
+    @staticmethod
+    def _track_spool_changes(active: dict[str, Any], now_ids: dict[str, Any], progress: Any) -> dict[str, Any]:
+        """2.4.0b4: spool per head during the print, with changes in the middle of it.
+
+        Typical case: a spool runs empty, the printer pauses and the same head is
+        refilled with another spool (e.g. Sunlu instead of Creality PETG). Before,
+        the head's whole usage was booked on whatever spool was assigned at the end
+        – or on none if the head had none then. Now:
+        - a head that loses its spool (unloaded) keeps the last known one,
+        - a change to another spool is noted with the file progress at that moment
+          (``spool_changes``: head -> [{"spool_id", "until"}]); ``SpoolManager.book``
+          splits the head's usage by it.
+        """
+        prev = active.get("spool_ids") or {}
+        frac = float(progress) if isinstance(progress, (int, float)) and not isinstance(progress, bool) else None
+        changes = active.setdefault("spool_changes", {})
+        merged: dict[str, Any] = {}
+        for key in sorted(set(prev) | set(now_ids)):
+            old, new = prev.get(key), now_ids.get(key)
+            if not new and old:
+                merged[key] = old  # unloaded during the pause: still the spool of this head
+                continue
+            if old and new and new != old and frac is not None:
+                done = [c["until"] for c in changes.get(key, [])]
+                changes.setdefault(key, []).append({"spool_id": old, "until": round(max([frac, *done]), 4)})
+                _LOGGER.info("Head %s: spool %s -> %s at %.0f %% of the print", int(key) + 1, old, new, frac * 100)
+            merged[key] = new
+        return merged
 
     async def _note_moonraker_spool(self, active: dict[str, Any]) -> None:
         """Remember every spool Moonraker had active during the print (it books those itself)."""

@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "Demander « plateau libre ? »",
           "description": "À l'heure prévue, demander d'abord dans la notification et la carte si le plateau est libre. Désactivé = démarre seul dès que l'imprimante est libre."
+        },
+        "after_prev": {
+          "name": "Juste après la tâche précédente",
+          "description": "Démarre quand la tâche en cours ou précédente est terminée, toujours avec la question « plateau libre ? ». Remplace l'heure de début."
         }
       }
     },

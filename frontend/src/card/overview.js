@@ -268,6 +268,7 @@ export const OverviewMixin = (Base) => class extends Base {
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
+            <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
           </div>
           ${this._spoolLine(h)}
           <div class="head-tags">
@@ -340,6 +341,7 @@ export const OverviewMixin = (Base) => class extends Base {
     if (!sp) {
       return `<button type="button" class="spool-line" data-spoolpick="${h.idx}" data-none="1">
           <ha-icon icon="mdi:database-search-outline"></ha-icon><span>${sm.online ? tr("Spule wählen") : tr("Spoolman nicht erreichbar")}</span>
+          <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
         </button>`;
     }
     const rest = sp.remaining_weight;
@@ -348,7 +350,8 @@ export const OverviewMixin = (Base) => class extends Base {
     return `<button type="button" class="spool-line" data-spoolpick="${h.idx}" data-low="${low ? 1 : 0}"
         title="${sp.manual ? tr("Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen", { id: sp.id }) : tr("Spoolman-Spule #{id} (automatisch) – zum Ändern tippen", { id: sp.id })}">
         <span class="spool-top"><span class="spool-name">#${sp.id} ${esc(sp.name)}</span>
-          <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span></span>
+          <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
+          <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon></span>
         ${pct != null ? `<span class="spool-track"><i style="width:${pct}%"></i></span>` : ""}
         ${this._runoutText(h.idx)}
       </button>`;

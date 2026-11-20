@@ -216,6 +216,28 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.ok(!/gebraucht werden/.test(card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)").textContent));
   pd.close && card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)").close();
 
+  // 3b. 2.4.0b4: spool too short -> a spare of the same material and colour with enough left
+  const fsm = states["sensor.u1c_filamente"].attributes.spoolman;
+  const spare = { id: 8, name: "PLA Weiss 2", vendor: "Generic", material: "PLA", color: "#FAFAFA", remaining_weight: 500, initial_weight: 1000, location: "Keller" };
+  fsm.spools = [...spools, spare, { id: 9, name: "PLA Rot", vendor: "Generic", material: "PLA", color: "#D32F2F", remaining_weight: 900, initial_weight: 1000 }];
+  card.hass = hass();
+  const PD = () => card.shadowRoot.querySelector("dialog.u1dlg:not(.u1spool)");
+  root().querySelector('[data-print="teil.gcode"]').click();
+  assert.match(PD().textContent.replace(/\s+/g, " "), /Ersatz: Spule #8 PLA Weiss 2 \(500 g · Keller\) einlegen/, "nicht im Drucker: Hinweis");
+  PD().close();
+  // the spare sits in head 1 (black needs 10 g there, 80 + 10 fit): offer to remap
+  fsm.slots = { ...fsm.slots, 0: { ...spare, manual: true } };
+  card.hass = hass();
+  root().querySelector('[data-print="teil.gcode"]').click();
+  assert.ok(PD().querySelector("[data-preview] > summary ha-icon.caret"), "aufklappbar erkennbar");
+  const alt = PD().querySelector(".map-alt[data-map]");
+  assert.ok(alt && alt.dataset.slot === "0", "Kopf mit Ersatzspule anbieten");
+  assert.match(alt.textContent, /Spule #8, 500 g/);
+  alt.click();
+  assert.ok(PD().querySelector('.slot-btn[data-map="0"][data-slot="0"][aria-pressed="true"]'), "umgelegt");
+  assert.ok(!/gebraucht werden/.test(PD().textContent), "Warnung weg");
+  PD().close();
+
   // 4. Without Spoolman: none of it
   delete states["sensor.u1c_filamente"].attributes.spoolman;
   card.hass = hass();

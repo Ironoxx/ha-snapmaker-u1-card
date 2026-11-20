@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "Chiedi «piatto libero?»",
           "description": "All'ora di avvio chiede prima nella notifica e nella scheda se il piatto è libero. Spento = parte da solo appena la stampante è libera."
+        },
+        "after_prev": {
+          "name": "Subito dopo il lavoro precedente",
+          "description": "Parte quando il lavoro in corso o precedente è finito, sempre con la domanda «piatto libero?». Sostituisce l'ora di avvio."
         }
       }
     },

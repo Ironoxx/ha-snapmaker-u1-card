@@ -1,11 +1,14 @@
 /** Print dialog: filament mapping like Snapmaker Orca, options, queue and photo viewer. */
 
-import { onColor, suggestMapping } from "../color.js";
+import { colorDistance, onColor, suggestMapping } from "../color.js";
 import { DOMAIN, MAINT_LABELS } from "../const.js";
 import { esc, fixed, fmtMin, fmtMoney, fmtStart } from "../format.js";
 import { tr } from "../i18n.js";
 
 /** Now as "YYYY-MM-DDTHH:MM" in browser time, the format of <input type="datetime-local">. */
+// 2.4.0b4: largest colour distance (color.js, 0–765) for a spare spool to count as "the same colour"
+const SPARE_COLOR_MAX = 120;
+
 const localNow = () => {
   const d = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
   return d.toISOString().slice(0, 16);
@@ -21,6 +24,29 @@ export const PrintDialogMixin = (Base) => class extends Base {
   _prefs() {
     const st = this._ents && this._ents.filaments && this._st(this._ents.filaments);
     return (st && st.attributes && st.attributes.preferences) || {};
+  }
+
+  /**
+   * 2.4.0b4: does a job planned for ``start`` (epoch s, ``dur`` s long) collide with the
+   * running print (ends now + remaining) or another timed job (its start + its file's time)?
+   * Returns { name, until } of the first collision or null. Only data the card has.
+   */
+  _planOverlap(start, dur) {
+    if (!Number.isFinite(start)) return null;
+    const end = start + (dur || 0);
+    const d = this._d || {};
+    const now = Date.now() / 1000;
+    if (d.active && d.remaining != null) {
+      const until = now + d.remaining * 60;
+      if (start < until) return { name: "", until: fmtStart(until) };
+    }
+    const files = new Map((d.files || []).map((x) => [x.path, x]));
+    for (const j of d.queue || []) {
+      if (!j.start_at) continue;
+      const jEnd = j.start_at + ((files.get(j.file) || {}).time || 0);
+      if (start < jEnd && end > j.start_at) return { name: j.name || j.file, until: fmtStart(jEnd) };
+    }
+    return null;
   }
 
   /** Result photo enlarged in a dialog; tap, Esc or the backdrop closes it. */
@@ -100,6 +126,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
       // 2.4: optional start time for the queue ("YYYY-MM-DDTHH:MM", browser time) and the bed question then
       startAt: "",
       confirmBed: true,
+      // 2.4.0b4: "right after" the running/previous print (queue_add after_prev), always with the bed question
+      afterPrev: false,
       busy: false,
       error: null,
       slotsKey: JSON.stringify(slots),
@@ -223,10 +251,40 @@ export const PrintDialogMixin = (Base) => class extends Base {
         const sp = this._slotSpool(k);
         if (sp && sp.remaining_weight != null && need[k] > sp.remaining_weight)
           issues[f.index] = { level: "warn",
-            text: tr("Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g", { id: sp.id, rest: Math.round(sp.remaining_weight), need: Math.round(need[k]) }) };
+            text: tr("Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g", { id: sp.id, rest: Math.round(sp.remaining_weight), need: Math.round(need[k]) }),
+            alt: this._spareSpool(sp, f, k, need) };
       });
     }
     return issues;
+  }
+
+  /**
+   * 2.4.0b4: a spool that could stand in when ``sp`` (in head ``k``) is too short: same
+   * material, a close colour (to the spool or the file's filament) and enough left – also for
+   * what its own head already prints. In a head: { id, head, … } (the dialog offers to
+   * remap); otherwise { id, head: null, … } (hint to load it). Best = closest colour, then
+   * least left over. Only the spool list the card already has.
+   */
+  _spareSpool(sp, f, k, need) {
+    const sm = this._spoolman();
+    const mat = String(sp.material || f.type || "").toUpperCase();
+    if (!sm || !mat) return null;
+    const inHead = this._spoolHeads();
+    const slots = this._slots() || [];
+    const close = (s) => Math.min(colorDistance(s.color, sp.color), colorDistance(s.color, f.color));
+    let best = null;
+    for (const s of sm.spools || []) {
+      if (s.id === sp.id || String(s.material || "").toUpperCase() !== mat || s.remaining_weight == null) continue;
+      const head = inHead.has(s.id) ? inHead.get(s.id) : null;
+      if (head != null && !(slots[head] || {}).loaded) continue;
+      const wanted = need[k] + (head != null && head !== k ? need[head] || 0 : 0);
+      const dist = close(s);
+      if (s.remaining_weight < wanted || dist > SPARE_COLOR_MAX) continue;
+      const score = [dist, s.remaining_weight - wanted];
+      if (!best || score[0] < best.score[0] || (score[0] === best.score[0] && score[1] < best.score[1]))
+        best = { id: s.id, head, name: s.name || "", rest: Math.round(s.remaining_weight), location: s.location || "", score };
+    }
+    return best;
   }
 
   _renderDialog() {
@@ -256,7 +314,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
     // 2.4: due maintenance is a hint, not a blocker (data the card has anyway)
     const maintDue = ((this._d && this._d.maint) || []).filter((m) => m.due);
     const hasQueue = !!(this._ents && this._ents.queue);
-    const planned = hasQueue && !!g.startAt;
+    const afterPrev = hasQueue && !!g.afterPrev;
+    const planned = hasQueue && (!!g.startAt || afterPrev);
+    // 2.4.0b4: the planned time collides with the running print or another timed job
+    const overlap = hasQueue && g.startAt && !afterPrev ? this._planOverlap(Date.parse(g.startAt) / 1000, f.time) : null;
 
     const meta = [];
     if (f.time) meta.push(fmtMin(f.time / 60));
@@ -295,6 +356,10 @@ export const PrintDialogMixin = (Base) => class extends Base {
           </div>
           <div class="map-slots">${buttons}</div>
           ${issue ? `<div class="map-issue"><ha-icon icon="${issue.level === "error" ? "mdi:alert-circle" : "mdi:alert"}"></ha-icon>${esc(issue.text)}</div>` : ""}
+          ${issue && issue.alt ? (issue.alt.head != null
+            ? `<button type="button" class="chip sm map-alt" data-map="${fil.index}" data-slot="${issue.alt.head}" ${g.busy ? "disabled" : ""}>
+                <ha-icon icon="mdi:swap-horizontal"></ha-icon><span>${esc(tr("{head} nehmen: Spule #{id}, {rest} g", { head: (heads[issue.alt.head] || {}).name || `E${issue.alt.head}`, id: issue.alt.id, rest: issue.alt.rest }))}</span></button>`
+            : `<div class="t-label map-alt"><ha-icon icon="mdi:lightbulb-outline"></ha-icon>${esc(tr("Ersatz: Spule #{id} {name} ({rest} g{loc}) einlegen", { id: issue.alt.id, name: issue.alt.name, rest: issue.alt.rest, loc: issue.alt.location ? ` · ${issue.alt.location}` : "" }))}</div>`) : ""}
         </div>`;
     }).join("") : `<div class="t-label">${tr("Die Datei enthält keine Filamentangaben. Der Drucker nutzt seine Standardzuordnung (Filament 1 → Kopf 1 …).")}</div>`;
 
@@ -325,11 +390,11 @@ export const PrintDialogMixin = (Base) => class extends Base {
         <details class="dlg-settings" data-settings ${g.settingsOpen ? "open" : ""}>
           <summary><ha-icon icon="mdi:tune-variant"></ha-icon>${tr("Slicer-Einstellungen")}${g.settings && g.settings.layer_height != null
             ? ` <span class="t-label">${esc([`${fixed(g.settings.layer_height, 2)} mm`, g.settings.infill != null ? `${fixed(g.settings.infill, 0)} %` : "",
-              g.settings.support ? tr("Stützen") : ""].filter(Boolean).join(" · "))}</span>` : ""}</summary>
+              g.settings.support ? tr("Stützen") : ""].filter(Boolean).join(" · "))}</span>` : ""}<ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
           ${this._settingsHtml(g)}
         </details>
         <details class="dlg-settings" data-preview ${g.previewOpen ? "open" : ""}>
-          <summary><ha-icon icon="mdi:layers-search-outline"></ha-icon>${tr("G-Code-Vorschau")}</summary>
+          <summary><ha-icon icon="mdi:layers-search-outline"></ha-icon>${tr("G-Code-Vorschau")}<ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
           ${g.previewOpen ? this._pvHtml(g) : ""}
         </details>
         <div class="dlg-sec">${tr("Filamentzuordnung")}${stale ? ` <span class="t-label">${tr("(Stand vor dem Ausschalten)")}</span>` : ""}</div>
@@ -348,11 +413,17 @@ export const PrintDialogMixin = (Base) => class extends Base {
         </label>
         ${pause.error ? `<div class="map-issue" style="color:var(--u1-error)"><ha-icon icon="mdi:alert-circle"></ha-icon>${esc(pause.error)}</div>`
           : pause.layers.length ? `<div class="t-label">${tr("Der Drucker hält vor Schicht {l} an (z. B. für Magnete). Fortsetzen am Display oder in der Karte.", { l: pause.layers.join(", ") })}</div>` : ""}
-        ${hasQueue ? `<label class="pause-in">
+        ${hasQueue && (busyPrinter || (this._d.queue || []).length) ? `<label class="chk"><input type="checkbox" data-afterprev ${afterPrev ? "checked" : ""} ${g.busy ? "disabled" : ""} />
+          <span>${tr("Direkt danach drucken")}</span></label>
+          ${afterPrev ? `<div class="t-label">${tr("Wartet, bis der Druck davor fertig ist. Dann kommt die Frage, ob das Druckbett frei ist – mit Kamerabild, falls vorhanden.")}</div>` : ""}` : ""}
+        ${hasQueue && !afterPrev ? `<label class="pause-in">
           <ha-icon icon="mdi:clock-outline"></ha-icon>
           <span>${tr("Startzeit (Warteschlange)")}</span>
           <input type="datetime-local" data-startat value="${esc(g.startAt)}" min="${localNow()}" ${g.busy ? "disabled" : ""} />
         </label>
+        ${overlap ? `<div class="map-issue" data-overlap><ha-icon icon="mdi:calendar-alert"></ha-icon>${esc(overlap.name
+          ? tr("Überschneidet sich mit „{name}“ (bis {until}). Der Auftrag wartet dann, bis der Drucker frei ist, und fragt nach dem Druckbett.", overlap)
+          : tr("Der laufende Druck ist erst gegen {until} fertig. Der Auftrag wartet dann und fragt nach dem Druckbett.", overlap))}</div>` : ""}
         ${planned ? `<label class="chk"><input type="checkbox" data-confirmbed ${g.confirmBed ? "checked" : ""} ${g.busy ? "disabled" : ""} />
           <span>${tr("Zur Startzeit fragen, ob das Druckbett frei ist")}</span></label>
           <div class="t-label">${g.confirmBed ? tr("Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.")
@@ -407,6 +478,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (det) det.addEventListener("toggle", () => { g.settingsOpen = det.open; });
     const sat = el.querySelector("[data-startat]");
     if (sat) sat.addEventListener("change", () => { g.startAt = sat.value; this._renderDialog(); });
+    const aprev = el.querySelector("[data-afterprev]");
+    if (aprev) aprev.addEventListener("change", () => { g.afterPrev = aprev.checked; this._renderDialog(); });
     const cbed = el.querySelector("[data-confirmbed]");
     if (cbed) cbed.addEventListener("change", () => { g.confirmBed = cbed.checked; this._renderDialog(); });
     const pin = el.querySelector("[data-pause]");
@@ -447,7 +520,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
     if (g.used.length) data.mapping = mapping;
     const pause = this._parsePause(g.pause, g.file.layers).layers;
     if (pause.length) data.pause_layers = pause;
-    if (toQueue && g.startAt) {
+    if (toQueue && g.afterPrev) data.after_prev = true;
+    else if (toQueue && g.startAt) {
       // browser local time -> absolute UTC time; the integration shows it in HA's time zone
       const at = new Date(g.startAt);
       if (!Number.isNaN(at.getTime())) { data.start_at = at.toISOString(); data.confirm_bed = !!g.confirmBed; }
@@ -456,7 +530,8 @@ export const PrintDialogMixin = (Base) => class extends Base {
       // notifyOnError=false: the error is shown in the dialog, no second toast.
       await this._hass.callService(DOMAIN, toQueue ? "queue_add" : "start_print", data, undefined, false);
       this._closeDialog();
-      this._toast(toQueue && data.start_at ? tr("Geplant für {at}: {name}", { at: fmtStart(Date.parse(data.start_at) / 1000), name: g.file.name })
+      this._toast(toQueue && data.after_prev ? tr("Direkt danach geplant: {name}", { name: g.file.name })
+        : toQueue && data.start_at ? tr("Geplant für {at}: {name}", { at: fmtStart(Date.parse(data.start_at) / 1000), name: g.file.name })
         : toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name })
         : tr("Druck gestartet: {name}", { name: g.file.name }));
     } catch (err) {

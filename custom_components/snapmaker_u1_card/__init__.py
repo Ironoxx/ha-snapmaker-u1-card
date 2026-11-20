@@ -97,6 +97,8 @@ QUEUE_ADD_SCHEMA = vol.Schema({
     # 2.4: start time (local time if no zone is given) and the "bed is clear" question at that time
     vol.Optional("start_at"): cv.datetime,
     vol.Optional("confirm_bed", default=True): cv.boolean,
+    # 2.4.0b4: start right after the running/earlier job (always with the bed question)
+    vol.Optional("after_prev", default=False): cv.boolean,
     vol.Optional(ATTR_ENTRY): cv.string,
 })
 JOB_SCHEMA = vol.Schema({vol.Required("job_id"): cv.string, vol.Optional(ATTR_ENTRY): cv.string})
@@ -392,7 +394,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         job["file"] = call.data["filename"].lstrip("/")
         if "mapping" in job:
             job["mapping"] = {str(k): v for k, v in job["mapping"].items()}
-        if job.get("start_at") is not None:
+        if not job.get("after_prev"):
+            job.pop("after_prev", None)
+        if job.get("after_prev"):
+            job.pop("start_at", None)
+        elif job.get("start_at") is not None:
             job["start_at"] = dt_util.as_utc(job["start_at"]).timestamp()
         else:
             job.pop("confirm_bed", None)  # only means something with a start time

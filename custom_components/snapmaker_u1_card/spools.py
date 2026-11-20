@@ -16,7 +16,13 @@ import time
 from typing import Any
 
 from .api import MoonrakerError, SpoolmanClient
-from .parsing import compact_spool, grams_per_slot, slot_fingerprint, suggest_spools
+from .parsing import (
+    compact_spool,
+    grams_per_slot,
+    slot_fingerprint,
+    spool_fits_slot,
+    suggest_spools,
+)
 from .spool_catalog import SpoolCatalog
 
 _LOGGER = logging.getLogger(__name__)
@@ -181,6 +187,13 @@ class SpoolManager:
             # when a matching spool has been added to Spoolman in the meantime).
             if entry.get("manual") or entry.get("spool_id") is not None:
                 fixed[slot["index"]] = entry.get("spool_id")
+        # 2.4.0b4: a remembered spool that does not fit what is loaded now is forgotten,
+        # so the head gets a matching spool suggested instead of waiting for the old one
+        for slot in slots:
+            last = self.spool(self._last.get(str(slot["index"])))
+            if last is not None and slot.get("loaded") and not spool_fits_slot(slot, last):
+                self._last.pop(str(slot["index"]), None)
+                changed = True
         proposal = suggest_spools(slots, self.spools, fixed)
         # A head that is waiting for its previous spool gets no other one guessed
         waiting = {k for k, v in self._last.items() if v in known} if self.keep_last else set()
@@ -227,8 +240,8 @@ class SpoolManager:
             if (self.mapping.get(str(idx)) or {}).get("spool_id"):
                 continue  # has a spool again
             spool = self.spool(sid)
-            if spool is None or sid in assigned:
-                continue
+            if spool is None or sid in assigned or not spool_fits_slot(slot, spool):
+                continue  # 2.4.0b4: other filament loaded (e.g. Sunlu instead of Creality PETG)
             out[idx] = spool
         return out
 
@@ -271,32 +284,67 @@ class SpoolManager:
         spool_ids: dict[str, Any] = record.get("spool_ids") or {}
         start: dict[str, Any] = record.get("spool_start") or {}
         booked = []
-        for slot, grams in sorted(grams_per_slot(record).items()):
-            spool_id = spool_ids.get(str(slot))
-            if not spool_id or grams <= 0:
-                continue
-            item = {
-                "key": f"{record.get('started')}|{slot}",
-                "spool_id": spool_id, "grams": round(grams, 2),
-                "file": record.get("file"), "slot": slot,
-            }
-            before = start.get(str(slot))
-            # 2.3: per spool – Moonraker without SpoolLink books only its active spool,
-            # the others are booked by the integration (before: nobody booked them)
-            moonraker = self.moonraker_books(spool_id, record.get("moonraker_spools"))
-            ours = self.deduct and not moonraker
-            entry: dict[str, Any] = {
-                "slot": slot, "spool_id": spool_id, "grams": item["grams"],
-                # True/False = booked by us (done/pending), "moonraker" = Moonraker books, None = off
-                "booked": False if ours else ("moonraker" if moonraker else None),
-                "before": before,
-                # expected; replaced by Spoolman's value after the booking
-                "after": round(before - item["grams"], 1) if isinstance(before, (int, float)) else None,
-            }
-            booked.append(entry)
-            if ours and not any(q["key"] == item["key"] for q in self.queue):
-                self.queue.append(item)
+        for slot, total in sorted(grams_per_slot(record).items()):
+            for spool_id, grams, part in self._split(record, slot, total, spool_ids.get(str(slot))):
+                entry = self._book_part(record, slot, spool_id, grams, start, part)
+                if entry is not None:
+                    booked.append(entry)
         return booked
+
+    @staticmethod
+    def _split(record: dict[str, Any], slot: int, total: float, last: Any) -> list[tuple[Any, float, int]]:
+        """2.4.0b4: a head's usage split over the spools it had during the print.
+
+        ``spool_changes`` (see SpoolMixin._track_spool_changes) holds each earlier
+        spool with the file progress until which it was used; the rest goes to
+        the spool at the end. Split by file progress – close enough, the slicer
+        does not tell how much of a head's filament falls before a given point.
+        Returns (spool_id, grams, part index); part 0 keeps the old booking key.
+        """
+        changes = (record.get("spool_changes") or {}).get(str(slot)) or []
+        progress = 1.0 if record.get("result") == "complete" else None
+        used, whole = record.get("filament_used"), record.get("filament_total")
+        if progress is None:
+            progress = max(0.0, min(1.0, used / whole)) if used and whole else 1.0
+        parts: list[tuple[Any, float, int]] = []
+        since = 0.0
+        for i, ch in enumerate(changes):
+            until = min(float(ch.get("until") or 0.0), progress)
+            share = (until - since) / progress if progress > 0 else 0.0
+            parts.append((ch.get("spool_id"), round(total * max(0.0, share), 2), i))
+            since = max(since, until)
+        rest = (progress - since) / progress if progress > 0 else 1.0
+        parts.append((last, round(total * max(0.0, rest), 2), len(changes)))
+        return parts
+
+    def _book_part(self, record: dict[str, Any], slot: int, spool_id: Any, grams: float,
+                   start: dict[str, Any], part: int) -> dict[str, Any] | None:
+        """Queue one spool's share of a head (and return its history entry).
+
+        Part 0 keeps the booking key of before 2.4.0b4 (no double booking of old
+        pending items); later parts (spool changed during the print) get "|n".
+        """
+        if not spool_id or grams <= 0:
+            return None
+        key = f"{record.get('started')}|{slot}" + (f"|{part}" if part else "")
+        item = {"key": key, "spool_id": spool_id, "grams": round(grams, 2), "file": record.get("file"), "slot": slot}
+        # remaining at the start is known for the head's first spool; a later one: as Spoolman has it now
+        before = start.get(str(slot)) if part == 0 else self.remaining(spool_id)
+        # 2.3: per spool – Moonraker without SpoolLink books only its active spool,
+        # the others are booked by the integration (before: nobody booked them)
+        moonraker = self.moonraker_books(spool_id, record.get("moonraker_spools"))
+        ours = self.deduct and not moonraker
+        entry: dict[str, Any] = {
+            "slot": slot, "spool_id": spool_id, "grams": item["grams"],
+            # True/False = booked by us (done/pending), "moonraker" = Moonraker books, None = off
+            "booked": False if ours else ("moonraker" if moonraker else None),
+            "before": before,
+            # expected; replaced by Spoolman's value after the booking
+            "after": round(before - item["grams"], 1) if isinstance(before, (int, float)) else None,
+        }
+        if ours and not any(q["key"] == item["key"] for q in self.queue):
+            self.queue.append(item)
+        return entry
 
     def remaining(self, spool_id: Any) -> float | None:
         spool = self.spool(spool_id) if isinstance(spool_id, int) else None

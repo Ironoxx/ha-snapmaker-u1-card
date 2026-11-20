@@ -3,7 +3,7 @@
 export const DOMAIN = "snapmaker_u1_card";
 // 2.4.0b3: static path of the card files (see const.py CARD_URL); language tables under /i18n/
 export const CARD_URL_BASE = `/${DOMAIN}/card`;
-export const CARD_VERSION = "2.4.0b3";
+export const CARD_VERSION = "2.4.0b4";
 // 1x1 GIF: assigning it reliably aborts a running MJPEG request.
 export const BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 

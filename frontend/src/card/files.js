@@ -139,13 +139,8 @@ export const FilesMixin = (Base) => class extends Base {
         j.timelapse ? `<ha-icon icon="mdi:filmstrip" title="${tr("Zeitraffer")}"></ha-icon>` : "",
         j.bed_leveling ? `<ha-icon icon="mdi:grid" title="${tr("Bettnivellierung")}"></ha-icon>` : "",
         Array.isArray(j.pause_layers) && j.pause_layers.length ? `<span>${tr("Pause vor {l}", { l: j.pause_layers.join(", ") })}</span>` : "",
-        // 2.4: start time and where the scheduled job stands
-        j.start_at ? `<span class="q-sched" data-sched="${esc(j.sched || "wait")}"><ha-icon icon="mdi:calendar-clock"></ha-icon>${esc(
-          j.sched === "confirm" ? tr("{at}: Druckbett frei? Bitte starten", { at: fmtStart(j.start_at) })
-            : j.sched === "missed" ? tr("{at} verpasst", { at: fmtStart(j.start_at) })
-              : j.sched === "error" ? tr("{at} fehlgeschlagen: {err}", { at: fmtStart(j.start_at), err: j.sched_error || "" })
-                : j.sched === "due" || j.sched === "starting" ? tr("{at}: startet, sobald der Drucker frei ist", { at: fmtStart(j.start_at) })
-                  : tr("Start {at}", { at: fmtStart(j.start_at) }) + (j.confirm_bed === false ? ` · ${tr("ohne Rückfrage")}` : ""))}</span>` : "",
+        // 2.4: start time and where the scheduled job stands (2.4.0b4: also "right after")
+        j.start_at || j.after_prev ? `<span class="q-sched" data-sched="${esc(j.sched || "plan")}"><ha-icon icon="${j.after_prev ? "mdi:transfer-right" : "mdi:calendar-clock"}"></ha-icon>${esc(this._schedText(j))}</span>` : "",
       ].join("");
       // the first job, and a scheduled one that waits for the user, can be started here
       const startable = i === 0 || ["confirm", "missed", "error"].includes(j.sched);
@@ -175,6 +170,28 @@ export const FilesMixin = (Base) => class extends Base {
         ${d.active && !jobs.some((j) => j.start_at && j.confirm_bed === false) ? `<div class="t-label">${tr("Startet nicht von selbst: nach dem Druck das Bett räumen und hier starten.")}</div>` : ""}
         <div class="q-list">${items}</div>
       </section>`;
+  }
+
+  /**
+   * Where a timed (or "right after", 2.4.0b4) job stands, from its ``sched`` field.
+   * ``bed_used``: a print ended since the job was planned, so the bed needs clearing first.
+   */
+  _schedText(j) {
+    const at = j.after_prev ? tr("Direkt danach") : fmtStart(j.start_at);
+    switch (j.sched) {
+      case "confirm":
+        return j.bed_used ? tr("{at}: Druckbett benutzt – räumen, dann starten", { at })
+          : tr("{at}: Druckbett frei? Bitte starten", { at });
+      case "wait":
+        return j.after_prev && !j.bed_used ? tr("Direkt danach · wartet auf den laufenden Druck")
+          : tr("{at}: wartet, bis der Drucker frei ist", { at });
+      case "missed": return tr("{at} verpasst", { at });
+      case "error": return tr("{at} fehlgeschlagen: {err}", { at, err: j.sched_error || "" });
+      case "due":
+      case "starting": return tr("{at}: startet, sobald der Drucker frei ist", { at });
+      default:
+        return tr("Start {at}", { at }) + (j.confirm_bed === false ? ` · ${tr("ohne Rückfrage")}` : "");
+    }
   }
 
   async _queueAction(action, jobId, pos) {

@@ -210,15 +210,22 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   // 6. History: result photo
   tab("history");
   const ph = R().querySelector("img.hist-photo");
-  assert.ok(ph && ph.dataset.photo.endsWith("/results/x.jpg"));
+  assert.ok(ph && ph.getAttribute("src").endsWith("/results/x.jpg"));
   let opened = null; w.open = (u) => { opened = u; };
   ph.click();
   assert.strictEqual(opened, null, "kein neues Fenster");
+  // 2.4.0b4: the row (also its photo) opens the print details; the big picture enlarges
+  const hd = card.shadowRoot.querySelector("dialog.u1hist");
+  assert.ok(hd && hd.hasAttribute("open"), "Druckdetails offen");
+  assert.ok(hd.querySelector("[data-histimg]").getAttribute("src").endsWith("/results/x.jpg"));
+  hd.querySelector("[data-histimg]").click();
   const pd = card.shadowRoot.querySelector("dialog.u1photo");
   assert.ok(pd && pd.hasAttribute("open"), "Vergroesserung im Dialog");
   assert.ok(pd.querySelector("img").src.endsWith("/results/x.jpg"));
   pd.click();
   assert.ok(!pd.hasAttribute("open"), "Antippen schliesst");
+  hd.querySelector("[data-close]").click();
+  assert.ok(!hd.hasAttribute("open"), "Details geschlossen");
 
   // 7. Material statistics
   const mt = R().querySelector(".mat-table");

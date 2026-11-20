@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "Ask “bed is clear?”",
           "description": "At the start time first ask in the notification and the card whether the bed is clear. Off = start on its own as soon as the printer is free."
+        },
+        "after_prev": {
+          "name": "Right after the previous job",
+          "description": "Start after the running/earlier job has finished, always with the “bed clear?” question. Replaces the start time."
         }
       }
     },

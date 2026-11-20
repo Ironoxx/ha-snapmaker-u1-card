@@ -33,9 +33,10 @@ export const HistoryMixin = (Base) => class extends Base {
       const thumb = h.thumb ? `<img src="${esc(h.thumb)}" alt="" loading="lazy" />`
         : `<ha-icon icon="mdi:printer-3d"></ha-icon>`;
       return `
-        <div class="hist">
+        <div class="hist" data-hist="${idx}" role="button" tabindex="0" title="${tr("Details anzeigen")}">
           <span class="hist-thumb">${thumb}</span>
-          ${h.photo ? `<img class="hist-photo" src="${esc(h.photo)}" alt="${tr("Ergebnisfoto")}" title="${tr("Ergebnisfoto")}" data-photo="${esc(h.photo)}" loading="lazy" />` : ""}
+          ${h.photo ? `<span class="hist-photo-wrap"><img class="hist-photo" src="${esc(h.photo)}" alt="${tr("Ergebnisfoto")}" loading="lazy" />
+            <ha-icon class="hist-zoom" icon="mdi:magnify-plus-outline" aria-hidden="true"></ha-icon></span>` : ""}
           <div class="hist-main">
             <div class="hist-name" title="${esc(h.file || "")}">${esc(h.name || h.file || tr("Druck"))}</div>
             <div class="t-label">${esc(fmtDate(h.ended))} · ${facts.map(esc).join(" · ") || "—"}</div>
@@ -48,6 +49,7 @@ export const HistoryMixin = (Base) => class extends Base {
             ${h.total_cost !== undefined && h.total_cost !== null
               ? `<span class="hist-cost" title="${esc(tr("Strom {e} · Filament {f}", { e: fmtMoney(h.energy_cost), f: fmtMoney(h.filament_cost) }))}">${fmtMoney(h.total_cost)}</span>` : ""}
           </div>
+          <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
         </div>`;
     }).join("") : `<div class="t-label">${tr("Noch keine Drucke erfasst. Die Historie füllt sich ab dem nächsten Druck.")}</div>`;
     const sum = list.reduce((acc, h) => {
@@ -68,6 +70,101 @@ export const HistoryMixin = (Base) => class extends Base {
           <div class="body hist-list">${rows}</div>
         </details>
       </section>`;
+  }
+
+  /**
+   * 2.4.0b4: one print of the history as a pop-up, like the timelapse player:
+   * result photo (or the file's preview, switchable when both exist), the facts,
+   * the spools with their grams, and reprint / timelapse / photo download.
+   * Everything comes from the history sensor the card has anyway; the image
+   * loads only now.
+   */
+  _historyDetail(idx) {
+    const h = (this._d.history || [])[idx];
+    if (!h) return;
+    const host = this.shadowRoot.getElementById("u1dlg");
+    let dlg = host.querySelector("dialog.u1hist");
+    if (!dlg) {
+      host.insertAdjacentHTML("beforeend", `<dialog class="u1dlg u1hist" aria-label="${tr("Druckdetails")}"></dialog>`);
+      dlg = host.querySelector("dialog.u1hist");
+      dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+      dlg.addEventListener("close", () => { dlg.innerHTML = ""; });
+    }
+    const [rawLabel, tone] = RESULT[h.result] || [h.result || "—", ""];
+    const files = new Set((this._d.files || []).map((f) => f.path));
+    const canReprint = files.has(h.source || h.file);
+    const video = this._historyVideo(h);
+    const images = [h.photo ? { src: h.photo, label: tr("Ergebnisfoto") } : null,
+      h.thumb ? { src: h.thumb, label: tr("Vorschau") } : null].filter(Boolean);
+    const spoolRows = Array.isArray(h.spools) ? h.spools.map((sp) => {
+      const g = (v) => `${Math.round(v)} g`;
+      const head = (this._d.heads[sp.slot] || {}).name || `E${sp.slot}`;
+      const rest = typeof sp.before === "number" && typeof sp.after === "number" ? ` (${g(sp.before)} → ${g(sp.after)})` : "";
+      return [`${tr("Spule")} #${sp.spool_id}`, `${head} · −${String(sp.grams).replace(".", ",")} g${rest}${sp.booked === false ? " ⏳" : ""}`];
+    }) : [];
+    const opts = h.options || {};
+    const optList = [opts.timelapse ? tr("Zeitraffer") : null, opts.bed_leveling ? tr("Bettnivellierung") : null,
+      opts.flow_calibration ? tr("Flusskalibrierung") : null,
+      Array.isArray(h.pause_layers) && h.pause_layers.length ? tr("Pause vor {l}", { l: h.pause_layers.join(", ") }) : null]
+      .filter(Boolean);
+    const rows = [
+      [tr("Ergebnis"), tr(rawLabel)],
+      h.error ? [tr("Meldung"), h.error] : null,
+      [tr("Ende"), fmtDate(h.ended)],
+      h.duration ? [tr("Dauer"), fmtMin(h.duration / 60)] : null,
+      h.filament_g != null ? [tr("Filament"), `${Math.round(h.filament_g)} g`] : null,
+      ...spoolRows,
+      h.energy != null ? [tr("Strom"), num(h.energy, 2, "kWh")] : null,
+      h.total_cost != null ? [tr("Kosten"), `${fmtMoney(h.total_cost)}${h.filament_cost != null || h.energy_cost != null
+        ? ` (${tr("Strom {e} · Filament {f}", { e: fmtMoney(h.energy_cost), f: fmtMoney(h.filament_cost) })})` : ""}`] : null,
+      h.switches > 1 ? [tr("Werkzeugwechsel"), fmtInt(h.switches)] : null,
+      optList.length ? [tr("Optionen"), optList.join(" · ")] : null,
+    ].filter(Boolean);
+    dlg.innerHTML = `<div class="dlg vid">
+        <header class="dlg-head"><div style="min-width:0">
+          <div class="dlg-title">${esc(h.name || h.file || tr("Druck"))}</div>
+          <div class="t-label"><span class="chip sm" data-tone="${tone}">${esc(tr(rawLabel))}</span> ${esc(fmtDate(h.ended))}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        ${images.length ? `<div class="hist-big"><img data-histimg style="cursor:zoom-in" src="${esc(images[0].src)}" alt="${esc(images[0].label)}" /></div>
+          ${images.length > 1 ? `<div class="chips">${images.map((im, i) => `<button type="button" class="chip sm" data-histpic="${i}" aria-pressed="${i === 0}">${esc(im.label)}</button>`).join("")}</div>` : ""}` : ""}
+        <div class="rows">${rows.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
+        <div class="dlg-actions">
+          ${h.photo ? `<a class="btn outline" href="${esc(h.photo)}" download><ha-icon icon="mdi:download"></ha-icon>${tr("Foto")}</a>` : ""}
+          ${video ? `<button type="button" class="outline" data-histvideo><ha-icon icon="mdi:filmstrip"></ha-icon>${tr("Zeitraffer")}</button>` : ""}
+          ${canReprint ? `<button type="button" class="filled" data-histreprint><ha-icon icon="mdi:restart"></ha-icon>${tr("Nochmal drucken")}</button>` : ""}
+        </div>
+      </div>`;
+    const q = (sel) => dlg.querySelector(sel);
+    q("[data-close]").addEventListener("click", () => dlg.close());
+    // the big picture opens full size (same viewer as before 2.4.0b4)
+    if (q("[data-histimg]")) q("[data-histimg]").addEventListener("click", () => this._showPhoto(q("[data-histimg]").getAttribute("src")));
+    dlg.querySelectorAll("[data-histpic]").forEach((b) => b.addEventListener("click", () => {
+      const im = images[Number(b.dataset.histpic)];
+      q("[data-histimg]").src = im.src;
+      dlg.querySelectorAll("[data-histpic]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    }));
+    if (q("[data-histvideo]")) q("[data-histvideo]").addEventListener("click", () => { dlg.close(); this._tlOpen(video); });
+    if (q("[data-histreprint]")) q("[data-histreprint]").addEventListener("click", () => { dlg.close(); this._reprint(idx); });
+    if (!dlg.open) { if (typeof dlg.showModal === "function") dlg.showModal(); else dlg.setAttribute("open", ""); }
+  }
+
+  /** Timelapse of a print: same file name stem, recorded within a few hours of its end (backup first). */
+  _historyVideo(h) {
+    const tl = this._d.timelapses;
+    if (!tl || !h.ended) return null;
+    // file names on the printer use "_" where the print name has spaces
+    const norm = (x) => String(x || "").toLowerCase().replace(/[\s_]+/g, " ").trim();
+    const stem = norm(h.name || (h.file || "").split("/").pop().replace(/\.gcode$/i, ""));
+    if (!stem) return null;
+    const end = Date.parse(h.ended) / 1000;
+    const near = (ts) => ts && Math.abs(ts - end) < 4 * 3600;
+    const archive = (tl.archive && tl.archive.videos) || [];
+    const ai = archive.findIndex((v) => norm(v.file).startsWith(stem) && near(v.modified));
+    if (ai >= 0) return `a:${ai}`;
+    const pi = (tl.videos || []).findIndex((v) => norm(v.name || (v.path || "").split("/").pop()).startsWith(stem)
+      && near(v.recorded ? Date.parse(v.recorded) / 1000 : v.modified));
+    return pi >= 0 ? `p:${pi}` : null;
   }
 
   _sectionCharts() {

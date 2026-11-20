@@ -109,6 +109,12 @@ class MoonrakerClient:
         except (TypeError, ValueError):
             return None
 
+    async def disk_usage(self, root: str = "gcodes") -> dict[str, Any]:
+        """2.4.0b4: free space on the printer (Moonraker's ``disk_usage`` of a file root), {} if unknown."""
+        result = await self._get_json("/server/files/directory", {"path": root, "extended": "false"})
+        usage = result.get("disk_usage") if isinstance(result, dict) else None
+        return usage if isinstance(usage, dict) else {}
+
     async def spoolman_status(self) -> dict[str, Any]:
         """Moonraker's Spoolman state: ``spool_id`` = the spool it books right now (or None)."""
         result = await self._get_json("/server/spoolman/status")

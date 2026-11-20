@@ -591,3 +591,5 @@ async def test_self_test_more(hass: HomeAssistant, mock_client) -> None:
     assert keys["clock"]["ok"] is None and "300" in keys["clock"]["detail"]
     assert keys["maintenance"]["ok"] is None and "Düse" in keys["maintenance"]["detail"]
     assert keys["blueprint"]["ok"] is None, "installed, no automation yet"
+    # 2.4.0b4: free space on the printer (0.5 of 8 GB) and of the media folder (only with the backup)
+    assert keys["disk_printer"]["ok"] is False and "0.5 GB" in keys["disk_printer"]["detail"]

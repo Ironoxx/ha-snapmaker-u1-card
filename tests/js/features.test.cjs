@@ -72,7 +72,10 @@ own("sensor.snapmaker_u1_card_meldungen", "1", { errors: [
     text: { de: "Vorladen: kein Filament erkannt (Kopf 2)", en: "Preload: no filament detected (head 2)" },
     hint: { de: "Filament bis zum Anschlag einführen.", en: "Insert the filament until it stops." } },
 ] }, "errors");
-own("sensor.snapmaker_u1_card_zeitraffer", "0", { entry_id: "E1", url: "/api/snapmaker_u1_card/video/E1", videos: [], playable: true,
+own("sensor.snapmaker_u1_card_zeitraffer", "2", { entry_id: "E1", url: "/api/snapmaker_u1_card/video/E1", playable: true,
+  // one video also backed up (shown once), one only on the printer
+  videos: [{ path: "Nuss_2_PLA_1h17m_20261008195643.mp4", root: "timelapse", name: "Nuss 2 PLA 1h17m", modified: 1760000000, size: 17000000 },
+    { path: "Wuerfel_20261009100000.mp4", root: "timelapse", name: "Wuerfel", modified: 1760100000, size: 5000000 }],
   archive: { count: 2, keep: 5, cleanup: "ok", busy: false, last_backup: 1760000000, errors: [], folder: "/media/snapmaker_u1",
     videos: [{ file: "Nuss_2_PLA_1h17m_20261008195643.mp4", size: 17000000, modified: 1760000000,
       media_id: "media-source://media_source/local/snapmaker_u1/Nuss_2_PLA_1h17m_20261008195643.mp4",
@@ -141,7 +144,23 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   const hbox = himg.parentNode;
   himg.dispatchEvent(new w.Event("error"));
   assert.ok(!hbox.querySelector("img") && hbox.querySelector("ha-icon"), hbox.innerHTML);
+  // 4a. 2.4.0b4: a row opens the print details (button clicks in the row keep their own job)
+  const HD = () => card.shadowRoot.querySelector("dialog.u1hist");
+  R().querySelectorAll("[data-hist]")[1].click();
+  assert.ok(HD() && HD().hasAttribute("open"), "Druckdetails offen");
+  assert.match(text(HD()), /Weg.*Meldung\s*Spaghetti erkannt/);
+  assert.ok(!HD().querySelector("[data-histreprint]"), "Datei weg: kein Nochmal");
+  HD().querySelector("[data-close]").click();
+  R().querySelectorAll("[data-hist]")[0].click();
+  assert.match(text(HD()), /Optionen\s*Zeitraffer · Pause vor 12/);
+  assert.ok(HD().querySelector("[data-histreprint]"));
+  HD().querySelector("[data-close]").click();
+  // its timelapse: same name, recorded around the end (backup first; "_" in file names = spaces)
+  assert.strictEqual(card._historyVideo({ name: "Nuss 2 PLA 1h17m", ended: new Date((1760000000 + 900) * 1000).toISOString() }), "a:0");
+  assert.strictEqual(card._historyVideo({ name: "Nuss 2 PLA 1h17m", ended: new Date((1760000000 + 86400) * 1000).toISOString() }), null, "zu weit weg");
+  assert.strictEqual(card._historyVideo({ name: "Wuerfel", ended: new Date(1760100100 * 1000).toISOString() }), "p:1");
   R().querySelector("[data-reprint]").click();
+  assert.ok(!HD() || !HD().hasAttribute("open"), "Nochmal in der Zeile oeffnet keine Details");
   let dl = D();
   assert.ok(dl && dl.hasAttribute("open"), "Dialog offen");
   const pressed = [...dl.querySelectorAll('.slot-btn[aria-pressed="true"]')].map((b) => `${b.dataset.map}>${b.dataset.slot}`);
@@ -191,6 +210,38 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   assert.strictEqual(qs[1], "queue_add");
   assert.strictEqual(qs[2].start_at, new Date("2099-01-02T22:30").toISOString());
   assert.strictEqual(qs[2].confirm_bed, false);
+
+  // 5c. 2.4.0b4: "right after" – no start time, always the bed question; overlap warning
+  const jq = states["sensor.snapmaker_u1_card_warteschlange"].attributes.jobs;
+  const at = new Date("2099-01-02T22:00").getTime() / 1000;
+  jq[0] = { ...jq[0], start_at: at, sched: null };
+  card.hass = hass();
+  R().querySelector('[data-print="box.gcode"]').click();
+  const s2 = D().querySelector("[data-startat]");
+  s2.value = "2099-01-02T22:30"; s2.dispatchEvent(new w.Event("change"));
+  assert.match(text(D().querySelector("[data-overlap]")), /Überschneidet sich mit „Box“/, "Box laeuft 1 h ab 22:00");
+  s2.value = "2099-01-02T23:30"; s2.dispatchEvent(new w.Event("change"));
+  assert.ok(!D().querySelector("[data-overlap]"), "danach frei");
+  D().querySelector("[data-afterprev]").click();
+  assert.ok(!D().querySelector("[data-startat]") && !D().querySelector("[data-confirmbed]"), "keine Startzeit, immer Rueckfrage");
+  assert.match(text(D()), /Wartet, bis der Druck davor fertig ist/);
+  D().querySelector('[data-dlg="queue"]').click();
+  await tick(); await tick();
+  const qa = calls.pop();
+  assert.strictEqual(qa[2].after_prev, true);
+  assert.ok(!("start_at" in qa[2]), "after_prev ohne Startzeit");
+  // queue display of the states
+  jq[0] = { ...jq[0], start_at: null, after_prev: true, sched: "wait" };
+  card.hass = hass();
+  assert.match(text(R().querySelector(".q-list")), /Direkt danach · wartet auf den laufenden Druck/);
+  jq[0] = { ...jq[0], sched: "confirm", bed_used: true };
+  card.hass = hass();
+  assert.match(text(R().querySelector(".q-list")), /Direkt danach: Druckbett benutzt – räumen, dann starten/);
+  jq[0] = { ...jq[0], after_prev: false, start_at: at, sched: "wait", bed_used: false };
+  card.hass = hass();
+  assert.match(text(R().querySelector(".q-list")), /: wartet, bis der Drucker frei ist/);
+  jq[0] = { id: "j1", file: "box.gcode", name: "Box", mapping: { 0: 1 }, timelapse: true, pause_layers: [5, 9] };
+  card.hass = hass();
 
   // 6. Start a print with pauses
   tab("files");
@@ -280,9 +331,14 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   // 10. Timelapse archive
   tab("timelapse");
   assert.match(text(R().querySelector(".arch-head")), /Gesichert in Medien \(2\)/);
-  assert.match(text(R().querySelector('[data-archive="0"]')), /Nuss 2 PLA 1h17m/);
+  assert.match(text(R().querySelector('[data-tlvid="a:0"]')), /Nuss 2 PLA 1h17m/);
+  assert.strictEqual(R().querySelectorAll(".file.tl").length, 2, "Video auf Drucker und in HA nur einmal");
+  assert.ok(!R().querySelector('[data-tlvid="p:0"]'), "doppeltes Video ausgeblendet");
+  assert.match(text(R().querySelector('[data-tlvid="p:1"]')), /Wuerfel.*nur auf dem Drucker/);
+  assert.strictEqual(R().querySelector(".file.tl").dataset.tlvid, "p:1", "neuestes zuerst");
+  assert.ok(!R().querySelector('[data-tlvid="a:0"] .tl-where'), "gesichertes Video ohne Markierung");
   assert.match(text(R()), /Auf dem Drucker bleiben die 5 neuesten/);
-  R().querySelector('[data-archive="0"]').click();
+  R().querySelector('[data-tlvid="a:0"]').click();
   await tick(); await tick();
   assert.deepEqual(ws.pop(), { type: "media_source/resolve_media", media_content_id: states["sensor.snapmaker_u1_card_zeitraffer"].attributes.archive.videos[0].media_id, expires: 3600 });
   const vid = card.shadowRoot.querySelector("dialog.u1video video");
@@ -293,6 +349,14 @@ const tick = () => new Promise((r) => setTimeout(r, 0));
   states["sensor.snapmaker_u1_card_zeitraffer"].attributes.archive.cleanup = "not_supported";
   card.hass = hass();
   assert.match(text(R()), /von der Firmware nicht unterstützt/);
+  // printer off: printer-only videos greyed and marked, backups still playable
+  states["sensor.snapmaker_u1_card_zeitraffer"].attributes.playable = false;
+  card.hass = hass();
+  assert.ok(R().querySelector('[data-tlvid="p:1"]').hasAttribute("data-off"));
+  assert.match(text(R().querySelector('[data-tlvid="p:1"]')), /Drucker aus/);
+  assert.ok(!R().querySelector('[data-tlvid="a:0"]').hasAttribute("data-off"));
+  states["sensor.snapmaker_u1_card_zeitraffer"].attributes.playable = true;
+  card.hass = hass();
 
   // 11. Mini card: message and next job
   const mini = w.document.createElement("snapmaker-u1-mini-card");

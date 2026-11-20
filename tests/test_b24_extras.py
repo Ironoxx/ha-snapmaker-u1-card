@@ -216,9 +216,11 @@ async def test_scheduled_job_asks_for_the_bed(hass: HomeAssistant, mock_client, 
     assert coord.queue.jobs == []
 
 
-async def test_scheduled_job_without_question_waits_for_free_printer(hass: HomeAssistant, mock_client, transfer,
-                                                                    notifications) -> None:
-    entry = await _setup(hass)
+async def test_scheduled_job_overlapping_a_running_print(hass: HomeAssistant, mock_client, transfer,
+                                                         notifications) -> None:
+    """2.4.0b4 (Thomas: 1 h print in 1 h, 45 min print in 1 h 30 min): B waits, never starts onto A's part."""
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"])
+    hass.config.language = "de"
     coord = entry.runtime_data
     _status(mock_client, "printing", "x.gcode")
     await _refresh(hass, entry)
@@ -227,13 +229,57 @@ async def test_scheduled_job_without_question_waits_for_free_printer(hass: HomeA
                                                          "confirm_bed": False}, blocking=True)
     async_fire_time_changed(hass, at + timedelta(seconds=1))
     await hass.async_block_till_done()
-    assert coord.queue.jobs[0]["sched"] == "due"
-    mock_client["start_print"].assert_not_called()  # still printing
+    assert coord.queue.jobs[0]["sched"] == "wait", "printer busy: waits, no question, no error"
+    mock_client["start_print"].assert_not_called()
+    # A ends: its part is on the bed -> question even without confirm_bed, no automatic start
     _status(mock_client, "complete", "x.gcode")
     await _refresh(hass, entry)
     await hass.async_block_till_done()
+    job = coord.queue.jobs[0]
+    assert job["sched"] == "confirm" and job["bed_used"] is True
+    mock_client["start_print"].assert_not_called()
+    note = next(c for c in notifications if "Druckbett räumen" in c.data["message"])
+    action = note.data["data"]["actions"][0]["action"]
+    hass.bus.async_fire("mobile_app_notification_action", {"action": action})
+    await hass.async_block_till_done()
     mock_client["start_print"].assert_called_once()
     assert coord.queue.jobs == []
+
+
+async def test_bed_confirmation_while_still_printing(hass: HomeAssistant, mock_client, transfer, notifications) -> None:
+    """Tapping "bed clear – start" while a print runs is no error: the job waits and asks again later."""
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"])
+    coord = entry.runtime_data
+    at = dt_util.utcnow() + timedelta(minutes=5)
+    await hass.services.async_call(DOMAIN, "queue_add", {"filename": "old.gcode", "start_at": at.isoformat()},
+                                   blocking=True)
+    async_fire_time_changed(hass, at + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    job = coord.queue.jobs[0]
+    assert job["sched"] == "confirm"
+    _status(mock_client, "printing", "x.gcode")  # someone started a print by hand meanwhile
+    await _refresh(hass, entry)
+    await coord.confirm_job(job["id"])
+    assert job["sched"] == "wait" and job["bed_used"] is True
+    mock_client["start_print"].assert_not_called()
+
+
+async def test_right_after_previous_job(hass: HomeAssistant, mock_client, transfer, notifications) -> None:
+    """2.4.0b4 after_prev: waits for the running print, then asks (always) – no start time needed."""
+    entry = await _setup(hass)
+    coord = entry.runtime_data
+    _status(mock_client, "printing", "x.gcode")
+    await _refresh(hass, entry)
+    res = await hass.services.async_call(DOMAIN, "queue_add", {"filename": "old.gcode", "after_prev": True,
+                                                               "confirm_bed": False}, blocking=True, return_response=True)
+    job = res["job"]
+    assert job["after_prev"] is True and job["confirm_bed"] is True and "start_at" not in job
+    assert coord.queue.jobs[0]["sched"] == "wait"
+    _status(mock_client, "complete", "x.gcode")
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    assert coord.queue.jobs[0]["sched"] == "confirm"
+    mock_client["start_print"].assert_not_called()
 
 
 async def test_scheduled_job_missed_while_ha_was_off(hass: HomeAssistant, mock_client, transfer, notifications) -> None:
@@ -329,3 +375,39 @@ async def test_create_spool_with_own_fields(hass: HomeAssistant, mock_client, sp
     spool = next(d for k, d in created if k == "spool")
     assert fil["extra"] == {"shop": '"x"'}
     assert spool["extra"] == {"dryer": '"Box 1"', "dried": "true"}
+
+
+# ── 2.4.0b4: spool changed at the printer ───────────────────────────────────
+def test_spool_fits_slot():
+    from custom_components.snapmaker_u1_card import parsing as p
+    creality = {"material": "PETG", "color": "#FFFFFF", "vendor": "Creality"}
+    assert p.spool_fits_slot({"type": "PETG", "color": "#FFFFFF", "vendor": "Generic"}, creality)
+    assert not p.spool_fits_slot({"type": "PETG", "color": "#FFFFFF", "vendor": "Sunlu"}, creality), "other vendor"
+    assert not p.spool_fits_slot({"type": "PETG", "color": "#000000", "vendor": "Generic"}, creality), "other colour"
+    assert not p.spool_fits_slot({"type": "ABS", "color": "#FFFFFF", "vendor": "Generic"}, creality), "other material"
+    assert p.spool_fits_slot({"type": "PLA", "color": None, "vendor": "Generic"}, creality), "firmware default = unknown"
+
+
+def test_usage_split_when_the_spool_changed_during_the_print():
+    from custom_components.snapmaker_u1_card.spools import SpoolManager
+    mgr = SpoolManager(object(), None, True)
+    mgr.spools = [{"id": 3, "remaining_weight": 900.0}]
+    record = {"started": "s1", "result": "complete", "map_table": [0], "file": "a.gcode",
+              "filaments": [{"index": 0, "weight": 100.0}],
+              "spool_ids": {"0": 3}, "spool_start": {"0": 40.0},
+              "spool_changes": {"0": [{"spool_id": 7, "until": 0.4}]}}
+    booked = mgr.book(record)
+    assert [(b["spool_id"], b["grams"]) for b in booked] == [(7, 40.0), (3, 60.0)]
+    assert [q["key"] for q in mgr.queue] == ["s1|0", "s1|0|1"], "first part keeps the old key"
+    assert booked[0]["before"] == 40.0 and booked[1]["before"] == 900.0
+
+
+def test_spool_changes_are_tracked_and_unload_keeps_the_spool():
+    from custom_components.snapmaker_u1_card.coordinator.spools import SpoolMixin
+    active = {"spool_ids": {"0": 7}}
+    ids = SpoolMixin._track_spool_changes(active, {"0": None}, 0.39)
+    assert ids == {"0": 7} and active["spool_changes"] == {}, "unloaded in the pause: still spool 7"
+    active["spool_ids"] = ids
+    active["spool_ids"] = SpoolMixin._track_spool_changes(active, {"0": 3}, 0.4)
+    assert active["spool_ids"] == {"0": 3}
+    assert active["spool_changes"] == {"0": [{"spool_id": 7, "until": 0.4}]}

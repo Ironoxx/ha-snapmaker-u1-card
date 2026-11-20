@@ -85,6 +85,7 @@ class NotifyMixin:
             if 0.3 < factor < 3:
                 summary["speed_factor"] = round(factor, 3)
                 summary["prep_s"] = round(begin)
+        self.note_print_ended_for_jobs()  # 2.4.0b4: scheduled jobs now find a used bed
         booked = self.spools.book(record)
         if booked:
             summary["spools"] = booked
@@ -125,7 +126,9 @@ class NotifyMixin:
         self._force_stats = True
         if self.queue.jobs and summary.get("result") in ("complete", "cancelled", "error"):
             nxt = self.queue.jobs[0]
-            self._notify("queue", {"name": nxt.get("name") or nxt.get("file"), "queue": len(self.queue.jobs)})
+            # 2.4.0b4: a scheduled job asks itself (with the start button), no second message
+            if not (nxt.get("start_at") or nxt.get("after_prev")):
+                self._notify("queue", {"name": nxt.get("name") or nxt.get("file"), "queue": len(self.queue.jobs)})
         if (
             self.options.get(CONF_AUTO_OFF)
             and self.power_switch
@@ -276,7 +279,7 @@ class NotifyMixin:
                 job = self.queue.get(name.split(":", 1)[1])
                 if job is None or job.get("sched") != "confirm":
                     return
-                await self._start_due(job["id"])
+                await self.confirm_job(job["id"])
                 return
             elif name == "LIGHT":
                 light = self._light_entity()

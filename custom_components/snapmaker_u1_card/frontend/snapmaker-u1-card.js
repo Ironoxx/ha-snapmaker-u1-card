@@ -3,7 +3,7 @@
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
   var CARD_URL_BASE = `/${DOMAIN}/card`;
-  var CARD_VERSION = "2.4.0b3";
+  var CARD_VERSION = "2.4.0b4";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -71,13 +71,13 @@
 
   // frontend/src/i18n-files.gen.js
   var LANG_FILES = {
-    "es": "es.ba26ca34.json",
-    "fr": "fr.82c37940.json",
-    "it": "it.f604756a.json",
-    "nl": "nl.c8e9aa5a.json",
-    "pt": "pt.67830f56.json",
-    "tr": "tr.4a04cfc7.json",
-    "zh": "zh.9ca3bf8b.json"
+    "es": "es.28dda171.json",
+    "fr": "fr.2aca6e60.json",
+    "it": "it.ab12a43d.json",
+    "nl": "nl.cac002f6.json",
+    "pt": "pt.5af37e26.json",
+    "tr": "tr.206c4afa.json",
+    "zh": "zh.a15153a5.json"
   };
 
   // frontend/src/i18n.js
@@ -974,7 +974,37 @@
     "Gilt für das Filament dieser Spule.": "Applies to the filament of this spool.",
     "Spule #{id} gespeichert": "Spool #{id} saved",
     "Eigene Felder der Spule": "Own fields of the spool",
-    "Eigene Felder des Filaments (nur bei neuem Filament)": "Own fields of the filament (new filament only)"
+    "Eigene Felder des Filaments (nur bei neuem Filament)": "Own fields of the filament (new filament only)",
+    // 2.4.0b4: history details, timelapse list, right after, sort, put in head, spare spool
+    "{head} nehmen: Spule #{id}, {rest} g": "Use {head}: spool #{id}, {rest} g",
+    "Ersatz: Spule #{id} {name} ({rest} g{loc}) einlegen": "Replacement: load spool #{id} {name} ({rest} g{loc})",
+    "Direkt danach drucken": "Print right after",
+    "Wartet, bis der Druck davor fertig ist. Dann kommt die Frage, ob das Druckbett frei ist – mit Kamerabild, falls vorhanden.": "Waits until the print before it is done. Then you are asked whether the bed is clear – with a camera image if there is one.",
+    "Überschneidet sich mit „{name}“ (bis {until}). Der Auftrag wartet dann, bis der Drucker frei ist, und fragt nach dem Druckbett.": "Overlaps with “{name}” (until {until}). The job then waits until the printer is free and asks about the bed.",
+    "Der laufende Druck ist erst gegen {until} fertig. Der Auftrag wartet dann und fragt nach dem Druckbett.": "The running print only ends around {until}. The job then waits and asks about the bed.",
+    "Direkt danach geplant: {name}": "Planned right after: {name}",
+    "Direkt danach": "Right after",
+    "{at}: Druckbett benutzt – räumen, dann starten": "{at}: bed used – clear it, then start",
+    "Direkt danach · wartet auf den laufenden Druck": "Right after · waits for the running print",
+    "{at}: wartet, bis der Drucker frei ist": "{at}: waits until the printer is free",
+    "Details anzeigen": "Show details",
+    "Druckdetails": "Print details",
+    "Ergebnis": "Result",
+    "Ende": "Ended",
+    "Werkzeugwechsel": "Tool changes",
+    "Foto": "Photo",
+    "Sortieren": "Sort",
+    "nach Lagerort": "by location",
+    "Ohne Lagerort": "No location",
+    "In Kopf legen": "Put in head",
+    "Druckt gerade": "Printing right now",
+    "druckt": "printing",
+    "In welchen Kopf kommt Spule #{id}?": "Which head gets spool #{id}?",
+    "Spule #{id} in {head}": "Spool #{id} in {head}",
+    "antippen zum Ändern": "tap to change",
+    "Noch nicht in Home Assistant gesichert": "Not yet backed up in Home Assistant",
+    "nur auf dem Drucker · Drucker aus": "only on the printer · printer off",
+    "nur auf dem Drucker": "only on the printer"
   };
 
   // frontend/src/accent.js
@@ -2552,6 +2582,7 @@
               <div class="head-mat">${esc(h.material)}</div>
               ${h.vendor ? `<div class="head-vendor">${esc(h.vendor)}</div>` : ""}
             </div>
+            <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
           </div>
           ${this._spoolLine(h)}
           <div class="head-tags">
@@ -2623,6 +2654,7 @@
       if (!sp) {
         return `<button type="button" class="spool-line" data-spoolpick="${h.idx}" data-none="1">
           <ha-icon icon="mdi:database-search-outline"></ha-icon><span>${sm.online ? tr("Spule wählen") : tr("Spoolman nicht erreichbar")}</span>
+          <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
         </button>`;
       }
       const rest = sp.remaining_weight;
@@ -2631,7 +2663,8 @@
       return `<button type="button" class="spool-line" data-spoolpick="${h.idx}" data-low="${low ? 1 : 0}"
         title="${sp.manual ? tr("Spoolman-Spule #{id} (manuell gewählt) – zum Ändern tippen", { id: sp.id }) : tr("Spoolman-Spule #{id} (automatisch) – zum Ändern tippen", { id: sp.id })}">
         <span class="spool-top"><span class="spool-name">#${sp.id} ${esc(sp.name)}</span>
-          <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span></span>
+          <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
+          <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon></span>
         ${pct != null ? `<span class="spool-track"><i style="width:${pct}%"></i></span>` : ""}
         ${this._runoutText(h.idx)}
       </button>`;
@@ -2839,10 +2872,8 @@
           j.timelapse ? `<ha-icon icon="mdi:filmstrip" title="${tr("Zeitraffer")}"></ha-icon>` : "",
           j.bed_leveling ? `<ha-icon icon="mdi:grid" title="${tr("Bettnivellierung")}"></ha-icon>` : "",
           Array.isArray(j.pause_layers) && j.pause_layers.length ? `<span>${tr("Pause vor {l}", { l: j.pause_layers.join(", ") })}</span>` : "",
-          // 2.4: start time and where the scheduled job stands
-          j.start_at ? `<span class="q-sched" data-sched="${esc(j.sched || "wait")}"><ha-icon icon="mdi:calendar-clock"></ha-icon>${esc(
-            j.sched === "confirm" ? tr("{at}: Druckbett frei? Bitte starten", { at: fmtStart(j.start_at) }) : j.sched === "missed" ? tr("{at} verpasst", { at: fmtStart(j.start_at) }) : j.sched === "error" ? tr("{at} fehlgeschlagen: {err}", { at: fmtStart(j.start_at), err: j.sched_error || "" }) : j.sched === "due" || j.sched === "starting" ? tr("{at}: startet, sobald der Drucker frei ist", { at: fmtStart(j.start_at) }) : tr("Start {at}", { at: fmtStart(j.start_at) }) + (j.confirm_bed === false ? ` · ${tr("ohne Rückfrage")}` : "")
-          )}</span>` : ""
+          // 2.4: start time and where the scheduled job stands (2.4.0b4: also "right after")
+          j.start_at || j.after_prev ? `<span class="q-sched" data-sched="${esc(j.sched || "plan")}"><ha-icon icon="${j.after_prev ? "mdi:transfer-right" : "mdi:calendar-clock"}"></ha-icon>${esc(this._schedText(j))}</span>` : ""
         ].join("");
         const startable = i === 0 || ["confirm", "missed", "error"].includes(j.sched);
         return `
@@ -2871,6 +2902,28 @@
         ${d.active && !jobs.some((j) => j.start_at && j.confirm_bed === false) ? `<div class="t-label">${tr("Startet nicht von selbst: nach dem Druck das Bett räumen und hier starten.")}</div>` : ""}
         <div class="q-list">${items}</div>
       </section>`;
+    }
+    /**
+     * Where a timed (or "right after", 2.4.0b4) job stands, from its ``sched`` field.
+     * ``bed_used``: a print ended since the job was planned, so the bed needs clearing first.
+     */
+    _schedText(j) {
+      const at = j.after_prev ? tr("Direkt danach") : fmtStart(j.start_at);
+      switch (j.sched) {
+        case "confirm":
+          return j.bed_used ? tr("{at}: Druckbett benutzt – räumen, dann starten", { at }) : tr("{at}: Druckbett frei? Bitte starten", { at });
+        case "wait":
+          return j.after_prev && !j.bed_used ? tr("Direkt danach · wartet auf den laufenden Druck") : tr("{at}: wartet, bis der Drucker frei ist", { at });
+        case "missed":
+          return tr("{at} verpasst", { at });
+        case "error":
+          return tr("{at} fehlgeschlagen: {err}", { at, err: j.sched_error || "" });
+        case "due":
+        case "starting":
+          return tr("{at}: startet, sobald der Drucker frei ist", { at });
+        default:
+          return tr("Start {at}", { at }) + (j.confirm_bed === false ? ` · ${tr("ohne Rückfrage")}` : "");
+      }
     }
     async _queueAction(action, jobId, pos) {
       if (action === "remove") return this._call("queue_remove", { job_id: jobId });
@@ -3533,9 +3586,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         ].filter(Boolean);
         const thumb = h.thumb ? `<img src="${esc(h.thumb)}" alt="" loading="lazy" />` : `<ha-icon icon="mdi:printer-3d"></ha-icon>`;
         return `
-        <div class="hist">
+        <div class="hist" data-hist="${idx}" role="button" tabindex="0" title="${tr("Details anzeigen")}">
           <span class="hist-thumb">${thumb}</span>
-          ${h.photo ? `<img class="hist-photo" src="${esc(h.photo)}" alt="${tr("Ergebnisfoto")}" title="${tr("Ergebnisfoto")}" data-photo="${esc(h.photo)}" loading="lazy" />` : ""}
+          ${h.photo ? `<span class="hist-photo-wrap"><img class="hist-photo" src="${esc(h.photo)}" alt="${tr("Ergebnisfoto")}" loading="lazy" />
+            <ha-icon class="hist-zoom" icon="mdi:magnify-plus-outline" aria-hidden="true"></ha-icon></span>` : ""}
           <div class="hist-main">
             <div class="hist-name" title="${esc(h.file || "")}">${esc(h.name || h.file || tr("Druck"))}</div>
             <div class="t-label">${esc(fmtDate(h.ended))} · ${facts.map(esc).join(" · ") || "—"}</div>
@@ -3547,6 +3601,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
             </span>
             ${h.total_cost !== void 0 && h.total_cost !== null ? `<span class="hist-cost" title="${esc(tr("Strom {e} · Filament {f}", { e: fmtMoney(h.energy_cost), f: fmtMoney(h.filament_cost) }))}">${fmtMoney(h.total_cost)}</span>` : ""}
           </div>
+          <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
         </div>`;
       }).join("") : `<div class="t-label">${tr("Noch keine Drucke erfasst. Die Historie füllt sich ab dem nächsten Druck.")}</div>`;
       const sum = list.reduce((acc, h) => {
@@ -3566,6 +3621,112 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <div class="body hist-list">${rows}</div>
         </details>
       </section>`;
+    }
+    /**
+     * 2.4.0b4: one print of the history as a pop-up, like the timelapse player:
+     * result photo (or the file's preview, switchable when both exist), the facts,
+     * the spools with their grams, and reprint / timelapse / photo download.
+     * Everything comes from the history sensor the card has anyway; the image
+     * loads only now.
+     */
+    _historyDetail(idx) {
+      const h = (this._d.history || [])[idx];
+      if (!h) return;
+      const host = this.shadowRoot.getElementById("u1dlg");
+      let dlg = host.querySelector("dialog.u1hist");
+      if (!dlg) {
+        host.insertAdjacentHTML("beforeend", `<dialog class="u1dlg u1hist" aria-label="${tr("Druckdetails")}"></dialog>`);
+        dlg = host.querySelector("dialog.u1hist");
+        dlg.addEventListener("click", (e) => {
+          if (e.target === dlg) dlg.close();
+        });
+        dlg.addEventListener("close", () => {
+          dlg.innerHTML = "";
+        });
+      }
+      const [rawLabel, tone] = RESULT[h.result] || [h.result || "—", ""];
+      const files = new Set((this._d.files || []).map((f) => f.path));
+      const canReprint = files.has(h.source || h.file);
+      const video = this._historyVideo(h);
+      const images = [
+        h.photo ? { src: h.photo, label: tr("Ergebnisfoto") } : null,
+        h.thumb ? { src: h.thumb, label: tr("Vorschau") } : null
+      ].filter(Boolean);
+      const spoolRows = Array.isArray(h.spools) ? h.spools.map((sp) => {
+        const g = (v) => `${Math.round(v)} g`;
+        const head = (this._d.heads[sp.slot] || {}).name || `E${sp.slot}`;
+        const rest = typeof sp.before === "number" && typeof sp.after === "number" ? ` (${g(sp.before)} → ${g(sp.after)})` : "";
+        return [`${tr("Spule")} #${sp.spool_id}`, `${head} · −${String(sp.grams).replace(".", ",")} g${rest}${sp.booked === false ? " ⏳" : ""}`];
+      }) : [];
+      const opts = h.options || {};
+      const optList = [
+        opts.timelapse ? tr("Zeitraffer") : null,
+        opts.bed_leveling ? tr("Bettnivellierung") : null,
+        opts.flow_calibration ? tr("Flusskalibrierung") : null,
+        Array.isArray(h.pause_layers) && h.pause_layers.length ? tr("Pause vor {l}", { l: h.pause_layers.join(", ") }) : null
+      ].filter(Boolean);
+      const rows = [
+        [tr("Ergebnis"), tr(rawLabel)],
+        h.error ? [tr("Meldung"), h.error] : null,
+        [tr("Ende"), fmtDate(h.ended)],
+        h.duration ? [tr("Dauer"), fmtMin(h.duration / 60)] : null,
+        h.filament_g != null ? [tr("Filament"), `${Math.round(h.filament_g)} g`] : null,
+        ...spoolRows,
+        h.energy != null ? [tr("Strom"), num(h.energy, 2, "kWh")] : null,
+        h.total_cost != null ? [tr("Kosten"), `${fmtMoney(h.total_cost)}${h.filament_cost != null || h.energy_cost != null ? ` (${tr("Strom {e} · Filament {f}", { e: fmtMoney(h.energy_cost), f: fmtMoney(h.filament_cost) })})` : ""}`] : null,
+        h.switches > 1 ? [tr("Werkzeugwechsel"), fmtInt(h.switches)] : null,
+        optList.length ? [tr("Optionen"), optList.join(" · ")] : null
+      ].filter(Boolean);
+      dlg.innerHTML = `<div class="dlg vid">
+        <header class="dlg-head"><div style="min-width:0">
+          <div class="dlg-title">${esc(h.name || h.file || tr("Druck"))}</div>
+          <div class="t-label"><span class="chip sm" data-tone="${tone}">${esc(tr(rawLabel))}</span> ${esc(fmtDate(h.ended))}</div></div>
+          <button type="button" class="icon outline" data-close style="margin-left:auto" aria-label="${tr("Schließen")}"><ha-icon icon="mdi:close"></ha-icon></button>
+        </header>
+        ${images.length ? `<div class="hist-big"><img data-histimg style="cursor:zoom-in" src="${esc(images[0].src)}" alt="${esc(images[0].label)}" /></div>
+          ${images.length > 1 ? `<div class="chips">${images.map((im, i) => `<button type="button" class="chip sm" data-histpic="${i}" aria-pressed="${i === 0}">${esc(im.label)}</button>`).join("")}</div>` : ""}` : ""}
+        <div class="rows">${rows.map(([k, v]) => `<div class="row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join("")}</div>
+        <div class="dlg-actions">
+          ${h.photo ? `<a class="btn outline" href="${esc(h.photo)}" download><ha-icon icon="mdi:download"></ha-icon>${tr("Foto")}</a>` : ""}
+          ${video ? `<button type="button" class="outline" data-histvideo><ha-icon icon="mdi:filmstrip"></ha-icon>${tr("Zeitraffer")}</button>` : ""}
+          ${canReprint ? `<button type="button" class="filled" data-histreprint><ha-icon icon="mdi:restart"></ha-icon>${tr("Nochmal drucken")}</button>` : ""}
+        </div>
+      </div>`;
+      const q = (sel) => dlg.querySelector(sel);
+      q("[data-close]").addEventListener("click", () => dlg.close());
+      if (q("[data-histimg]")) q("[data-histimg]").addEventListener("click", () => this._showPhoto(q("[data-histimg]").getAttribute("src")));
+      dlg.querySelectorAll("[data-histpic]").forEach((b) => b.addEventListener("click", () => {
+        const im = images[Number(b.dataset.histpic)];
+        q("[data-histimg]").src = im.src;
+        dlg.querySelectorAll("[data-histpic]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      }));
+      if (q("[data-histvideo]")) q("[data-histvideo]").addEventListener("click", () => {
+        dlg.close();
+        this._tlOpen(video);
+      });
+      if (q("[data-histreprint]")) q("[data-histreprint]").addEventListener("click", () => {
+        dlg.close();
+        this._reprint(idx);
+      });
+      if (!dlg.open) {
+        if (typeof dlg.showModal === "function") dlg.showModal();
+        else dlg.setAttribute("open", "");
+      }
+    }
+    /** Timelapse of a print: same file name stem, recorded within a few hours of its end (backup first). */
+    _historyVideo(h) {
+      const tl = this._d.timelapses;
+      if (!tl || !h.ended) return null;
+      const norm = (x) => String(x || "").toLowerCase().replace(/[\s_]+/g, " ").trim();
+      const stem = norm(h.name || (h.file || "").split("/").pop().replace(/\.gcode$/i, ""));
+      if (!stem) return null;
+      const end = Date.parse(h.ended) / 1e3;
+      const near = (ts) => ts && Math.abs(ts - end) < 4 * 3600;
+      const archive = tl.archive && tl.archive.videos || [];
+      const ai = archive.findIndex((v) => norm(v.file).startsWith(stem) && near(v.modified));
+      if (ai >= 0) return `a:${ai}`;
+      const pi = (tl.videos || []).findIndex((v) => norm(v.name || (v.path || "").split("/").pop()).startsWith(stem) && near(v.recorded ? Date.parse(v.recorded) / 1e3 : v.modified));
+      return pi >= 0 ? `p:${pi}` : null;
     }
     _sectionCharts() {
       const st = this._d.stats;
@@ -3647,53 +3808,104 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _sectionTimelapse() {
       const tl = this._d.timelapses;
       if (!tl) return "";
-      const tiles = tl.videos.length ? tl.videos.slice(0, this._cfg.timelapse_limit || 8).map((v, i) => `
-        <button class="file tl" data-video="${i}" title="${esc(v.path)}">
-          <span class="file-thumb tl-thumb">
-            ${v.poster_url || v.thumb_url ? `<img src="${esc(v.poster_url || v.thumb_url)}" alt="" loading="lazy" />` : ""}
-            <ha-icon icon="mdi:play-circle" class="tl-play"></ha-icon>
-          </span>
-          <span class="file-name">${esc(v.name)}</span>
-          <span class="file-meta">${esc(fmtDate(v.recorded || (v.modified ? new Date(v.modified * 1e3).toISOString() : null)))}${v.size ? ` · ${(v.size / 1048576).toFixed(0)} MB` : ""}</span>
-        </button>`).join("") : `<div class="t-label">${tr("Keine Zeitraffer auf dem Drucker. Aufnahme im Druckdialog unter „Zeitraffer“ einschalten.")}</div>`;
+      const a = tl.archive;
+      const limit = this._cfg.timelapse_limit || 8;
+      let body;
+      let count;
+      if (a) {
+        const items = this._timelapseItems(tl, a).slice(0, limit);
+        count = items.length;
+        body = `${this._archiveStatus(a)}
+        ${items.length ? `<div class="files">${items.map((it) => this._tlTile(it, tl.playable)).join("")}</div>` : `<div class="t-label">${tr("Keine Zeitraffer auf dem Drucker. Aufnahme im Druckdialog unter „Zeitraffer“ einschalten.")}</div>`}`;
+      } else {
+        count = tl.videos.length;
+        body = tl.videos.length ? `<div class="files">${tl.videos.slice(0, limit).map((v, i) => this._tlTile({
+          kind: "p",
+          index: i,
+          name: v.name,
+          poster: v.poster_url || v.thumb_url,
+          ts: v.recorded ? Date.parse(v.recorded) / 1e3 : v.modified,
+          size: v.size,
+          title: v.path
+        }, true)).join("")}</div>` : `<div class="t-label">${tr("Keine Zeitraffer auf dem Drucker. Aufnahme im Druckdialog unter „Zeitraffer“ einschalten.")}</div>`;
+      }
       return `
       <section class="panel span2">
         <details ${this._cfg.compact ? "" : "open"}>
           <summary>
             <ha-icon icon="mdi:filmstrip-box-multiple"></ha-icon>
             <span>${tr("Zeitraffer")}</span>
-            ${tl.videos.length ? `<span class="t-label" style="margin-left:auto">${tl.videos.length}</span>` : ""}
+            ${count ? `<span class="t-label" style="margin-left:auto">${count}</span>` : ""}
             <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon>
           </summary>
-          <div class="body"><div class="files">${tiles}</div>${this._archiveBlock(tl.archive)}</div>
+          <div class="body">${body}</div>
         </details>
       </section>`;
     }
-    _archiveBlock(a) {
-      if (!a) return "";
+    /**
+     * 2.4.0b4: backed-up videos and the ones only on the printer as one list, newest first.
+     * A video in both places counts once, as the backup (same file name, see archive.py).
+     */
+    _timelapseItems(tl, a) {
+      const backed = new Set((a.videos || []).map((v) => v.file));
+      const items = (a.videos || []).map((v, i) => ({
+        kind: "a",
+        index: i,
+        name: archiveName(v.file),
+        poster: v.poster_url,
+        ts: v.modified,
+        size: v.size,
+        title: v.file
+      }));
+      tl.videos.forEach((v, i) => {
+        const file = (v.path || "").split("/").pop();
+        if (backed.has(file)) return;
+        items.push({
+          kind: "p",
+          index: i,
+          name: v.name,
+          poster: v.poster_url || v.thumb_url,
+          title: v.path,
+          ts: v.recorded ? Date.parse(v.recorded) / 1e3 : v.modified,
+          size: v.size,
+          onlyPrinter: true
+        });
+      });
+      return items.sort((x, y) => (y.ts || 0) - (x.ts || 0));
+    }
+    _tlTile(it, playable) {
+      const off = it.kind === "p" && !playable;
+      return `
+        <button class="file tl" data-tlvid="${it.kind}:${it.index}" title="${esc(it.title || it.name)}" ${off ? 'aria-disabled="true" data-off="1"' : ""}>
+          <span class="file-thumb tl-thumb">
+            ${it.poster ? `<img src="${esc(it.poster)}" alt="" loading="lazy" />` : ""}
+            <ha-icon icon="${off ? "mdi:power-plug-off" : "mdi:play-circle"}" class="tl-play"></ha-icon>
+          </span>
+          <span class="file-name">${esc(it.name)}</span>
+          <span class="file-meta">${esc(fmtDate(it.ts ? new Date(it.ts * 1e3).toISOString() : null))}${it.size ? ` · ${(it.size / 1048576).toFixed(0)} MB` : ""}</span>
+          ${it.onlyPrinter ? `<span class="chip sm tl-where" title="${tr("Noch nicht in Home Assistant gesichert")}"><ha-icon icon="mdi:printer-3d"></ha-icon>${off ? tr("nur auf dem Drucker · Drucker aus") : tr("nur auf dem Drucker")}</span>` : ""}
+        </button>`;
+    }
+    /** Tap on a timelapse tile of the merged list (2.4.0b4). */
+    _tlOpen(ref) {
+      const [kind, idx] = String(ref).split(":");
+      if (kind === "a") return this._openArchive(Number(idx));
+      return this._openVideo(Number(idx));
+    }
+    /** Backup status line with "back up now" (the videos themselves are in the merged list). */
+    _archiveStatus(a) {
       const status = [
         a.busy ? tr("Sicherung läuft …") : a.last_backup ? tr("Zuletzt gesichert: {d}", { d: fmtDate(new Date(a.last_backup * 1e3).toISOString()) }) : tr("Noch nichts gesichert."),
         a.keep > 0 ? a.cleanup === "not_supported" ? tr("Löschen auf dem Drucker wird von der Firmware nicht unterstützt.") : tr("Auf dem Drucker bleiben die {n} neuesten.", { n: a.keep }) : null
       ].filter(Boolean).join(" · ");
-      const tiles = (a.videos || []).slice(0, this._cfg.timelapse_limit || 8).map((v, i) => `
-        <button class="file tl" data-archive="${i}" title="${esc(v.file)}">
-          <span class="file-thumb tl-thumb">
-            ${v.poster_url ? `<img src="${esc(v.poster_url)}" alt="" loading="lazy" />` : ""}
-            <ha-icon icon="mdi:play-circle" class="tl-play"></ha-icon>
-          </span>
-          <span class="file-name">${esc(archiveName(v.file))}</span>
-          <span class="file-meta">${esc(fmtDate(new Date(v.modified * 1e3).toISOString()))} · ${(v.size / 1048576).toFixed(0)} MB</span>
-        </button>`).join("");
       return `
       <div class="arch-head">
         <ha-icon icon="mdi:folder-play-outline"></ha-icon>
-        <span class="panel-title">${tr("Gesichert in Medien")} (${a.count})</span>
+        <span class="t-label">${tr("Gesichert in Medien")} (${a.count}) · ${esc(status)}</span>
         <button class="icon outline" data-act="backup" title="${tr("Jetzt sichern")}" ${a.busy ? "disabled" : ""}
           style="margin-left:auto"><ha-icon icon="${a.busy ? "mdi:loading" : "mdi:content-save-move-outline"}" class="${a.busy ? "spin" : ""}"></ha-icon></button>
       </div>
-      <div class="t-label">${esc(status)}</div>
-      ${(a.errors || []).length ? `<div class="t-label" style="color:var(--u1-error)">${a.errors.map(esc).join("<br>")}</div>` : ""}
-      ${tiles ? `<div class="files">${tiles}</div>` : ""}`;
+      ${(a.errors || []).length ? `<div class="t-label" style="color:var(--u1-error)">${a.errors.map(esc).join("<br>")}</div>` : ""}`;
     }
     /** Play a backed-up video via HA's media source (signed URL). */
     async _openArchive(index) {
@@ -4772,6 +4984,10 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     white-space: nowrap;
     transition: background var(--u1-motion), color var(--u1-motion), border-color var(--u1-motion);
   }
+  /* 2.4.0b4: one look for every chosen option chip (filters, folders, metrics, notification events) */
+  button.chip[aria-pressed="true"], .chip.sel {
+    background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
+  button.chip { cursor: pointer; }
   .chip[data-tone="active"]   { background: var(--u1-primary-container); color: var(--u1-on-primary-container); border-color: transparent; }
   .chip[data-tone="warn"]     { background: color-mix(in srgb, var(--u1-warn) 22%, transparent); color: var(--u1-warn); border-color: transparent; }
   .chip[data-tone="error"]    { background: var(--u1-error-container); color: var(--u1-on-error-container); border-color: transparent; }
@@ -5161,6 +5377,18 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   details > summary::-webkit-details-marker { display: none; }
   details > summary ha-icon { --mdc-icon-size: 18px; transition: transform var(--u1-motion); }
   details[open] > summary ha-icon.caret { transform: rotate(180deg); }
+  /* 2.4.0b4: the caret always sits at the right end, so every fold reads as "tap to open" */
+  details > summary ha-icon.caret { margin-left: auto; color: var(--u1-on-variant); flex-shrink: 0; }
+  /* 2.4.0b4: rows that open something get a chevron that is visible on touch, not only on hover */
+  ha-icon.row-go { --mdc-icon-size: 18px; color: var(--u1-on-variant); flex-shrink: 0; margin-left: auto; }
+  .head-card-top ha-icon.row-go { align-self: center; }
+  .spool-top ha-icon.row-go { margin-left: 2px; --mdc-icon-size: 16px; }
+  /* 2.4.0b4: panel heads with buttons wrap instead of running out of the card */
+  .panel-head { flex-wrap: wrap; row-gap: 6px; }
+  .panel-head .panel-acts { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  @container u1 (max-width: 520px) {
+    .panel-head .panel-acts { margin-left: 0; width: 100%; justify-content: flex-start; }
+  }
   details > .body { padding-top: 10px; }
 
   .switches { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -5240,14 +5468,22 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   }
   .ftools select { flex: 0 0 auto; }
   .fchips { display: flex; gap: 6px; flex-wrap: wrap; }
-  .fchips button[aria-pressed="true"] { background: var(--u1-primary); color: var(--u1-on-primary, #fff); }
   .files-more { display: flex; flex-direction: column; gap: 4px; }
   .files-more button { justify-content: flex-start; text-align: left; }
   dialog.u1photo { padding: 0; border: 0; background: transparent; max-width: 96vw; max-height: 92vh; overflow: visible; }
   dialog.u1photo::backdrop { background: rgba(0,0,0,.8); }
   dialog.u1photo img { display: block; max-width: 96vw; max-height: 92vh; border-radius: var(--u1-r-m); object-fit: contain; cursor: zoom-out; }
   dialog.u1photo .photo-close { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.55); color: #fff; }
-  .hist-photo { width: 44px; height: 44px; border-radius: var(--u1-r-s); object-fit: cover; cursor: zoom-in; flex-shrink: 0; }
+  .hist-photo { width: 44px; height: 44px; border-radius: var(--u1-r-s); object-fit: cover; flex-shrink: 0; display: block; }
+  /* 2.4.0b4: history rows open the print details – chevron and a small magnifier on the photo */
+  .hist[data-hist] { cursor: pointer; }
+  .hist[data-hist]:focus-visible { outline: 2px solid var(--u1-primary); outline-offset: 2px; border-radius: var(--u1-r-s); }
+  .hist-photo-wrap { position: relative; flex-shrink: 0; }
+  .hist-zoom { position: absolute; right: -4px; bottom: -4px; --mdc-icon-size: 16px; padding: 2px; border-radius: 50%;
+    background: var(--u1-panel-highest); color: var(--u1-on-variant); }
+  .hist-big { border-radius: var(--u1-r-m); overflow: hidden; background: #000; display: flex; justify-content: center; }
+  .hist-big img { max-width: 100%; max-height: 50vh; object-fit: contain; display: block; }
+  dialog.u1hist .dlg-actions { flex-wrap: wrap; }
   .runout { font-size: 11px; color: var(--u1-warn); }
   .selftest-wrap { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; align-items: flex-start; }
   .selftest { display: flex; flex-direction: column; gap: 4px; }
@@ -5311,6 +5547,21 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .stock { display: flex; flex-direction: column; gap: 10px; }
   .stock-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
   .stock-row[hidden], .stock-list[hidden] { display: none; }
+  /* 2.4.0b4: sort and group by location; a group spans the whole grid and repeats it inside */
+  .map-alt { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 6px; }
+  .map-alt ha-icon { --mdc-icon-size: 16px; }
+  .stock-view { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .stock-sort { display: inline-flex; align-items: center; gap: 6px; }
+  .stock-sort ha-icon { --mdc-icon-size: 18px; color: var(--u1-on-variant); }
+  .stock-sort select { font: inherit; min-height: 32px; padding: 4px 8px; border-radius: 8px; color: var(--u1-on);
+    background: transparent; border: 1px solid var(--u1-outline); }
+  .stock-grp { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px; }
+  .stock-grp[hidden] { display: none; }
+  .stock-grp-h { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; font-weight: 500; margin-top: 4px;
+    color: var(--u1-on-variant); }
+  .stock-grp-h ha-icon { --mdc-icon-size: 16px; }
+  [data-headpick] { height: auto; min-height: 36px; gap: 6px; }
+  [data-headpick] .t-label { font-size: 11px; }
   .stock-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
     border: 1px solid color-mix(in srgb, var(--u1-outline) 50%, transparent); }
   .stock-row .spool-track { margin-top: 4px; }
@@ -5443,8 +5694,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   /* 2.4: textarea like the inputs; collapsed "more details" in the new spool form */
   .head-form textarea { font: inherit; font-size: 14px; color: var(--u1-on); background: var(--u1-panel-high); resize: vertical;
     border: 1px solid var(--u1-outline); border-radius: var(--u1-r-s); padding: 8px; box-sizing: border-box; }
-  .head-form .more-fields { display: flex; flex-direction: column; gap: 8px; }
-  .head-form .more-fields > summary { cursor: pointer; font-size: 13px; color: var(--u1-primary); }
+  .head-form .more-fields { display: flex; flex-direction: column; gap: 8px;
+    border: 1px solid var(--u1-outline); border-radius: var(--u1-r-m); padding: 0 12px; }
+  .head-form .more-fields[open] { padding-bottom: 12px; }
+  .head-form .more-fields > summary { min-height: 44px; font-size: 14px; font-weight: 500; color: var(--u1-on); gap: 8px; }
+  .head-form .more-fields > summary ha-icon:first-child { color: var(--u1-primary); }
+  .head-form .more-fields[open] > summary .t-label { display: none; }
   .head-form .more-fields > .head-form { margin-top: 8px; }
   /* 2.4.0b3: own Spoolman fields – ranges as two boxes, multi-choice lists not too tall */
   .head-form .range-in { display: flex; align-items: center; gap: 6px; }
@@ -5491,7 +5746,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   .cfg-multi { display: flex; flex-direction: column; gap: 6px; }
   .cfg-chk { display: flex; gap: 8px; align-items: center; font-size: 14px; min-width: 0; }
   .cfg-chk span { min-width: 0; overflow-wrap: anywhere; }
-  .cfg-more > summary { cursor: pointer; color: var(--u1-primary); font-size: 13px; padding: 4px 0; }
+  .cfg-more > summary { cursor: pointer; color: var(--u1-primary); font-size: 13px; padding: 6px 0; gap: 6px; }
+  .cfg-more > summary ha-icon { --mdc-icon-size: 18px; }
   .cfg-more[open] { display: flex; flex-direction: column; gap: 6px; }
   .cfg-chk input { accent-color: var(--u1-primary); width: 18px; height: 18px; }
   .cfg-maint { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px; gap: 8px; align-items: center; padding: 4px 0; font-size: 14px; }
@@ -5552,6 +5808,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
   /* ── Timelapses ──────────────────────────────────────────────────────── */
   .tl-thumb { position: relative; aspect-ratio: 16 / 9; height: auto; }
+  /* 2.4.0b4: merged timelapse list – videos only on the printer are marked, greyed while it is off */
+  button.file.tl { justify-content: flex-start; }
+  .file.tl .tl-where { align-self: center; height: auto; min-height: 22px; max-width: 100%; gap: 4px; font-size: 11px;
+    white-space: normal; line-height: 1.25; padding: 2px 8px; text-align: center; }
+  .file.tl .tl-where ha-icon { --mdc-icon-size: 14px; }
+  .file.tl[data-off] { opacity: .55; }
   .tl-thumb img { object-fit: cover; }
   .tl-play {
     position: absolute; inset: 0; margin: auto; --mdc-icon-size: 36px !important;
@@ -5937,7 +6199,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         d.power ? `p${d.power.on}${d.power.available}${d.power.autoOn}${d.online ? "" : d.power.shuttingDown + "" + d.power.poweringOn}` : "nop",
         d.usage ? `u${d.usage.inProgress}${d.usage.hasEnergy}${d.usage.hasCost}` : "nou",
         d.history ? d.history.map((h) => `${h.ended}${h.total_cost}`).join(",") : "noh",
-        d.timelapses ? d.timelapses.videos.map((v) => v.path).join(",") : "not",
+        // 2.4.0b4: printer-only timelapses are greyed while the printer is off
+        d.timelapses ? `${d.timelapses.videos.map((v) => v.path).join(",")}${d.timelapses.playable}` : "not",
         d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
         d.queue ? d.queue.map((j) => `${j.id}:${j.start_at || ""}:${j.sched || ""}`).join(",") : "noq",
         d.errors.map((e) => e.key).join(","),
@@ -6195,7 +6458,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         });
       }));
       r.querySelectorAll("[data-reprint]").forEach((b) => b.addEventListener("click", () => this._reprint(Number(b.dataset.reprint))));
-      r.querySelectorAll("[data-archive]").forEach((b) => b.addEventListener("click", () => this._openArchive(Number(b.dataset.archive))));
+      r.querySelectorAll("[data-tlvid]").forEach((b) => b.addEventListener("click", () => this._tlOpen(b.dataset.tlvid)));
       r.querySelectorAll("[data-q]").forEach((b) => b.addEventListener("click", () => this._queueAction(b.dataset.q, b.dataset.job, Number(b.dataset.pos))));
       r.querySelectorAll("[data-metric]").forEach((b) => b.addEventListener("click", () => {
         this._metric = b.dataset.metric;
@@ -6269,15 +6532,18 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       r.querySelectorAll(".hist-thumb img").forEach((img) => img.addEventListener("error", () => {
         img.replaceWith(Object.assign(document.createElement("ha-icon"), { icon: "mdi:printer-3d" }));
       }, { once: true }));
-      r.querySelectorAll("[data-photo]").forEach(
-        (el) => el.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this._showPhoto(el.dataset.photo);
-        })
-      );
-      r.querySelectorAll("[data-video]").forEach(
-        (b) => b.addEventListener("click", () => this._openVideo(Number(b.dataset.video)))
-      );
+      r.querySelectorAll("[data-hist]").forEach((el) => {
+        const open = () => this._historyDetail(Number(el.dataset.hist));
+        el.addEventListener("click", (e) => {
+          if (!e.target.closest("button")) open();
+        });
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            open();
+          }
+        });
+      });
       r.querySelectorAll("[data-covermode]").forEach((b) => b.addEventListener("click", () => {
         this._touchLock();
         if (b.getAttribute("aria-pressed") === "true" || !this._ents.coverMode) return;
@@ -6653,6 +6919,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
   };
 
   // frontend/src/card/dialog.js
+  var SPARE_COLOR_MAX = 120;
   var localNow = () => {
     const d = new Date(Date.now() - (/* @__PURE__ */ new Date()).getTimezoneOffset() * 6e4);
     return d.toISOString().slice(0, 16);
@@ -6666,6 +6933,28 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
     _prefs() {
       const st = this._ents && this._ents.filaments && this._st(this._ents.filaments);
       return st && st.attributes && st.attributes.preferences || {};
+    }
+    /**
+     * 2.4.0b4: does a job planned for ``start`` (epoch s, ``dur`` s long) collide with the
+     * running print (ends now + remaining) or another timed job (its start + its file's time)?
+     * Returns { name, until } of the first collision or null. Only data the card has.
+     */
+    _planOverlap(start, dur) {
+      if (!Number.isFinite(start)) return null;
+      const end = start + (dur || 0);
+      const d = this._d || {};
+      const now = Date.now() / 1e3;
+      if (d.active && d.remaining != null) {
+        const until = now + d.remaining * 60;
+        if (start < until) return { name: "", until: fmtStart(until) };
+      }
+      const files = new Map((d.files || []).map((x) => [x.path, x]));
+      for (const j of d.queue || []) {
+        if (!j.start_at) continue;
+        const jEnd = j.start_at + ((files.get(j.file) || {}).time || 0);
+        if (start < jEnd && end > j.start_at) return { name: j.name || j.file, until: fmtStart(jEnd) };
+      }
+      return null;
     }
     /** Result photo enlarged in a dialog; tap, Esc or the backdrop closes it. */
     _showPhoto(url) {
@@ -6739,6 +7028,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         // 2.4: optional start time for the queue ("YYYY-MM-DDTHH:MM", browser time) and the bed question then
         startAt: "",
         confirmBed: true,
+        // 2.4.0b4: "right after" the running/previous print (queue_add after_prev), always with the bed question
+        afterPrev: false,
         busy: false,
         error: null,
         slotsKey: JSON.stringify(slots),
@@ -6891,11 +7182,40 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           if (sp && sp.remaining_weight != null && need[k] > sp.remaining_weight)
             issues[f.index] = {
               level: "warn",
-              text: tr("Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g", { id: sp.id, rest: Math.round(sp.remaining_weight), need: Math.round(need[k]) })
+              text: tr("Spule #{id} hat noch {rest} g, gebraucht werden ca. {need} g", { id: sp.id, rest: Math.round(sp.remaining_weight), need: Math.round(need[k]) }),
+              alt: this._spareSpool(sp, f, k, need)
             };
         });
       }
       return issues;
+    }
+    /**
+     * 2.4.0b4: a spool that could stand in when ``sp`` (in head ``k``) is too short: same
+     * material, a close colour (to the spool or the file's filament) and enough left – also for
+     * what its own head already prints. In a head: { id, head, … } (the dialog offers to
+     * remap); otherwise { id, head: null, … } (hint to load it). Best = closest colour, then
+     * least left over. Only the spool list the card already has.
+     */
+    _spareSpool(sp, f, k, need) {
+      const sm = this._spoolman();
+      const mat = String(sp.material || f.type || "").toUpperCase();
+      if (!sm || !mat) return null;
+      const inHead = this._spoolHeads();
+      const slots = this._slots() || [];
+      const close = (s) => Math.min(colorDistance(s.color, sp.color), colorDistance(s.color, f.color));
+      let best = null;
+      for (const s of sm.spools || []) {
+        if (s.id === sp.id || String(s.material || "").toUpperCase() !== mat || s.remaining_weight == null) continue;
+        const head = inHead.has(s.id) ? inHead.get(s.id) : null;
+        if (head != null && !(slots[head] || {}).loaded) continue;
+        const wanted = need[k] + (head != null && head !== k ? need[head] || 0 : 0);
+        const dist = close(s);
+        if (s.remaining_weight < wanted || dist > SPARE_COLOR_MAX) continue;
+        const score = [dist, s.remaining_weight - wanted];
+        if (!best || score[0] < best.score[0] || score[0] === best.score[0] && score[1] < best.score[1])
+          best = { id: s.id, head, name: s.name || "", rest: Math.round(s.remaining_weight), location: s.location || "", score };
+      }
+      return best;
     }
     _renderDialog() {
       const g = this._dlg;
@@ -6926,7 +7246,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       const f = g.file;
       const maintDue = (this._d && this._d.maint || []).filter((m) => m.due);
       const hasQueue = !!(this._ents && this._ents.queue);
-      const planned = hasQueue && !!g.startAt;
+      const afterPrev = hasQueue && !!g.afterPrev;
+      const planned = hasQueue && (!!g.startAt || afterPrev);
+      const overlap = hasQueue && g.startAt && !afterPrev ? this._planOverlap(Date.parse(g.startAt) / 1e3, f.time) : null;
       const meta = [];
       if (f.time) meta.push(fmtMin(f.time / 60));
       if (f.weight) meta.push(`${Math.round(f.weight)} g`);
@@ -6965,6 +7287,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           </div>
           <div class="map-slots">${buttons}</div>
           ${issue ? `<div class="map-issue"><ha-icon icon="${issue.level === "error" ? "mdi:alert-circle" : "mdi:alert"}"></ha-icon>${esc(issue.text)}</div>` : ""}
+          ${issue && issue.alt ? issue.alt.head != null ? `<button type="button" class="chip sm map-alt" data-map="${fil.index}" data-slot="${issue.alt.head}" ${g.busy ? "disabled" : ""}>
+                <ha-icon icon="mdi:swap-horizontal"></ha-icon><span>${esc(tr("{head} nehmen: Spule #{id}, {rest} g", { head: (heads[issue.alt.head] || {}).name || `E${issue.alt.head}`, id: issue.alt.id, rest: issue.alt.rest }))}</span></button>` : `<div class="t-label map-alt"><ha-icon icon="mdi:lightbulb-outline"></ha-icon>${esc(tr("Ersatz: Spule #{id} {name} ({rest} g{loc}) einlegen", { id: issue.alt.id, name: issue.alt.name, rest: issue.alt.rest, loc: issue.alt.location ? ` · ${issue.alt.location}` : "" }))}</div>` : ""}
         </div>`;
       }).join("") : `<div class="t-label">${tr("Die Datei enthält keine Filamentangaben. Der Drucker nutzt seine Standardzuordnung (Filament 1 → Kopf 1 …).")}</div>`;
       const chk = (key, label) => `<label class="chk">
@@ -6994,11 +7318,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         `${fixed(g.settings.layer_height, 2)} mm`,
         g.settings.infill != null ? `${fixed(g.settings.infill, 0)} %` : "",
         g.settings.support ? tr("Stützen") : ""
-      ].filter(Boolean).join(" · "))}</span>` : ""}</summary>
+      ].filter(Boolean).join(" · "))}</span>` : ""}<ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
           ${this._settingsHtml(g)}
         </details>
         <details class="dlg-settings" data-preview ${g.previewOpen ? "open" : ""}>
-          <summary><ha-icon icon="mdi:layers-search-outline"></ha-icon>${tr("G-Code-Vorschau")}</summary>
+          <summary><ha-icon icon="mdi:layers-search-outline"></ha-icon>${tr("G-Code-Vorschau")}<ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
           ${g.previewOpen ? this._pvHtml(g) : ""}
         </details>
         <div class="dlg-sec">${tr("Filamentzuordnung")}${stale ? ` <span class="t-label">${tr("(Stand vor dem Ausschalten)")}</span>` : ""}</div>
@@ -7016,11 +7340,15 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
             ${g.busy ? "disabled" : ""} />
         </label>
         ${pause.error ? `<div class="map-issue" style="color:var(--u1-error)"><ha-icon icon="mdi:alert-circle"></ha-icon>${esc(pause.error)}</div>` : pause.layers.length ? `<div class="t-label">${tr("Der Drucker hält vor Schicht {l} an (z. B. für Magnete). Fortsetzen am Display oder in der Karte.", { l: pause.layers.join(", ") })}</div>` : ""}
-        ${hasQueue ? `<label class="pause-in">
+        ${hasQueue && (busyPrinter || (this._d.queue || []).length) ? `<label class="chk"><input type="checkbox" data-afterprev ${afterPrev ? "checked" : ""} ${g.busy ? "disabled" : ""} />
+          <span>${tr("Direkt danach drucken")}</span></label>
+          ${afterPrev ? `<div class="t-label">${tr("Wartet, bis der Druck davor fertig ist. Dann kommt die Frage, ob das Druckbett frei ist – mit Kamerabild, falls vorhanden.")}</div>` : ""}` : ""}
+        ${hasQueue && !afterPrev ? `<label class="pause-in">
           <ha-icon icon="mdi:clock-outline"></ha-icon>
           <span>${tr("Startzeit (Warteschlange)")}</span>
           <input type="datetime-local" data-startat value="${esc(g.startAt)}" min="${localNow()}" ${g.busy ? "disabled" : ""} />
         </label>
+        ${overlap ? `<div class="map-issue" data-overlap><ha-icon icon="mdi:calendar-alert"></ha-icon>${esc(overlap.name ? tr("Überschneidet sich mit „{name}“ (bis {until}). Der Auftrag wartet dann, bis der Drucker frei ist, und fragt nach dem Druckbett.", overlap) : tr("Der laufende Druck ist erst gegen {until} fertig. Der Auftrag wartet dann und fragt nach dem Druckbett.", overlap))}</div>` : ""}
         ${planned ? `<label class="chk"><input type="checkbox" data-confirmbed ${g.confirmBed ? "checked" : ""} ${g.busy ? "disabled" : ""} />
           <span>${tr("Zur Startzeit fragen, ob das Druckbett frei ist")}</span></label>
           <div class="t-label">${g.confirmBed ? tr("Zur Startzeit kommt eine Benachrichtigung mit „Bett frei – starten“; ohne Bestätigung wartet der Auftrag.") : tr("Startet zur Startzeit von selbst, sobald der Drucker frei ist. Das Druckbett muss dann leer sein!")}</div>` : ""}` : ""}
@@ -7084,6 +7412,11 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         g.startAt = sat.value;
         this._renderDialog();
       });
+      const aprev = el.querySelector("[data-afterprev]");
+      if (aprev) aprev.addEventListener("change", () => {
+        g.afterPrev = aprev.checked;
+        this._renderDialog();
+      });
       const cbed = el.querySelector("[data-confirmbed]");
       if (cbed) cbed.addEventListener("change", () => {
         g.confirmBed = cbed.checked;
@@ -7129,7 +7462,8 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       if (g.used.length) data.mapping = mapping;
       const pause = this._parsePause(g.pause, g.file.layers).layers;
       if (pause.length) data.pause_layers = pause;
-      if (toQueue && g.startAt) {
+      if (toQueue && g.afterPrev) data.after_prev = true;
+      else if (toQueue && g.startAt) {
         const at = new Date(g.startAt);
         if (!Number.isNaN(at.getTime())) {
           data.start_at = at.toISOString();
@@ -7139,7 +7473,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       try {
         await this._hass.callService(DOMAIN, toQueue ? "queue_add" : "start_print", data, void 0, false);
         this._closeDialog();
-        this._toast(toQueue && data.start_at ? tr("Geplant für {at}: {name}", { at: fmtStart(Date.parse(data.start_at) / 1e3), name: g.file.name }) : toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name }) : tr("Druck gestartet: {name}", { name: g.file.name }));
+        this._toast(toQueue && data.after_prev ? tr("Direkt danach geplant: {name}", { name: g.file.name }) : toQueue && data.start_at ? tr("Geplant für {at}: {name}", { at: fmtStart(Date.parse(data.start_at) / 1e3), name: g.file.name }) : toQueue ? tr("In die Warteschlange gestellt: {name}", { name: g.file.name }) : tr("Druck gestartet: {name}", { name: g.file.name }));
       } catch (err) {
         if (this._dlg !== g) return;
         g.busy = false;
@@ -8466,7 +8800,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const chosen = opts.filter((o) => (cur || []).includes(o));
         const rest = opts.filter((o) => !(cur || []).includes(o));
         const fold = !f.option_labels && opts.length > 6 && chosen.length;
-        control = `<div class="cfg-multi" ${attr} data-multi>${fold ? `${chosen.map(chk).join("")}<details class="cfg-more"><summary>${tr("Weitere anzeigen ({n})", { n: rest.length })}</summary>${rest.map(chk).join("")}</details>` : opts.map(chk).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
+        control = `<div class="cfg-multi" ${attr} data-multi>${fold ? `${chosen.map(chk).join("")}<details class="cfg-more"><summary><ha-icon icon="mdi:playlist-plus"></ha-icon>${tr("Weitere anzeigen ({n})", { n: rest.length })}<ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>${rest.map(chk).join("")}</details>` : opts.map(chk).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
       } else if (f.type === "select") {
         const lab = (o) => f.option_labels && f.option_labels[o] || o;
         control = `<select ${attr}>${f.required ? "" : `<option value="">—</option>`}${(f.options || []).map((o) => `<option value="${esc(o)}" ${o === cur ? "selected" : ""}>${esc(lab(o))}</option>`).join("")}</select>`;
@@ -8901,6 +9235,37 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
 
   // frontend/src/card/spoolstock.js
   var SUGGEST_DELAY_MS = 250;
+  var VIEW_KEY = "snapmaker-u1-card.stock-view";
+  var SORTS = ["material", "rest", "used", "id"];
+  var loadView = () => {
+    try {
+      const v = JSON.parse(localStorage.getItem(VIEW_KEY) || "{}");
+      return { sort: SORTS.includes(v.sort) ? v.sort : "material", group: !!v.group };
+    } catch (_e) {
+      return { sort: "material", group: false };
+    }
+  };
+  var saveView = (v) => {
+    try {
+      localStorage.setItem(VIEW_KEY, JSON.stringify({ sort: v.sort, group: v.group }));
+    } catch (_e) {
+    }
+  };
+  var stockSorter = (key) => {
+    const base2 = (a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || "");
+    const rest = (s) => s.remaining_weight == null ? Infinity : s.remaining_weight;
+    const used = (s) => s.last_used ? Date.parse(s.last_used) || 0 : 0;
+    switch (key) {
+      case "rest":
+        return (a, b) => rest(a) - rest(b) || base2(a, b);
+      case "used":
+        return (a, b) => used(b) - used(a) || base2(a, b);
+      case "id":
+        return (a, b) => a.id - b.id;
+      default:
+        return base2;
+    }
+  };
   var rfidTemp = (v) => {
     const t = Array.isArray(v) ? v[0] : v;
     return Number.isFinite(Number(t)) && Number(t) > 0 ? Math.round(Number(t)) : "";
@@ -9014,17 +9379,18 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         ${empty ? `<button type="button" class="chip sm" data-emptyarch="${s.id}" title="${tr("Leere Spule archivieren")}">
           <ha-icon icon="mdi:archive-arrow-down-outline"></ha-icon><span>${tr("leer · archivieren")}</span></button>` : ""}
         <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
+        <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
       </div>`;
     }
     /** Tab "Spoolman": every active spool; filter and search work in place (no rebuild, focus stays). */
     _sectionSpools() {
       const sm = this._spoolman();
       if (!sm) return "";
-      const sorted = (list) => list.slice().sort((a, b) => (a.material || "").localeCompare(b.material || "") || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
+      const f = this._stockFilter || (this._stockFilter = { material: "", text: "", archived: false, ...loadView() });
+      const sorted = (list) => list.slice().sort(stockSorter(f.sort));
       const all = sorted(sm.spools || []);
       const heads = this._spoolHeads();
       const materials = [...new Set(all.map((s) => (s.material || "").toUpperCase()).filter(Boolean))].sort();
-      const f = this._stockFilter || (this._stockFilter = { material: "", text: "", archived: false });
       const low = sm.low || 0;
       const arch = f.archived ? this._archSpools : null;
       return `
@@ -9032,10 +9398,12 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         <div class="panel-head">
           <ha-icon icon="mdi:package-variant-closed"></ha-icon>
           <span class="panel-title">${tr("Spoolman-Bestand")}</span>
-          <button type="button" class="chip sm" data-stocklabels style="margin-left:auto" title="${tr("Etiketten für die angezeigten Spulen drucken")}">
+          <span class="panel-acts">
+          <button type="button" class="chip sm" data-stocklabels title="${tr("Etiketten für die angezeigten Spulen drucken")}">
             <ha-icon icon="mdi:qrcode"></ha-icon><span>${tr("Etiketten")}</span></button>
           <button type="button" class="chip sm" data-stocknew ${sm.online ? "" : "disabled"}>
             <ha-icon icon="mdi:plus"></ha-icon><span>${tr("Neue Spule")}</span></button>
+          </span>
         </div>
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
         <div class="t-label" data-stocksum></div>
@@ -9046,14 +9414,48 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <button type="button" class="chip sm" data-stockarch aria-pressed="${!!f.archived}" ${sm.online ? "" : "disabled"}>
             <ha-icon icon="mdi:archive-outline"></ha-icon><span>${tr("Archiviert")}</span></button>
         </div>
-        <div class="stock-list" data-activelist ${f.archived ? "hidden" : ""}>${all.map((s) => this._stockRow(s, heads, low)).join("")}</div>
-        <div class="stock-list" data-archlist ${f.archived ? "" : "hidden"}>${arch ? sorted(arch).map((s) => this._stockRow(s, heads, low, true)).join("") : ""}</div>
+        <div class="stock-view">
+          <label class="stock-sort"><ha-icon icon="mdi:sort"></ha-icon><span class="t-label">${tr("Sortieren")}</span>
+            <select data-stocksort>${[["material", tr("Material")], ["rest", tr("Rest")], ["used", tr("Zuletzt benutzt")], ["id", "ID"]].map(([k, l]) => `<option value="${k}" ${f.sort === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+          <button type="button" class="chip sm" data-stockgroup aria-pressed="${!!f.group}">
+            <ha-icon icon="mdi:map-marker-outline"></ha-icon><span>${tr("nach Lagerort")}</span></button>
+        </div>
+        <div class="stock-list" data-activelist ${f.archived ? "hidden" : ""}>${this._stockRows(all, heads, low, false)}</div>
+        <div class="stock-list" data-archlist ${f.archived ? "" : "hidden"}>${arch ? this._stockRows(sorted(arch), heads, low, true) : ""}</div>
         <div class="t-label" data-stockempty hidden>${f.archived ? tr("Keine archivierten Spulen.") : all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>
       </section>`;
+    }
+    /** Rows of a sorted list, grouped by location when switched on (no location = last group). */
+    _stockRows(list, heads, low, archived) {
+      const f = this._stockFilter;
+      if (!f.group) return list.map((s) => this._stockRow(s, heads, low, archived)).join("");
+      const groups = /* @__PURE__ */ new Map();
+      list.forEach((s) => {
+        const k = (s.location || "").trim();
+        if (!groups.has(k)) groups.set(k, []);
+        groups.get(k).push(s);
+      });
+      const keys = [...groups.keys()].sort((a, b) => !a - !b || a.localeCompare(b));
+      return keys.map((k) => `<div class="stock-grp" data-grp>
+        <div class="stock-grp-h"><ha-icon icon="mdi:map-marker-outline"></ha-icon>${esc(k || tr("Ohne Lagerort"))}</div>
+        ${groups.get(k).map((s) => this._stockRow(s, heads, low, archived)).join("")}</div>`).join("");
     }
     _wireSpools(r) {
       const sec = r.querySelector("[data-spools]");
       if (!sec) return;
+      const view = () => {
+        saveView(this._stockFilter);
+        this._renderKey = null;
+        this._render();
+      };
+      sec.querySelector("[data-stocksort]").addEventListener("change", (e) => {
+        this._stockFilter.sort = e.target.value;
+        view();
+      });
+      sec.querySelector("[data-stockgroup]").addEventListener("click", () => {
+        this._stockFilter.group = !this._stockFilter.group;
+        view();
+      });
       sec.querySelectorAll("[data-stockmat]").forEach((b) => b.addEventListener("click", () => {
         this._stockFilter.material = b.dataset.stockmat;
         this._filterSpools(sec);
@@ -9113,7 +9515,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         this._archSpools = res && res.spools || [];
         if (!res) this._toast(tr("Archivierte Spulen konnten nicht geladen werden."));
         const sm = this._spoolman() || {};
-        box.innerHTML = this._archSpools.map((s) => this._stockRow(s, this._spoolHeads(), sm.low || 0, true)).join("");
+        box.innerHTML = this._stockRows(this._archSpools.slice().sort(stockSorter(f.sort)), this._spoolHeads(), sm.low || 0, true);
         this._wireStockRows(sec);
       }
       this._filterSpools(sec);
@@ -9131,6 +9533,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           grams += Number(el.dataset.rest);
           value += Number(el.dataset.value);
         }
+      });
+      list.querySelectorAll("[data-grp]").forEach((g) => {
+        g.hidden = ![...g.querySelectorAll("[data-stock]")].some((el) => !el.hidden);
       });
       sec.querySelectorAll("[data-stockmat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stockmat === f.material)));
       sec.querySelector("[data-stockarch]").setAttribute("aria-pressed", String(!!f.archived));
@@ -9178,6 +9583,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         <div class="dlg-actions" data-spoolacts>
           <button type="button" class="outline" data-edit><ha-icon icon="mdi:pencil-outline"></ha-icon>${tr("Bearbeiten")}</button>
           <button type="button" class="outline" data-label><ha-icon icon="mdi:qrcode"></ha-icon>${tr("Etikett")}</button>
+          ${!archived && !headName ? `<button type="button" class="outline" data-tohead><ha-icon icon="mdi:printer-3d-nozzle-outline"></ha-icon>${tr("In Kopf legen")}</button>` : ""}
           ${archived ? `<button type="button" class="outline" data-restore><ha-icon icon="mdi:archive-arrow-up-outline"></ha-icon>${tr("Wiederherstellen")}</button>` : `<button type="button" class="outline" data-archive ${headName ? "disabled" : ""}><ha-icon icon="mdi:archive-arrow-down-outline"></ha-icon>${tr("Archivieren")}</button>`}
           ${admin ? `<button type="button" class="outline danger" data-delete ${headName ? "disabled" : ""}><ha-icon icon="mdi:delete-outline"></ha-icon>${tr("Löschen")}</button>` : ""}
         </div>
@@ -9186,6 +9592,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
       q("[data-close]").addEventListener("click", () => dlg.close());
       q("[data-label]").addEventListener("click", () => this._printLabels([s]));
       q("[data-edit]").addEventListener("click", () => this._editSpoolForm(id, archived));
+      if (q("[data-tohead]")) q("[data-tohead]").addEventListener("click", () => this._spoolToHead(id, dlg));
       if (q("[data-archive]")) q("[data-archive]").addEventListener("click", () => this._spoolArchive(id, true, dlg));
       if (q("[data-restore]")) q("[data-restore]").addEventListener("click", () => this._spoolArchive(id, false, dlg));
       if (q("[data-delete]")) q("[data-delete]").addEventListener("click", () => {
@@ -9197,6 +9604,45 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         q("[data-confirm]").addEventListener("click", () => this._spoolDelete(id, dlg));
       });
       this._showDialog(dlg);
+    }
+    /**
+     * 2.4.0b4 "Put in head": pick a head, then the same set_spool service as the head panel.
+     * The head that prints right now stays locked during a print. Each choice shows what the
+     * printer reports there, so a wrong material is visible before tapping.
+     */
+    _spoolToHead(id, dlg) {
+      const s = this._stockSpool(id);
+      const acts = dlg.querySelector("[data-spoolacts]");
+      if (!s || !acts) return;
+      const d = this._d;
+      const heads = (d.heads || []).map((h, i) => {
+        const cur = this._slotSpool(i);
+        const locked = d.active && h.active;
+        const what = [h.loaded ? h.material : tr("Leer"), cur ? `#${cur.id}` : ""].filter(Boolean).join(" · ");
+        return `<button type="button" class="chip" data-headpick="${i}" ${locked ? "disabled" : ""}
+          title="${esc(locked ? tr("Druckt gerade") : what)}"><span class="spool-dot" style="--fil:${esc(h.color)}"></span>
+          <span>${esc(h.name)}</span><span class="t-label">${esc(locked ? tr("druckt") : what)}</span></button>`;
+      }).join("");
+      acts.innerHTML = `<div class="t-label" style="flex-basis:100%">${tr("In welchen Kopf kommt Spule #{id}?", { id })}</div>
+      <div class="chips" style="flex-basis:100%">${heads}</div>
+      <button type="button" class="outline" data-cancel>${tr("Abbrechen")}</button>`;
+      acts.querySelector("[data-cancel]").addEventListener("click", () => this._spoolDetail(id, false));
+      acts.querySelectorAll("[data-headpick]").forEach((b) => b.addEventListener("click", async () => {
+        const idx = Number(b.dataset.headpick);
+        acts.querySelectorAll("button").forEach((x) => {
+          x.disabled = true;
+        });
+        try {
+          await this._hass.callService(DOMAIN, "set_spool", { slot: idx + 1, spool_id: id, ...this._entryData() }, void 0, false);
+          dlg.close();
+          this._toast(tr("Spule #{id} in {head}", { id, head: (d.heads[idx] || {}).name || `E${idx}` }));
+        } catch (err) {
+          const box = dlg.querySelector(".dlg-error");
+          box.hidden = false;
+          box.textContent = err && (err.message || err.error) || String(err);
+          this._spoolToHead(id, dlg);
+        }
+      }));
     }
     /** Own Spoolman fields {spool, filament}; asked once per page, empty lists if Spoolman has none. */
     async _smFieldsLoad() {
@@ -9241,7 +9687,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <label class="wide">${tr("Kommentar")}<textarea name="comment" maxlength="1024" rows="2">${val(sp.comment)}</textarea></label>
           ${fl.spool.map((x) => extraInput(x, sp.extra[x.key] ?? null, "s")).join("")}
           <details class="wide more-fields" data-filpart>
-            <summary>${tr("Filament")}</summary>
+            <summary><ha-icon icon="mdi:printer-3d-nozzle-outline"></ha-icon><span>${tr("Filament")}</span><span class="t-label">${tr("antippen zum Ändern")}</span><ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
             <div class="t-label">${res.filament_spools > 1 ? tr("Gilt für alle {n} Spulen dieses Filaments.", { n: res.filament_spools }) : tr("Gilt für das Filament dieser Spule.")}</div>
             <div class="head-form">
               <label>${tr("Name")}<input name="f_name" maxlength="64" value="${val(fil.name)}" /></label>
@@ -9476,7 +9922,7 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
           <label>${tr("Preis")}<input name="price" type="number" min="0" max="10000" step="0.01" placeholder="${tr("optional")}" /></label>
           <label>${tr("Ort")}<input name="location" maxlength="64" placeholder="${tr("optional")}" /></label>
           <details class="wide more-fields">
-            <summary>${tr("Weitere Angaben")}</summary>
+            <summary><ha-icon icon="mdi:tune-variant"></ha-icon><span>${tr("Weitere Angaben")}</span><span class="t-label">${tr("antippen zum Ändern")}</span><ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
             <div class="t-label">${tr("Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.")}</div>
             <div class="head-form">
               <label>${tr("Düsentemperatur (°C)")}<input name="extruder_temp" type="number" min="150" max="350" step="1" value="${rfidTemp(rfid.nozzle_temp)}" placeholder="${tr("optional")}" /></label>

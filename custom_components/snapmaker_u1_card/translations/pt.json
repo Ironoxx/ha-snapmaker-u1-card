@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "Perguntar «mesa livre?»",
           "description": "À hora de início, perguntar primeiro na notificação e no cartão se a mesa está livre. Desligado = inicia sozinho assim que a impressora estiver livre."
+        },
+        "after_prev": {
+          "name": "Logo após o trabalho anterior",
+          "description": "Inicia quando o trabalho em curso ou anterior terminar, sempre com a pergunta «mesa livre?». Substitui a hora de início."
         }
       }
     },

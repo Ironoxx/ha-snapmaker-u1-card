@@ -140,7 +140,7 @@ export const SettingsMixin = (Base) => class extends Base {
       const rest = opts.filter((o) => !(cur || []).includes(o));
       const fold = !f.option_labels && opts.length > 6 && chosen.length;
       control = `<div class="cfg-multi" ${attr} data-multi>${fold
-        ? `${chosen.map(chk).join("")}<details class="cfg-more"><summary>${tr("Weitere anzeigen ({n})", { n: rest.length })}</summary>${rest.map(chk).join("")}</details>`
+        ? `${chosen.map(chk).join("")}<details class="cfg-more"><summary><ha-icon icon="mdi:playlist-plus"></ha-icon>${tr("Weitere anzeigen ({n})", { n: rest.length })}<ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>${rest.map(chk).join("")}</details>`
         : opts.map(chk).join("") || `<span class="t-label">${tr("keine verfügbar")}</span>`}</div>`;
     } else if (f.type === "select") {
       const lab = (o) => (f.option_labels && f.option_labels[o]) || o;

@@ -516,7 +516,8 @@ def _delta(start: float | None, end: float | None) -> float | None:
 
 # Fields of the running print that move into the record when it finishes.
 _CARRY = ("name", "thumb", "filaments", "filament_total", "filament_used", "print_duration",
-          "map_table", "spool_ids", "spool_start", "moonraker_spools", "source", "mapping", "options", "pause_layers", "begin_s",
+          "map_table", "spool_ids", "spool_start", "spool_changes", "moonraker_spools", "source", "mapping", "options",
+          "pause_layers", "begin_s",
           "slicer_print_s")
 
 
@@ -1110,6 +1111,30 @@ def _color_close(slot: dict[str, Any], spool: dict[str, Any]) -> bool:
     if not slot.get("color") or not spool.get("color"):
         return True  # without a colour the material decides
     return color_distance(slot["color"], spool["color"]) <= SPOOL_COLOR_LIMIT
+
+
+GENERIC_VENDORS = {"", "GENERIC", "SNAPMAKER"}  # what the display sets without RFID: says nothing
+
+
+def spool_fits_slot(slot: dict[str, Any], spool: dict[str, Any]) -> bool:
+    """2.4.0b4: is the loaded filament plausibly still this spool (offer it again)?
+
+    Same material, a close colour and – only when the printer reports a real
+    vendor (RFID or chosen on the display) – the same vendor. A head reloaded
+    with Sunlu PETG must not be offered the Creality spool it had before.
+
+    The stock firmware reports "PLA Generic" for every spool without a tag after
+    loading (its default, not what is loaded): that says nothing, so the old
+    spool is still offered then (the card also offers "choose another spool").
+    """
+    vendor = (slot.get("vendor") or "").strip().upper()
+    if (slot.get("type") or "PLA").strip().upper() == "PLA" and vendor in GENERIC_VENDORS:
+        return True  # firmware default after loading – unknown, keep offering
+    if _spool_score(slot, spool)[0] != 0 or not _color_close(slot, spool):
+        return False
+    if vendor not in GENERIC_VENDORS and spool.get("vendor"):
+        return vendor == str(spool["vendor"]).strip().upper()
+    return True
 
 
 def suggest_spools(

@@ -24,6 +24,11 @@
  * collapsed "more details" part. Labels: QR code (link to the spool in
  * Spoolman, own encoder in qr.js) with the main data, previewed in the dialog,
  * printed from a hidden iframe or saved as an HTML file.
+ *
+ * 2.4.0b4: the list can be sorted (material, remaining, last used, ID) and
+ * grouped by location – remembered per browser (localStorage, a convenience
+ * only). "Put in head" in the details assigns the spool to a head with the
+ * existing set_spool service.
  */
 
 import { DOMAIN } from "../const.js";
@@ -32,6 +37,35 @@ import { tr } from "../i18n.js";
 import { qrSvg } from "../qr.js";
 
 const SUGGEST_DELAY_MS = 250;
+const VIEW_KEY = "snapmaker-u1-card.stock-view";
+const SORTS = ["material", "rest", "used", "id"];
+
+/** Sort and grouping of the stock list from this browser (never required: falls back to the defaults). */
+const loadView = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem(VIEW_KEY) || "{}");
+    return { sort: SORTS.includes(v.sort) ? v.sort : "material", group: !!v.group };
+  } catch (_e) {
+    return { sort: "material", group: false };
+  }
+};
+const saveView = (v) => {
+  try { localStorage.setItem(VIEW_KEY, JSON.stringify({ sort: v.sort, group: v.group })); } catch (_e) { /* private mode */ }
+};
+
+/** Sorter for a stock view key; ties fall back to material, vendor, name. */
+const stockSorter = (key) => {
+  const base = (a, b) => (a.material || "").localeCompare(b.material || "")
+    || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || "");
+  const rest = (s) => (s.remaining_weight == null ? Infinity : s.remaining_weight);
+  const used = (s) => (s.last_used ? Date.parse(s.last_used) || 0 : 0);
+  switch (key) {
+    case "rest": return (a, b) => rest(a) - rest(b) || base(a, b);
+    case "used": return (a, b) => used(b) - used(a) || base(a, b);
+    case "id": return (a, b) => a.id - b.id;
+    default: return base;
+  }
+};
 
 /** First temperature of an RFID tag value (list or number) for a form field, "" if none. */
 const rfidTemp = (v) => {
@@ -140,6 +174,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
         ${empty ? `<button type="button" class="chip sm" data-emptyarch="${s.id}" title="${tr("Leere Spule archivieren")}">
           <ha-icon icon="mdi:archive-arrow-down-outline"></ha-icon><span>${tr("leer · archivieren")}</span></button>` : ""}
         <span class="spool-rest">${rest != null ? `${Math.round(rest)} g` : "–"}</span>
+        <ha-icon class="row-go" icon="mdi:chevron-right" aria-hidden="true"></ha-icon>
       </div>`;
   }
 
@@ -147,12 +182,11 @@ export const SpoolStockMixin = (Base) => class extends Base {
   _sectionSpools() {
     const sm = this._spoolman();
     if (!sm) return "";
-    const sorted = (list) => list.slice().sort((a, b) => (a.material || "").localeCompare(b.material || "")
-      || (a.vendor || "").localeCompare(b.vendor || "") || (a.name || "").localeCompare(b.name || ""));
+    const f = this._stockFilter || (this._stockFilter = { material: "", text: "", archived: false, ...loadView() });
+    const sorted = (list) => list.slice().sort(stockSorter(f.sort));
     const all = sorted(sm.spools || []);
     const heads = this._spoolHeads();
     const materials = [...new Set(all.map((s) => (s.material || "").toUpperCase()).filter(Boolean))].sort();
-    const f = this._stockFilter || (this._stockFilter = { material: "", text: "", archived: false });
     const low = sm.low || 0;
     const arch = f.archived ? this._archSpools : null; // loaded on demand, kept across rebuilds
     return `
@@ -160,10 +194,12 @@ export const SpoolStockMixin = (Base) => class extends Base {
         <div class="panel-head">
           <ha-icon icon="mdi:package-variant-closed"></ha-icon>
           <span class="panel-title">${tr("Spoolman-Bestand")}</span>
-          <button type="button" class="chip sm" data-stocklabels style="margin-left:auto" title="${tr("Etiketten für die angezeigten Spulen drucken")}">
+          <span class="panel-acts">
+          <button type="button" class="chip sm" data-stocklabels title="${tr("Etiketten für die angezeigten Spulen drucken")}">
             <ha-icon icon="mdi:qrcode"></ha-icon><span>${tr("Etiketten")}</span></button>
           <button type="button" class="chip sm" data-stocknew ${sm.online ? "" : "disabled"}>
             <ha-icon icon="mdi:plus"></ha-icon><span>${tr("Neue Spule")}</span></button>
+          </span>
         </div>
         ${sm.online ? "" : `<div class="dlg-note" data-tone="error"><ha-icon icon="mdi:database-off"></ha-icon>${tr("Spoolman nicht erreichbar")}${sm.error ? `: ${esc(sm.error)}` : ""}</div>`}
         <div class="t-label" data-stocksum></div>
@@ -174,16 +210,43 @@ export const SpoolStockMixin = (Base) => class extends Base {
           <button type="button" class="chip sm" data-stockarch aria-pressed="${!!f.archived}" ${sm.online ? "" : "disabled"}>
             <ha-icon icon="mdi:archive-outline"></ha-icon><span>${tr("Archiviert")}</span></button>
         </div>
-        <div class="stock-list" data-activelist ${f.archived ? "hidden" : ""}>${all.map((s) => this._stockRow(s, heads, low)).join("")}</div>
-        <div class="stock-list" data-archlist ${f.archived ? "" : "hidden"}>${arch ? sorted(arch).map((s) => this._stockRow(s, heads, low, true)).join("") : ""}</div>
+        <div class="stock-view">
+          <label class="stock-sort"><ha-icon icon="mdi:sort"></ha-icon><span class="t-label">${tr("Sortieren")}</span>
+            <select data-stocksort>${[["material", tr("Material")], ["rest", tr("Rest")], ["used", tr("Zuletzt benutzt")], ["id", "ID"]]
+              .map(([k, l]) => `<option value="${k}" ${f.sort === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+          <button type="button" class="chip sm" data-stockgroup aria-pressed="${!!f.group}">
+            <ha-icon icon="mdi:map-marker-outline"></ha-icon><span>${tr("nach Lagerort")}</span></button>
+        </div>
+        <div class="stock-list" data-activelist ${f.archived ? "hidden" : ""}>${this._stockRows(all, heads, low, false)}</div>
+        <div class="stock-list" data-archlist ${f.archived ? "" : "hidden"}>${arch ? this._stockRows(sorted(arch), heads, low, true) : ""}</div>
         <div class="t-label" data-stockempty hidden>${f.archived ? tr("Keine archivierten Spulen.")
           : all.length ? tr("Keine Spule passt zum Filter.") : tr("Keine aktiven Spulen in Spoolman.")}</div>
       </section>`;
   }
 
+  /** Rows of a sorted list, grouped by location when switched on (no location = last group). */
+  _stockRows(list, heads, low, archived) {
+    const f = this._stockFilter;
+    if (!f.group) return list.map((s) => this._stockRow(s, heads, low, archived)).join("");
+    const groups = new Map();
+    list.forEach((s) => {
+      const k = (s.location || "").trim();
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(s);
+    });
+    const keys = [...groups.keys()].sort((a, b) => (!a) - (!b) || a.localeCompare(b));
+    return keys.map((k) => `<div class="stock-grp" data-grp>
+        <div class="stock-grp-h"><ha-icon icon="mdi:map-marker-outline"></ha-icon>${esc(k || tr("Ohne Lagerort"))}</div>
+        ${groups.get(k).map((s) => this._stockRow(s, heads, low, archived)).join("")}</div>`).join("");
+  }
+
   _wireSpools(r) {
     const sec = r.querySelector("[data-spools]");
     if (!sec) return;
+    // 2.4.0b4: sorting and grouping rebuild the card part (remembered in this browser)
+    const view = () => { saveView(this._stockFilter); this._renderKey = null; this._render(); };
+    sec.querySelector("[data-stocksort]").addEventListener("change", (e) => { this._stockFilter.sort = e.target.value; view(); });
+    sec.querySelector("[data-stockgroup]").addEventListener("click", () => { this._stockFilter.group = !this._stockFilter.group; view(); });
     sec.querySelectorAll("[data-stockmat]").forEach((b) => b.addEventListener("click", () => {
       this._stockFilter.material = b.dataset.stockmat;
       this._filterSpools(sec);
@@ -232,7 +295,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
       this._archSpools = (res && res.spools) || [];
       if (!res) this._toast(tr("Archivierte Spulen konnten nicht geladen werden."));
       const sm = this._spoolman() || {};
-      box.innerHTML = this._archSpools.map((s) => this._stockRow(s, this._spoolHeads(), sm.low || 0, true)).join("");
+      box.innerHTML = this._stockRows(this._archSpools.slice().sort(stockSorter(f.sort)), this._spoolHeads(), sm.low || 0, true);
       this._wireStockRows(sec);
     }
     this._filterSpools(sec);
@@ -249,6 +312,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
       el.hidden = !show;
       if (show) { n++; grams += Number(el.dataset.rest); value += Number(el.dataset.value); }
     });
+    list.querySelectorAll("[data-grp]").forEach((g) => { g.hidden = ![...g.querySelectorAll("[data-stock]")].some((el) => !el.hidden); });
     sec.querySelectorAll("[data-stockmat]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.stockmat === f.material)));
     sec.querySelector("[data-stockarch]").setAttribute("aria-pressed", String(!!f.archived));
     sec.querySelector("[data-stocksum]").textContent =
@@ -297,6 +361,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
         <div class="dlg-actions" data-spoolacts>
           <button type="button" class="outline" data-edit><ha-icon icon="mdi:pencil-outline"></ha-icon>${tr("Bearbeiten")}</button>
           <button type="button" class="outline" data-label><ha-icon icon="mdi:qrcode"></ha-icon>${tr("Etikett")}</button>
+          ${!archived && !headName ? `<button type="button" class="outline" data-tohead><ha-icon icon="mdi:printer-3d-nozzle-outline"></ha-icon>${tr("In Kopf legen")}</button>` : ""}
           ${archived
             ? `<button type="button" class="outline" data-restore><ha-icon icon="mdi:archive-arrow-up-outline"></ha-icon>${tr("Wiederherstellen")}</button>`
             : `<button type="button" class="outline" data-archive ${headName ? "disabled" : ""}><ha-icon icon="mdi:archive-arrow-down-outline"></ha-icon>${tr("Archivieren")}</button>`}
@@ -307,6 +372,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
     q("[data-close]").addEventListener("click", () => dlg.close());
     q("[data-label]").addEventListener("click", () => this._printLabels([s]));
     q("[data-edit]").addEventListener("click", () => this._editSpoolForm(id, archived));
+    if (q("[data-tohead]")) q("[data-tohead]").addEventListener("click", () => this._spoolToHead(id, dlg));
     if (q("[data-archive]")) q("[data-archive]").addEventListener("click", () => this._spoolArchive(id, true, dlg));
     if (q("[data-restore]")) q("[data-restore]").addEventListener("click", () => this._spoolArchive(id, false, dlg));
     if (q("[data-delete]")) q("[data-delete]").addEventListener("click", () => {
@@ -319,6 +385,44 @@ export const SpoolStockMixin = (Base) => class extends Base {
       q("[data-confirm]").addEventListener("click", () => this._spoolDelete(id, dlg));
     });
     this._showDialog(dlg);
+  }
+
+  /**
+   * 2.4.0b4 "Put in head": pick a head, then the same set_spool service as the head panel.
+   * The head that prints right now stays locked during a print. Each choice shows what the
+   * printer reports there, so a wrong material is visible before tapping.
+   */
+  _spoolToHead(id, dlg) {
+    const s = this._stockSpool(id);
+    const acts = dlg.querySelector("[data-spoolacts]");
+    if (!s || !acts) return;
+    const d = this._d;
+    const heads = (d.heads || []).map((h, i) => {
+      const cur = this._slotSpool(i);
+      const locked = d.active && h.active;
+      const what = [h.loaded ? h.material : tr("Leer"), cur ? `#${cur.id}` : ""].filter(Boolean).join(" · ");
+      return `<button type="button" class="chip" data-headpick="${i}" ${locked ? "disabled" : ""}
+          title="${esc(locked ? tr("Druckt gerade") : what)}"><span class="spool-dot" style="--fil:${esc(h.color)}"></span>
+          <span>${esc(h.name)}</span><span class="t-label">${esc(locked ? tr("druckt") : what)}</span></button>`;
+    }).join("");
+    acts.innerHTML = `<div class="t-label" style="flex-basis:100%">${tr("In welchen Kopf kommt Spule #{id}?", { id })}</div>
+      <div class="chips" style="flex-basis:100%">${heads}</div>
+      <button type="button" class="outline" data-cancel>${tr("Abbrechen")}</button>`;
+    acts.querySelector("[data-cancel]").addEventListener("click", () => this._spoolDetail(id, false));
+    acts.querySelectorAll("[data-headpick]").forEach((b) => b.addEventListener("click", async () => {
+      const idx = Number(b.dataset.headpick);
+      acts.querySelectorAll("button").forEach((x) => { x.disabled = true; });
+      try {
+        await this._hass.callService(DOMAIN, "set_spool", { slot: idx + 1, spool_id: id, ...this._entryData() }, undefined, false);
+        dlg.close();
+        this._toast(tr("Spule #{id} in {head}", { id, head: (d.heads[idx] || {}).name || `E${idx}` }));
+      } catch (err) {
+        const box = dlg.querySelector(".dlg-error");
+        box.hidden = false;
+        box.textContent = (err && (err.message || err.error)) || String(err);
+        this._spoolToHead(id, dlg);
+      }
+    }));
   }
 
   /** Own Spoolman fields {spool, filament}; asked once per page, empty lists if Spoolman has none. */
@@ -365,7 +469,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
           <label class="wide">${tr("Kommentar")}<textarea name="comment" maxlength="1024" rows="2">${val(sp.comment)}</textarea></label>
           ${fl.spool.map((x) => extraInput(x, sp.extra[x.key] ?? null, "s")).join("")}
           <details class="wide more-fields" data-filpart>
-            <summary>${tr("Filament")}</summary>
+            <summary><ha-icon icon="mdi:printer-3d-nozzle-outline"></ha-icon><span>${tr("Filament")}</span><span class="t-label">${tr("antippen zum Ändern")}</span><ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
             <div class="t-label">${res.filament_spools > 1 ? tr("Gilt für alle {n} Spulen dieses Filaments.", { n: res.filament_spools }) : tr("Gilt für das Filament dieser Spule.")}</div>
             <div class="head-form">
               <label>${tr("Name")}<input name="f_name" maxlength="64" value="${val(fil.name)}" /></label>
@@ -597,7 +701,7 @@ export const SpoolStockMixin = (Base) => class extends Base {
           <label>${tr("Preis")}<input name="price" type="number" min="0" max="10000" step="0.01" placeholder="${tr("optional")}" /></label>
           <label>${tr("Ort")}<input name="location" maxlength="64" placeholder="${tr("optional")}" /></label>
           <details class="wide more-fields">
-            <summary>${tr("Weitere Angaben")}</summary>
+            <summary><ha-icon icon="mdi:tune-variant"></ha-icon><span>${tr("Weitere Angaben")}</span><span class="t-label">${tr("antippen zum Ändern")}</span><ha-icon class="caret" icon="mdi:chevron-down"></ha-icon></summary>
             <div class="t-label">${tr("Temperaturen, Dichte, Durchmesser und Artikelnummer gehören zum Filament und gelten nur, wenn es neu angelegt wird.")}</div>
             <div class="head-form">
               <label>${tr("Düsentemperatur (°C)")}<input name="extruder_temp" type="number" min="150" max="350" step="1" value="${rfidTemp(rfid.nozzle_temp)}" placeholder="${tr("optional")}" /></label>

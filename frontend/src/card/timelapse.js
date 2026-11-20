@@ -7,56 +7,94 @@ export const TimelapseMixin = (Base) => class extends Base {
   _sectionTimelapse() {
     const tl = this._d.timelapses;
     if (!tl) return "";
-    const tiles = tl.videos.length ? tl.videos.slice(0, this._cfg.timelapse_limit || 8).map((v, i) => `
-        <button class="file tl" data-video="${i}" title="${esc(v.path)}">
-          <span class="file-thumb tl-thumb">
-            ${v.poster_url || v.thumb_url ? `<img src="${esc(v.poster_url || v.thumb_url)}" alt="" loading="lazy" />` : ""}
-            <ha-icon icon="mdi:play-circle" class="tl-play"></ha-icon>
-          </span>
-          <span class="file-name">${esc(v.name)}</span>
-          <span class="file-meta">${esc(fmtDate(v.recorded || (v.modified ? new Date(v.modified * 1000).toISOString() : null)))}${v.size ? ` · ${(v.size / 1048576).toFixed(0)} MB` : ""}</span>
-        </button>`).join("")
-      : `<div class="t-label">${tr("Keine Zeitraffer auf dem Drucker. Aufnahme im Druckdialog unter „Zeitraffer“ einschalten.")}</div>`;
+    const a = tl.archive;
+    const limit = this._cfg.timelapse_limit || 8;
+    let body;
+    let count;
+    if (a) {
+      // 2.4.0b4: one list. Backed-up videos (play always, also with the printer off) plus
+      // the ones only on the printer, marked and playable only while it is on.
+      const items = this._timelapseItems(tl, a).slice(0, limit);
+      count = items.length;
+      body = `${this._archiveStatus(a)}
+        ${items.length ? `<div class="files">${items.map((it) => this._tlTile(it, tl.playable)).join("")}</div>`
+          : `<div class="t-label">${tr("Keine Zeitraffer auf dem Drucker. Aufnahme im Druckdialog unter „Zeitraffer“ einschalten.")}</div>`}`;
+    } else {
+      count = tl.videos.length;
+      body = tl.videos.length ? `<div class="files">${tl.videos.slice(0, limit).map((v, i) => this._tlTile({
+        kind: "p", index: i, name: v.name, poster: v.poster_url || v.thumb_url,
+        ts: v.recorded ? Date.parse(v.recorded) / 1000 : v.modified, size: v.size, title: v.path,
+      }, true)).join("")}</div>`
+        : `<div class="t-label">${tr("Keine Zeitraffer auf dem Drucker. Aufnahme im Druckdialog unter „Zeitraffer“ einschalten.")}</div>`;
+    }
     return `
       <section class="panel span2">
         <details ${this._cfg.compact ? "" : "open"}>
           <summary>
             <ha-icon icon="mdi:filmstrip-box-multiple"></ha-icon>
             <span>${tr("Zeitraffer")}</span>
-            ${tl.videos.length ? `<span class="t-label" style="margin-left:auto">${tl.videos.length}</span>` : ""}
+            ${count ? `<span class="t-label" style="margin-left:auto">${count}</span>` : ""}
             <ha-icon class="caret" icon="mdi:chevron-down"></ha-icon>
           </summary>
-          <div class="body"><div class="files">${tiles}</div>${this._archiveBlock(tl.archive)}</div>
+          <div class="body">${body}</div>
         </details>
       </section>`;
   }
 
-  _archiveBlock(a) {
-    if (!a) return "";
+  /**
+   * 2.4.0b4: backed-up videos and the ones only on the printer as one list, newest first.
+   * A video in both places counts once, as the backup (same file name, see archive.py).
+   */
+  _timelapseItems(tl, a) {
+    const backed = new Set((a.videos || []).map((v) => v.file));
+    const items = (a.videos || []).map((v, i) => ({
+      kind: "a", index: i, name: archiveName(v.file), poster: v.poster_url, ts: v.modified, size: v.size, title: v.file,
+    }));
+    tl.videos.forEach((v, i) => {
+      const file = (v.path || "").split("/").pop();
+      if (backed.has(file)) return;
+      items.push({ kind: "p", index: i, name: v.name, poster: v.poster_url || v.thumb_url, title: v.path,
+        ts: v.recorded ? Date.parse(v.recorded) / 1000 : v.modified, size: v.size, onlyPrinter: true });
+    });
+    return items.sort((x, y) => (y.ts || 0) - (x.ts || 0));
+  }
+
+  _tlTile(it, playable) {
+    const off = it.kind === "p" && !playable;
+    return `
+        <button class="file tl" data-tlvid="${it.kind}:${it.index}" title="${esc(it.title || it.name)}" ${off ? 'aria-disabled="true" data-off="1"' : ""}>
+          <span class="file-thumb tl-thumb">
+            ${it.poster ? `<img src="${esc(it.poster)}" alt="" loading="lazy" />` : ""}
+            <ha-icon icon="${off ? "mdi:power-plug-off" : "mdi:play-circle"}" class="tl-play"></ha-icon>
+          </span>
+          <span class="file-name">${esc(it.name)}</span>
+          <span class="file-meta">${esc(fmtDate(it.ts ? new Date(it.ts * 1000).toISOString() : null))}${it.size ? ` · ${(it.size / 1048576).toFixed(0)} MB` : ""}</span>
+          ${it.onlyPrinter ? `<span class="chip sm tl-where" title="${tr("Noch nicht in Home Assistant gesichert")}"><ha-icon icon="mdi:printer-3d"></ha-icon>${off ? tr("nur auf dem Drucker · Drucker aus") : tr("nur auf dem Drucker")}</span>` : ""}
+        </button>`;
+  }
+
+  /** Tap on a timelapse tile of the merged list (2.4.0b4). */
+  _tlOpen(ref) {
+    const [kind, idx] = String(ref).split(":");
+    if (kind === "a") return this._openArchive(Number(idx));
+    return this._openVideo(Number(idx));
+  }
+
+  /** Backup status line with "back up now" (the videos themselves are in the merged list). */
+  _archiveStatus(a) {
     const status = [
       a.busy ? tr("Sicherung läuft …") : a.last_backup ? tr("Zuletzt gesichert: {d}", { d: fmtDate(new Date(a.last_backup * 1000).toISOString()) }) : tr("Noch nichts gesichert."),
       a.keep > 0 ? (a.cleanup === "not_supported" ? tr("Löschen auf dem Drucker wird von der Firmware nicht unterstützt.")
         : tr("Auf dem Drucker bleiben die {n} neuesten.", { n: a.keep })) : null,
     ].filter(Boolean).join(" · ");
-    const tiles = (a.videos || []).slice(0, this._cfg.timelapse_limit || 8).map((v, i) => `
-        <button class="file tl" data-archive="${i}" title="${esc(v.file)}">
-          <span class="file-thumb tl-thumb">
-            ${v.poster_url ? `<img src="${esc(v.poster_url)}" alt="" loading="lazy" />` : ""}
-            <ha-icon icon="mdi:play-circle" class="tl-play"></ha-icon>
-          </span>
-          <span class="file-name">${esc(archiveName(v.file))}</span>
-          <span class="file-meta">${esc(fmtDate(new Date(v.modified * 1000).toISOString()))} · ${(v.size / 1048576).toFixed(0)} MB</span>
-        </button>`).join("");
     return `
       <div class="arch-head">
         <ha-icon icon="mdi:folder-play-outline"></ha-icon>
-        <span class="panel-title">${tr("Gesichert in Medien")} (${a.count})</span>
+        <span class="t-label">${tr("Gesichert in Medien")} (${a.count}) · ${esc(status)}</span>
         <button class="icon outline" data-act="backup" title="${tr("Jetzt sichern")}" ${a.busy ? "disabled" : ""}
           style="margin-left:auto"><ha-icon icon="${a.busy ? "mdi:loading" : "mdi:content-save-move-outline"}" class="${a.busy ? "spin" : ""}"></ha-icon></button>
       </div>
-      <div class="t-label">${esc(status)}</div>
-      ${(a.errors || []).length ? `<div class="t-label" style="color:var(--u1-error)">${a.errors.map(esc).join("<br>")}</div>` : ""}
-      ${tiles ? `<div class="files">${tiles}</div>` : ""}`;
+      ${(a.errors || []).length ? `<div class="t-label" style="color:var(--u1-error)">${a.errors.map(esc).join("<br>")}</div>` : ""}`;
   }
 
   /** Play a backed-up video via HA's media source (signed URL). */

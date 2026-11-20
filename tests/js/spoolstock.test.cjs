@@ -6,7 +6,7 @@ const assert = require("assert");
 const { JSDOM } = require("jsdom");
 
 const src = fs.readFileSync(process.argv[2] || path.join(__dirname, "../../custom_components/snapmaker_u1_card/frontend/snapmaker-u1-card.js"), "utf8");
-const dom = new JSDOM(`<!doctype html><body></body>`, { runScripts: "outside-only", pretendToBeVisual: true });
+const dom = new JSDOM(`<!doctype html><body></body>`, { url: "http://ha.local/", runScripts: "outside-only", pretendToBeVisual: true });
 const w = dom.window;
 w.HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
 w.HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); this.dispatchEvent(new w.Event("close")); };
@@ -191,5 +191,43 @@ const last = () => { const c = calls.at(-1); const d = { ...c[2] }; delete d.con
   dlg().querySelector("[data-editform]").dispatchEvent(new w.Event("submit", { cancelable: true })); await tick();
   assert.strictEqual(calls.length, n, "ohne Änderung kein Aufruf");
   assert.ok(dlg().querySelector("[data-edit]"), "zurück zu den Details");
+  dlg().close();
+
+  // 9. 2.4.0b4: sort and group by location, remembered in this browser
+  const order = () => [...sec().querySelectorAll("[data-activelist] [data-stock]")].map((el) => Number(el.dataset.stock));
+  assert.deepStrictEqual(order(), [6, 5, 1], "nach Material, dann Hersteller");
+  const sortSel = sec().querySelector("[data-stocksort]");
+  sortSel.value = "rest"; sortSel.dispatchEvent(new w.Event("change"));
+  assert.deepStrictEqual(order(), [5, 1, 6], "wenig Rest zuerst");
+  sortSel.value = "id"; sortSel.dispatchEvent(new w.Event("change"));
+  assert.deepStrictEqual(order(), [1, 5, 6]);
+  assert.match(w.localStorage.getItem("snapmaker-u1-card.stock-view"), /"sort":"id"/);
+  sec().querySelector("[data-stockgroup]").click();
+  assert.strictEqual(sec().querySelector("[data-stockgroup]").getAttribute("aria-pressed"), "true");
+  const groups = [...sec().querySelectorAll("[data-activelist] [data-grp] .stock-grp-h")].map((h) => h.textContent.trim());
+  assert.deepStrictEqual(groups, ["Regal", "Ohne Lagerort"], "Gruppen nach Lagerort, ohne Ort zuletzt");
+  // filtering hides a group with nothing left
+  sec().querySelector('[data-stockmat="PETG"]').click();
+  assert.ok(sec().querySelector("[data-grp]").hidden, "leere Gruppe ausgeblendet");
+  sec().querySelector('[data-stockmat=""]').click();
+  sec().querySelector("[data-stockgroup]").click();
+  assert.ok(!sec().querySelector("[data-grp]"));
+
+  // 10. 2.4.0b4: "Put in head" – head picker, then set_spool
+  row(1).click();
+  assert.ok(!dlg().querySelector("[data-tohead]"), "steckt schon in einem Kopf");
+  dlg().close();
+  row(6).click();
+  dlg().querySelector("[data-tohead]").click();
+  const picks = dlg().querySelectorAll("[data-headpick]");
+  assert.strictEqual(picks.length, 4);
+  assert.match(text(picks[0]), /PLA · #1/, "zeigt was im Kopf steckt");
+  picks[1].click(); await tick();
+  assert.deepStrictEqual(last(), ["set_spool", { slot: 2, spool_id: 6 }]);
+  assert.ok(!dlg().hasAttribute("open"), "Dialog zu nach dem Zuordnen");
+
+  // 11. 2.4.0b4: clickable things look clickable – chevrons on rows, caret on the summaries
+  assert.ok(row(1).querySelector("ha-icon.row-go"), "Pfeil an der Zeile");
+  assert.ok(sec().querySelector(".panel-acts [data-stocknew]"), "Kopfknöpfe gruppiert");
   console.log("SPOOLSTOCK OK –", calls.length, "service calls, labels in the dialog");
 })().catch((e) => { console.error(e); process.exit(1); });

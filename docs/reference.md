@@ -85,13 +85,16 @@ Moonraker's own queue (`[job_queue]`) is not loaded on the U1 and knows nothing 
 - `confirm_bed: true` (default): a notification (group 1) asks *Bed clear – start*; the button starts the job, so does *Start* on the job in the card. Without a confirmation the job waits.
 - `confirm_bed: false`: the job starts on its own as soon as the printer is free (switched on first with *auto on*); still printing = it waits for the end.
 - A time that passed while Home Assistant was not running is never made up for: the job is marked *missed* and announced. A refused start is kept on the job (*failed: …*) and announced, not retried.
+- 2.4.0b4: **a print ended in between** (the bed has a part on it): the question is always asked, also with `confirm_bed: false`. Only a job whose printer stayed untouched since it was planned starts on its own. Due while another print runs: the job waits for its end (`wait`), then asks. Never two jobs at once – one after the other.
+- 2.4.0b4: **right after** (`after_prev: true`, print dialog: *Print right after*): no start time; the job waits for the running print or the job before it and then always asks about the bed (with a camera image when a camera is set up).
+- The print dialog warns when a start time overlaps the running print or another planned job (start + file time).
 
 ```yaml
 action: snapmaker_u1_card.queue_add
 data: {filename: Holder.gcode, start_at: "2026-11-20 06:30:00", confirm_bed: true}
 ```
 
-The job's attribute `sched` in the queue sensor: empty (waiting for its time), `confirm`, `due`, `starting`, `missed`, `error` (with `sched_error`).
+The job's attribute `sched` in the queue sensor: empty (waiting for its time), `wait` (printer busy or an earlier job first, 2.4.0b4), `confirm`, `due`, `starting`, `missed`, `error` (with `sched_error`). `bed_used: true` = a print ended since the job was planned; `after_prev: true` = right after.
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 

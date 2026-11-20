@@ -118,6 +118,10 @@ queue_add:
       default: true
       selector:
         boolean:
+    after_prev:
+      default: false
+      selector:
+        boolean:
     config_entry_id:
       selector:
         config_entry:

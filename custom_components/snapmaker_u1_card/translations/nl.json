@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "Vragen „bed vrij?”",
           "description": "Op de starttijd eerst via de melding en de kaart vragen of het bed vrij is. Uit = start zelf zodra de printer vrij is."
+        },
+        "after_prev": {
+          "name": "Direct na de vorige taak",
+          "description": "Start wanneer de lopende of vorige taak klaar is, altijd met de vraag „bed vrij?”. Vervangt de starttijd."
         }
       }
     },

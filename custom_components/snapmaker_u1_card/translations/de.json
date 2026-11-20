@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "„Druckbett frei?“ fragen",
           "description": "Zur Startzeit erst per Benachrichtigung und in der Karte fragen, ob das Bett frei ist. Aus = startet selbst, sobald der Drucker frei ist."
+        },
+        "after_prev": {
+          "name": "Direkt nach dem vorigen Auftrag",
+          "description": "Startet, wenn der laufende bzw. vorige Auftrag fertig ist, immer mit der Rückfrage „Druckbett frei?“. Ersetzt die Startzeit."
         }
       }
     },

@@ -82,13 +82,16 @@ Moonrakers eigene Warteschlange (`[job_queue]`) ist auf dem U1 nicht geladen und
 - `confirm_bed: true` (Standard): Eine Benachrichtigung (Gruppe 1) fragt *Bett frei – starten*; der Knopf startet den Auftrag, ebenso *Starten* am Auftrag in der Karte. Ohne Bestätigung wartet der Auftrag.
 - `confirm_bed: false`: Der Auftrag startet selbst, sobald der Drucker frei ist (mit *automatisch einschalten* vorher eingeschaltet); druckt er noch, wartet der Auftrag bis zum Ende.
 - Eine Zeit, die verstrichen ist, während Home Assistant nicht lief, wird nie nachgeholt: Der Auftrag wird als *verpasst* markiert und gemeldet. Ein abgelehnter Start bleibt am Auftrag stehen (*fehlgeschlagen: …*) und wird gemeldet, nicht wiederholt.
+- 2.4.0b4: **Dazwischen ein Druck zu Ende gegangen** (auf dem Bett liegt ein Teil): Die Rückfrage kommt immer, auch mit `confirm_bed: false`. Nur ein Auftrag, dessen Drucker seit dem Planen unberührt blieb, startet selbst. Fällig, während ein anderer Druck läuft: Der Auftrag wartet auf dessen Ende (`wait`) und fragt dann. Nie zwei Aufträge gleichzeitig – einer nach dem anderen.
+- 2.4.0b4: **Direkt danach** (`after_prev: true`, Druckdialog: *Direkt danach drucken*): ohne Startzeit; der Auftrag wartet auf den laufenden Druck bzw. den Auftrag davor und fragt dann immer nach dem Druckbett (mit Kamerabild, wenn eine Kamera eingerichtet ist).
+- Der Druckdialog warnt, wenn sich eine Startzeit mit dem laufenden Druck oder einem anderen geplanten Auftrag (Start + Dateizeit) überschneidet.
 
 ```yaml
 action: snapmaker_u1_card.queue_add
 data: {filename: Halter.gcode, start_at: "2026-11-20 06:30:00", confirm_bed: true}
 ```
 
-Attribut `sched` des Auftrags im Warteschlangen-Sensor: leer (wartet auf seine Zeit), `confirm`, `due`, `starting`, `missed`, `error` (mit `sched_error`).
+Attribut `sched` des Auftrags im Warteschlangen-Sensor: leer (wartet auf seine Zeit), `wait` (Drucker belegt oder ein früherer Auftrag zuerst, 2.4.0b4), `confirm`, `due`, `starting`, `missed`, `error` (mit `sched_error`). `bed_used: true` = seit dem Planen ist ein Druck zu Ende gegangen; `after_prev: true` = direkt danach.
 
 ### `snapmaker_u1_card.maintenance_done` / `backup_timelapses` / `backup_config`
 

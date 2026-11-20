@@ -81,11 +81,12 @@ def mock_client():
          patch(f"{API}.firmware_version", AsyncMock(return_value="1.6.0")), \
          patch(f"{API}.firmware_config", AsyncMock(return_value=(404, None))) as fwc, \
          patch(f"{API}.server_time", AsyncMock(return_value=None)), \
+         patch(f"{API}.disk_usage", AsyncMock(return_value={"total": 8e9, "used": 7.5e9, "free": 0.5e9})) as disk, \
          patch(f"{API}.firmware_settings", AsyncMock(return_value=(404, None))), \
          patch(f"{API}.spoolman_status", AsyncMock(return_value={"spoolman_connected": True, "spool_id": None})) as sms, \
          patch(f"{API}.history_totals", AsyncMock(return_value={"total_print_time": 36000.0})):
         yield {"query": q, "download": dl, "start_print": sp, "ready": ready, "files": files, "components": comps,
-               "objects": objs, "firmware_config": fwc, "spoolman_status": sms}
+               "objects": objs, "firmware_config": fwc, "spoolman_status": sms, "disk_usage": disk}
 
 
 async def _setup(hass: HomeAssistant) -> MockConfigEntry:

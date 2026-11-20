@@ -1,16 +1,23 @@
 """Starting prints, "pause at layer" copies and the job queue.
 
-2.4: a queued job can carry a start time (``start_at``, epoch seconds). One
-timer per job (``async_track_point_in_utc_time``, no polling) makes it due:
+2.4: a queued job can carry a start time (``start_at``, epoch seconds) or wait
+for the job before it (``after_prev``, 2.4.0b4). One timer per timed job
+(``async_track_point_in_utc_time``, no polling); the rest runs from the
+coordinator listener after every update (``try_due_jobs``).
 
 * ``confirm_bed`` (default on): the job waits for "bed is clear" – card button
-  or the action button in the notification – before anything moves.
-* without it the job starts as soon as the printer is free (switched on first
-  with the option auto_on); still printing = it waits for the next update.
+  or the action button in the notification (with a camera image) – before
+  anything moves.
+* 2.4.0b4: a print that **ended after the job was planned** leaves its part on
+  the bed (``bed_used``): then the question is always asked, also without
+  ``confirm_bed``. Only a job whose printer stayed untouched starts on its own.
+* 2.4.0b4: due while another print runs → ``wait`` ("waits for the end"), no
+  question, no error; afterwards the question comes (bed is used then).
 
-Job field ``sched``: None (waiting for its time) | "confirm" | "due" | "starting" | "missed"
-(the time passed while Home Assistant was not running: never started blindly,
-only announced) | "error" (start refused, ``sched_error``).
+Job field ``sched``: None (waiting for its time) | "wait" (printer busy or an
+earlier job first) | "confirm" | "due" | "starting" | "missed" (the time passed
+while Home Assistant was not running: never started blindly, only announced) |
+"error" (start refused, ``sched_error``).
 """
 
 from __future__ import annotations
@@ -166,6 +173,9 @@ class PrintJobMixin:
 
     def queue_add(self, job: dict[str, Any]) -> dict[str, Any]:
         """Add a job to the queue and return it (``start_at``: epoch seconds or None)."""
+        if job.get("after_prev"):
+            # 2.4.0b4 "right after": waits for the running/earlier job, always with the bed question
+            job = {**job, "start_at": None, "confirm_bed": True, "sched": "wait"}
         if job.get("start_at") is not None and job["start_at"] < time.time() - 60:
             raise HomeAssistantError(tr(self.hass, "Die Startzeit liegt in der Vergangenheit.",
                                         "The start time is in the past."))
@@ -251,37 +261,80 @@ class PrintJobMixin:
 
     @callback
     def _job_due(self, job_id: str, _now: Any = None) -> None:
-        """The start time of a job is reached."""
+        """The start time of a job is reached: wait, ask or start (see module doc)."""
         self.__dict__.get("_job_timers", {}).pop(job_id, None)
         job = self.queue.get(job_id)
         if job is None:
             return
-        if job.get("confirm_bed", True):
-            job["sched"] = "confirm"
-            self._notify("queue", {"name": job.get("name"), "text": self._sched_text("confirm", job),
-                                   "job_id": job_id})
-        else:
-            job["sched"] = "due"
+        job["sched"] = "wait"
         self._queue_changed()
         self.try_due_jobs()
 
+    def _printer_busy(self) -> bool:
+        """A print runs (or is being started) – a due job has to wait for its end."""
+        data = self.data
+        return bool(self._starting or (data is not None and data.online and data.print_state in ACTIVE_PRINT_STATES))
+
+    def note_print_ended_for_jobs(self) -> None:
+        """2.4.0b4: a print ended – its part is on the bed for every job still waiting."""
+        changed = False
+        for job in self.queue.jobs:
+            if (job.get("start_at") or job.get("after_prev")) and job.get("sched") in (None, "wait", "due"):
+                job["bed_used"] = True
+                changed = True
+        if changed:
+            self._save()
+
     @callback
     def try_due_jobs(self) -> None:
-        """Start the first due job (no bed question) once the printer is free.
+        """Move scheduled jobs on once the printer is free; one job at a time.
 
         Coordinator listener: runs after every update with the new data in place
-        (inside the update ``self.data`` would still be the old snapshot).
+        (inside the update ``self.data`` would still be the old snapshot). Order:
+        the earliest waiting job (queue order); nothing moves while a job already
+        waits for its confirmation or is being started.
         """
-        job = next((j for j in self.queue.jobs if j.get("sched") == "due"), None)
-        if job is None or self._starting or self.shutting_down:
+        if self.shutting_down or self._printer_busy():
+            return
+        jobs = self.queue.jobs
+        if any(j.get("sched") in ("confirm", "starting") for j in jobs):
+            return
+        job = next((j for j in jobs if j.get("sched") in ("wait", "due")), None)
+        if job is None:
             return
         data = self.data
-        if data is not None and data.online and data.print_state in ACTIVE_PRINT_STATES:
-            return  # still printing: wait for the next update
+        if job.get("confirm_bed", True) or job.get("bed_used"):
+            job["sched"] = "confirm"
+            self._ask_bed(job)
+            self._queue_changed()
+            return
         if (data is None or not data.online) and not (self.power_is_off() and self.options.get("auto_on")):
-            return  # off without auto-on (or not reachable): wait until it is back
+            job["sched"] = "due"  # off without auto-on (or not reachable): wait until it is back
+            return
         job["sched"] = "starting"  # not picked up again by the next listener call
         self.hass.async_create_task(self._start_due(job["id"]), "snapmaker_u1_card scheduled print")
+
+    def _ask_bed(self, job: dict[str, Any]) -> None:
+        """Notification "bed is clear – start" with the camera image (2.4.0b4: camera woken first)."""
+        if self.camera_entity() and self.data is not None and self.data.online:
+            self.hass.async_create_task(self.async_camera_wake_once(), "snapmaker_u1_card camera wake")
+        self._notify("queue", {"name": job.get("name"),
+                               "text": self._sched_text("used" if job.get("bed_used") else "confirm", job),
+                               "job_id": job["id"]})
+
+    async def confirm_job(self, job_id: str) -> None:
+        """"Bed clear – start" (notification or card): start, or wait if a print still runs."""
+        job = self.queue.get(job_id)
+        if job is None:
+            return
+        if self._printer_busy():
+            # not an error: ask again after the end (the bed is used by then)
+            job["sched"], job["bed_used"] = "wait", True
+            self._notify("queue", {"name": job.get("name"), "text": self._sched_text("busy", job), "no_image": True})
+            self._queue_changed()
+            return
+        job["sched"] = "starting"
+        await self._start_due(job_id)
 
     async def _start_due(self, job_id: str) -> None:
         """Start a scheduled job; a refusal is kept on the job and announced, not retried."""
@@ -292,20 +345,30 @@ class PrintJobMixin:
             await self.queue_start(job_id)
             _LOGGER.info("Scheduled job %s started", job.get("file"))
         except HomeAssistantError as err:
-            job["sched"], job["sched_error"] = "error", str(err)
-            self._notify("queue", {"name": job.get("name"), "text": self._sched_text("error", job)})
+            if self._printer_busy():
+                job["sched"], job["bed_used"] = "wait", True  # raced with another start: wait for its end
+            else:
+                job["sched"], job["sched_error"] = "error", str(err)
+                self._notify("queue", {"name": job.get("name"), "text": self._sched_text("error", job)})
             self._queue_changed()
 
     def _sched_text(self, kind: str, job: dict[str, Any]) -> str:
         """Notification text for a scheduled job."""
         de = self.hass.config.language.lower().startswith("de")
-        at = dt_util.as_local(dt_util.utc_from_timestamp(job["start_at"])).strftime("%H:%M") if job.get("start_at") else ""
+        at = (dt_util.as_local(dt_util.utc_from_timestamp(job["start_at"])).strftime("%H:%M") if job.get("start_at")
+              else ("" if not job.get("after_prev") else ("(direkt danach)" if de else "(right after)")))
         texts = {
             "confirm": ("Geplanter Start {at}: Ist das Druckbett frei? Mit „Starten“ geht es los.",
                         "Scheduled start {at}: is the bed clear? Tap “Start” to begin."),
+            # 2.4.0b4: a print ended since planning – its part is still on the bed
+            "used": ("Geplanter Start {at}: Der vorige Druck ist fertig – bitte das Druckbett räumen und dann starten.",
+                     "Scheduled start {at}: the previous print has finished – clear the bed, then start."),
+            "busy": ("{name}: Der Drucker druckt noch – ich frage nach dem Ende wieder.",
+                     "{name}: the printer is still printing – I will ask again after the end."),
             "missed": ("Geplanter Start {at} verpasst (Home Assistant lief nicht). Bitte in der Karte starten.",
                        "Scheduled start {at} missed (Home Assistant was not running). Please start it from the card."),
             "error": ("Geplanter Start {at} nicht möglich: {err}", "Scheduled start {at} failed: {err}"),
         }
         de_text, en_text = texts[kind]
-        return (de_text if de else en_text).format(at=at, err=job.get("sched_error") or "")
+        return (de_text if de else en_text).format(at=at, err=job.get("sched_error") or "",
+                                                   name=job.get("name") or job.get("file") or "")

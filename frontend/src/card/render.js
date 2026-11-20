@@ -32,7 +32,8 @@ export const RenderMixin = (Base) => class extends Base {
       d.power ? `p${d.power.on}${d.power.available}${d.power.autoOn}${d.online ? "" : d.power.shuttingDown + "" + d.power.poweringOn}` : "nop",
       d.usage ? `u${d.usage.inProgress}${d.usage.hasEnergy}${d.usage.hasCost}` : "nou",
       d.history ? d.history.map((h) => `${h.ended}${h.total_cost}`).join(",") : "noh",
-      d.timelapses ? d.timelapses.videos.map((v) => v.path).join(",") : "not",
+      // 2.4.0b4: printer-only timelapses are greyed while the printer is off
+      d.timelapses ? `${d.timelapses.videos.map((v) => v.path).join(",")}${d.timelapses.playable}` : "not",
       d.files ? d.files.map((f) => f.path + f.modified + (f.thumb || "")).join(",") : "none",
       d.queue ? d.queue.map((j) => `${j.id}:${j.start_at || ""}:${j.sched || ""}`).join(",") : "noq",
       d.errors.map((e) => e.key).join(","),
@@ -250,8 +251,8 @@ export const RenderMixin = (Base) => class extends Base {
     }));
     r.querySelectorAll("[data-reprint]").forEach((b) =>
       b.addEventListener("click", () => this._reprint(Number(b.dataset.reprint))));
-    r.querySelectorAll("[data-archive]").forEach((b) =>
-      b.addEventListener("click", () => this._openArchive(Number(b.dataset.archive))));
+    r.querySelectorAll("[data-tlvid]").forEach((b) =>
+      b.addEventListener("click", () => this._tlOpen(b.dataset.tlvid)));
     r.querySelectorAll("[data-q]").forEach((b) =>
       b.addEventListener("click", () => this._queueAction(b.dataset.q, b.dataset.job, Number(b.dataset.pos))));
     r.querySelectorAll("[data-metric]").forEach((b) =>
@@ -313,13 +314,12 @@ export const RenderMixin = (Base) => class extends Base {
     r.querySelectorAll(".hist-thumb img").forEach((img) => img.addEventListener("error", () => {
       img.replaceWith(Object.assign(document.createElement("ha-icon"), { icon: "mdi:printer-3d" }));
     }, { once: true }));
-    r.querySelectorAll("[data-photo]").forEach((el) =>
-      el.addEventListener("click", (e) => { e.stopPropagation(); this._showPhoto(el.dataset.photo); })
-    );
-
-    r.querySelectorAll("[data-video]").forEach((b) =>
-      b.addEventListener("click", () => this._openVideo(Number(b.dataset.video)))
-    );
+    // 2.4.0b4: a history row (also its photo) opens the print details; its own buttons keep their job
+    r.querySelectorAll("[data-hist]").forEach((el) => {
+      const open = () => this._historyDetail(Number(el.dataset.hist));
+      el.addEventListener("click", (e) => { if (!e.target.closest("button")) open(); });
+      el.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    });
 
     r.querySelectorAll("[data-covermode]").forEach((b) => b.addEventListener("click", () => {
       this._touchLock();

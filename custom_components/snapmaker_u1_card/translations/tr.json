@@ -866,6 +866,10 @@
         "confirm_bed": {
           "name": "“Tabla boş mu?” diye sor",
           "description": "Başlangıç saatinde önce bildirimde ve kartta tablanın boş olup olmadığını sor. Kapalı = yazıcı boşalır boşalmaz kendisi başlar."
+        },
+        "after_prev": {
+          "name": "Önceki işten hemen sonra",
+          "description": "Çalışan veya önceki iş bitince başlar, her zaman “tabla boş mu?” sorusuyla. Başlangıç saatinin yerine geçer."
         }
       }
     },
