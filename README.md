@@ -14,7 +14,7 @@ One integration for the Snapmaker U1 in Home Assistant, with its own dashboard c
 
 **Printing**
 - Start prints with the filament mapping of Snapmaker Orca, including a cost estimate, the file's slicer settings and a warning when a spool will not last
-- Queue (with start times), pause at a layer, reprint from the history, exclude objects during a print
+- Queue with start times or "right after" and a "bed clear?" question with camera image, pause at a layer, reprint from the history, exclude objects during a print
 - Layer view in the colours of the loaded spools with sliders for layer and progress, G-code preview of any file before printing, remaining time calibrated on the real print
 
 **Printer**
@@ -25,17 +25,23 @@ One integration for the Snapmaker U1 in Home Assistant, with its own dashboard c
 
 **Camera**
 - WebRTC at home, RTSP through Home Assistant when away (Nabu Casa), MJPEG or still images as fallback, including the stock firmware camera
-- Zoom, fullscreen, second (USB) camera, timelapse player with backup to the media folder
+- Zoom, fullscreen, second (USB) camera, timelapse player with backup to the media folder (one list of backed-up and printer videos)
 
 **Filament and Spoolman**
 - Material, vendor and colour per head from the firmware and RFID tags, editable for spools without a tag
-- [Spoolman](https://github.com/Donkie/Spoolman): own tab with the stock (archive, delete, QR labels), spool per head, new spools with suggestions from Spoolman's catalogue, usage booked per head, prices from Spoolman, SpoolLink support
+- [Spoolman](https://github.com/Donkie/Spoolman): own tab with the stock – edit, archive, delete, QR labels, sort and group by location, put a spool in a head; your own Spoolman fields; new spools with suggestions from Spoolman's catalogue; spool per head, usage booked per spool (split when a spool changes mid-print), a spare spool suggested when one runs short, prices from Spoolman, SpoolLink support
 
 **Around the printer**
 - Phone notifications with camera image and buttons, live progress notification on Android
 - Power switch with clean shutdown, auto-on and auto-off, energy and cost per print
-- History, statistics per material, maintenance planner, firmware check, self test, configuration backup, voice commands via Assist
-- Settings right in the card; the card follows your theme and language (English, German, Spanish, French, Italian, Dutch, Portuguese, Turkish or Simplified Chinese)
+- History with print details (photo, spools, cost, timelapse), statistics per material, maintenance planner, firmware check, self test, configuration backup, voice commands via Assist
+- Print event entity for your own automations; to-do lists for due maintenance and low spools (optional)
+
+**Dashboard**
+- Guided setup step by step; dashboard templates (full, minimal, maintenance & diagnostics) with one tap
+- Full card, mini card and section cards to arrange freely; clock and up to four own buttons with Home Assistant actions
+- Several printers: each card shows the printer you pick
+- Settings right in the card; the card follows your theme and language (English, German, Spanish, French, Italian, Dutch, Portuguese, Turkish or Simplified Chinese) and loads fast on phones
 
 It works the same locally, over VPN and through Nabu Casa.
 
@@ -93,17 +99,17 @@ Search for **Snapmaker U1 Card** in HACS (Home Assistant 2026.11 and newer: *Set
 
 [![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=snapmaker_u1_card)
 
-*Settings → Devices & services → Add integration → Snapmaker U1 Card*, enter the printer's IP address. The second step has all settings; everything is optional and can be changed later.
+*Settings → Devices & services → Add integration → Snapmaker U1 Card*, enter the printer's IP address. Then choose *step by step* (power, notifications, Spoolman) or all settings on one page; everything is optional and can be changed later. Several printers: add one entry per printer.
 
 **3. Add the card**
 
-*Add card → Snapmaker U1* (or *Snapmaker U1 Mini*), or in YAML:
+*Add card → Snapmaker U1* (or *Snapmaker U1 Mini*, or the section cards), or in YAML:
 
 ```yaml
 type: custom:snapmaker-u1-card
 ```
 
-It works best in a *Panel* view or a full-width *Sections* view. No resource needed, the integration registers the card itself.
+It works best in a *Panel* view or a full-width *Sections* view. No resource needed, the integration registers the card itself. A ready-made dashboard: in the card *Settings → Dashboard templates*.
 
 **4. Self test**
 

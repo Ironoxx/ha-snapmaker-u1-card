@@ -14,7 +14,7 @@ Eine Integration für den Snapmaker U1 in Home Assistant, mit eigener Dashboard-
 
 **Drucken**
 - Druckstart mit Filamentzuordnung wie in Snapmaker Orca, mit Kostenschätzung, Slicer-Einstellungen der Datei und Warnung, wenn eine Spule nicht reicht
-- Warteschlange (mit Startzeit), Pause bei Schicht, Nachdruck aus dem Verlauf, Objekte im Druck auslassen
+- Warteschlange mit Startzeit oder „direkt danach“ und Rückfrage „Druckbett frei?“ mit Kamerabild, Pause bei Schicht, Nachdruck aus dem Verlauf, Objekte im Druck auslassen
 - Schichtansicht in den Farben der geladenen Spulen mit Reglern für Schicht und Fortschritt, G-Code-Vorschau jeder Datei vor dem Druck, Restzeit am echten Druck kalibriert
 
 **Drucker**
@@ -25,17 +25,23 @@ Eine Integration für den Snapmaker U1 in Home Assistant, mit eigener Dashboard-
 
 **Kamera**
 - Zu Hause WebRTC, unterwegs (Nabu Casa) RTSP über Home Assistant, sonst MJPEG oder Standbilder, auch mit der Kamera der Stock-Firmware
-- Zoom, Vollbild, zweite Kamera (USB), Zeitraffer-Player mit Sicherung in den Medienordner
+- Zoom, Vollbild, zweite Kamera (USB), Zeitraffer-Player mit Sicherung in den Medienordner (eine Liste aus gesicherten und Drucker-Videos)
 
 **Filament und Spoolman**
 - Material, Hersteller und Farbe je Kopf aus Firmware und RFID-Tag, für Spulen ohne Tag von Hand änderbar
-- [Spoolman](https://github.com/Donkie/Spoolman): eigener Reiter mit dem Bestand (archivieren, löschen, QR-Etiketten), Spule je Kopf, neue Spulen mit Vorschlägen aus dem Spoolman-Katalog, Verbrauch je Kopf gebucht, Preise aus Spoolman, SpoolLink
+- [Spoolman](https://github.com/Donkie/Spoolman): eigener Reiter mit dem Bestand – bearbeiten, archivieren, löschen, QR-Etiketten, sortieren und nach Lagerort gruppieren, Spule in einen Kopf legen; eigene Spoolman-Felder; neue Spulen mit Vorschlägen aus dem Spoolman-Katalog; Spule je Kopf, Verbrauch je Spule gebucht (aufgeteilt, wenn die Spule im Druck wechselt), Ersatzspule, wenn eine nicht reicht, Preise aus Spoolman, SpoolLink
 
 **Rund um den Drucker**
 - Benachrichtigungen aufs Handy mit Kamerabild und Knöpfen, laufende Fortschrittsanzeige unter Android
 - Netzschalter mit sauberem Herunterfahren, Auto-Ein und Auto-Aus, Strom und Kosten je Druck
-- Verlauf, Statistik je Material, Wartungsplaner, Firmware-Prüfung, Selbsttest, Sicherung der Druckerkonfiguration, Sprachbefehle über Assist
-- Einstellungen direkt in der Karte; die Karte folgt deinem Theme und deiner Sprache (Deutsch, Englisch, Spanisch, Französisch, Italienisch, Niederländisch oder Portugiesisch)
+- Verlauf mit Druckdetails (Foto, Spulen, Kosten, Zeitraffer), Statistik je Material, Wartungsplaner, Firmware-Prüfung, Selbsttest, Sicherung der Druckerkonfiguration, Sprachbefehle über Assist
+- Druckereignis-Entität für eigene Automationen; Aufgabenlisten für fällige Wartung und knappe Spulen (optional)
+
+**Dashboard**
+- Geführte Einrichtung Schritt für Schritt; Dashboard-Vorlagen (Voll, Minimal, Wartung & Diagnose) per Knopf
+- Große Karte, Mini-Karte und frei anordenbare Bereichs-Karten; Uhr und bis zu vier eigene Knöpfe mit Home-Assistant-Aktionen
+- Mehrere Drucker: Jede Karte zeigt den Drucker, den du wählst
+- Einstellungen direkt in der Karte; die Karte folgt deinem Theme und deiner Sprache (Deutsch, Englisch, Spanisch, Französisch, Italienisch, Niederländisch, Portugiesisch, Türkisch oder vereinfachtes Chinesisch) und lädt am Handy schnell
 
 Das funktioniert lokal, über VPN und über Nabu Casa gleich.
 
@@ -91,17 +97,17 @@ In HACS (ab Home Assistant 2026.11: *Einstellungen → Marketplace*) nach **Snap
 
 [![Add integration](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=snapmaker_u1_card)
 
-*Einstellungen → Geräte & Dienste → Integration hinzufügen → Snapmaker U1 Card*, IP-Adresse des Druckers eingeben. Im zweiten Schritt stehen alle Einstellungen; alles ist optional und später änderbar.
+*Einstellungen → Geräte & Dienste → Integration hinzufügen → Snapmaker U1 Card*, IP-Adresse des Druckers eingeben. Dann *Schritt für Schritt* (Strom, Benachrichtigungen, Spoolman) oder alle Einstellungen auf einer Seite; alles ist optional und später änderbar. Mehrere Drucker: je Drucker ein Eintrag.
 
 **3. Karte hinzufügen**
 
-*Karte hinzufügen → Snapmaker U1* (oder *Snapmaker U1 Mini*), oder in YAML:
+*Karte hinzufügen → Snapmaker U1* (oder *Snapmaker U1 Mini* bzw. die Bereichs-Karten), oder in YAML:
 
 ```yaml
 type: custom:snapmaker-u1-card
 ```
 
-Am besten in einer *Panel*-Ansicht oder in *Abschnitte* mit voller Breite. Eine Ressource musst du nicht anlegen, das macht die Integration selbst.
+Am besten in einer *Panel*-Ansicht oder in *Abschnitte* mit voller Breite. Eine Ressource musst du nicht anlegen, das macht die Integration selbst. Ein fertiges Dashboard: in der Karte *Einstellungen → Dashboard-Vorlagen*.
 
 **4. Selbsttest**
 
