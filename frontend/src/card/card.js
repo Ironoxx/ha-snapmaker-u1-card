@@ -11,6 +11,7 @@
  *   type: custom:snapmaker-u1-card
  *
  * Everything is detected automatically. Options only to override:
+ *   device            printer (device ID, 2.4.1)            (the first printer)
  *   prefix            Moonraker entity prefix                (auto)
  *   camera            camera entity                          (auto)
  *   thumbnail         slicer preview                         (camera.<prefix>_thumbnail)
@@ -247,7 +248,11 @@ export class SnapmakerU1Card extends U1Base {
       prefix = hit ? hit.entity_id.slice("sensor.".length, -"_printer_state".length) : "snapmaker_u1";
     }
 
-    const own = list.filter((e) => e.platform === DOMAIN);
+    // 2.4.1 (#19): one printer per card. Only the integration's entities of the chosen device
+    // (option ``device``); without it those of the first printer, so a card never mixes two.
+    const ownAll = list.filter((e) => e.platform === DOMAIN);
+    const device = c.device || (ownAll.find((e) => e.device_id) || {}).device_id || null;
+    const own = device ? ownAll.filter((e) => e.device_id === device) : ownAll;
     const ownKey = (k) => (own.find((e) => e.translation_key === k) || {}).entity_id || null;
 
     // Camera: option, else the integration's own camera (detects stream / still

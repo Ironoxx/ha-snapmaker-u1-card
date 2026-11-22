@@ -1,6 +1,6 @@
 /** Visual editor: ha-form schema for both cards. */
 
-import { SECTIONS } from "./const.js";
+import { DOMAIN, SECTIONS } from "./const.js";
 import { setLang, tr } from "./i18n.js";
 
 export const SECTION_LABELS = {
@@ -29,6 +29,7 @@ export const FORM_LABELS = {
   accent_color: "Akzentfarbe",
   camera_fit: "Skalierung", camera_height: "Bildhöhe (px)", refresh: "Bildrate (s)",
   stale_after: "„Bild veraltet“ ab (s)", printer_image: "Statisches Bild statt Kamera",
+  device: "Drucker",
   prefix: "Moonraker-Präfix", network_tracker: "WLAN-Tracker", files_limit: "Angezeigte Dateien",
   navigation_path: "Beim Antippen öffnen", hide_filaments: "Filamente ausblenden",
   unlock_controls: "Regler nicht sperren",
@@ -57,7 +58,8 @@ export const FORM_LABELS = {
 };
 export const FORM_HELPERS = {
   camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
-  prefix: "Nur bei mehreren Druckern nötig",
+  device: "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.",
+  prefix: "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.",
   network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
   hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
   layout: "Leer = Reiter. Tablet / Monitor: Kamera, Druckauftrag und Druckköpfe links, Reiter rechts (ab ca. 900 px Breite)",
@@ -100,12 +102,33 @@ export function buttonFields(opts) {
   };
 }
 
+/**
+ * 2.4.1 (#19): the printer this card shows. All printers of the integration get the same
+ * device name, so the choice lists them with their address (configuration_url) as a
+ * native select; without hass at hand HA's device picker (filtered to the integration).
+ * Value = device ID; empty = the first printer (as before 2.4.1).
+ */
+export function deviceField(hass) {
+  const ids = new Set(Object.values((hass && hass.entities) || {})
+    .filter((e) => e.platform === DOMAIN && e.device_id).map((e) => e.device_id));
+  const devs = [...ids].map((id) => (hass.devices || {})[id]).filter(Boolean);
+  if (!devs.length) return { name: "device", selector: { device: { integration: DOMAIN } } };
+  const host = (d) => { try { return new URL(d.configuration_url).host; } catch (e) { return ""; } };
+  return { name: "device", selector: { select: { mode: "dropdown", options: devs.map((d) => ({
+    value: d.id, label: [d.name_by_user || d.name, host(d)].filter(Boolean).join(" · ") })) } } };
+}
+
 /** Form of the card editor: mini = true for the mini card, "section" for the building block card. */
 export function configForm(mini) {
   const section = mini === "section";
   if (section) mini = false;
   // Called statically: take the language from the running HA frontend.
-  try { const ha = document.querySelector("home-assistant"); if (ha && ha.hass) setLang(ha.hass); } catch (e) { /* ignore */ }
+  let hass = null;
+  try { const ha = document.querySelector("home-assistant"); hass = ha && ha.hass; if (hass) setLang(hass); } catch (e) { /* ignore */ }
+  // only offered when there is something to choose (or HA could not be asked)
+  const devCount = new Set(Object.values((hass && hass.entities) || {})
+    .filter((e) => e.platform === DOMAIN && e.device_id).map((e) => e.device_id)).size;
+  const device = !hass || devCount > 1 ? [deviceField(hass)] : [];
   const opts = (list) => list.map(([value, label]) => ({ value, label: tr(label) }));
   const name = [
     { name: "printer_name", selector: { text: {} } },
@@ -124,6 +147,7 @@ export function configForm(mini) {
   if (section) {
     return {
       schema: [
+        ...device,
         { name: "show", required: true, selector: { select: { multiple: true, mode: "list", reorder: true,
           options: SECTIONS.map((sec) => ({ value: sec, label: `${tr(SECTION_LABELS[sec])} – ${tr(SECTION_DESC[sec])}` })) } } },
         { name: "alerts", selector: { boolean: {} } },
@@ -140,12 +164,14 @@ export function configForm(mini) {
     };
   }
   const schema = mini ? [
+    ...device,
     { name: "printer_name", selector: { text: {} } },
     { name: "accent_color", selector: { color_rgb: {} } },
     { name: "hide_filaments", selector: { boolean: {} } },
     { name: "navigation_path", selector: { text: {} } },
     advanced,
   ] : [
+    ...device,
     { type: "grid", name: "", schema: name },
     { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"], ["tablet", "Tablet / Monitor"]]) } } },
     { name: "hide", selector: { select: { multiple: true, mode: "list",

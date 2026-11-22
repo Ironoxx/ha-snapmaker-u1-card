@@ -364,7 +364,8 @@ export default {
   "WLAN-Tracker": "Wi-Fi izleyici",
   "Angezeigte Dateien": "Gösterilen dosyalar",
   "Leer = automatisch erkannt": "Boş = otomatik algılanır",
-  "Nur bei mehreren Druckern nötig": "Yalnızca birden fazla yazıcı varsa gerekir",
+  "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.": "Boş = ilk kurulan yazıcı. Birden fazla U1 varsa bu kartın hangisini göstereceğini burada seçin.",
+  "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.": "Yalnızca Moonraker entegrasyonunun varlıkları için. Yazıcıyı yukarıda “Yazıcı” altında seçin.",
   "Zeigt einen Verbindungs-Chip in der Kopfzeile": "Başlıkta bağlantı göstergesi gösterir",
   "Kopfnamen und Temperatur-Presets im YAML-Editor": "Kafa adları ve sıcaklık ön ayarları YAML düzenleyicide",
   "Beim Antippen öffnen": "Dokununca aç",
@@ -871,5 +872,7 @@ export default {
   "antippen zum Ändern": "değiştirmek için dokunun",
   "Noch nicht in Home Assistant gesichert": "Henüz Home Assistant'a yedeklenmedi",
   "nur auf dem Drucker · Drucker aus": "yalnızca yazıcıda · yazıcı kapalı",
-  "nur auf dem Drucker": "yalnızca yazıcıda"
+  "nur auf dem Drucker": "yalnızca yazıcıda",
+  // 2.4.1 (#19): printer choice in the card editor
+  "Drucker": "Yazıcı"
 };

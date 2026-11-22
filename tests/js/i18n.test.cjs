@@ -83,7 +83,6 @@ for (const [source, expected] of [
   ["Einzug {head}: Störung", "进料器 {head}：故障"],
   ["Druck wirklich abbrechen?", "确定要取消打印吗？"],
   ["Der Drucker antwortet nicht. Trotzdem ausschalten?", "打印机无响应。仍要关机并断电吗？"],
-  ["Nur bei mehreren Druckern nötig", "仅多台打印机时需要"],
   ["Der Drucker ist aus. Er wird eingeschaltet und startet den Druck, sobald er bereit ist (ca. 1–2 min).", "打印机当前已关机；系统会先自动开机，待打印机就绪后开始打印（约 1–2 分钟）。"],
   ["Rand (Brim)", "外扩边（Brim）"],
   ["nur vom Bett", "仅接触打印平台"],

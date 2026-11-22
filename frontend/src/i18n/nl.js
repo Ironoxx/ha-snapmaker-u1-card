@@ -364,7 +364,8 @@ export default {
   "WLAN-Tracker": "Wifi-tracker",
   "Angezeigte Dateien": "Getoonde bestanden",
   "Leer = automatisch erkannt": "Leeg = automatisch gedetecteerd",
-  "Nur bei mehreren Druckern nötig": "Alleen nodig met meerdere printers",
+  "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.": "Leeg = de eerst ingestelde printer. Met meerdere U1 kies je hier welke deze kaart toont.",
+  "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.": "Alleen voor entiteiten van de Moonraker-integratie. De printer kies je hierboven bij ‘Printer’.",
   "Zeigt einen Verbindungs-Chip in der Kopfzeile": "Toont een verbindingschip in de koptekst",
   "Kopfnamen und Temperatur-Presets im YAML-Editor": "Kopnamen en temperatuurpresets in de YAML-editor",
   "Beim Antippen öffnen": "Openen bij tikken",
@@ -871,5 +872,7 @@ export default {
   "antippen zum Ändern": "tik om te wijzigen",
   "Noch nicht in Home Assistant gesichert": "Nog niet in Home Assistant opgeslagen",
   "nur auf dem Drucker · Drucker aus": "alleen op de printer · printer uit",
-  "nur auf dem Drucker": "alleen op de printer"
+  "nur auf dem Drucker": "alleen op de printer",
+  // 2.4.1 (#19): printer choice in the card editor
+  "Drucker": "Printer"
 };

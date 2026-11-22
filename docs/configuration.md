@@ -89,7 +89,8 @@ buttons:
 | `alerts` | with `stage`/`job` | 2.2, section card: printer messages on top (`true` always, `false` never). The section `messages` shows them on its own |
 | `toolheads` | – | head names, e.g. `- name: Left` (material and colour come from the printer) |
 | `network_tracker` | – | `device_tracker` for a WiFi chip in the header |
-| `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatic | only needed with several printers |
+| `device` | first printer | 2.4.1: which printer this card shows (device ID). With several U1 choose it in the card editor under *Printer* (listed with their address) |
+| `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatic | `prefix` only for entities of the Moonraker integration |
 
 > **Another U1 card installed?** The integration [kbaker827/ha-snapmaker-u1](https://github.com/kbaker827/ha-snapmaker-u1) also ships a card called `custom:snapmaker-u1-card`; whichever loads first gets that name. This card is always available as `type: custom:snapmaker-u1-card-ironoxx` too, and the self test points it out.
 
@@ -118,7 +119,8 @@ navigation_path: /dashboard-printer/0   # optional: go there on tap, otherwise t
 | `printer_name` | `U1` | display name |
 | `navigation_path` | – | target on tap |
 | `hide_filaments` | `false` | hide the filament row |
-| `prefix` | automatic | only with several printers |
+| `device` | first printer | 2.4.1: which printer (card editor: *Printer*) |
+| `prefix` | automatic | only for entities of the Moonraker integration |
 
 ## Updating
 
@@ -150,4 +152,4 @@ If a page is loaded while Home Assistant is still starting (a tab or the app dur
 
 ## Moonraker integration (optional)
 
-Not needed since 2.0: the card gets all values and controls from this integration. We recommend not using the [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) next to it: it queries the printer a second time and only adds load. If you keep it, the card prefers its own values and only falls back to the Moonraker entities when they are missing. With several printers set `prefix` in the card.
+Not needed since 2.0: the card gets all values and controls from this integration. We recommend not using the [Moonraker integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) next to it: it queries the printer a second time and only adds load. If you keep it, the card prefers its own values and only falls back to the Moonraker entities when they are missing. With several printers set `device` (card editor: *Printer*) and, for the Moonraker entities, `prefix`.

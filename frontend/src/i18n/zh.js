@@ -364,7 +364,8 @@ export default {
   "WLAN-Tracker": "Wi-Fi 跟踪器",
   "Angezeigte Dateien": "显示的文件",
   "Leer = automatisch erkannt": "空=自动检测到",
-  "Nur bei mehreren Druckern nötig": "仅多台打印机时需要",
+  "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.": "留空 = 第一台已设置的打印机。有多台 U1 时，在此选择此卡片显示哪一台。",
+  "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.": "仅用于 Moonraker 集成的实体。打印机请在上方“打印机”中选择。",
   "Zeigt einen Verbindungs-Chip in der Kopfzeile": "在标题栏显示连接状态标记",
   "Kopfnamen und Temperatur-Presets im YAML-Editor": "YAML 编辑器中的打印头名称和温度预设",
   "Beim Antippen öffnen": "点击打开",
@@ -871,5 +872,7 @@ export default {
   "antippen zum Ändern": "点按以更改",
   "Noch nicht in Home Assistant gesichert": "尚未备份到 Home Assistant",
   "nur auf dem Drucker · Drucker aus": "仅在打印机上 · 打印机已关闭",
-  "nur auf dem Drucker": "仅在打印机上"
+  "nur auf dem Drucker": "仅在打印机上",
+  // 2.4.1 (#19): printer choice in the card editor
+  "Drucker": "打印机"
 };

@@ -3,7 +3,7 @@
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
   var CARD_URL_BASE = `/${DOMAIN}/card`;
-  var CARD_VERSION = "2.4.0";
+  var CARD_VERSION = "2.4.1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -71,13 +71,13 @@
 
   // frontend/src/i18n-files.gen.js
   var LANG_FILES = {
-    "es": "es.28dda171.json",
-    "fr": "fr.2aca6e60.json",
-    "it": "it.ab12a43d.json",
-    "nl": "nl.cac002f6.json",
-    "pt": "pt.5af37e26.json",
-    "tr": "tr.206c4afa.json",
-    "zh": "zh.a15153a5.json"
+    "es": "es.e1b0adcf.json",
+    "fr": "fr.215d668e.json",
+    "it": "it.c151de61.json",
+    "nl": "nl.d26cf941.json",
+    "pt": "pt.114073f6.json",
+    "tr": "tr.341b7e21.json",
+    "zh": "zh.9dc498b4.json"
   };
 
   // frontend/src/i18n.js
@@ -495,7 +495,8 @@
     "WLAN-Tracker": "Wi-Fi tracker",
     "Angezeigte Dateien": "Files shown",
     "Leer = automatisch erkannt": "Empty = detected automatically",
-    "Nur bei mehreren Druckern nötig": "Only needed with several printers",
+    "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.": "Empty = the first printer set up. With several U1 choose here which one this card shows.",
+    "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.": "Only for entities of the Moonraker integration. Choose the printer above under “Printer”.",
     "Zeigt einen Verbindungs-Chip in der Kopfzeile": "Shows a connection chip in the header",
     "Kopfnamen und Temperatur-Presets im YAML-Editor": "Head names and temperature presets in the YAML editor",
     "Beim Antippen öffnen": "Open on tap",
@@ -1004,7 +1005,9 @@
     "antippen zum Ändern": "tap to change",
     "Noch nicht in Home Assistant gesichert": "Not yet backed up in Home Assistant",
     "nur auf dem Drucker · Drucker aus": "only on the printer · printer off",
-    "nur auf dem Drucker": "only on the printer"
+    "nur auf dem Drucker": "only on the printer",
+    // 2.4.1 (#19): printer choice in the card editor
+    "Drucker": "Printer"
   };
 
   // frontend/src/accent.js
@@ -1102,6 +1105,7 @@
     refresh: "Bildrate (s)",
     stale_after: "„Bild veraltet“ ab (s)",
     printer_image: "Statisches Bild statt Kamera",
+    device: "Drucker",
     prefix: "Moonraker-Präfix",
     network_tracker: "WLAN-Tracker",
     files_limit: "Angezeigte Dateien",
@@ -1133,7 +1137,8 @@
   };
   var FORM_HELPERS = {
     camera: "Leer = Kamera der Integration (erkennt Stock- und angepasste Firmware), sonst die der Moonraker-Integration",
-    prefix: "Nur bei mehreren Druckern nötig",
+    device: "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.",
+    prefix: "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.",
     network_tracker: "Zeigt einen Verbindungs-Chip in der Kopfzeile",
     hide: "Kopfnamen und Temperatur-Presets im YAML-Editor",
     layout: "Leer = Reiter. Tablet / Monitor: Kamera, Druckauftrag und Druckköpfe links, Reiter rechts (ab ca. 900 px Breite)",
@@ -1176,14 +1181,34 @@
       hold_action: { label: tr("Aktion beim Halten"), selector: { ui_action: {} } }
     };
   }
+  function deviceField(hass) {
+    const ids = new Set(Object.values(hass && hass.entities || {}).filter((e) => e.platform === DOMAIN && e.device_id).map((e) => e.device_id));
+    const devs = [...ids].map((id) => (hass.devices || {})[id]).filter(Boolean);
+    if (!devs.length) return { name: "device", selector: { device: { integration: DOMAIN } } };
+    const host = (d) => {
+      try {
+        return new URL(d.configuration_url).host;
+      } catch (e) {
+        return "";
+      }
+    };
+    return { name: "device", selector: { select: { mode: "dropdown", options: devs.map((d) => ({
+      value: d.id,
+      label: [d.name_by_user || d.name, host(d)].filter(Boolean).join(" · ")
+    })) } } };
+  }
   function configForm(mini) {
     const section = mini === "section";
     if (section) mini = false;
+    let hass = null;
     try {
       const ha = document.querySelector("home-assistant");
-      if (ha && ha.hass) setLang(ha.hass);
+      hass = ha && ha.hass;
+      if (hass) setLang(hass);
     } catch (e) {
     }
+    const devCount = new Set(Object.values(hass && hass.entities || {}).filter((e) => e.platform === DOMAIN && e.device_id).map((e) => e.device_id)).size;
+    const device = !hass || devCount > 1 ? [deviceField(hass)] : [];
     const opts = (list) => list.map(([value, label]) => ({ value, label: tr(label) }));
     const name = [
       { name: "printer_name", selector: { text: {} } },
@@ -1206,6 +1231,7 @@
     if (section) {
       return {
         schema: [
+          ...device,
           { name: "show", required: true, selector: { select: {
             multiple: true,
             mode: "list",
@@ -1235,12 +1261,14 @@
       };
     }
     const schema = mini ? [
+      ...device,
       { name: "printer_name", selector: { text: {} } },
       { name: "accent_color", selector: { color_rgb: {} } },
       { name: "hide_filaments", selector: { boolean: {} } },
       { name: "navigation_path", selector: { text: {} } },
       advanced
     ] : [
+      ...device,
       { type: "grid", name: "", schema: name },
       { name: "layout", selector: { select: { mode: "dropdown", options: opts([["tabs", "Reiter"], ["scroll", "Untereinander"], ["tablet", "Tablet / Monitor"]]) } } },
       { name: "hide", selector: { select: {
@@ -10534,7 +10562,9 @@ ${tr("Der Drucker antwortet nicht. Trotzdem ausschalten?")}`)) {
         const hit = list.find((e) => e.platform === "moonraker" && /^sensor\..+_printer_state$/.test(e.entity_id));
         prefix = hit ? hit.entity_id.slice("sensor.".length, -"_printer_state".length) : "snapmaker_u1";
       }
-      const own = list.filter((e) => e.platform === DOMAIN);
+      const ownAll = list.filter((e) => e.platform === DOMAIN);
+      const device = c.device || (ownAll.find((e) => e.device_id) || {}).device_id || null;
+      const own = device ? ownAll.filter((e) => e.device_id === device) : ownAll;
       const ownKey = (k) => (own.find((e) => e.translation_key === k) || {}).entity_id || null;
       const ownCam = ownKey("camera");
       let camera = c.camera || ownCam;

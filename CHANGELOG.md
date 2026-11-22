@@ -4,6 +4,120 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.4.1
+
+Fix for several printers: choose which U1 a card shows. Includes everything from 2.4.0.
+
+**Fixed in 2.4.1**
+- **Several printers** (#19, thanks jingshengtop): with more than one U1 the card always showed the first one, and `prefix` did not help since 2.0. New option **Printer** in the card editor (full, mini and section card; listed with their address, YAML `device`): each card shows one printer and sends its actions to it. A card never mixes entities of two printers. Without the option everything stays as before (the first printer).
+
+**Everything new in 2.4:**
+
+Guided setup, dashboard templates, clock and own buttons, a print event entity, a full Spoolman tab (edit, archive, labels, sort, put in head), start times and "right after" for queued jobs, print details in the history, one timelapse list, to-do lists, and a card that loads much faster.
+
+**Setup and dashboards**
+- **Guided setup:** after the address, choose *step by step* (power → notifications → Spoolman, each page can be skipped, a list of next steps at the end) or all settings on one page as before.
+- **Dashboard templates** in the card's settings: *Full*, *Minimal* or *Maintenance & diagnostics* creates a new sections dashboard, editable in Home Assistant afterwards (admins).
+- **paxx12 settings** (RTSP, SpoolLink, …) to view in the card's settings.
+
+**Card**
+- **Clock** on the far right of the header (#16, thanks donjo3), option `clock`, off by default.
+- **Own buttons** (#16): up to 4 next to *Light*, with Home Assistant's actions (`tap_action`/`hold_action`), each shown before, during and/or after the print. Option `buttons`, set up in the card editor.
+- **Light button** switches further lights along (option `light_entities`, e.g. WLED).
+- **Mini card** compact like Home Assistant's tile card: tap the icon to switch the printer on/off, one line cycling through the infos, progress ring.
+- **Clearer controls:** pressed chips highlighted everywhere, folding sections with an arrow, rows that open details with a chevron; header buttons wrap on phones.
+- **Loads much faster:** long cache headers and a gzip copy, and only German and English in the card – other languages are loaded once when used. Phones download about 150 KB instead of about 900 KB, afterwards from the cache.
+
+**Spoolman tab**
+- **Tap a spool** for its details: *Edit*, *Label*, *Put in head*, *Archive* and – for admins – *Delete*. Empty spools offer *empty · archive* right in the list; chip *Archived* shows archived spools to restore them.
+- **Edit** spool and filament (only changed fields are saved; the form says how many spools share the filament). **Your own Spoolman fields** appear in *New spool* and *Edit*.
+- **New spool** with more fields: temperatures, density, diameter, remaining, article and lot number, comment.
+- **QR labels** (62 × 29 mm, link to the spool in Spoolman) as a preview in the card, then *Print* or *Save as file*.
+- **Sort** by material, remaining, last used or ID, **group by location**.
+- **Spare spool** in the print dialog when a spool is too short (same material, close colour, enough left).
+- **Spool changed during a print:** usage is split between old and new spool. A spool loaded at the printer that does not match the remembered one is no longer offered as "previous spool".
+- New services `update_spool`, `spool_archive`, `spool_delete`; `create_spool` takes more fields.
+
+**Queue**
+- **Start time** for queued jobs and **Print right after**. At the start the job asks *Bed clear – start* (notification with camera image, or the card); without the question it starts on its own only if no print ended since it was planned. Due while another print runs = waits for its end; jobs run one after the other; a time missed while Home Assistant was off is never made up for. The dialog warns about overlaps. `queue_add`: `start_at`, `confirm_bed`, `after_prev`.
+
+**History and timelapses**
+- **Print details:** tap a print for photo or preview, spools with grams, cost, options – with *Print again*, *Timelapse* and *Photo*.
+- **Timelapses** as one list of backups and videos only on the printer (marked, playable only while it is on).
+
+**Automations and to-do lists**
+- New **print event entity** (finished, cancelled, error, paused, message, first layer, almost done, spool low/runs out, part removable, maintenance, chamber warm) for your own automations.
+- **To-do lists** (options, off by default): due maintenance (tick off = done) and a shopping list for low spools, own list or an existing one.
+
+**Self test and repairs**
+- **Colliding card names** (another `custom:snapmaker-u1-card`) show up under Repairs, with how to use `custom:snapmaker-u1-card-ironoxx`.
+- The self test also checks: power switch and meter, a matching spool on every head, paxx12 WLAN and eMMC, the printer's clock, maintenance due, the status light blueprint, an old card in the browser, and free space in the media folder and on the printer.
+- The print dialog shows **due maintenance** as a hint.
+
+**Fixed**
+- Spoolman tab missing after a Home Assistant restart while the printer was off (#17, thanks donjo3).
+- Spoolman refreshed right away after a host restart.
+
+After updating: restart Home Assistant and reload the dashboard once.
+
+### Deutsch
+
+Korrektur für mehrere Drucker: wählen, welchen U1 eine Karte zeigt. Enthält alles aus 2.4.0.
+
+**Behoben in 2.4.1**
+- **Mehrere Drucker** (#19, danke jingshengtop): Mit mehr als einem U1 zeigte die Karte immer den ersten, und `prefix` half seit 2.0 nicht mehr. Neue Option **Drucker** im Karten-Editor (große, Mini- und Bereichs-Karte; mit ihrer Adresse aufgelistet, YAML `device`): Jede Karte zeigt einen Drucker und schickt ihre Aktionen an ihn. Eine Karte mischt nie Entitäten zweier Drucker. Ohne die Option bleibt alles wie bisher (der erste Drucker).
+
+**Alles Neue in 2.4:**
+
+Geführte Einrichtung, Dashboard-Vorlagen, Uhr und eigene Knöpfe, eine Druckereignis-Entität, ein vollständiger Spoolman-Reiter (bearbeiten, archivieren, Etiketten, sortieren, in Kopf legen), Startzeit und „direkt danach“ für Aufträge, Druckdetails in der Historie, eine Zeitraffer-Liste, Aufgabenlisten und eine Karte, die viel schneller lädt.
+
+**Einrichtung und Dashboards**
+- **Geführte Einrichtung:** Nach der Adresse *Schritt für Schritt* (Strom → Benachrichtigungen → Spoolman, jede Seite überspringbar, zum Schluss die nächsten Schritte) oder wie bisher alle Einstellungen auf einer Seite.
+- **Dashboard-Vorlagen** in den Einstellungen der Karte: *Voll*, *Minimal* oder *Wartung & Diagnose* legt ein neues Abschnitte-Dashboard an, danach in Home Assistant bearbeitbar (Admins).
+- **paxx12-Einstellungen** (RTSP, SpoolLink, …) zum Ansehen in den Einstellungen der Karte.
+
+**Karte**
+- **Uhr** ganz rechts in der Kopfzeile (#16, danke donjo3), Option `clock`, standardmäßig aus.
+- **Eigene Knöpfe** (#16): bis zu 4 neben *Licht*, mit den Aktionen von Home Assistant (`tap_action`/`hold_action`), jeweils vor, während und/oder nach dem Druck sichtbar. Option `buttons`, im Karten-Editor einstellbar.
+- **Licht-Knopf** schaltet weitere Lampen mit (Option `light_entities`, z. B. WLED).
+- **Mini-Karte** kompakt wie die Kachel-Karte: Tipp aufs Symbol schaltet den Drucker ein/aus, eine wechselnde Infozeile, Fortschrittsring.
+- **Klarere Bedienung:** gedrückte Chips überall hinterlegt, aufklappbare Bereiche mit Pfeil, Zeilen mit Details mit Winkel; Kopf-Knöpfe brechen am Handy um.
+- **Lädt viel schneller:** lange Cache-Zeiten und eine gzip-Kopie, und nur Deutsch und Englisch in der Karte – andere Sprachen werden einmal bei Bedarf geladen. Handys laden etwa 150 KB statt etwa 900 KB, danach aus dem Cache.
+
+**Spoolman-Reiter**
+- **Spule antippen** für die Details: *Bearbeiten*, *Etikett*, *In Kopf legen*, *Archivieren* und – für Admins – *Löschen*. Leere Spulen bieten *leer · archivieren* direkt in der Liste; der Chip *Archiviert* zeigt archivierte Spulen zum Wiederherstellen.
+- Spule und Filament **bearbeiten** (gespeichert wird nur Geändertes; das Formular sagt, wie viele Spulen sich das Filament teilen). **Eigene Spoolman-Felder** erscheinen in *Neue Spule* und *Bearbeiten*.
+- **Neue Spule** mit mehr Feldern: Temperaturen, Dichte, Durchmesser, Rest, Artikelnummer, Charge, Kommentar.
+- **QR-Etiketten** (62 × 29 mm, Link zur Spule in Spoolman) als Vorschau in der Karte, dann *Drucken* oder *Als Datei speichern*.
+- **Sortieren** nach Material, Rest, zuletzt benutzt oder ID, **nach Lagerort gruppieren**.
+- **Ersatzspule** im Druckdialog, wenn eine Spule nicht reicht (gleiches Material, ähnliche Farbe, genug Rest).
+- **Spule im Druck gewechselt:** Der Verbrauch wird auf alte und neue Spule aufgeteilt. Eine am Drucker eingelegte Spule, die nicht zur gemerkten passt, wird nicht mehr als „vorherige Spule“ angeboten.
+- Neue Dienste `update_spool`, `spool_archive`, `spool_delete`; `create_spool` nimmt mehr Felder.
+
+**Warteschlange**
+- **Startzeit** für Aufträge und **Direkt danach drucken**. Zum Start fragt der Auftrag *Bett frei – starten* (Benachrichtigung mit Kamerabild oder in der Karte); ohne Rückfrage startet er nur selbst, wenn seit dem Planen kein Druck zu Ende ging. Fällig während eines anderen Drucks = wartet auf dessen Ende; Aufträge laufen nacheinander; eine verpasste Zeit, während Home Assistant aus war, wird nie nachgeholt. Der Dialog warnt bei Überschneidungen. `queue_add`: `start_at`, `confirm_bed`, `after_prev`.
+
+**Historie und Zeitraffer**
+- **Druckdetails:** Druck antippen für Foto oder Vorschau, Spulen mit Gramm, Kosten, Optionen – mit *Nochmal drucken*, *Zeitraffer* und *Foto*.
+- **Zeitraffer** als eine Liste aus Sicherungen und Videos nur auf dem Drucker (markiert, nur bei eingeschaltetem Drucker abspielbar).
+
+**Automationen und Aufgabenlisten**
+- Neue **Druckereignis-Entität** (fertig, abgebrochen, Fehler, Pause, Meldung, erste Schicht, gleich fertig, Spule knapp/wird leer, Teil entnehmbar, Wartung, Kammer warm) für eigene Automationen.
+- **Aufgabenlisten** (Optionen, standardmäßig aus): fällige Wartung (abhaken = erledigt) und eine Einkaufsliste für knappe Spulen, eigene Liste oder eine vorhandene.
+
+**Selbsttest und Reparaturen**
+- **Kollidierende Kartennamen** (eine andere `custom:snapmaker-u1-card`) erscheinen unter Reparaturen, mit dem Weg über `custom:snapmaker-u1-card-ironoxx`.
+- Der Selbsttest prüft zusätzlich: Netzschalter und Leistungsmesser, eine passende Spule an jedem Kopf, paxx12-WLAN und eMMC, die Uhr des Druckers, fällige Wartung, den Status-Licht-Blueprint, eine alte Karte im Browser sowie freien Platz im Medienordner und am Drucker.
+- Der Druckdialog zeigt **fällige Wartung** als Hinweis.
+
+**Behoben**
+- Spoolman-Reiter fehlte nach einem Neustart von Home Assistant bei ausgeschaltetem Drucker (#17, danke donjo3).
+- Spoolman wird nach einem Neustart des Rechners sofort abgefragt.
+
+Nach dem Update: Home Assistant neu starten und das Dashboard einmal neu laden.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.4.0
 
 Guided setup, dashboard templates, clock and own buttons, a print event entity, a full Spoolman tab (edit, archive, labels, sort, put in head), start times and "right after" for queued jobs, print details in the history, one timelapse list, to-do lists, and a card that loads much faster.

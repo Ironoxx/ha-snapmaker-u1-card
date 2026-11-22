@@ -70,7 +70,8 @@ Alle Optionen sind freiwillig und bis auf Kopfnamen und Presets auch im visuelle
 | `alerts` | mit `stage`/`job` | 2.2, Bereichs-Karte: Meldungen des Druckers oben (`true` immer, `false` nie). Der Bereich `messages` zeigt sie für sich |
 | `toolheads` | – | Kopfnamen, z. B. `- name: Links` (Material und Farbe kommen vom Drucker) |
 | `network_tracker` | – | `device_tracker` für einen WLAN-Chip im Kopf |
-| `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatisch | nur bei mehreren Druckern nötig |
+| `device` | erster Drucker | 2.4.1: welchen Drucker diese Karte zeigt (Geräte-ID). Bei mehreren U1 im Karten-Editor unter *Drucker* wählen (mit ihrer Adresse aufgelistet) |
+| `prefix`, `camera`, `thumbnail`, `filaments_sensor`, `files_sensor` | automatisch | `prefix` nur für Entitäten der Moonraker-Integration |
 
 > **Noch eine U1-Karte installiert?** Die Integration [kbaker827/ha-snapmaker-u1](https://github.com/kbaker827/ha-snapmaker-u1) bringt ebenfalls eine Karte `custom:snapmaker-u1-card` mit; wer zuerst lädt, bekommt den Namen. Diese Karte ist deshalb immer auch als `type: custom:snapmaker-u1-card-ironoxx` erreichbar, der Selbsttest weist darauf hin.
 
@@ -99,7 +100,8 @@ navigation_path: /dashboard-drucker/0   # optional: beim Antippen dorthin, sonst
 | `printer_name` | `U1` | Anzeigename |
 | `navigation_path` | – | Ziel beim Antippen |
 | `hide_filaments` | `false` | Filamentreihe ausblenden |
-| `prefix` | automatisch | nur bei mehreren Druckern |
+| `device` | erster Drucker | 2.4.1: welcher Drucker (Karten-Editor: *Drucker*) |
+| `prefix` | automatisch | nur für Entitäten der Moonraker-Integration |
 
 ## Update
 
@@ -131,4 +133,4 @@ Wird eine Seite geladen, während Home Assistant noch startet (Tab oder App bei 
 
 ## Moonraker-Integration (optional)
 
-Seit 2.0 nicht mehr nötig: Die Karte bekommt alle Werte und Steuerungen von dieser Integration. Am besten verzichtest du auf die [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) daneben: Sie fragt den Drucker ein zweites Mal ab und belastet ihn nur zusätzlich. Behältst du sie, nimmt die Karte bevorzugt die eigenen Werte und greift nur auf die Moonraker-Entitäten zurück, wenn diese fehlen. Bei mehreren Druckern `prefix` in der Karte setzen.
+Seit 2.0 nicht mehr nötig: Die Karte bekommt alle Werte und Steuerungen von dieser Integration. Am besten verzichtest du auf die [Moonraker-Integration](https://github.com/marcolivierarsenault/moonraker-home-assistant) daneben: Sie fragt den Drucker ein zweites Mal ab und belastet ihn nur zusätzlich. Behältst du sie, nimmt die Karte bevorzugt die eigenen Werte und greift nur auf die Moonraker-Entitäten zurück, wenn diese fehlen. Bei mehreren Druckern `device` setzen (Karten-Editor: *Drucker*) und für die Moonraker-Entitäten `prefix`.

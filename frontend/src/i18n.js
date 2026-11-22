@@ -422,7 +422,8 @@ export const EN = {
   "„Bild veraltet“ ab (s)": "“Image stale” after (s)", "Statisches Bild statt Kamera": "Static image instead of camera",
   "Erweitert": "Advanced", "Moonraker-Präfix": "Moonraker prefix", "WLAN-Tracker": "Wi-Fi tracker",
   "Angezeigte Dateien": "Files shown", "Leer = automatisch erkannt": "Empty = detected automatically",
-  "Nur bei mehreren Druckern nötig": "Only needed with several printers",
+  "Leer = der erste eingerichtete Drucker. Bei mehreren U1 hier wählen, welchen diese Karte zeigt.": "Empty = the first printer set up. With several U1 choose here which one this card shows.",
+  "Nur für Entitäten der Moonraker-Integration. Den Drucker wählst du oben unter „Drucker“.": "Only for entities of the Moonraker integration. Choose the printer above under “Printer”.",
   "Zeigt einen Verbindungs-Chip in der Kopfzeile": "Shows a connection chip in the header",
   "Kopfnamen und Temperatur-Presets im YAML-Editor": "Head names and temperature presets in the YAML editor",
   "Beim Antippen öffnen": "Open on tap", "Filamente ausblenden": "Hide filaments",
@@ -912,5 +913,7 @@ export const EN = {
   "antippen zum Ändern": "tap to change",
   "Noch nicht in Home Assistant gesichert": "Not yet backed up in Home Assistant",
   "nur auf dem Drucker · Drucker aus": "only on the printer · printer off",
-  "nur auf dem Drucker": "only on the printer"
+  "nur auf dem Drucker": "only on the printer",
+  // 2.4.1 (#19): printer choice in the card editor
+  "Drucker": "Printer"
 };
