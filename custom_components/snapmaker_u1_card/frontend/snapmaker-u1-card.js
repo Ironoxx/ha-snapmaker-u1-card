@@ -3,7 +3,7 @@
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
   var CARD_URL_BASE = `/${DOMAIN}/card`;
-  var CARD_VERSION = "2.4.0b4";
+  var CARD_VERSION = "2.4.0";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
