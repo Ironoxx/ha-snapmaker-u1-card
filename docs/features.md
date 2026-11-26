@@ -44,6 +44,7 @@ The integration subscribes to `print_stats`, `toolhead`, `virtual_sdcard` and `e
 | Printer message | new firmware message during a print. If the printer pauses because of it, only the pause notification (with the text) is sent |
 | First layer done | change from layer 1 to 2. Joining in the middle of a print (HA restart) does not send one |
 | Almost done | remaining time (see below) below the configured minutes, once per print |
+| Last layers | 2.4.2 (#20): the print enters its last N layers (option *“Last layers” notification*, 1 = the final layer, 0 = off), once per print; not when Home Assistant joins inside that window. Total from the slicer (`total_layer`), else the file's layer count |
 | Not enough filament | at print start, when according to Spoolman a spool has less left than the file needs on that head |
 | Spool about to run out | during the print, when a spool will be empty in less than 30 min according to the time profile. With a hint whether the firmware will continue via **auto-replenish** from a head with the same material (and colour, unless "ignore colour" is on at the printer) or pause |
 | Part ready to remove | after a finished print, once the bed has cooled below the configured temperature (35 °C) |

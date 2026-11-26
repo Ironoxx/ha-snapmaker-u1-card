@@ -4,6 +4,36 @@ Each `## x.y.z` section becomes the text of the GitHub release, which HACS shows
 in the update dialog. Newest first. After updating: restart Home Assistant and
 reload the dashboard (the card shows a hint if the browser still has the old one).
 
+## 2.4.2b1
+
+Beta. A notification for the last layers and a name per printer. Includes everything from 2.4.1.
+
+**Notifications**
+- **Last layers** (#20, thanks bemble): new option *“Last layers” notification* (Notifications, 0 = off, default off). The print notifies once when it enters its last N layers – `1` = the final layer. Its own event *Last layers* next to *Almost done*, so you can pick either or both; with camera image and the Pause/Light buttons, also on the print event entity. The layer count is a steadier signal near the end than the time estimate. Total from the slicer, else from the file; files without a layer count never trigger it, and joining inside the window (Home Assistant restarted) does not report it late.
+
+**Several printers**
+- **Each printer's device is named after its entry** (*Snapmaker U1 (192.168.1.50)*, or what you rename the entry to, e.g. *Workshop*). With one printer and the default title it stays *Snapmaker U1 Card*. A name you give the device yourself always wins.
+- **Entity IDs do not change** – neither for existing nor for new entities (`…snapmaker_u1_card_…`, the second printer `…_2` as before).
+- Notification titles name the printer when there are several; the card's printer choice shows the names.
+
+Please check: a print with *Last layers* = 1 (and 2–3) and the event selected; with two printers the device names (rename an entry) and that entity IDs stay.
+
+### Deutsch
+
+Beta. Eine Benachrichtigung für die letzten Schichten und ein Name je Drucker. Enthält alles aus 2.4.1.
+
+**Benachrichtigungen**
+- **Letzte Schichten** (#20, danke bemble): neue Option *Benachrichtigung „Letzte Schichten“* (Benachrichtigungen, 0 = aus, standardmäßig aus). Der Druck meldet sich einmal, wenn er seine letzten N Schichten erreicht – `1` = die letzte Schicht. Eigener Anlass *Letzte Schichten* neben *Gleich fertig*, also einzeln oder beide wählbar; mit Kamerabild und den Knöpfen Pause/Licht, auch auf der Druckereignis-Entität. Zum Ende hin ist die Schichtzahl ein ruhigeres Signal als die geschätzte Zeit. Gesamtzahl vom Slicer, sonst aus der Datei; Dateien ohne Schichtzahl lösen nie aus, und wer innerhalb des Bereichs dazukommt (Home Assistant neu gestartet), bekommt keine verspätete Meldung.
+
+**Mehrere Drucker**
+- **Das Gerät jedes Druckers heißt wie sein Eintrag** (*Snapmaker U1 (192.168.1.50)* oder wie du den Eintrag umbenennst, z. B. *Werkstatt*). Mit einem Drucker und dem vorgegebenen Titel bleibt es *Snapmaker U1 Card*. Ein Name, den du dem Gerät selbst gibst, hat immer Vorrang.
+- **Entitäts-IDs ändern sich nicht** – weder bei bestehenden noch bei neuen Entitäten (`…snapmaker_u1_card_…`, der zweite Drucker wie bisher `…_2`).
+- Benachrichtigungstitel nennen bei mehreren Druckern den Drucker; die Druckerauswahl der Karte zeigt die Namen.
+
+Bitte prüfen: ein Druck mit *Letzte Schichten* = 1 (und 2–3) und gewähltem Anlass; mit zwei Druckern die Gerätenamen (einen Eintrag umbenennen) und dass die Entitäts-IDs bleiben.
+
+⭐ [GitHub](https://github.com/Ironoxx/ha-snapmaker-u1-card) · ☕ [Ko-fi](https://ko-fi.com/ironoxx)
+
 ## 2.4.1
 
 Fix for several printers: choose which U1 a card shows. Includes everything from 2.4.0.

@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from . import U1ConfigEntry
 from .const import (
@@ -35,6 +36,7 @@ from .const import (
 )
 from .coordinator import U1Coordinator
 from .machine import PURIFIER_MODES
+from .naming import DEFAULT_DEVICE_NAME, device_name
 from .parsing import average_kw, estimate_cost
 
 
@@ -161,12 +163,27 @@ class U1Entity(CoordinatorEntity[U1Coordinator]):
         self._attr_unique_id = f"{entry.entry_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            name="Snapmaker U1 Card",
+            # 2.4.2: own name per printer (naming.py); before always "Snapmaker U1 Card"
+            name=device_name(coordinator.hass, entry),
             manufacturer="Snapmaker",
             model="U1",
             sw_version=VERSION,
             configuration_url=f"http://{entry.data[CONF_HOST]}",
         )
+
+    def add_to_platform_start(self, hass, platform, parallel_updates) -> None:
+        """2.4.2: keep entity IDs independent of the device name.
+
+        Home Assistant builds a new entity's ID from device name + entity name. Since the
+        device may now be named after the printer, a new entity suggests the ID it got
+        before 2.4.2 (``<domain>.snapmaker_u1_card_<entity name>``); a taken ID still
+        gets ``_2`` from Home Assistant as before. Entities already in the registry keep
+        their ID, the suggestion does not apply to them.
+        """
+        super().add_to_platform_start(hass, platform, parallel_updates)
+        if self.entity_id is None:
+            name = self.suggested_object_id  # English entity name (object-ID translations)
+            self.entity_id = f"{platform.domain}.{slugify(f'{DEFAULT_DEVICE_NAME} {name}' if name else DEFAULT_DEVICE_NAME)}"
 
     @property
     def available(self) -> bool:

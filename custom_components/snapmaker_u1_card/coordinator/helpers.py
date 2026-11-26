@@ -30,6 +30,7 @@ RESULT_TEXT = {
     "alert": "Meldung vom Drucker",
     "first_layer": "Erste Schicht fertig",
     "almost_done": "Gleich fertig",
+    "last_layers": "Letzte Schichten",
     "spool_low": "Filament reicht nicht",
     "spool_runout": "Spule läuft gleich leer",
     "bed_cool": "Teil entnehmbar",
@@ -46,6 +47,7 @@ RESULT_TEXT_EN = {
     "alert": "Printer message",
     "first_layer": "First layer done",
     "almost_done": "Almost done",
+    "last_layers": "Last layers",
     "spool_low": "Not enough filament",
     "spool_runout": "Spool about to run out",
     "bed_cool": "Part ready to remove",
@@ -160,6 +162,10 @@ def notify_message(info: dict[str, Any], de: bool = True, currency: str = "€")
         c = info["chamber"]
         return (f"{c['device']}: {c['temp']} °C erreicht (Soll {c['target']} °C)." if de
                 else f"{c['device']}: {c['temp']} °C reached (target {c['target']} °C).")
+    if info.get("total") and info.get("layer"):
+        # 2.4.2 (#20): last layers
+        return (f"{name} – Schicht {info['layer']} von {info['total']}" if de
+                else f"{name} – layer {info['layer']} of {info['total']}")
     if info.get("left_min"):
         return f"{name} – {'noch etwa' if de else 'about'} {info['left_min']} min"
     if info.get("short"):

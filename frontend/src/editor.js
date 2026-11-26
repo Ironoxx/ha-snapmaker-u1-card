@@ -103,9 +103,9 @@ export function buttonFields(opts) {
 }
 
 /**
- * 2.4.1 (#19): the printer this card shows. All printers of the integration get the same
- * device name, so the choice lists them with their address (configuration_url) as a
- * native select; without hass at hand HA's device picker (filtered to the integration).
+ * 2.4.1 (#19): the printer this card shows, as a native select with the device name (since
+ * 2.4.2 named after the printer) and its address (configuration_url) when the name lacks it;
+ * without hass at hand HA's device picker (filtered to the integration).
  * Value = device ID; empty = the first printer (as before 2.4.1).
  */
 export function deviceField(hass) {
@@ -114,8 +114,9 @@ export function deviceField(hass) {
   const devs = [...ids].map((id) => (hass.devices || {})[id]).filter(Boolean);
   if (!devs.length) return { name: "device", selector: { device: { integration: DOMAIN } } };
   const host = (d) => { try { return new URL(d.configuration_url).host; } catch (e) { return ""; } };
-  return { name: "device", selector: { select: { mode: "dropdown", options: devs.map((d) => ({
-    value: d.id, label: [d.name_by_user || d.name, host(d)].filter(Boolean).join(" · ") })) } } };
+  // 2.4.2: devices are named after the printer; the address only when the name lacks it
+  const label = (d) => { const n = d.name_by_user || d.name || "", h = host(d); return h && !n.includes(h) ? [n, h].filter(Boolean).join(" · ") : n; };
+  return { name: "device", selector: { select: { mode: "dropdown", options: devs.map((d) => ({ value: d.id, label: label(d) })) } } };
 }
 
 /** Form of the card editor: mini = true for the mini card, "section" for the building block card. */

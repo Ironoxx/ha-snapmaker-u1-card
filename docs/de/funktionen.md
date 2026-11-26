@@ -44,6 +44,7 @@ Die Integration abonniert bei Moonraker `print_stats`, `toolhead`, `virtual_sdca
 | Meldung vom Drucker | neue Firmware-Meldung, während gedruckt wird. Pausiert der Drucker deshalb, kommt nur die Pause-Meldung (mit dem Text) |
 | Erste Schicht fertig | Wechsel von Schicht 1 auf 2. Wer erst mitten im Druck einsteigt (Neustart von HA), bekommt keine |
 | Gleich fertig | Restzeit (siehe unten) unter der eingestellten Minutenzahl, einmal je Druck |
+| Letzte Schichten | 2.4.2 (#20): Der Druck erreicht seine letzten N Schichten (Option *Benachrichtigung „Letzte Schichten“*, 1 = letzte Schicht, 0 = aus), einmal je Druck; nicht, wenn Home Assistant erst innerhalb dieses Bereichs dazukommt. Gesamtzahl vom Slicer (`total_layer`), sonst aus der Schichtzahl der Datei |
 | Filament reicht nicht | beim Druckstart, wenn laut Spoolman eine Spule weniger Rest hat als die Datei auf diesem Kopf braucht |
 | Spule läuft gleich leer | im Druck, wenn eine Spule laut Zeitprofil in weniger als 30 min leer ist. Mit Hinweis, ob die Firmware per **Auto-Nachfüllen** von einem Kopf mit gleichem Material (und gleicher Farbe, außer „Farbe ignorieren“ ist am Drucker an) weitermacht oder pausieren wird |
 | Teil entnehmbar | nach einem fertigen Druck, sobald das Bett unter die eingestellte Temperatur (35 °C) gefallen ist |

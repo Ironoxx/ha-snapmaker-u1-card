@@ -12,6 +12,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 
+from .. import naming
 from ..api import (
     MoonrakerError,
 )
@@ -190,7 +191,9 @@ class NotifyMixin:
     def _notify(self, event: str, info: dict[str, Any]) -> None:
         """Send a notification for ``event`` to the groups that have it enabled."""
         de = self.hass.config.language.lower().startswith("de")
-        title = f"Snapmaker U1: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
+        # 2.4.2: with several printers the title says which one (its device name)
+        who = naming.device_name(self.hass, self.config_entry) if naming.several_printers(self.hass) else "Snapmaker U1"
+        title = f"{who}: {(RESULT_TEXT if de else RESULT_TEXT_EN).get(event, event)}"
         message = notify_message(info, de, currency_symbol(self.hass.config.currency))
         # 2.4: event entity for own automations, whether or not notifications are set up
         attrs = {k: info[k] for k in ("name", "file", "result") if info.get(k) is not None}
@@ -243,7 +246,7 @@ class NotifyMixin:
         if event == "queue" and (info or {}).get("job_id"):
             # 2.4: scheduled job waiting for "bed is clear"
             return [{"action": self._action_id(f"QSTART:{info['job_id']}"), "title": t("Bett frei – starten", "Bed clear – start")}]
-        if event in ("first_layer", "almost_done", "alert", "spool_low", "spool_runout"):
+        if event in ("first_layer", "almost_done", "last_layers", "alert", "spool_low", "spool_runout"):
             return [{"action": self._action_id("PAUSE"), "title": t("Pausieren", "Pause")},
                     {"action": self._action_id("LIGHT"), "title": t("Licht", "Light")}]
         if event == "paused":

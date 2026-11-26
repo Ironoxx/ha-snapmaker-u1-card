@@ -3,7 +3,7 @@
   // frontend/src/const.js
   var DOMAIN = "snapmaker_u1_card";
   var CARD_URL_BASE = `/${DOMAIN}/card`;
-  var CARD_VERSION = "2.4.1";
+  var CARD_VERSION = "2.4.2b1";
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var SUFFIX = ["", "1", "2", "3"];
   var SECTIONS = [
@@ -1192,10 +1192,11 @@
         return "";
       }
     };
-    return { name: "device", selector: { select: { mode: "dropdown", options: devs.map((d) => ({
-      value: d.id,
-      label: [d.name_by_user || d.name, host(d)].filter(Boolean).join(" · ")
-    })) } } };
+    const label = (d) => {
+      const n = d.name_by_user || d.name || "", h = host(d);
+      return h && !n.includes(h) ? [n, h].filter(Boolean).join(" · ") : n;
+    };
+    return { name: "device", selector: { select: { mode: "dropdown", options: devs.map((d) => ({ value: d.id, label: label(d) })) } } };
   }
   function configForm(mini) {
     const section = mini === "section";

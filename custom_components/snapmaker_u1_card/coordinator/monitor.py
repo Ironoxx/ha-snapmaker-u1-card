@@ -15,8 +15,10 @@ from homeassistant.util import dt as dt_util
 from ..const import (
     CONF_ALMOST_DONE,
     CONF_BED_COOL,
+    CONF_LAST_LAYERS,
     DEFAULT_ALMOST_DONE,
     DEFAULT_BED_COOL,
+    DEFAULT_LAST_LAYERS,
     DOMAIN,
     ERROR_LOG_MAX,
     LIVE_INTERVAL,
@@ -185,7 +187,7 @@ class PrintMonitorMixin:
 
     # ── Events during a print ──────────────────────────────────────────────
     def _print_events(self, stats: dict[str, Any], vsd: dict[str, Any]) -> None:
-        """First layer done and "almost done", once per print."""
+        """First layer done, "almost done" and (2.4.2) "last layers", once per print."""
         active = self._print_state.get("active")
         if not active:
             self._event_key, self._last_layer = None, None
@@ -203,6 +205,7 @@ class PrintMonitorMixin:
             if self._last_layer == 1 and layer >= 2 and "first_layer" not in self._events_sent:
                 self._events_sent.add("first_layer")
                 self._notify("first_layer", {"name": active.get("name"), "file": active.get("file")})
+            self._last_layers_event(active, info, layer)
             self._last_layer = layer
         left = self._remaining(stats, vsd)
         minutes = float(self.options.get(CONF_ALMOST_DONE, DEFAULT_ALMOST_DONE) or 0)
@@ -210,6 +213,29 @@ class PrintMonitorMixin:
             self._events_sent.add("almost_done")
             self._notify("almost_done", {"name": active.get("name"), "file": active.get("file"),
                                          "left_min": max(1, round(left / 60))})
+
+    def _last_layers_event(self, active: dict[str, Any], info: dict[str, Any], layer: int) -> None:
+        """2.4.2 (#20): the print entered its last N layers (option ``last_layers``, 0 = off).
+
+        Fires on the step into the window (``current_layer > total − N``), once per print, so
+        joining in the middle of the last layers (Home Assistant restarted) does not report it
+        late. Total from Klipper (``total_layer``, set by the slicer), else from the file list
+        (``layer_count`` of the metadata); without a total nothing happens.
+        """
+        n = int(self.options.get(CONF_LAST_LAYERS, DEFAULT_LAST_LAYERS) or 0)
+        if n <= 0 or "last_layers" in self._events_sent or self._last_layer is None:
+            return
+        total = info.get("total_layer")
+        if not isinstance(total, int) or total <= 0:
+            meta = next((f for f in self._files if f.get("path") == active.get("file")), None) or {}
+            total = meta.get("layers")
+        if not isinstance(total, int) or total <= 0:
+            return
+        start = total - n  # last layer before the window
+        if self._last_layer <= start < layer:
+            self._events_sent.add("last_layers")
+            self._notify("last_layers", {"name": active.get("name"), "file": active.get("file"),
+                                         "layer": layer, "total": total})
 
     def _remaining(self, stats: dict[str, Any], vsd: dict[str, Any]) -> float | None:
         """Remaining time: slicer marks / time profile calibrated from the first layer on, else duration x rest/progress."""

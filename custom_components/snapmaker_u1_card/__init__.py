@@ -28,7 +28,7 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import blueprints, resource, settings_ws, spoolman_ws, whats_new
+from . import blueprints, naming, resource, settings_ws, spoolman_ws, whats_new
 from .api import MoonrakerClient
 from .const import (
     CARD_FILENAME,
@@ -547,6 +547,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: U1ConfigEntry) -> bool:
     coordinator.start_live()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_reload))
+    # 2.4.2: a second printer renames the first one's device (naming.py)
+    naming.async_refresh_device_names(hass)
     # After an update to a new minor version: one notification with the highlights
     if not hass.data[DOMAIN].get("whats_new_checked"):
         hass.data[DOMAIN]["whats_new_checked"] = True

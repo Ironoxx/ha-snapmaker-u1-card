@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 DOMAIN = "snapmaker_u1_card"
-VERSION = "2.4.1"
+VERSION = "2.4.2b1"
 
 CONF_API_KEY = "api_key"
 CONF_FILES_LIMIT = "files_limit"
@@ -50,7 +50,7 @@ DEFAULT_AUTO_OFF = False
 DEFAULT_AUTO_OFF_TEMP = 50
 DEFAULT_AUTO_OFF_DELAY = 5  # minutes
 DEFAULT_AUTO_ON = False
-NOTIFY_EVENTS = ("complete", "cancelled", "error", "paused", "alert", "first_layer", "almost_done",
+NOTIFY_EVENTS = ("complete", "cancelled", "error", "paused", "alert", "first_layer", "almost_done", "last_layers",
                  "spool_low", "spool_runout", "bed_cool", "maintenance", "chamber_ready")
 DEFAULT_NOTIFY_EVENTS = ["complete", "error", "paused", "alert", "spool_low", "spool_runout", "maintenance"]
 # Group 2 is meant for what needs someone at the printer (other person or sound)
@@ -68,6 +68,10 @@ PAXX_REPO = "paxx12-snapmaker-u1/SnapmakerU1-Extended-Firmware"
 FIRMWARE_CHECK_S = 24 * 3600
 CONF_ALMOST_DONE = "almost_done_minutes"
 DEFAULT_ALMOST_DONE = 10  # minutes before the end
+# 2.4.2 (#20): notify in the last N layers (event last_layers); 0 = off. The time estimate drifts,
+# the layer count does not – N = 1 is the final layer.
+CONF_LAST_LAYERS = "last_layers"
+DEFAULT_LAST_LAYERS = 0
 CONF_BACKUP = "config_backup"
 DEFAULT_BACKUP = True
 BACKUP_KEEP = 5

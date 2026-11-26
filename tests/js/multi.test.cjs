@@ -27,7 +27,7 @@ const printer = (n, dev, entry, file) => {
 printer(1, "dev1", "E1", "eins.gcode");
 printer(2, "dev2", "E2", "zwei.gcode");
 const devices = {
-  dev1: { id: "dev1", name: "Snapmaker U1 Card", name_by_user: null, configuration_url: "http://192.168.1.50" },
+  dev1: { id: "dev1", name: "Snapmaker U1 (192.168.1.50)", name_by_user: null, configuration_url: "http://192.168.1.50" },
   dev2: { id: "dev2", name: "Snapmaker U1 Card", name_by_user: "Werkstatt", configuration_url: "http://192.168.1.51" },
 };
 const calls = [];
@@ -73,7 +73,7 @@ const make = (cfg) => {
   const form = Card.getConfigForm();
   const dev = form.schema.find((s) => s.name === "device");
   assert.ok(dev && dev.selector.select, "Druckerwahl im Editor");
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(dev.selector.select.options.map((o) => o.label))), ["Snapmaker U1 Card · 192.168.1.50", "Werkstatt · 192.168.1.51"]);
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(dev.selector.select.options.map((o) => o.label))), ["Snapmaker U1 (192.168.1.50)", "Werkstatt · 192.168.1.51"], "Adresse nur, wenn sie nicht schon im Namen steht");
   assert.strictEqual(form.computeLabel({ name: "device" }), "Drucker");
   assert.ok(w.customElements.get("snapmaker-u1-mini-card").getConfigForm().schema.some((s) => s.name === "device"));
   assert.ok(w.customElements.get("snapmaker-u1-section-card").getConfigForm().schema.some((s) => s.name === "device"));

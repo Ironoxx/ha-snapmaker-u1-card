@@ -143,6 +143,59 @@ async def test_first_layer_and_almost_done(hass: HomeAssistant, mock_client, not
     assert len(_sent(notifications, "Gleich fertig")) == 1
 
 
+async def test_last_layers(hass: HomeAssistant, mock_client, notifications) -> None:
+    """2.4.2 (#20): notify on the step into the last N layers, once per print, not when joining late."""
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"],
+                         notify_events=["last_layers"], last_layers=2)
+    hass.config.language = "de"
+    st = _status(mock_client, "printing", "sub/new.gcode", info={"current_layer": 47, "total_layer": 50})
+    await _refresh(hass, entry)
+    st["print_stats"]["info"] = {"current_layer": 48, "total_layer": 50}
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    assert notifications == [], "48 of 50 is not in the last two"
+    st["print_stats"]["info"] = {"current_layer": 49, "total_layer": 50}
+    await _refresh(hass, entry)
+    st["print_stats"]["info"] = {"current_layer": 50, "total_layer": 50}
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    msgs = _sent(notifications, "Letzte Schichten")
+    assert len(msgs) == 1 and "Schicht 49 von 50" in msgs[0].data["message"]
+
+
+async def test_last_layers_off_by_default(hass: HomeAssistant, mock_client, notifications) -> None:
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["last_layers"])
+    st = _status(mock_client, "printing", "sub/new.gcode", info={"current_layer": 9, "total_layer": 10})
+    await _refresh(hass, entry)
+    st["print_stats"]["info"] = {"current_layer": 10, "total_layer": 10}
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    assert notifications == []
+
+
+async def test_last_layers_not_when_joining_late(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Already inside the window when Home Assistant joined (restart): nothing, like first_layer."""
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["last_layers"], last_layers=1)
+    st = _status(mock_client, "printing", "sub/new.gcode", info={"current_layer": 10, "total_layer": 10})
+    await _refresh(hass, entry)
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    assert notifications == []
+
+
+async def test_last_layers_total_from_the_file(hass: HomeAssistant, mock_client, notifications) -> None:
+    """Without total_layer from Klipper the file's layer count is used."""
+    entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["last_layers"], last_layers=1)
+    entry.runtime_data._files = [{"path": "sub/new.gcode", "layers": 30}]
+    st = _status(mock_client, "printing", "sub/new.gcode", info={"current_layer": 29})
+    await _refresh(hass, entry)
+    entry.runtime_data._files = [{"path": "sub/new.gcode", "layers": 30}]
+    st["print_stats"]["info"] = {"current_layer": 30}
+    await _refresh(hass, entry)
+    await hass.async_block_till_done()
+    assert len(notifications) == 1 and "30 of 30" in notifications[0].data["message"]
+
+
 async def test_join_mid_print_no_first_layer(hass: HomeAssistant, mock_client, notifications) -> None:
     entry = await _setup(hass, notify_targets=["notify.mobile_app_handy"], notify_events=["first_layer"])
     st = _status(mock_client, "printing", "sub/new.gcode", info={"current_layer": 40})
